@@ -6,7 +6,19 @@
     <title>Catálogo | Júlia Aleixo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
+    
+    <!-- Preload Critical Fonts (Optional but good for performance) -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Pinyon+Script&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Allura&family=Imperial+Script&display=block" as="style">
+    <link rel="preload" href="https://fonts.cdnfonts.com/css/olivia" as="style">
+    <link rel="preload" href="https://fonts.cdnfonts.com/css/sofia-carolyn" as="style">
+    <link rel="preload" href="https://fonts.cdnfonts.com/css/beauty" as="style">
+
+    <!-- Stylesheets (display=block to prevent multiple layout shifts on initial load for custom brand fonts) -->
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Pinyon+Script&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Allura&family=Imperial+Script&display=block" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/olivia" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/sofia-carolyn" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/beauty" rel="stylesheet">
     <script id="fetch-fix">
       // Fix for "Cannot set property fetch of #<Window> which has only a getter"
       // This happens when sub-dependencies try to polyfill fetch in environments where it is a protected property.

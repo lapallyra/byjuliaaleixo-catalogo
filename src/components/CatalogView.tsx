@@ -530,7 +530,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     style={{ 
                       backgroundColor: companyId === 'guennita' 
                         ? '#2B0406' // Darker burgundy 2 tones below #56070c
-                        : theme.accentColor 
+                        : companyId === 'mimada' ? theme.primaryColor : theme.accentColor 
                     }}
                   >
                     {/* Image Section - Left (Horizontal Layout) */}
@@ -557,26 +557,26 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     <div className="flex-1 pl-5 pr-2 py-4 flex flex-col justify-center space-y-4 relative overflow-hidden">
                       {/* Name & Pricing Section (Bottom) */}
                       <div className="space-y-3">
-                        <h3 className="font-fancy text-xl md:text-2xl font-medium leading-snug line-clamp-2" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}>
+                        <h3 className="font-fancy text-xl md:text-2xl font-medium leading-snug line-clamp-2" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}>
                           {product.product_name}
                         </h3>
 
                         <div className="space-y-1 text-left">
                           {product.original_price && (
-                            <p className="text-[10px] md:text-[11px] font-medium tracking-wide flex items-center gap-1.5" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>
+                            <p className="text-[10px] md:text-[11px] font-medium tracking-wide flex items-center gap-1.5" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>
                                <span className="opacity-60 text-[8px] uppercase">de:</span>
-                               <span className="line-through decoration-white/60 decoration-1">{formatCurrency(product.original_price)}</span>
+                               <span className={`line-through decoration-1 ${companyId === 'mimada' ? 'decoration-black/60' : 'decoration-white/60'}`}>{formatCurrency(product.original_price)}</span>
                             </p>
                           )}
                           
                           <div className="flex items-baseline gap-1.5 mt-0.5">
-                            <span className="text-[8px] md:text-[9px] uppercase tracking-wider font-light" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>Por:</span>
-                            <span className="text-lg md:text-xl tracking-tight font-bold" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}>
+                            <span className="text-[8px] md:text-[9px] uppercase tracking-wider font-light" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>Por:</span>
+                            <span className="text-lg md:text-xl tracking-tight font-bold" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}>
                               {formatCurrency(product.retail_price)}
                             </span>
                           </div>
                           
-                          <p className="text-[8px] md:text-[9px] tracking-wide mt-1" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF', opacity: 0.4 }}>
+                          <p className="text-[8px] md:text-[9px] tracking-wide mt-1" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF', opacity: 0.4 }}>
                             2x de {formatCurrency(product.retail_price / 2)} sem juros
                           </p>
                         </div>
@@ -587,8 +587,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                   onAddToCart(product, 1); 
                                   setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
                                 }}
-                                className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
-                                style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}
+                                className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl transition-colors border ${companyId === 'mimada' ? 'bg-black/5 hover:bg-black/10 border-black/10' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}
+                                style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}
                               >
                                 <ShoppingCart size={14} className="md:w-[16px] md:h-[16px]" />
                              </button>
@@ -598,8 +598,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                   onAddToGiftList(product); 
                                   setToast({ message: 'Adicionado à Lista', type: 'gift' });
                                 }}
-                                className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
-                                style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}
+                                className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl transition-colors border ${companyId === 'mimada' ? 'bg-black/5 hover:bg-black/10 border-black/10' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}
+                                style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}
                               >
                                 <Gift size={14} className="md:w-[16px] md:h-[16px]" />
                              </button>
@@ -608,7 +608,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
                       {/* Subtle hover indicator */}
                       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-500">
-                         <div className="p-2 rounded-full border border-white/20" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}>
+                         <div className={`p-2 rounded-full border ${companyId === 'mimada' ? 'border-black/10' : 'border-white/20'}`} style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}>
                            <ChevronRight size={14} />
                          </div>
                       </div>

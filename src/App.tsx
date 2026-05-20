@@ -185,6 +185,12 @@ function CheckoutPageWrapper({ carts, setCarts, config }: { carts: Record<string
 function MainApp() {
   const [config, setConfig] = useState<AppConfig>(INITIAL_CONFIG);
   const [allProducts, setAllProducts] = useState<Product[]>(PRODUCTS); // Start with static, then sync
+  
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     const unsubConfig = subscribeToAppConfig((newConfig) => {
