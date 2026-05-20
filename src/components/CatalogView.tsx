@@ -526,7 +526,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     viewport={{ once: true, margin: "-50px" }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: (idx % 3) * 0.1 }}
                     onClick={() => setSelectedProduct(product)}
-                    className="group relative flex h-52 md:h-64 cursor-pointer backdrop-blur-xl border border-white/20 rounded-[2rem] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:scale-[1.02]"
+                    className="group relative flex p-3 cursor-pointer backdrop-blur-xl border border-white/20 rounded-[2rem] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:scale-[1.02]"
                     style={{ 
                       backgroundColor: companyId === 'guennita' 
                         ? '#2B0406' // Darker burgundy 2 tones below #56070c
@@ -534,19 +534,19 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     }}
                   >
                     {/* Image Section - Left (Horizontal Layout) */}
-                    <div className="relative w-2/5 h-full overflow-hidden bg-black/20 shrink-0">
+                    <div className="relative w-[45%] aspect-square overflow-hidden bg-black/20 shrink-0 rounded-2xl">
                       <motion.div 
                         whileHover={{ scale: 1.15 }}
                         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                         className="w-full h-full"
                       >
-                        {renderProductImage(product.image, "w-full h-full transition-all duration-1000")}
+                        {renderProductImage(product.image, "w-full h-full object-cover transition-all duration-1000")}
                       </motion.div>
 
                       {/* Premium/New Badge */}
                       {(product.retail_price > 200 || isNew) && (
-                        <div className="absolute top-4 left-4 z-20">
-                          <span className="px-3 py-1 rounded-full text-[7px] font-black uppercase tracking-[0.2em] backdrop-blur-md bg-white/90 text-[#1A1A1A] border border-white/20 shadow-sm">
+                        <div className="absolute top-3 left-3 z-20">
+                          <span className="px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[7px] font-black uppercase tracking-[0.2em] backdrop-blur-md bg-white/90 text-[#1A1A1A] border border-white/20 shadow-sm">
                             {product.retail_price > 200 ? 'Exclusive' : 'New'}
                           </span>
                         </div>
@@ -554,49 +554,43 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     </div>
 
                     {/* Content Section - Right (Horizontal Layout) */}
-                    <div className="flex-1 p-5 md:p-6 flex flex-col justify-between relative overflow-hidden">
-                      {/* Category at the top */}
-                      <p className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] opacity-30 truncate max-w-[120px]" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}>
-                        {product.category}
-                      </p>
-                      
+                    <div className="flex-1 pl-5 pr-2 py-4 flex flex-col justify-center space-y-4 relative overflow-hidden">
                       {/* Name & Pricing Section (Bottom) */}
                       <div className="space-y-3">
-                        <h3 className="font-fancy text-xl md:text-2xl leading-[1.4] py-1 line-clamp-2" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}>
+                        <h3 className="font-fancy text-xl md:text-2xl font-medium leading-snug line-clamp-2" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}>
                           {product.product_name}
                         </h3>
 
-                        <div className="space-y-0 text-left">
+                        <div className="space-y-1 text-left">
                           {product.original_price && (
-                            <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>
-                               <span className="opacity-50 font-normal">de:</span>
-                               <span className="line-through decoration-white/60 decoration-1 font-light">{formatCurrency(product.original_price)}</span>
+                            <p className="text-[10px] md:text-[11px] font-medium tracking-wide flex items-center gap-1.5" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>
+                               <span className="opacity-60 text-[8px] uppercase">de:</span>
+                               <span className="line-through decoration-white/60 decoration-1">{formatCurrency(product.original_price)}</span>
                             </p>
                           )}
                           
-                          <div className="flex items-baseline gap-2 mt-0.5">
-                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF', opacity: 0.7 }}>Por:</span>
-                            <span className="text-2xl md:text-3xl font-black" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}>
+                          <div className="flex items-baseline gap-1.5 mt-0.5">
+                            <span className="text-[8px] md:text-[9px] uppercase tracking-wider font-light" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>Por:</span>
+                            <span className="text-lg md:text-xl tracking-tight font-bold" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}>
                               {formatCurrency(product.retail_price)}
                             </span>
                           </div>
                           
-                          <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-widest mt-0.5" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF', opacity: 0.25 }}>
+                          <p className="text-[8px] md:text-[9px] tracking-wide mt-1" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF', opacity: 0.4 }}>
                             2x de {formatCurrency(product.retail_price / 2)} sem juros
                           </p>
                         </div>
-
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3 pt-2">
                              <button 
                                 onClick={(e) => { 
                                   e.stopPropagation(); 
                                   onAddToCart(product, 1); 
                                   setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
                                 }}
-                                className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
+                                className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
                                 style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}
                               >
-                                <ShoppingCart size={13} className="md:w-[15px] md:h-[15px]" />
+                                <ShoppingCart size={14} className="md:w-[16px] md:h-[16px]" />
                              </button>
                              <button 
                                 onClick={(e) => { 
@@ -604,16 +598,16 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                   onAddToGiftList(product); 
                                   setToast({ message: 'Adicionado à Lista', type: 'gift' });
                                 }}
-                                className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
+                                className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
                                 style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}
                               >
-                                <Gift size={13} className="md:w-[15px] md:h-[15px]" />
+                                <Gift size={14} className="md:w-[16px] md:h-[16px]" />
                              </button>
                           </div>
                       </div>
 
                       {/* Subtle hover indicator */}
-                      <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-500">
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-500">
                          <div className="p-2 rounded-full border border-white/20" style={{ color: companyId === 'guennita' ? theme.accentColor : '#FFFFFF' }}>
                            <ChevronRight size={14} />
                          </div>

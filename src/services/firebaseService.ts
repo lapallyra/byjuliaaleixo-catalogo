@@ -555,7 +555,17 @@ export const getGiftList = async (code: string) => {
       const data = docSnap.data();
       // Check if list is older than 60 days
       if (data.createdAt) {
-        const createdAt = (data.createdAt as Timestamp).toDate();
+        let createdAt: Date;
+        if (data.createdAt.toDate && typeof data.createdAt.toDate === 'function') {
+           createdAt = data.createdAt.toDate();
+        } else if (data.createdAt.seconds) {
+           createdAt = new Date(data.createdAt.seconds * 1000);
+        } else if (data.createdAt instanceof Date) {
+           createdAt = data.createdAt;
+        } else {
+           createdAt = new Date(data.createdAt);
+        }
+        
         const now = new Date();
         const diffInMs = now.getTime() - createdAt.getTime();
         const sixtyDaysInMs = 60 * 24 * 60 * 60 * 1000;
@@ -569,6 +579,41 @@ export const getGiftList = async (code: string) => {
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, path);
     return null;
+  }
+};
+
+export const getGiftListWithStatus = async (code: string): Promise<{ data: any | null, status: 'found' | 'expired' | 'not_found' }> => {
+  const path = `giftLists/${code}`;
+  try {
+    const docSnap = await getDoc(doc(db, 'giftLists', code));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      // Check if list is older than 60 days
+      if (data.createdAt) {
+        let createdAt: Date;
+        if (data.createdAt.toDate && typeof data.createdAt.toDate === 'function') {
+           createdAt = data.createdAt.toDate();
+        } else if (data.createdAt.seconds) {
+           createdAt = new Date(data.createdAt.seconds * 1000);
+        } else if (data.createdAt instanceof Date) {
+           createdAt = data.createdAt;
+        } else {
+           createdAt = new Date(data.createdAt);
+        }
+        
+        const now = new Date();
+        const diffInMs = now.getTime() - createdAt.getTime();
+        const sixtyDaysInMs = 60 * 24 * 60 * 60 * 1000;
+        if (diffInMs > sixtyDaysInMs) {
+          return { data: null, status: 'expired' };
+        }
+      }
+      return { data, status: 'found' };
+    }
+    return { data: null, status: 'not_found' };
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+    return { data: null, status: 'not_found' };
   }
 };
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ChevronLeft, AlertCircle, Gift, ArrowRight } from 'lucide-react';
-import { getOrderByCode, getGiftList } from '../services/firebaseService';
-import { Order, Product } from '../types';
+import { getOrderByCode, getGiftListWithStatus } from '../services/firebaseService';
+import { Order } from '../types';
 import { OrderReceiptModal } from './Admin/OrderReceiptModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { themes } from '../lib/theme';
@@ -38,10 +38,14 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
     }
 
     // Try Gift List
-    const fetchedList = await getGiftList(uppercaseCode);
-    if (fetchedList) {
+    const { data: fetchedList, status } = await getGiftListWithStatus(uppercaseCode);
+    if (status === 'found' && fetchedList) {
       setLoading(false);
       window.location.href = `/listadepresentes/${fetchedList.code}`;
+      return;
+    } else if (status === 'expired') {
+      setError('Esta lista de presentes expirou (mais de 60 dias).');
+      setLoading(false);
       return;
     }
 
