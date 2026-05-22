@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Edit2, Check } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 
 interface ListItem {
   id: string;
   name: string;
   value: number;
+  category?: string;
 }
 
 interface DynamicPricingListProps {
@@ -18,16 +19,30 @@ interface DynamicPricingListProps {
 export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({ title, subtitle, items = [], onChange, isPercentage }) => {
   const [newItemName, setNewItemName] = useState('');
   const [newItemValue, setNewItemValue] = useState('');
+  const [newItemCategory, setNewItemCategory] = useState('');
+  const [showNewCatInput, setShowNewCatInput] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const categories = Array.from(new Set(items.map(i => i.category).filter(Boolean))) as string[];
 
   const handleAdd = () => {
     if (!newItemName || !newItemValue) return;
+    const finalCategory = showNewCatInput ? customCategory : newItemCategory;
     onChange([
       ...items,
-      { id: crypto.randomUUID(), name: newItemName, value: Number(newItemValue) }
+      { 
+        id: crypto.randomUUID(), 
+        name: newItemName, 
+        value: Number(newItemValue),
+        category: finalCategory
+      }
     ]);
     setNewItemName('');
     setNewItemValue('');
+    setNewItemCategory('');
+    setCustomCategory('');
+    setShowNewCatInput(false);
   };
 
   const handleRemove = (id: string) => {
@@ -42,88 +57,142 @@ export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({ title, s
   const total = items.reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
 
   return (
-    <div className="p-8 rounded-[2rem] bg-gray-50 border border-lilac/10 space-y-6">
-      <div className="space-y-1">
-        <h4 className="text-[12px] font-black uppercase text-gray-600 tracking-widest">{title}</h4>
-        <p className="text-[9px] font-bold text-gray-400">{subtitle}</p>
+    <div className="p-8 rounded-[2rem] bg-[#0b0507] border border-lilac/10 space-y-8 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-lilac/5 pb-6">
+        <div>
+          <h4 className="text-[14px] font-black uppercase text-rose-50 tracking-widest">{title}</h4>
+          <p className="text-[9px] font-bold text-lilac uppercase tracking-widest mt-1">{subtitle}</p>
+        </div>
+        <div className="text-right">
+           <p className="text-[8px] font-black text-rose-300 uppercase tracking-widest mb-1">Total acumulado</p>
+           <p className="text-xl font-mono font-black text-rose-50">{!isPercentage && 'R$'} {total.toFixed(2)} {isPercentage && '%'}</p>
+        </div>
       </div>
 
       <div className="space-y-3">
         {items.map(item => (
-          <div key={item.id} className="flex items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-lilac/5">
+          <div key={item.id} className="group flex items-center gap-4 bg-[#140b0e] p-5 rounded-2xl border border-lilac/5 hover:border-lilac/20 transition-all hover:shadow-md">
             {editingId === item.id ? (
-              <>
+              <div className="flex-1 flex flex-wrap gap-3">
                 <input 
                   type="text" 
                   defaultValue={item.name}
-                  className="flex-1 bg-gray-50 border-none rounded-lg px-3 py-2 text-xs font-bold text-black outline-none"
+                  className="flex-1 min-w-[150px] bg-[#1f0e16] border border-lilac/10 rounded-xl px-4 py-3 text-[11px] font-bold text-rose-50 outline-none focus:border-lilac"
                   onBlur={(e) => handleUpdate(item.id, e.target.value, item.value)}
                   autoFocus
                 />
                 <input 
                   type="number" 
                   defaultValue={item.value}
-                  className="w-24 bg-gray-50 border-none rounded-lg px-3 py-2 text-xs font-bold text-black outline-none"
+                  className="w-24 bg-[#1f0e16] border border-lilac/10 rounded-xl px-4 py-3 text-[11px] font-black text-rose-50 outline-none focus:border-lilac"
                   onBlur={(e) => handleUpdate(item.id, item.name, Number(e.target.value))}
                 />
-                <button onClick={() => setEditingId(null)} className="p-2 text-green-500 hover:bg-green-50 rounded-lg">
-                  <Check size={14} />
+                <button onClick={() => setEditingId(null)} className="p-3 text-emerald-500 bg-emerald-950/30 rounded-xl hover:bg-emerald-100 transition-colors">
+                  <Check size={16} />
                 </button>
-              </>
+              </div>
             ) : (
               <>
                 <div className="flex-1">
-                  <span className="text-xs font-bold text-black block">{item.name}</span>
+                  <div className="flex items-center gap-2 mb-1">
+                     <span className="text-[11px] font-black text-rose-50 uppercase">{item.name}</span>
+                     {item.category && (
+                       <span className="text-[7px] font-bold bg-lilac/10 text-lilac px-2 py-0.5 rounded-full uppercase tracking-widest">{item.category}</span>
+                     )}
+                  </div>
+                  <p className="text-[8px] text-rose-300 font-bold uppercase tracking-widest">Registrado em base global</p>
                 </div>
-                <div className="font-mono text-xs font-bold text-gray-600">
-                  {!isPercentage && 'R$'} {item.value} {isPercentage && '%'}
+                <div className="text-right flex items-center gap-6">
+                   <div className="font-mono text-sm font-black text-rose-50">
+                     {!isPercentage && 'R$'} {item.value.toFixed(2)} {isPercentage && '%'}
+                   </div>
+                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                     <button onClick={() => setEditingId(item.id)} className="p-2 text-rose-400 hover:text-lilac hover:bg-lilac/5 rounded-lg transition-all">
+                       <Edit2 size={14} />
+                     </button>
+                     <button onClick={() => handleRemove(item.id)} className="p-2 text-rose-400 hover:text-rose-500 hover:bg-[#1f0e16] rounded-lg transition-all">
+                       <Trash2 size={14} />
+                     </button>
+                   </div>
                 </div>
-                <button onClick={() => setEditingId(item.id)} className="p-2 text-gray-400 hover:text-blue-500">
-                  <Edit2 size={12} />
-                </button>
-                <button onClick={() => handleRemove(item.id)} className="p-2 text-gray-400 hover:text-red-500">
-                  <Trash2 size={12} />
-                </button>
               </>
             )}
           </div>
         ))}
         
         {items.length === 0 && (
-          <div className="text-center p-4 text-[10px] text-gray-400 font-bold border border-dashed rounded-xl">
-            Nenhum item cadastrado.
+          <div className="text-center py-12 bg-[#140b0e]/50 border-2 border-dashed border-lilac/10 rounded-[2rem] text-[9px] text-rose-300 font-black uppercase tracking-[0.3em]">
+            Nenhum registro de custo ativo
           </div>
         )}
       </div>
 
-      <div className="pt-4 border-t border-gray-200">
-        <div className="flex items-center gap-3">
+      <div className="bg-[#140b0e] p-6 rounded-[2rem] border border-lilac/10 shadow-inner space-y-4">
+        <h5 className="text-[9px] font-black text-lilac uppercase tracking-[0.3em] mb-4">Adicionar novo item</h5>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <input 
             type="text"
-            placeholder="Nome (Ex: Aluguel)"
+            placeholder="NOME (EX: ALUGUEL)"
             value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
-            className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold outline-none text-black"
+            className="w-full bg-[#0b0507] border border-lilac/10 rounded-xl px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-lilac transition-all"
           />
+          
           <input 
             type="number"
-            placeholder={isPercentage ? "Valor %" : "R$"}
+            placeholder={isPercentage ? "VALOR %" : "VALOR R$"}
             value={newItemValue}
             onChange={(e) => setNewItemValue(e.target.value)}
-            className="w-28 bg-white border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold outline-none text-black"
+            className="w-full bg-[#0b0507] border border-lilac/10 rounded-xl px-5 py-4 text-[10px] font-black outline-none focus:border-lilac transition-all"
           />
+
+          <div className="flex gap-2">
+            {!showNewCatInput ? (
+              <div className="flex-1 flex gap-2">
+                <select 
+                  value={newItemCategory}
+                  onChange={(e) => setNewItemCategory(e.target.value)}
+                  className="flex-1 bg-[#0b0507] border border-lilac/10 rounded-xl px-4 py-4 text-[9px] font-black uppercase tracking-widest outline-none focus:border-lilac"
+                >
+                  <option value="">CATEGORIA...</option>
+                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+                <button 
+                  type="button"
+                  onClick={() => setShowNewCatInput(true)}
+                  className="p-4 bg-lilac/5 text-lilac rounded-xl hover:bg-lilac/10 transition-all border border-lilac/10"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex-1 flex gap-2">
+                <input 
+                  type="text"
+                  placeholder="NOVA CATEGORIA..."
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  className="flex-1 bg-[#0b0507] border border-lilac/10 rounded-xl px-4 py-4 text-[9px] font-black uppercase outline-none focus:border-lilac"
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowNewCatInput(false)}
+                  className="p-4 bg-[#1f0e16] text-rose-400 rounded-xl"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+
           <button 
             onClick={handleAdd}
-            className="p-3 bg-black text-white rounded-xl hover:scale-105 transition-all shadow-md"
+            className="w-full bg-black text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-[1.03] transition-all shadow-xl shadow-black/10 h-full min-h-[50px] flex items-center justify-center gap-2"
           >
-            <Plus size={16} />
+            <Plus size={16} /> Adicionar
           </button>
         </div>
-      </div>
-
-      <div className="pt-4 flex justify-between items-center text-xs font-black uppercase tracking-widest text-black">
-        <span>Total:</span>
-        <span className="text-lilac">{!isPercentage && 'R$'} {total} {isPercentage && '%'}</span>
       </div>
     </div>
   );

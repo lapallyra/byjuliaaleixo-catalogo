@@ -6,6 +6,8 @@ import { formatCurrency } from '../lib/currencyUtils';
 import { sendNotifications } from '../services/notificationService';
 import { createRealNotification } from '../services/saleNotificationService';
 import { saveSale, updateOrder } from '../services/firebaseService';
+import { functions } from '../lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { PrizeRouletteModal } from './PrizeRouletteModal';
 import { ImageWithFallback } from './ImageWithFallback';
 import { themes } from '../lib/theme';
@@ -64,7 +66,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     city: "",
     state: "",
     zipCode: "",
-    paymentMethod: "pix",
+    paymentMethod: "mercadopago",
     installments: 1,
     needsChange: "NÃO",
     changeAmount: "",
@@ -78,27 +80,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [wonPrize, setWonPrize] = useState('');
 
   const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
-  const emergencyFee = formData.isEmergency ? 25 : 0;
-  const installmentFeeThreshold = 2; // Fee starts for 3x or more
-  
-  // Fee table (percentage-based or flat rates could be mapped here)
-  // TODO: Configure these rates according to machine terminal pricing
-  const getInstallmentFee = (installments: number) => {
-    if (installments <= 2) return 0;
-    
-    // Example: 3x=5%, 4x=6%, 5x=7%, 6x=8%
-    const rates: { [key: number]: number } = {
-        3: 0.05,
-        4: 0.06,
-        5: 0.07,
-        6: 0.08
-    };
-    
-    return subtotal * (rates[installments] || 0.10);
-  };
-
-  const installmentFee = (formData.paymentMethod === 'credit_card' || formData.paymentMethod === 'pix_parcelado') ? getInstallmentFee(formData.installments || 1) : 0;
-  const total = subtotal + installmentFee + emergencyFee;
+  const total = subtotal;
   
   const needsDeposit = subtotal >= 100;
   const depositAmount = needsDeposit ? subtotal * 0.5 : 0;
@@ -210,20 +192,108 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
       console.log("✅ Sale saved to Firebase");
 
-      const waUrl = await sendNotifications(config, cart, formData, total, companyName);
+      const savedOrderCode = docId || '';
+      setOrderCode(savedOrderCode);
       
-      // Trigger notification
-      const realNotif = {
-        id: typeof docId !== 'undefined' ? docId : crypto.randomUUID(),
-        customerName: formData.name,
-        productName: cart[0]?.product_name || 'um item exclusivo',
-        timeAgo: 'Agora mesmo',
-        companyId: companyId
-      };
-      window.dispatchEvent(new CustomEvent('new-sale-notification', { detail: realNotif }));
+      const requiresOnlinePayment = formData.paymentMethod !== 'cash';
+      
+      if (requiresOnlinePayment) {
+        console.log('Calling createPreference');
+        const createPreference = httpsCallable(functions, 'createPreference');
+        
+        const mpItems = cart.map(item => ({
+          title: String(item.product_name || "Item"),
+          quantity: Number(item.quantity) || 1,
+          unit_price: Number(item.retail_price) || 0,
+          currency_id: 'BRL'
+        }));
+
+        const preferencePayload = {
+          orderId: savedOrderCode,
+          companyId: companyId,
+          items: mpItems,
+          payer: {
+            name: formData.name,
+            email: "cliente@loja.com" 
+          },
+          back_urls: {
+            success: `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`,
+            failure: `${window.location.origin}${window.location.pathname}?payment_status=failed&order_id=${savedOrderCode}`,
+            pending: `${window.location.origin}${window.location.pathname}?payment_status=pending&order_id=${savedOrderCode}`
+          },
+          auto_return: "approved"
+        };
+
+        let data: any;
+        let initPoint: string | null = null;
+        let preferenceId: string | null = null;
+
+        try {
+          const result = await createPreference(preferencePayload);
+          data = result.data;
+          console.log('Preference created');
+          
+          const responseData = data as any;
+          initPoint = responseData?.init_point || 
+                            responseData?.url || 
+                            responseData?.body?.init_point || 
+                            responseData?.response?.init_point ||
+                            (typeof responseData === 'string' && responseData.startsWith('http') ? responseData : null);
+          preferenceId = responseData?.id || null;
+          
+          if (!initPoint && preferenceId) {
+             initPoint = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preferenceId}`;
+          }
+
+          if (initPoint) {
+             console.log('Redirecting to Mercado Pago');
+             console.log(initPoint);
+             
+             // Setup return handling logic
+             localStorage.setItem('mp_pending_order', JSON.stringify({
+                orderId: savedOrderCode,
+                formData,
+                cart,
+                total,
+                companyName,
+                config: siteSettings
+             }));
+             
+             if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('clear-cart'));
+             }
+             
+             window.location.href = initPoint;
+             return; 
+          } else {
+             throw new Error("init_point não foi retornado pelo Mercado Pago.");
+          }
+        } catch (callError: any) {
+          console.error("Erro ao chamar o Mercado Pago:", callError);
+          // NO fallback to local success!
+          alert(`Falha no pagamento: ${callError.message || callError}`);
+          return; // Stop execution here instead of throwing which triggers the generic catch handler.
+        }
+      }
+
+      // Trigger notification if not done yet
+      if (!requiresOnlinePayment) {
+        const realNotif = {
+          id: typeof docId !== 'undefined' ? docId : crypto.randomUUID(),
+          customerName: formData.name,
+          productName: cart[0]?.product_name || 'um item exclusivo',
+          timeAgo: 'Agora mesmo',
+          companyId: companyId
+        };
+        window.dispatchEvent(new CustomEvent('new-sale-notification', { detail: realNotif }));
+
+        // Clear cart locally
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('clear-cart'));
+        }
+      }
 
       // Success!
-      setOrderCode(docId || '');
       setIsSuccess(true);
       
       // Auto redirect to WhatsApp
@@ -237,11 +307,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       // Check for roulette requirement (Total >= 300)
       if (total >= 300) {
         setShowRoulette(true);
-      }
-      
-      // Clear cart locally
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('clear-cart'));
       }
     } catch (error) {
       console.error("Erro no checkout:", error);
@@ -336,20 +401,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             {cart.some(item => item.isWholesaleEnabled && item.wholesale_price > 0 && item.quantity >= (item.wholesale_min_qty || 5)) && (
               <div className="flex justify-between items-center text-[10px] text-amber-600 font-black uppercase tracking-[0.2em] bg-amber-50 p-2 rounded-lg border border-amber-200">
                 <span>⚠️ ATACADO ATIVADO</span>
-              </div>
-            )}
-
-            {installmentFee > 0 && (
-              <div className="flex justify-between items-center text-[10px] text-amber-600 font-bold uppercase tracking-wider">
-                <span>Taxa Máquina do Cartão (mais de 2x):</span>
-                <span>+ {formatCurrency(10)}</span>
-              </div>
-            )}
-
-            {formData.isEmergency && (
-              <div className="flex justify-between items-center text-[10px] text-amber-600 font-bold uppercase tracking-wider">
-                <span>Taxa de Emergência (��):</span>
-                <span>+ {formatCurrency(25)}</span>
               </div>
             )}
 
@@ -532,11 +583,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <h3 className={`font-sans font-black text-sm uppercase tracking-[0.2em] ${companyId === "mimada" ? "font-bold text-[#FF007F]" : theme.specialText}`}>Metódos de Pagamento</h3>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
                       {[
-                        { id: 'pix', label: 'PIX' },
-                        { id: 'credit_card', label: 'Cartão' },
-                        { id: 'pix_parcelado', label: 'PIX/PARC' },
+                        { id: 'mercadopago', label: 'Cartão / Pix / Boleto' },
                         { id: 'cash', label: 'Dinheiro' }
                       ].map(method => (
                         <button
@@ -550,63 +599,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       ))}
                     </div>
 
-                    {formData.paymentMethod === 'pix' && (
+                    {formData.paymentMethod === 'mercadopago' && (
                       <div className={`${theme.cardBg} border ${theme.borderLine} rounded-[2rem] p-8 flex flex-col items-center gap-4`}>
-                        <div className="bg-white p-4 rounded-2xl shadow-xl">
-                          {config.store_qrcode ? (
-                            <ImageWithFallback src={config.store_qrcode} alt="PIX" className="w-40 h-40" />
-                          ) : (
-                            <div className="w-40 h-40 flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl">
-                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center px-4">QR Code Indisponível</span>
-                            </div>
-                          )}
-                        </div>
                         <div className="text-center">
-                          <p className={`text-[10px] ${companyId === "mimada" ? "font-bold text-[#FF007F]" : theme.specialText} mb-1 uppercase font-bold tracking-widest`}>PIX CNPJ</p>
-                          <p className={`text-lg font-mono font-bold ${theme.textPrimary}`}>{config.store_cnpj}</p>
+                          <p className={`text-sm ${theme.textPrimary} mb-2 uppercase font-bold tracking-widest font-sans`}>Pagamento Seguro</p>
+                          <p className={`text-xs ${theme.textSecondary} max-w-[250px] leading-relaxed mx-auto mb-4`}>
+                            Você será redirecionado para o ambiente seguro do Mercado Pago para efetuar o pagamento via Pix, Cartão de Crédito ou Boleto.
+                          </p>
                         </div>
-                        <p className={`text-[9px] ${companyId === "mimada" ? "font-bold text-[#FF007F]" : theme.specialText} text-center max-w-[200px] leading-relaxed italic`}>
-                          Finalize enviando o comprovante após o fechamento do pedido.
-                        </p>
-                      </div>
-                    )}
-
-                  {(formData.paymentMethod === 'credit_card' || formData.paymentMethod === 'pix_parcelado') && (
-                      <div className="space-y-4">
-                        <div className="space-y-1.5">
-                          <label className={`text-[9px] ${companyId === "mimada" ? "font-bold text-[#FF007F]" : theme.specialText} font-bold uppercase tracking-widest pl-1`}>Parcelamento (até 6x)</label>
-                          <select 
-                            className={`w-full ${theme.cardBg} border ${theme.borderLine} focus:border-[#C6A664] focus:ring-1 rounded-2xl px-5 py-4 bg-white text-black font-black border-2 focus:ring-4 focus:ring-lilac/20 appearance-none cursor-pointer text-sm`}
-                            style={{ 
-                                color: '#000', 
-                                backgroundColor: '#fff',
-                                borderColor: companyId === 'pallyra' ? '#d4af37' : companyId === 'mimada' ? '#f472b6' : '#991b1b',
-                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='black'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                                backgroundRepeat: 'no-repeat',
-                                backgroundPosition: 'right 1.25rem center',
-                                backgroundSize: '1.5em'
-                            }}
-                            value={formData.installments}
-                            onChange={(e) => setFormData({...formData, installments: Number(e.target.value)})}
-                          >
-                            {[1, 2, 3, 4, 5, 6].map(n => (
-                              <option key={n} value={n} className="bg-white text-rose-950 font-black py-4">
-                                {n}x de {formatCurrency(total / n)} {n > installmentFeeThreshold ? `(+ ${formatCurrency(total - subtotal - emergencyFee)} de taxa)` : ''}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {formData.installments > 2 && (
-                          <motion.div 
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="p-4 rounded-xl bg-pink-50 border border-pink-200 text-pink-900 text-[10px] flex items-center gap-3"
-                          >
-                            <CreditCard size={16} />
-                            <span>Atenção: Será adicionado {formatCurrency(total - subtotal - emergencyFee)} referente à taxa da máquina do cartão.</span>
-                          </motion.div>
-                        )}
                       </div>
                     )}
 

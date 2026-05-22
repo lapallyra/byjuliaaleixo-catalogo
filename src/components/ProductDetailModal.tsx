@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Minus, Plus, Share2, ShoppingBag, Gift } from 'lucide-react';
+import { X, Minus, Plus, Share2, ShoppingCart, Gift } from 'lucide-react';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { Product, CompanyId } from '../types';
 import { themes } from '../lib/theme';
@@ -255,7 +255,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   }}
                   className={`w-full py-6 rounded-2xl text-[10px] uppercase tracking-normal font-black transition-all duration-700 flex items-center justify-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.15)] ${theme.btnPrimary} hover:shadow-[0_25px_60px_rgba(0,0,0,0.25)]`}
                 >
-                  <ShoppingBag size={20} strokeWidth={2} />
+                  <ShoppingCart size={20} strokeWidth={2} />
                   Adicionar ao Carrinho
                 </motion.button>
 
@@ -292,9 +292,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className={`absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 ${theme.specialBtn} text-xs uppercase tracking-widest font-semibold rounded-2xl shadow-xl z-[100]`}
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 bg-black text-white text-[10px] uppercase tracking-[0.2em] font-black rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[100] border border-white/10"
             >
-              Adicionado com sucesso
+              Adicionado ao Carrinho
             </motion.div>
           )}
           {showGiftToast && (
@@ -302,8 +302,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className={`absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 ${theme.specialBtn} text-xs uppercase tracking-widest font-semibold rounded-2xl shadow-xl z-[100]`}
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 bg-black text-white text-[10px] uppercase tracking-[0.2em] font-black rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[100] border border-white/10 flex items-center gap-2"
             >
+              <Gift size={14} className="text-pink-400" />
               Adicionado à sua lista!
             </motion.div>
           )}
@@ -312,9 +313,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className={`absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 ${theme.specialBtn} text-xs uppercase tracking-widest font-semibold rounded-2xl shadow-xl z-[100]`}
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 bg-black text-white text-[10px] uppercase tracking-[0.2em] font-black rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[100] border border-white/10"
             >
-              Link copiado!
+              Link copiado para partilhar!
             </motion.div>
           )}
         </AnimatePresence>

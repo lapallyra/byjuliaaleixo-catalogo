@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { commemorativeDateService } from '../../services/commemorativeDateService';
 import { CommemorativeDate } from '../../types';
 import { Sparkles, Calendar, ArrowRight, Tag } from 'lucide-react';

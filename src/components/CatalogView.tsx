@@ -4,7 +4,7 @@ import {
   ArrowLeft, 
   Search, 
   Filter, 
-  ShoppingBag, 
+  ShoppingCart, 
   Package, 
   ChevronLeft, 
   ChevronRight,
@@ -28,12 +28,14 @@ import {
   Gift,
   Share2,
   MessageCircle,
+  MessageSquare,
   Wand2,
   Loader2
 } from 'lucide-react';
 import { CompanyId, AppConfig, Product, CartItem, SiteSettings } from '../types';
 import { CartSidebar } from './CartSidebar';
 import { GiftListSidebar } from './GiftListSidebar';
+import { SuggestionBox } from './SuggestionBox';
 import { ProductDetailModal } from './ProductDetailModal';
 import { CheckoutModal } from './CheckoutModal';
 
@@ -41,7 +43,6 @@ import { CatalogHeader } from './Catalog/CatalogHeader';
 import { CatalogInfoBar } from './Catalog/CatalogInfoBar';
 import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
-import { SearchedGiftListModal } from './SearchedGiftListModal';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { subscribeToProducts, addProduct, getSiteSettings, getGiftList } from '../services/firebaseService';
 import { PRODUCTS, INITIAL_CONFIG } from '../constants';
@@ -159,6 +160,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isGiftListOpen, setIsGiftListOpen] = useState(false);
+  const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isReadOnlyProduct, setIsReadOnlyProduct] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -193,6 +195,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [isSearchingList, setIsSearchingList] = useState(false);
   const [listSearchCode, setListSearchCode] = useState('');
   const [isSearchingLoading, setIsSearchingLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'gift' } | null>(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const handleListSearch = async () => {
     if (!listSearchCode || listSearchCode.length < 5) return;
@@ -201,9 +211,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       const code = listSearchCode.trim().toUpperCase();
       const list = await getGiftList(code);
       if (list) {
-        setSearchedGiftList(list);
         setIsSearchingList(false);
         setListSearchCode('');
+        window.location.href = `/listadepresentes/${list.code}`;
       } else {
         alert("Lista não encontrada. Verifique o código.");
       }
@@ -274,14 +284,17 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   };
 
   const handleHiddenAdminClick = () => {
-    setAdminClickCount(prev => {
-      const next = prev + 1;
-      if (next >= 5) {
-        onOpenAdmin();
-        return 0;
-      }
-      return next;
-    });
+    if (isAdmin) {
+      onOpenAdmin();
+      return;
+    }
+    const next = adminClickCount + 1;
+    if (next >= 5) {
+      onOpenAdmin();
+      setAdminClickCount(0);
+    } else {
+      setAdminClickCount(next);
+    }
   };
 
   const createSparkles = (e: React.MouseEvent) => {
@@ -498,7 +511,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             {/* Grid */}
             {paginatedProducts.length > 0 ? (
               <>
-              <div id="catalog-grid" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 pb-20">
+              <div id="catalog-grid" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-10 pb-32">
                 {paginatedProducts.map((product, idx) => {
                   const today = new Date();
                   const createdAtDate = product.createdAt?.toMillis ? new Date(product.createdAt.toMillis()) : product.createdAt instanceof Date ? product.createdAt : new Date();
@@ -506,84 +519,103 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   const isNew = diffDays <= 10 || idx % 8 === 0;
 
                   return (
-                  <motion.div
+                    <motion.div
                     key={`prod-${product.id}-${idx}`}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-50px" }}
-                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: (idx % 4) * 0.05 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: (idx % 3) * 0.1 }}
                     onClick={() => setSelectedProduct(product)}
-                    className={`group relative flex flex-col cursor-pointer ${theme.cardBg} ${theme.borderLine} rounded-[2.5rem] overflow-hidden transition-all duration-500 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl border hover:-translate-y-2`}
-                    style={{ '--hover-glow': `${theme.accentColor}33` } as any}
+                    className="group relative flex p-3 cursor-pointer backdrop-blur-xl border border-white/20 rounded-[2rem] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:scale-[1.02]"
+                    style={{ 
+                      backgroundColor: companyId === 'guennita' 
+                        ? '#2B0406' // Darker burgundy 2 tones below #56070c
+                        : companyId === 'mimada' ? theme.primaryColor : theme.accentColor 
+                    }}
                   >
-                    {/* Image Section - Main Focus */}
-                    <div className="relative w-full aspect-[4/5] overflow-hidden bg-gray-50 group/img">
+                    {/* Image Section - Left (Horizontal Layout) */}
+                    <div className="relative w-[45%] aspect-square overflow-hidden bg-black/20 shrink-0 rounded-2xl">
                       <motion.div 
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        whileHover={{ scale: 1.15 }}
+                        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                         className="w-full h-full"
                       >
-                        {(() => {
-                          const secondaryImage = product.images && product.images.length > 1 ? product.images[1] : product.image_hover;
-                          if (secondaryImage) {
-                            return (
-                              <>
-                                {renderProductImage(product.image, "absolute inset-0 transition-all duration-700 group-hover/img:scale-105")}
-                                {renderProductImage(secondaryImage, "absolute inset-0 transition-opacity duration-700 opacity-0 group-hover/img:opacity-100")}
-                              </>
-                            );
-                          }
-                          return renderProductImage(product.image, "transition-all duration-700 group-hover/img:scale-105");
-                        })()}
+                        {renderProductImage(product.image, "w-full h-full object-cover transition-all duration-1000")}
                       </motion.div>
 
                       {/* Premium/New Badge */}
                       {(product.retail_price > 200 || isNew) && (
-                        <div className="absolute top-5 left-5 z-20">
-                          <span className="px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] backdrop-blur-md border border-white/20 shadow-lg text-white" style={{ backgroundColor: theme.accentColor }}>
-                            {product.retail_price > 200 ? '⭐ Exclusive' : '✨ Novo'}
+                        <div className="absolute top-3 left-3 z-20">
+                          <span className="px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[7px] font-black uppercase tracking-[0.2em] backdrop-blur-md bg-white/90 text-[#1A1A1A] border border-white/20 shadow-sm">
+                            {product.retail_price > 200 ? 'Exclusive' : 'New'}
                           </span>
                         </div>
                       )}
+                    </div>
 
-                      {/* Espiar Button Overlay */}
-                      <div className="absolute inset-x-0 bottom-0 py-8 px-6 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex justify-center translate-y-4 group-hover:translate-y-0">
-                         <span className="bg-white/90 backdrop-blur-md text-[#161616] text-[10px] font-black uppercase tracking-[0.3em] px-8 py-3 rounded-2xl shadow-xl">
-                            Detalhes
-                         </span>
+                    {/* Content Section - Right (Horizontal Layout) */}
+                    <div className="flex-1 pl-5 pr-2 py-4 flex flex-col justify-center space-y-4 relative overflow-hidden">
+                      {/* Name & Pricing Section (Bottom) */}
+                      <div className="space-y-3">
+                        <h3 className="font-fancy text-xl md:text-2xl font-medium leading-snug line-clamp-2" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}>
+                          {product.product_name}
+                        </h3>
+
+                        <div className="space-y-1 text-left">
+                          {product.original_price && (
+                            <p className="text-[10px] md:text-[11px] font-medium tracking-wide flex items-center gap-1.5" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>
+                               <span className="opacity-60 text-[8px] uppercase">de:</span>
+                               <span className={`line-through decoration-1 ${companyId === 'mimada' ? 'decoration-black/60' : 'decoration-white/60'}`}>{formatCurrency(product.original_price)}</span>
+                            </p>
+                          )}
+                          
+                          <div className="flex items-baseline gap-1.5 mt-0.5">
+                            <span className="text-[8px] md:text-[9px] uppercase tracking-wider font-light" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>Por:</span>
+                            <span className="text-lg md:text-xl tracking-tight font-bold" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}>
+                              {formatCurrency(product.retail_price)}
+                            </span>
+                          </div>
+                          
+                          <p className="text-[8px] md:text-[9px] tracking-wide mt-1" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF', opacity: 0.4 }}>
+                            2x de {formatCurrency(product.retail_price / 2)} sem juros
+                          </p>
+                        </div>
+                          <div className="flex items-center gap-3 pt-2">
+                             <button 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  onAddToCart(product, 1); 
+                                  setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
+                                }}
+                                className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl transition-colors border ${companyId === 'mimada' ? 'bg-black/5 hover:bg-black/10 border-black/10' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}
+                                style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}
+                              >
+                                <ShoppingCart size={14} className="md:w-[16px] md:h-[16px]" />
+                             </button>
+                             <button 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  onAddToGiftList(product); 
+                                  setToast({ message: 'Adicionado à Lista', type: 'gift' });
+                                }}
+                                className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl transition-colors border ${companyId === 'mimada' ? 'bg-black/5 hover:bg-black/10 border-black/10' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}
+                                style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}
+                              >
+                                <Gift size={14} className="md:w-[16px] md:h-[16px]" />
+                             </button>
+                          </div>
+                      </div>
+
+                      {/* Subtle hover indicator */}
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-500">
+                         <div className={`p-2 rounded-full border ${companyId === 'mimada' ? 'border-black/10' : 'border-white/20'}`} style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}>
+                           <ChevronRight size={14} />
+                         </div>
                       </div>
                     </div>
 
-                    {/* Info Section */}
-                    <div className={`p-4 md:p-5 flex flex-col gap-1.5 relative z-10 ${theme.cardBg}`}>
-                         <h3 
-                          className="font-dancing text-lg md:text-xl leading-none line-clamp-1 transition-colors group-hover:scale-[1.02] origin-left duration-300" 
-                          style={{ color: theme.accentColor }}
-                         >
-                           {product.product_name}
-                         </h3>
-                         
-                         <div className="mt-1">
-                            <PriceDisplay 
-                              price={product.retail_price} 
-                              originalPrice={product.original_price} 
-                              installments={2}
-                              accentColor={theme.accentColor}
-                              isDark={companyId === 'guennita'}
-                            />
-                         </div>
-                    </div>
-
-                    {/* Hover Actions */}
-                    <div className="absolute top-5 right-5 z-30 flex flex-col gap-3 translate-x-12 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500">
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); onAddToCart(product, 1); }}
-                            className="p-3 bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl text-[#161616] hover:scale-110 transition-transform active:scale-95"
-                            style={{ color: theme.accentColor }}
-                        >
-                          <ShoppingBag size={20} />
-                        </button>
-                    </div>
+                    {/* Background Decorative Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                   </motion.div>
                 )})}
               </div>
@@ -657,7 +689,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             onUpdateQty={onUpdateQuantity}
             onSetQty={onSetQuantity}
             onCheckout={() => {
-              navigate('/checkout', { state: { companyId } });
+              setCheckoutItems(cart);
+              setIsCheckoutOpen(true);
             }}
             companyId={companyId}
           />
@@ -673,34 +706,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           />
         )}
 
-        {giftList.length > 0 && !isGiftListOpen && (
-          <motion.button
-            initial={{ opacity: 0, x: 100, scale: 0.5 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 100, scale: 0.5 }}
-            onClick={() => setIsGiftListOpen(true)}
-            className="fixed bottom-24 right-6 md:bottom-28 md:right-12 z-[1001] flex items-center gap-3 px-6 py-3 rounded-full shadow-2xl text-white font-black uppercase tracking-widest text-[10px] transition-all hover:scale-105 active:scale-95 group"
-            style={{ backgroundColor: theme.accentColor, boxShadow: `0 10px 30px -10px ${theme.accentColor}` }}
-          >
-            <span className="relative">
-              <Gift size={18} strokeWidth={2.5} className="group-hover:rotate-12 transition-transform" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white animate-ping" />
-            </span>
-            <span className={theme.primaryColor === '#FFFFFF' || theme.primaryColor === '#F8F8F6' ? 'text-white' : 'text-current'}>Ver Lista ({giftList.length})</span>
-          </motion.button>
-        )}
-
-        <SearchedGiftListModal 
-          isOpen={searchedGiftList !== null}
-          onClose={() => setSearchedGiftList(null)}
-          giftList={searchedGiftList}
-          theme={theme}
-          onAddToCart={onAddToCart}
-          onViewProduct={(p) => {
-            setSelectedProduct(p);
-            setIsReadOnlyProduct(true);
-          }}
-          companyId={companyId}
+        <SuggestionBox 
+           companyId={companyId} 
+           hideTrigger 
+           isOpenExternal={isSuggestionOpen} 
+           onCloseExternal={() => setIsSuggestionOpen(false)} 
         />
 
         {/* List Search Overlay */}
@@ -790,20 +800,52 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             siteSettings={siteSettings}
           />
         )}
+
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 50, x: '-50%' }}
+            className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[5000] px-8 py-5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/20 flex items-center gap-4 min-w-[300px] justify-center"
+          >
+            {toast.type === 'gift' ? (
+              <div className="p-2 rounded-full bg-pink-500 text-white">
+                <Gift size={18} strokeWidth={2.5} />
+              </div>
+            ) : (
+              <div className="p-2 rounded-full bg-amber-500 text-white">
+                <ShoppingCart size={18} strokeWidth={2.5} />
+              </div>
+            )}
+            <span className="flex-1 text-center">{toast.message}</span>
+            <div className="w-8 h-px bg-white/20 mx-2" />
+            <Sparkles size={14} className="text-[#D4AF37] animate-pulse" />
+          </motion.div>
+        )}
       </AnimatePresence>
 
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: (isCartOpen || isGiftListOpen || isCheckoutOpen || isSearchingList || selectedProduct) ? 0 : 1, y: 0 }}
+          animate={{ opacity: (isCartOpen || isGiftListOpen || isCheckoutOpen || isSearchingList || selectedProduct || isSuggestionOpen) ? 0 : 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[1000] flex flex-col gap-2"
+          className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[1000] flex flex-row items-center gap-2"
         >
             <button 
+              onClick={() => setIsSuggestionOpen(true)}
+              className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm active:scale-95 transition-all border`}
+              style={{ borderColor: `${theme.accentColor}40` }}
+              title="Sugestões"
+            >
+              <MessageSquare size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
+            </button>
+
+            <button 
               onClick={() => setIsGiftListOpen(true)}
-              className={`w-9 h-9 flex items-center justify-center rounded-full ${theme.btnSecondary} backdrop-blur-md shadow-md active:scale-95 transition-all`}
+              className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm active:scale-95 transition-all border`}
+              style={{ borderColor: `${theme.accentColor}40` }}
               title="Lista de Presentes"
             >
-              <Gift size={14} strokeWidth={1.5} />
+              <Gift size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
               {giftList.length > 0 && (
                 <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: theme.accentColor }} />
               )}
@@ -811,12 +853,13 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             
             <button 
               onClick={() => setIsCartOpen(true)}
-              className={`w-9 h-9 flex items-center justify-center rounded-full ${theme.btnSecondary} backdrop-blur-md shadow-md active:scale-95 transition-all`}
+              className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm active:scale-95 transition-all border`}
+              style={{ borderColor: `${theme.accentColor}40` }}
               title="Carrinho"
             >
-              <ShoppingBag size={14} strokeWidth={1.5} />
+              <ShoppingCart size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
               {cart.length > 0 && (
-                <span className="absolute top-0 right-0 w-2.5 h-2.5 text-[7px] font-black flex items-center justify-center rounded-full text-white pointer-events-none shadow-sm" style={{ backgroundColor: theme.accentColor }}>
+                <span className="absolute -top-1 -right-1 w-4 h-4 text-[7px] font-black flex items-center justify-center rounded-full text-white pointer-events-none shadow-sm" style={{ backgroundColor: theme.accentColor }}>
                   {cart.reduce((a, b) => a + b.quantity, 0)}
                 </span>
               )}
@@ -826,10 +869,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               href={`https://wa.me/${config.whatsapp_number.replace(/\D/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
-              className={`w-9 h-9 flex items-center justify-center rounded-full ${theme.btnSecondary} backdrop-blur-md shadow-md active:scale-95 transition-all`}
+              className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm active:scale-95 transition-all border`}
+              style={{ borderColor: `${theme.accentColor}40` }}
               title="Fale Comigo"
             >
-              <MessageCircle size={14} strokeWidth={1.5} />
+              <MessageCircle size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
             </a>
         </motion.div>
     </div>

@@ -6,7 +6,6 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
-  setSessionAdmin: (val: boolean) => void;
   logout: () => void;
 }
 
@@ -14,14 +13,12 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   isAdmin: false,
-  setSessionAdmin: () => {},
   logout: () => {}
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sessionAdmin, setSessionAdmin] = useState(false);
   const [authInitialized, setAuthInitialized] = useState(false);
 
   // Admin list - for now hardcoded as requested by the rules/blueprint logic
@@ -40,17 +37,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const isAdmin = useMemo(() => {
-    const isPrimaryAdmin = !!user && !!user.email && ADMIN_EMAILS.includes(user.email);
-    console.log('[Auth] Calculating isAdmin:', { email: user?.email, isPrimaryAdmin, sessionAdmin });
-    return sessionAdmin || isPrimaryAdmin;
-  }, [user, sessionAdmin]);
+    const userEmail = user?.email?.toLowerCase();
+    const isPrimaryAdmin = !!userEmail && ADMIN_EMAILS.some(email => email.toLowerCase() === userEmail);
+    console.log('[Auth] Calculating isAdmin:', { 
+      email: user?.email, 
+      isPrimaryAdmin,
+      isInitialized: authInitialized,
+      loading
+    });
+    return isPrimaryAdmin;
+  }, [user, authInitialized, loading]);
 
   const logout = async () => {
     console.log('[Auth] Initiating logout');
     try {
       await auth.signOut();
-      setSessionAdmin(false);
-      window.location.href = '/admin/login'; 
+      window.location.href = '/'; 
     } catch (error) {
       console.error('[Auth] Logout error:', error);
     }
@@ -60,7 +62,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     loading: !authInitialized || loading,
     isAdmin,
-    setSessionAdmin,
     logout
   }), [user, loading, isAdmin, authInitialized]);
 

@@ -12,7 +12,8 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
-  orderBy
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig } from '../types';
@@ -456,22 +457,17 @@ export const getOrderByCode = async (code: string): Promise<Order | null> => {
   try {
     const uppercaseCode = code.toUpperCase();
     
-    // Attempt fast lookup by ID first (works for newly created orders)
     try {
       const docSnap = await getDoc(doc(db, 'sales', uppercaseCode));
       if (docSnap.exists()) {
         return { id: docSnap.id, ...docSnap.data() } as Order;
       }
+      return null;
     } catch (e) {
-      // Ignore getDoc permission issues just in case
+      console.warn("getDoc on sales failed", e);
+      return null;
     }
-    
-    // Fallback: try query if auth'd as admin
-    const q = query(collection(db, 'sales'), where('code', '==', uppercaseCode));
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return null;
-    return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as Order;
-  } catch (error) {
+  } catch (error: any) {
     // Suppress error so it doesn't crash the application
     console.error('getOrderByCode error:', error);
     return null;
@@ -538,12 +534,14 @@ export const subscribeToAppConfig = (callback: (config: AppConfig) => void) => {
 export const saveGiftList = async (list: { code: string; items: Product[]; companyId: string }) => {
   const path = 'giftLists';
   try {
-    await setDoc(doc(db, path, list.code), {
+    const payload = sanitize({
       ...list,
       createdAt: serverTimestamp()
     });
+    await setDoc(doc(db, path, list.code), payload);
     return true;
   } catch (error) {
+    console.error('Failed to save gift list:', error);
     handleFirestoreError(error, OperationType.WRITE, path);
     return false;
   }
@@ -554,12 +552,68 @@ export const getGiftList = async (code: string) => {
   try {
     const docSnap = await getDoc(doc(db, 'giftLists', code));
     if (docSnap.exists()) {
-      return docSnap.data();
+      const data = docSnap.data();
+      // Check if list is older than 60 days
+      if (data.createdAt) {
+        let createdAt: Date;
+        if (data.createdAt.toDate && typeof data.createdAt.toDate === 'function') {
+           createdAt = data.createdAt.toDate();
+        } else if (data.createdAt.seconds) {
+           createdAt = new Date(data.createdAt.seconds * 1000);
+        } else if (data.createdAt instanceof Date) {
+           createdAt = data.createdAt;
+        } else {
+           createdAt = new Date(data.createdAt);
+        }
+        
+        const now = new Date();
+        const diffInMs = now.getTime() - createdAt.getTime();
+        const sixtyDaysInMs = 60 * 24 * 60 * 60 * 1000;
+        if (diffInMs > sixtyDaysInMs) {
+          return null; // Expired
+        }
+      }
+      return data;
     }
     return null;
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, path);
     return null;
+  }
+};
+
+export const getGiftListWithStatus = async (code: string): Promise<{ data: any | null, status: 'found' | 'expired' | 'not_found' }> => {
+  const path = `giftLists/${code}`;
+  try {
+    const docSnap = await getDoc(doc(db, 'giftLists', code));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      // Check if list is older than 60 days
+      if (data.createdAt) {
+        let createdAt: Date;
+        if (data.createdAt.toDate && typeof data.createdAt.toDate === 'function') {
+           createdAt = data.createdAt.toDate();
+        } else if (data.createdAt.seconds) {
+           createdAt = new Date(data.createdAt.seconds * 1000);
+        } else if (data.createdAt instanceof Date) {
+           createdAt = data.createdAt;
+        } else {
+           createdAt = new Date(data.createdAt);
+        }
+        
+        const now = new Date();
+        const diffInMs = now.getTime() - createdAt.getTime();
+        const sixtyDaysInMs = 60 * 24 * 60 * 60 * 1000;
+        if (diffInMs > sixtyDaysInMs) {
+          return { data: null, status: 'expired' };
+        }
+      }
+      return { data, status: 'found' };
+    }
+    return { data: null, status: 'not_found' };
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+    return { data: null, status: 'not_found' };
   }
 };
 
@@ -583,14 +637,22 @@ export const subscribeToGiftLists = (callback: (lists: any[]) => void, companyId
 
 export const subscribeToSales = (callback: (sales: any[]) => void, companyId?: CompanyId) => {
   const path = 'sales';
-  const q = companyId 
-    ? query(collection(db, path), where('companyId', '==', companyId))
-    : collection(db, path);
+  let q;
+  if (companyId) {
+    q = query(collection(db, path), where('companyId', '==', companyId), orderBy('createdAt', 'desc'), limit(300));
+  } else {
+    q = query(collection(db, path), orderBy('createdAt', 'desc'), limit(300));
+  }
 
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   }, (error) => {
-    handleFirestoreError(error, OperationType.GET, path);
+    // Fallback to unstructured query if index is missing
+    console.warn("Index missing, falling back to unstructured sales query", error);
+    const fallbackQ = companyId ? query(collection(db, path), where('companyId', '==', companyId)) : collection(db, path);
+    onSnapshot(fallbackQ, (fallbackSnap) => {
+      callback(fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
   });
 };
 

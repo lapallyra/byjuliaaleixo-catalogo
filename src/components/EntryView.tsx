@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { MessageCircle, User, X, CheckCircle, FileText } from 'lucide-react';
+import { MessageCircle, User, X, CheckCircle, FileText, LayoutDashboard } from 'lucide-react';
 import { AppConfig, CompanyId, SiteSettings } from '../types';
 import { login } from '../lib/firebase';
 import { useAuth } from './AuthProvider';
 import { subscribeToAllSettings } from '../services/firebaseService';
-import { SuggestionBox } from './SuggestionBox';
 import { themes } from '../lib/theme';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './ImageWithFallback';
@@ -16,7 +15,7 @@ interface EntryViewProps {
 
 export const EntryView: React.FC<EntryViewProps> = ({ config }) => {
   const navigate = useNavigate();
-  const { user, setSessionAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
@@ -33,53 +32,53 @@ export const EntryView: React.FC<EntryViewProps> = ({ config }) => {
 
   const [clickCount, setClickCount] = useState(0);
 
-  const handleAdminAuth = async () => {
-    setIsLoggingIn(true);
-    try {
-      const { login } = await import('../lib/firebase');
-      const loginUser = await login();
-      if (loginUser && (loginUser.email === 'juualleixo@gmail.com' || loginUser.email === 'lapallyra@gmail.com')) {
-        navigate('/mimadasim/admin');
-      } else if (loginUser) {
-        alert(`Este e-mail não tem permissão de administrador. (${loginUser.email})`);
-        const { logout } = await import('../lib/firebase');
-        await logout();
-      }
-    } catch (error) {
-      console.error("Erro no login admin:", error);
-    } finally {
-      setIsLoggingIn(false);
-      setClickCount(0);
-    }
+  const handleAdminAuth = () => {
+    navigate('/admin');
   };
 
   const startHold = (e: React.MouseEvent | React.TouchEvent) => {
-    // Desktop: Click counter
+    // Desktop click handler
     if (e.type === 'mousedown') {
-      setClickCount(prev => {
-        const next = prev + 1;
-        if (next >= 5) {
-          handleAdminAuth();
-          return 0;
-        }
-        return next;
-      });
+      if (isAdmin) {
+        handleAdminAuth();
+        return;
+      }
+      const next = clickCount + 1;
+      if (next >= 5) {
+        handleAdminAuth();
+        setClickCount(0);
+      } else {
+        setClickCount(next);
+      }
       return;
     }
 
-    // Mobile: Long press (5s)
+    // Mobile hold handler
     setIsHolding(true);
-    const duration = 5000; // 5 seconds
-
-    holdTimerRef.current = setTimeout(() => {
+    if (isAdmin) {
       handleAdminAuth();
       stopHold();
-    }, duration);
+      return;
+    }
+    setHoldProgress(0);
+    
+    let progress = 0;
+    progressIntervalRef.current = setInterval(() => {
+      progress += 2;
+      if (progress >= 100) {
+        clearInterval(progressIntervalRef.current!);
+        handleAdminAuth();
+        stopHold();
+      } else {
+        setHoldProgress(progress);
+      }
+    }, 40); // 2 seconds total loop (40ms * 50 steps = 2000ms)
   };
 
   const stopHold = () => {
     setIsHolding(false);
-    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    setHoldProgress(0);
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
   };
 
   const companies = [
@@ -267,12 +266,36 @@ export const EntryView: React.FC<EntryViewProps> = ({ config }) => {
         onMouseDown={startHold}
         onTouchStart={startHold}
         onTouchEnd={stopHold}
-        className="fixed bottom-6 left-6 w-10 h-10 flex items-center justify-center cursor-pointer select-none z-[9999] opacity-30 hover:opacity-100 transition-all active:scale-95 group touch-none bg-white/20 backdrop-blur-md rounded-full border border-white/10"
+        className="fixed bottom-6 left-6 w-12 h-12 flex items-center justify-center cursor-pointer select-none z-[9999] opacity-40 hover:opacity-100 transition-all active:scale-95 group touch-none bg-white/40 backdrop-blur-md rounded-full border border-white/20"
       >
-        {isLoggingIn ? (
-          <div className="w-4 h-4 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin relative z-10" />
+        {isHolding && (
+          <svg className="absolute inset-0 w-full h-full -rotate-90">
+            <circle
+              cx="24"
+              cy="24"
+              r="22"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-lilac/20"
+            />
+            <motion.circle
+              cx="24"
+              cy="24"
+              r="22"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeDasharray="138.23"
+              strokeDashoffset={138.23 - (138.23 * holdProgress) / 100}
+              className="text-lilac"
+            />
+          </svg>
+        )}
+        {isAdmin ? (
+          <LayoutDashboard size={18} className="text-lilac shrink-0" />
         ) : (
-          <User size={16} className="text-[#D4AF37]/50 group-hover:text-[#D4AF37]" />
+          <User size={18} className="text-[#D4AF37]/50 group-hover:text-[#D4AF37] shrink-0" />
         )}
       </div>
 

@@ -7,11 +7,17 @@ import { addSuggestion } from '../services/firebaseService';
 
 interface SuggestionBoxProps {
   companyId: CompanyId;
+  hideTrigger?: boolean;
+  isOpenExternal?: boolean;
+  onCloseExternal?: () => void;
 }
 
-export const SuggestionBox: React.FC<SuggestionBoxProps> = ({ companyId }) => {
+export const SuggestionBox: React.FC<SuggestionBoxProps> = ({ companyId, hideTrigger, isOpenExternal, onCloseExternal }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFormOpenInternal, setIsFormOpenInternal] = useState(false);
+  
+  const isFormOpen = isOpenExternal !== undefined ? isOpenExternal : isFormOpenInternal;
+  const setIsFormOpen = onCloseExternal || setIsFormOpenInternal;
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
@@ -49,10 +55,13 @@ export const SuggestionBox: React.FC<SuggestionBoxProps> = ({ companyId }) => {
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className={`mb-4 w-72 ${theme.bg} rounded-[2rem] border shadow-2xl p-6 relative overflow-hidden backdrop-blur-md`}
+            className={`mb-4 w-72 ${theme.bg} rounded-[2rem] border shadow-2xl p-6 fixed bottom-24 right-6 md:right-10 z-[1101] overflow-hidden backdrop-blur-md`}
           >
             <button 
-              onClick={() => setIsFormOpen(false)}
+              onClick={() => {
+                if (onCloseExternal) onCloseExternal();
+                else setIsFormOpenInternal(false);
+              }}
               className="absolute top-4 right-4 opacity-40 hover:opacity-100 transition-opacity"
             >
               <X size={18} />
@@ -104,38 +113,42 @@ export const SuggestionBox: React.FC<SuggestionBoxProps> = ({ companyId }) => {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className={`mb-2 w-48 ${theme.bg} rounded-2xl border shadow-2xl p-2 backdrop-blur-md`}
-          >
-            <button
-              onClick={() => {
-                setIsFormOpen(true);
-                setIsMenuOpen(false);
-              }}
-              className={`w-full text-left px-4 py-3 text-[10px] font-bold hover:bg-white/5 rounded-xl transition-all`}
-            >
-              Sugestões
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {!hideTrigger && (
+        <>
+          <AnimatePresence>
+            {isMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`mb-2 w-48 ${theme.bg} rounded-2xl border shadow-2xl p-2 backdrop-blur-md`}
+              >
+                <button
+                  onClick={() => {
+                    setIsFormOpenInternal(true);
+                    setIsMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 text-[10px] font-bold hover:bg-white/5 rounded-xl transition-all`}
+                >
+                  Sugestões
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-      <button
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className={`relative w-12 h-12 md:w-16 md:h-16 ${theme.specialBtn} rounded-[1.8rem] shadow-2xl border flex items-center justify-center hover:scale-110 active:scale-95 transition-all group backdrop-blur-md overflow-hidden`}
-      >
-        <motion.div 
-          className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-[45deg]"
-          animate={{ x: ['-100%', '100%'] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear", delay: 2 }}
-        />
-        {isMenuOpen ? <ChevronDown size={24} /> : <MessageSquare size={20} className="group-hover:rotate-12 transition-transform relative z-10" />}
-      </button>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={`relative w-12 h-12 md:w-16 md:h-16 ${theme.specialBtn} rounded-[1.8rem] shadow-2xl border flex items-center justify-center hover:scale-110 active:scale-95 transition-all group backdrop-blur-md overflow-hidden`}
+          >
+            <motion.div 
+              className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-[45deg]"
+              animate={{ x: ['-100%', '100%'] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear", delay: 2 }}
+            />
+            {isMenuOpen ? <ChevronDown size={24} /> : <MessageSquare size={20} className="group-hover:rotate-12 transition-transform relative z-10" />}
+          </button>
+        </>
+      )}
     </div>
   );
 };

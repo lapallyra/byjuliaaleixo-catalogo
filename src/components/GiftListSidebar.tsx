@@ -17,6 +17,7 @@ export const GiftListSidebar: React.FC<{
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [listCode, setListCode] = useState<string | null>(null);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   useEffect(() => {
     // Generate code once when list has items and we don't have a code
@@ -36,7 +37,7 @@ export const GiftListSidebar: React.FC<{
     });
     setIsSaving(false);
     if (success) {
-      alert(`Lista salva com sucesso! Código: ${listCode}`);
+      setShowSuccessPopup(true);
     }
   };
 
@@ -53,9 +54,11 @@ export const GiftListSidebar: React.FC<{
 
   const handleCopy = () => {
     handleSave();
-    navigator.clipboard.writeText(generateShareMessage(false));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (listCode) {
+      navigator.clipboard.writeText(listCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -167,6 +170,58 @@ export const GiftListSidebar: React.FC<{
           </div>
         )}
       </motion.aside>
+
+      <AnimatePresence>
+        {showSuccessPopup && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[3000] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative text-center border-2"
+              style={{ borderColor: theme.accentColor }}
+            >
+              <button 
+                onClick={() => setShowSuccessPopup(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/5 transition-all text-gray-400 hover:text-black"
+              >
+                <X size={20} />
+              </button>
+              
+              <div className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center bg-pink-50" style={{ color: theme.accentColor }}>
+                <Gift size={32} />
+              </div>
+              
+              <h3 className="text-xl font-black uppercase tracking-wider mb-4" style={{ color: theme.accentColor }}>
+                Salvamos sua Lista de Presentes.
+              </h3>
+              
+              <p className="text-gray-500 text-sm font-medium leading-relaxed mb-6">
+                Quando precisar pesquise na página inicial utilizando o código que foi gerado exclusivamente para você. A lista ficará ativa por 60 dias.
+              </p>
+              
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl border border-gray-200 mb-6">
+                <span className="text-2xl font-black tracking-[0.2em] text-gray-800">
+                  {listCode}
+                </span>
+              </div>
+              
+              <button 
+                onClick={() => setShowSuccessPopup(false)}
+                className="w-full py-4 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:opacity-90 transition-all shadow-lg shadow-black/10 active:scale-95"
+                style={{ backgroundColor: theme.accentColor }}
+              >
+                Entendi, Obrigado!
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

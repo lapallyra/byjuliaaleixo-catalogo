@@ -51,6 +51,7 @@ service cloud.firestore {
     match /sales/{saleId} {
       // criar pedido público
       allow create: if true;
+      allow get: if true; // allow fetching specific order by ID (code)
 
       // permitir atualização APENAS de campos específicos do pós-venda
       allow update: if isAdmin() || 
@@ -63,8 +64,8 @@ service cloud.firestore {
           "status"
         ]);
 
-      // somente admin pode ler/listar/deletar
-      allow get, list, delete: if isAdmin();
+      // somente admin pode listar/deletar
+      allow list, delete: if isAdmin();
     }
 
     // ----------------------------------------------------

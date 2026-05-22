@@ -15,8 +15,17 @@ export const safeFormat = (date: any, formatStr: string, options?: any) => {
 export const safeFormatISO = (dateStr: string, formatStr: string, options?: any) => {
   try {
     if (!dateStr) return '---';
-    // Append time if only date is provided to avoid timezone shifts
-    const d = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T12:00:00`);
+    
+    let d: Date;
+    if (dateStr.includes('/')) {
+        // Handle dd/mm/yyyy
+        const [day, month, year] = dateStr.split('/');
+        d = new Date(`${year}-${month}-${day}T12:00:00`);
+    } else {
+        // Append time if only date is provided to avoid timezone shifts
+        d = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T12:00:00`);
+    }
+
     if (isNaN(d.getTime())) return '---';
     return format(d, formatStr, options);
   } catch (error) {

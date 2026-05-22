@@ -73,7 +73,7 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({ companyId }) => 
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-3xl font-black uppercase tracking-tighter text-slate-900 italic">Brindes da Roleta</h2>
+          <h2 className="text-3xl font-black uppercase tracking-tighter text-rose-50 italic">Brindes da Roleta</h2>
           <p className="text-[10px] text-rose-500 font-bold uppercase tracking-[0.2em] mt-2">Configure os prêmios que aparecem na roleta pós-pagamento (+R$300)</p>
         </div>
         
@@ -87,7 +87,7 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({ companyId }) => 
             setIsModalOpen(true);
           }}
           disabled={prizes.length >= 7}
-          className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${prizes.length >= 7 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-black text-white hover:scale-105 active:scale-95 shadow-xl shadow-black/10'}`}
+          className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${prizes.length >= 7 ? 'bg-[#2b141e] text-rose-300 cursor-not-allowed' : 'bg-black text-white hover:scale-105 active:scale-95 shadow-xl shadow-black/10'}`}
         >
           <Plus size={16} /> Novo Brinde ({prizes.length}/7)
         </button>
@@ -98,51 +98,51 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({ companyId }) => 
           <motion.div 
             layout
             key={prize.id}
-            className="bg-white border border-rose-50 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl transition-all relative group overflow-hidden"
+            className="bg-[#140b0e] border border-rose-50 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl transition-all relative group overflow-hidden"
           >
             <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity">
                <div className="flex gap-2">
-                  <button onClick={() => { setEditingPrize(prize); setIsModalOpen(true); }} className="p-3 bg-white border border-rose-100 rounded-xl text-rose-300 hover:text-black transition-all">
+                  <button onClick={() => { setEditingPrize(prize); setIsModalOpen(true); }} className="p-3 bg-[#140b0e] border border-[#3e1b29] rounded-xl text-rose-300 hover:text-rose-50 transition-all">
                      <Save size={16} />
                   </button>
-                  <button onClick={() => handleDelete(prize.id)} className="p-3 bg-white border border-rose-100 rounded-xl text-rose-200 hover:text-rose-500 transition-all">
+                  <button onClick={() => handleDelete(prize.id)} className="p-3 bg-[#140b0e] border border-[#3e1b29] rounded-xl text-rose-200 hover:text-rose-500 transition-all">
                      <Trash2 size={16} />
                   </button>
                </div>
             </div>
 
             <div className="flex items-center gap-6 mb-6">
-               <div className="w-20 h-20 rounded-3xl bg-rose-50 border border-rose-100 flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-inner">
+               <div className="w-20 h-20 rounded-3xl bg-[#1f0e16] border border-[#3e1b29] flex items-center justify-center text-4xl shrink-0 overflow-hidden shadow-inner">
                   {prize.image.length > 5 ? (
                     <ImageWithFallback src={prize.image} alt={prize.name} className="w-full h-full object-cover" />
                   ) : prize.image || '🎁'}
                </div>
                <div>
                   <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md mb-2 inline-block ${
-                    prize.type === 'discount' ? 'bg-emerald-50 text-emerald-500' :
+                    prize.type === 'discount' ? 'bg-emerald-950/30 text-emerald-500' :
                     prize.type === 'product' ? 'bg-blue-50 text-blue-500' : 'bg-lilac/10 text-lilac'
                   }`}>
                     {prize.type === 'discount' ? 'Desconto' : prize.type === 'product' ? 'Produto' : 'Especial'}
                   </span>
-                  <h3 className="text-sm font-black uppercase tracking-tight text-slate-900">{prize.name}</h3>
+                  <h3 className="text-sm font-black uppercase tracking-tight text-rose-50">{prize.name}</h3>
                </div>
             </div>
 
             <div className="space-y-4 pt-6 border-t border-rose-50/50">
                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-gray-400">Valor/Texto</span>
-                  <span className="text-slate-900">{prize.value}</span>
+                  <span className="text-rose-300">Valor/Texto</span>
+                  <span className="text-rose-50">{prize.value}</span>
                </div>
                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                  <span className="text-gray-400">Peso (Probabilidade)</span>
-                  <span className="text-slate-900">{prize.weight}</span>
+                  <span className="text-rose-300">Peso (Probabilidade)</span>
+                  <span className="text-rose-50">{prize.weight}</span>
                </div>
             </div>
           </motion.div>
         ))}
 
         {prizes.length === 0 && (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center text-gray-300 border-2 border-dashed border-rose-50 rounded-[3rem]">
+          <div className="col-span-full py-20 flex flex-col items-center justify-center text-rose-400 border-2 border-dashed border-rose-50 rounded-[3rem]">
             <Gift size={48} className="mb-4 opacity-50" />
             <p className="text-[10px] font-black uppercase tracking-[0.3em]">Nenhum brinde cadastrado</p>
           </div>
@@ -153,7 +153,7 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({ companyId }) => 
         {isModalOpen && (
           <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[3rem] p-10 shadow-3xl overflow-hidden flex flex-col">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-[#140b0e] rounded-[3rem] p-10 shadow-3xl overflow-hidden flex flex-col">
               <header className="flex justify-between items-center mb-10">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-[#FF007F]/10 text-[#FF007F] flex items-center justify-center border border-[#FF007F]/20">
@@ -164,25 +164,36 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({ companyId }) => 
                     <p className="text-[9px] text-[#FF007F] font-bold uppercase tracking-widest mt-1">Roleta de Prêmios Premium</p>
                   </div>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className="p-3 bg-rose-50 text-rose-300 rounded-2xl hover:text-rose-500 transition-all"><X size={24} /></button>
+                <button onClick={() => setIsModalOpen(false)} className="p-3 bg-[#1f0e16] text-rose-300 rounded-2xl hover:text-rose-500 transition-all"><X size={24} /></button>
               </header>
 
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[9px] font-black uppercase tracking-widest text-[#FF007F] ml-4">Nome do Brinde</label>
                   <input 
-                    className="w-full bg-rose-50/30 border-2 border-transparent focus:border-rose-100 rounded-[2rem] px-8 py-4 outline-none text-sm font-bold text-slate-800 transition-all" 
+                    className="w-full bg-[#1f0e16]/30 border-2 border-transparent focus:border-[#3e1b29] rounded-[2rem] px-8 py-4 outline-none text-sm font-bold text-slate-800 transition-all" 
                     placeholder="Ex: 10% de Desconto" 
                     value={editingPrize?.name || ''} 
                     onChange={e => setEditingPrize({...editingPrize, name: e.target.value})} 
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div className="space-y-2">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-[#FF007F] ml-4">Tipo</label>
+                <div className="space-y-2">
+                   <label className="text-[9px] font-black uppercase tracking-widest text-[#FF007F] ml-4">Peso (Sorte)</label>
+                   <input 
+                     type="number"
+                     className="w-full bg-[#1f0e16]/30 border-2 border-transparent focus:border-[#3e1b29] rounded-[2rem] px-8 py-4 outline-none text-sm font-bold text-slate-800 transition-all" 
+                     placeholder="1" 
+                     value={editingPrize?.weight || 1} 
+                     onChange={e => setEditingPrize({...editingPrize, weight: Number(e.target.value)})} 
+                   />
+                </div>
+
+                <div className="pt-4 border-t border-rose-50 opacity-40 hover:opacity-100 transition-opacity">
+                   <p className="text-[8px] font-black uppercase tracking-widest text-center mb-4">Configurações Avançadas</p>
+                   <div className="grid grid-cols-2 gap-4">
                       <select 
-                        className="w-full bg-rose-50/30 border-2 border-transparent focus:border-rose-100 rounded-[2rem] px-7 py-4 outline-none text-sm font-bold text-slate-800 transition-all appearance-none"
+                        className="w-full bg-[#1f0e16]/20 border border-[#3e1b29] rounded-xl px-4 py-2 outline-none text-[10px] font-bold text-slate-800"
                         value={editingPrize?.type || 'special'}
                         onChange={e => setEditingPrize({...editingPrize, type: e.target.value as any})}
                       >
@@ -190,37 +201,13 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({ companyId }) => 
                         <option value="product">🎁 Produto</option>
                         <option value="special">✨ Especial</option>
                       </select>
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-[#FF007F] ml-4">Peso (Sorte)</label>
                       <input 
-                        type="number"
-                        className="w-full bg-rose-50/30 border-2 border-transparent focus:border-rose-100 rounded-[2rem] px-8 py-4 outline-none text-sm font-bold text-slate-800 transition-all" 
-                        placeholder="1" 
-                        value={editingPrize?.weight || 1} 
-                        onChange={e => setEditingPrize({...editingPrize, weight: Number(e.target.value)})} 
+                        className="w-full bg-[#1f0e16]/20 border border-[#3e1b29] rounded-xl px-4 py-2 outline-none text-[10px] font-bold text-slate-800" 
+                        placeholder="Valor/Código" 
+                        value={editingPrize?.value || ''} 
+                        onChange={e => setEditingPrize({...editingPrize, value: e.target.value})} 
                       />
                    </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-[#FF007F] ml-4">Valor/Código/Texto que o cliente verá</label>
-                  <input 
-                    className="w-full bg-rose-50/30 border-2 border-transparent focus:border-rose-100 rounded-[2rem] px-8 py-4 outline-none text-sm font-bold text-slate-800 transition-all" 
-                    placeholder="Ex: CUPOM10 ou Mimo físico na entrega" 
-                    value={editingPrize?.value || ''} 
-                    onChange={e => setEditingPrize({...editingPrize, value: e.target.value})} 
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-[#FF007F] ml-4">URL Imagem ou Emoji</label>
-                  <input 
-                    className="w-full bg-rose-50/30 border-2 border-transparent focus:border-rose-100 rounded-[2rem] px-8 py-4 outline-none text-sm font-bold text-slate-800 transition-all" 
-                    placeholder="Ex: 🎁 ou https://imagem.png" 
-                    value={editingPrize?.image || ''} 
-                    onChange={e => setEditingPrize({...editingPrize, image: e.target.value})} 
-                  />
                 </div>
 
                 <button 

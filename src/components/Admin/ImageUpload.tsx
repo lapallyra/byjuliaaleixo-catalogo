@@ -94,11 +94,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
   return (
     <div className="space-y-2">
-      <label className="text-[10px] uppercase font-black text-gray-400 ml-2">{label}</label>
+      <label className="text-[10px] uppercase font-black text-rose-300 ml-2">{label}</label>
       
       <div 
-        className={`relative rounded-3xl border-2 border-dashed transition-all overflow-hidden flex items-center justify-center min-h-[160px] bg-white ${
-          currentUrl ? 'border-lilac/30' : 'border-gray-100 hover:border-lilac/30'
+        className={`relative rounded-3xl border-2 border-dashed transition-all overflow-hidden flex items-center justify-center min-h-[160px] bg-[#140b0e] ${
+          currentUrl ? 'border-lilac/30' : 'border-rose-900/30 hover:border-lilac/30'
         }`}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
@@ -130,16 +130,16 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               <Upload size={24} />
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-black text-black">Clique ou arraste a imagem</p>
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">PNG, JPG ou WEBP até 5MB</p>
+              <p className="text-xs font-black text-rose-50">Clique ou arraste a imagem</p>
+              <p className="text-[9px] font-bold text-rose-300 uppercase tracking-widest">PNG, JPG ou WEBP até 5MB</p>
             </div>
           </div>
         )}
 
         {isUploading && (
-          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-10">
+          <div className="absolute inset-0 bg-[#140b0e]/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-10">
             <Loader2 size={24} className="text-lilac animate-spin mb-4" />
-            <div className="w-full max-w-[200px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="w-full max-w-[200px] h-1.5 bg-[#2b141e] rounded-full overflow-hidden">
               <div 
                 className="h-full bg-lilac transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}

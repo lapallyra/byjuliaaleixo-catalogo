@@ -89,8 +89,8 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
           const realNotif: SaleNotification = {
             id: newest.id,
             customerName: newest.customerName,
-            productName: newest.items?.[0]?.product_name || 'um produto',
-            timeAgo: 'Agora mesmo',
+            productName: `comprou ${newest.items?.[0]?.product_name || 'um produto'}`,
+            timeAgo: 'nesse momento',
             companyId: newest.companyId
           };
           setNotification(realNotif);
@@ -196,7 +196,7 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
                 <span className={`font-black uppercase tracking-wider ${theme.textPrimary}`}>{notification.customerName}</span> {notification.productName}
               </p>
               <p className={`text-[8px] uppercase tracking-[0.2em] font-black mt-1.5 opacity-60 ${theme.textVeryMuted}`}>
-                {notification.timeAgo}
+                {notification.timeAgo.includes('segundo') ? `há ${notification.timeAgo}` : notification.timeAgo}
               </p>
             </div>
             

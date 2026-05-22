@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Search, Gift } from 'lucide-react';
+import { ShoppingCart, Search, Gift } from 'lucide-react';
 import { BotaoVoltar } from '../BotaoVoltar';
 import { CompanyId } from '../../types';
 import { FestiveBanner } from './FestiveBanner';
@@ -44,16 +44,30 @@ export const CatalogHeader: React.FC<{
               <motion.div 
                  initial={{ opacity: 0, scale: 0.8 }}
                  animate={{ opacity: 1, scale: 1 }}
+                 whileHover={{ scale: 1.05, y: -4 }}
+                 whileTap={{ scale: 0.97, y: 0 }}
                  transition={{ duration: 0.8, ease: "easeOut" }}
                  onClick={onLogoClick}
-                 className={`w-32 h-32 md:w-40 md:h-40 ${theme.cardBg} shadow-2xl rounded-full flex items-center justify-center relative transition-all duration-700 overflow-hidden cursor-pointer`}
-                 style={{ border: `2px solid ${theme.accentColor}33` }}
+                 className={`w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center relative overflow-hidden cursor-pointer backdrop-blur-xl group`}
+                 style={{ 
+                   background: isMimada && theme.primaryColor !== '#FFFFFF' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)',
+                   borderTop: `1px solid rgba(255,255,255,0.3)`,
+                   borderLeft: `1px solid rgba(255,255,255,0.1)`,
+                   borderRight: `1px solid rgba(0,0,0,0.05)`,
+                   borderBottom: `1px solid rgba(0,0,0,0.1)`,
+                   boxShadow: `
+                     inset 0 6px 16px rgba(255,255,255,0.2),
+                     inset 0 -6px 16px rgba(0,0,0,0.05),
+                     0 10px 30px -10px ${theme.accentColor}30,
+                     0 0 25px -5px ${theme.accentColor}15
+                   `
+                 }}
               >
                 {logoUrl ? (
                   <ImageWithFallback
                     src={logoUrl}
                     alt={companyName}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     referrerPolicy="no-referrer"
                     loading="eager"
                   />
@@ -63,7 +77,7 @@ export const CatalogHeader: React.FC<{
                   </div>
                 )}
                 {/* Brand Glow Overlay */}
-                <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-30" style={{ backgroundColor: theme.accentColor }} />
+                <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-20 group-hover:opacity-40 transition-opacity duration-500" style={{ backgroundColor: theme.accentColor }} />
               </motion.div>
               
               <div className="flex flex-col items-center md:items-start text-center md:text-left">

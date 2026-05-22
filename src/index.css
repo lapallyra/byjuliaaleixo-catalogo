@@ -1,8 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Pinyon+Script&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Allura&family=Imperial+Script&display=swap');
-@import url('https://fonts.cdnfonts.com/css/olivia');
-@import url('https://fonts.cdnfonts.com/css/sofia-carolyn');
-@import url('https://fonts.cdnfonts.com/css/beauty');
 @import "tailwindcss";
+
+@font-face {
+  font-family: 'Sofia Carolyn';
+  src: url('https://fonts.cdnfonts.com/s/72856/SofiaCarolyn.woff') format('woff');
+  font-display: block;
+}
 
 html {
   scroll-behavior: smooth;
@@ -28,7 +30,8 @@ html {
 
 @layer utilities {
   .font-fancy {
-    font-family: var(--font-elegant);
+    font-family: var(--font-hand);
+    font-weight: 400;
   }
   .font-beauty {
     font-family: 'Beauty', 'Great Vibes', cursive;
@@ -41,13 +44,6 @@ html {
   }
   .font-number {
     font-family: var(--font-number);
-  }
-}
-
-@layer font-face {
-  @font-face {
-    font-family: 'Sofia Carolyn';
-    src: url('https://fonts.cdnfonts.com/s/72856/SofiaCarolyn.woff') format('woff');
   }
 }
 
@@ -284,13 +280,22 @@ html {
     --theme-text: #ffffff;
   }
 
-  /* Admin Dashboard Premium Theme - Light Version */
+  /* Admin Dashboard Premium Theme - Dark Edition */
   .admin-bg {
-    background-color: #fdf2f8; /* pink-50 */
+    background-color: #0b0507; /* dark wine/black */
     background-image: 
-      radial-gradient(at 0% 0%, rgba(251, 113, 133, 0.1) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(244, 114, 182, 0.05) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(198, 166, 100, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(131, 24, 67, 0.15) 0px, transparent 50%);
   }
+
+  body:has(.feminine-admin), html:has(.feminine-admin) {
+    background-color: #0b0507 !important;
+  }
+
+  .feminine-admin {
+    background-color: #0b0507;
+  }
+
 
   .feminine-admin svg.lucide {
     stroke-width: 1.2 !important;
@@ -309,7 +314,7 @@ html {
   }
   
   .feminine-admin .text-slate-900 {
-    color: #831843 !important; /* pink-900 */
+    color: #fecdd3 !important; /* rose-200 */
   }
 
   .feminine-admin h1, .feminine-admin h2, .feminine-admin h3 {
@@ -318,47 +323,47 @@ html {
   }
 
   .feminine-admin .bg-slate-900 {
-    background-color: #831843 !important;
+    background-color: #3e1b29 !important;
   }
 
   .feminine-admin.bg-slate-950 {
-    background-color: #4c1d95 !important; /* deep purple/pink */
+    background-color: #0b0507 !important; /* dark wine/black */
   }
   
   .feminine-admin .text-slate-400 {
-    color: #f472b6 !important; /* pink-400 */
+    color: #fda4af !important; /* rose-300 */
   }
 
   .feminine-admin .text-slate-500 {
-    color: #f472b6 !important; /* pink-400 */
-  }
-  
-  .feminine-admin .text-slate-300 {
-    color: #fbcfe8 !important; /* pink-200 */
-  }
-  
-  .feminine-admin .border-slate-100 {
-    border-color: #fbcfe8 !important; /* pink-200 */
-  }
-  
-  .feminine-admin .bg-slate-100 {
-    background-color: #fce7f3 !important; /* pink-100 */
-  }
-
-  .feminine-admin .text-gold {
-    color: #f472b6 !important;
-  }
-
-  .feminine-admin .text-lilac {
     color: #fb7185 !important; /* rose-400 */
   }
   
+  .feminine-admin .text-slate-300 {
+    color: #fecdd3 !important; /* rose-200 */
+  }
+  
+  .feminine-admin .border-slate-100 {
+    border-color: #3e1b29 !important; /* dark rose */
+  }
+  
+  .feminine-admin .bg-slate-100 {
+    background-color: #2b141e !important;
+  }
+
+  .feminine-admin .text-gold {
+    color: #C6A664 !important;
+  }
+
+  .feminine-admin .text-lilac {
+    color: #C6A664 !important; /* Gold for accents */
+  }
+  
   .feminine-admin .bg-lilac {
-    background-color: #ffe4e6 !important; /* rose-100 */
+    background-color: #3e1b29 !important; /* Dark wine */
   }
 
   .feminine-admin .border-lilac {
-    border-color: #fecdd3 !important; /* rose-200 */
+    border-color: #C6A664 !important; /* Gold border */
   }
 
   .feminine-admin * {

@@ -91,7 +91,7 @@ export const themes: Record<string, Theme> = {
     specialHighlight: 'text-[#D4AF37]',
     specialBg: 'bg-[#D4AF37]/10',
     specialBorder: 'border-[#D4AF37]/30',
-    specialBtn: 'bg-white/5 border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37]/10',
+    specialBtn: 'bg-[#D4AF37] border-[#D4AF37] text-[#56070c] hover:bg-[#D4AF37]/90',
     specialAddBtn: 'bg-white/10 border-[#D4AF37]/30 text-white hover:bg-white/20',
     cartBadge: 'bg-[#D4AF37] text-[#56070c] border-[#56070c]',
     gradientText: 'text-[#D4AF37]',

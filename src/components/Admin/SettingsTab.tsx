@@ -126,7 +126,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
     }));
   };
 
-  if (loading) return <div className="p-20 text-center animate-pulse text-gray-400 font-bold uppercase tracking-widest text-[9px]">Carregando Configurações...</div>;
+  if (loading) return <div className="p-20 text-center animate-pulse text-rose-300 font-bold uppercase tracking-widest text-[9px]">Carregando Configurações...</div>;
 
   return (
     <div className="flex flex-col lg:flex-row gap-10 animate-in fade-in slide-in-from-left-4 duration-500 pb-20">
@@ -140,12 +140,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           { id: 'marketing', label: 'Pixel Facebook', icon: Facebook },
           { id: 'whatsapp', label: 'WhatsApp', icon: Phone },
           { id: 'receipt', label: 'Comprovantes', icon: FileText },
-          { id: 'roulette', label: 'Roleta de Brindes', icon: Gift },
         ].map(item => (
           <button
             key={item.id}
             onClick={() => setActiveSubTab(item.id as any)}
-            className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeSubTab === item.id ? 'bg-black text-white shadow-lg' : 'bg-white text-gray-400 border border-lilac/20 hover:border-lilac hover:text-black'}`}
+            className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeSubTab === item.id ? 'bg-black text-white shadow-lg' : 'bg-[#140b0e] text-rose-300 border border-lilac/20 hover:border-lilac hover:text-rose-50'}`}
           >
             <div className="flex items-center gap-3">
               <item.icon size={18} />
@@ -157,13 +156,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 p-8 md:p-12 rounded-[2.5rem] bg-white border border-lilac/20 shadow-sm min-h-[600px]">
+      <div className="flex-1 p-8 md:p-12 rounded-[2.5rem] bg-[#140b0e] border border-lilac/20 shadow-sm min-h-[600px]">
         
         {activeSubTab === 'brand' && (
           <div className="space-y-12">
              <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-lilac/10 text-lilac"><Store size={24} /></div>
-                <h3 className="text-2xl font-black text-black uppercase tracking-widest">Gestão de Marcas</h3>
+                <h3 className="text-2xl font-black text-rose-50 uppercase tracking-widest">Gestão de Marcas</h3>
              </div>
 
              <div className="grid grid-cols-1 gap-12">
@@ -174,14 +173,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 ] as const).map((atl) => {
                   const atlSettings = allAteliers[atl.id];
                   return (
-                    <div key={atl.id} className="bg-white/50 border border-lilac/10 rounded-[3rem] p-8 md:p-12 space-y-10 relative overflow-hidden group">
+                    <div key={atl.id} className="bg-[#140b0e]/50 border border-lilac/10 rounded-[3rem] p-8 md:p-12 space-y-10 relative overflow-hidden group">
                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                           <Store size={120} />
                        </div>
                        
                        <div className="flex items-center gap-4 relative z-10">
                           <div className={`w-3 h-3 rounded-full bg-current ${atl.color}`} />
-                          <h4 className="text-lg font-black uppercase tracking-tight text-black">{atl.label}</h4>
+                          <h4 className="text-lg font-black uppercase tracking-tight text-rose-50">{atl.label}</h4>
                        </div>
 
                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-10 relative z-10">
@@ -206,18 +205,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                           {/* Info Section */}
                           <div className="space-y-6">
                              <div className="space-y-2">
-                                <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Slogan / Descrição</label>
+                                <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Slogan / Descrição</label>
                                 <textarea 
                                   value={atlSettings.store_slogan || ''}
                                   onChange={e => updateMultiField(atl.id, 'store_slogan', e.target.value)}
-                                  className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-24 resize-none shadow-sm" 
+                                  className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-24 resize-none shadow-sm" 
                                   placeholder="Ex: Transformando momentos em memórias..." 
                                 />
                              </div>
 
                              <div className="grid grid-cols-3 gap-4 pt-4">
                                <div className="space-y-2">
-                                 <label className="text-[9px] uppercase font-black text-gray-400">Cor Principal</label>
+                                 <label className="text-[9px] uppercase font-black text-rose-300">Cor Principal</label>
                                  <div className="flex gap-2">
                                    <input 
                                      type="color" 
@@ -229,12 +228,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                                      type="text"
                                      value={atlSettings.theme_primary_color || '#ffffff'}
                                      onChange={e => updateMultiField(atl.id, 'theme_primary_color', e.target.value)}
-                                     className="min-w-0 flex-1 bg-white border border-lilac/20 rounded-lg px-2 text-[10px] font-mono outline-none"
+                                     className="min-w-0 flex-1 bg-[#140b0e] border border-lilac/20 rounded-lg px-2 text-[10px] font-mono outline-none"
                                    />
                                  </div>
                                </div>
                                <div className="space-y-2">
-                                 <label className="text-[9px] uppercase font-black text-gray-400">Cor Detalhes</label>
+                                 <label className="text-[9px] uppercase font-black text-rose-300">Cor Detalhes</label>
                                  <div className="flex gap-2">
                                    <input 
                                      type="color" 
@@ -246,12 +245,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                                      type="text"
                                      value={atlSettings.theme_accent_color || '#FF007F'}
                                      onChange={e => updateMultiField(atl.id, 'theme_accent_color', e.target.value)}
-                                     className="min-w-0 flex-1 bg-white border border-lilac/20 rounded-lg px-2 text-[10px] font-mono outline-none"
+                                     className="min-w-0 flex-1 bg-[#140b0e] border border-lilac/20 rounded-lg px-2 text-[10px] font-mono outline-none"
                                    />
                                  </div>
                                </div>
                                <div className="space-y-2">
-                                 <label className="text-[9px] uppercase font-black text-gray-400">Cor Info/Texto</label>
+                                 <label className="text-[9px] uppercase font-black text-rose-300">Cor Info/Texto</label>
                                  <div className="flex gap-2">
                                    <input 
                                      type="color" 
@@ -263,7 +262,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                                      type="text"
                                      value={atlSettings.theme_text_color || '#000000'}
                                      onChange={e => updateMultiField(atl.id, 'theme_text_color', e.target.value)}
-                                     className="min-w-0 flex-1 bg-white border border-lilac/20 rounded-lg px-2 text-[10px] font-mono outline-none"
+                                     className="min-w-0 flex-1 bg-[#140b0e] border border-lilac/20 rounded-lg px-2 text-[10px] font-mono outline-none"
                                    />
                                  </div>
                                </div>
@@ -281,7 +280,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           <div className="space-y-10">
              <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600"><CreditCard size={24} /></div>
-                <h3 className="text-2xl font-black text-black uppercase tracking-widest">Configurações de Venda</h3>
+                <h3 className="text-2xl font-black text-rose-50 uppercase tracking-widest">Configurações de Venda</h3>
              </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -294,11 +293,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                      onRemove={() => updateField('store_qrcode', '')}
                    />
                    <div className="space-y-1.5 max-w-full pl-1">
-                      <label className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Ou insira o Link Manual</label>
+                      <label className="text-[8px] font-black text-rose-400 uppercase tracking-widest">Ou insira o Link Manual</label>
                       <input 
                        type="text" 
                        placeholder="Link da imagem..." 
-                       className="w-full bg-gray-100/50 border border-lilac/5 rounded-xl px-4 py-2 text-[10px] outline-none font-bold focus:border-lilac transition-all"
+                       className="w-full bg-[#2b141e]/50 border border-lilac/5 rounded-xl px-4 py-2 text-[10px] outline-none font-bold focus:border-lilac transition-all"
                        value={settings.store_qrcode || ''}
                        onChange={e => updateField('store_qrcode', e.target.value)}
                      />
@@ -306,34 +305,34 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 </div>
                 <div className="space-y-6">
                     <div className="space-y-4 p-6 rounded-[2rem] bg-lilac/5 border border-lilac/10 mb-2">
-                       <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Meta de Vendas Mensal (R$)</label>
+                       <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Meta de Vendas Mensal (R$)</label>
                        <input 
                          type="number" 
                          value={settings.monthly_goal || ''}
                          onChange={e => updateField('monthly_goal', Number(e.target.value))}
-                         className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-black outline-none focus:border-lilac transition-all shadow-sm" 
+                         className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-black outline-none focus:border-lilac transition-all shadow-sm" 
                          placeholder="Ex: 10000" 
                        />
-                       <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest ml-2 leading-relaxed">Esta meta será usada no termômetro do dashboard.</p>
+                       <p className="text-[8px] text-rose-300 font-bold uppercase tracking-widest ml-2 leading-relaxed">Esta meta será usada no termômetro do dashboard.</p>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Chave PIX</label>
+                      <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Chave PIX</label>
                       <input 
                         type="text" 
                         value={settings.store_pix_key || ''}
                         onChange={e => updateField('store_pix_key', e.target.value)}
-                        className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-lilac transition-all" 
+                        className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-lilac transition-all" 
                         placeholder="Ex: 00.000.000/0001-00" 
                       />
                    </div>
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Nome do Beneficiário</label>
+                      <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Nome do Beneficiário</label>
                       <input 
                         type="text" 
                         value={settings.store_pix_name || ''}
                         onChange={e => updateField('store_pix_name', e.target.value)}
-                        className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all" 
+                        className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all" 
                         placeholder="Ex: Ateliê Sob Medida LTDA" 
                       />
                    </div>
@@ -346,15 +345,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           <div className="space-y-10">
              <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-amber-100 text-amber-600"><Calculator size={24} /></div>
-                <h3 className="text-2xl font-black text-black uppercase tracking-widest">Base de Precificação</h3>
+                <h3 className="text-2xl font-black text-rose-50 uppercase tracking-widest">Base de Precificação</h3>
              </div>
              
-             <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest leading-relaxed">
-               Estes valores globais serão usados pela Inteligência do Sistema na hora de sugerir o Preço de Venda do seus produtos baseando-se no tempo gasto e custo dos insumos.
+             <p className="text-[10px] uppercase font-black text-rose-300 tracking-widest leading-relaxed">
+                Estes valores globais serão usados pela Inteligência do Sistema na hora de sugerir o Preço de Venda do seus produtos baseando-se no tempo gasto e custo dos insumos.
              </p>
 
-             
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+             <div className="space-y-12">
                 <DynamicPricingList 
                   title="Custos Fixos (Mensal)" 
                   subtitle="Água, luz, assinaturas, aluguel..."
@@ -394,19 +392,19 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           <div className="space-y-8">
              <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-blue-100 text-blue-600"><Facebook size={24} /></div>
-                <h3 className="text-2xl font-black text-black uppercase tracking-widest">Marketing Digital</h3>
+                <h3 className="text-2xl font-black text-rose-50 uppercase tracking-widest">Marketing Digital</h3>
              </div>
              
              <div className="p-8 rounded-3xl bg-blue-50 border border-blue-100 space-y-4">
                 <p className="text-[10px] text-blue-400 uppercase font-bold leading-relaxed tracking-widest">Insira o ID do seu Pixel do Facebook para rastreamento.</p>
                 <div className="space-y-2">
-                   <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Pixel ID</label>
+                   <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Pixel ID</label>
                    <input 
                     type="text" 
                     value={settings.facebook_pixel || ''}
                     onChange={e => updateField('facebook_pixel', e.target.value)}
                     placeholder="Ex: 1234567890" 
-                    className="w-full bg-white border border-blue-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-blue-500 transition-all shadow-sm" 
+                    className="w-full bg-[#140b0e] border border-blue-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-blue-500 transition-all shadow-sm" 
                    />
                 </div>
              </div>
@@ -417,18 +415,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           <div className="space-y-10">
              <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600"><Phone size={24} /></div>
-                <h3 className="text-2xl font-black text-black uppercase tracking-widest">WhatsApp & Mensagens</h3>
+                <h3 className="text-2xl font-black text-rose-50 uppercase tracking-widest">WhatsApp & Mensagens</h3>
              </div>
 
-             <div className="p-8 rounded-3xl bg-emerald-50 border border-emerald-100 space-y-8">
+             <div className="p-8 rounded-3xl bg-emerald-950/30 border border-emerald-100 space-y-8">
                 <div className="space-y-2">
-                   <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Número do WhatsApp (Com DDD)</label>
+                   <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Número do WhatsApp (Com DDD)</label>
                    <input 
                     type="text" 
                     value={settings.store_contact || ''}
                     onChange={e => updateField('store_contact', e.target.value)}
                     placeholder="(44) 9 9999-9999" 
-                    className="w-full bg-white border border-emerald-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-emerald-500 transition-all shadow-sm" 
+                    className="w-full bg-[#140b0e] border border-emerald-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-emerald-500 transition-all shadow-sm" 
                    />
                 </div>
              </div>
@@ -436,22 +434,22 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="space-y-6">
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Mensagem do Botão WhatsApp (Loja)</label>
+                      <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Mensagem do Botão WhatsApp (Loja)</label>
                       <textarea 
                         value={settings.whatsapp_main_message || ''}
                         onChange={e => updateField('whatsapp_main_message', e.target.value)}
-                        className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-40 resize-none" 
+                        className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-40 resize-none" 
                         placeholder="Olá! Vi a sua loja e gostaria de tirar uma dúvida..." 
                       />
                    </div>
                 </div>
                 <div className="space-y-6">
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Mensagem de Interesse (Produto)</label>
+                      <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Mensagem de Interesse (Produto)</label>
                       <textarea 
                         value={settings.whatsapp_product_message || ''}
                         onChange={e => updateField('whatsapp_product_message', e.target.value)}
-                        className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-40 resize-none" 
+                        className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-40 resize-none" 
                         placeholder="Olá! Tenho interesse no {product}..." 
                       />
                    </div>
@@ -464,57 +462,57 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           <div className="space-y-10">
              <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-amber-100 text-amber-600"><FileText size={24} /></div>
-                <h3 className="text-2xl font-black text-black uppercase tracking-widest">Textos dos Comprovantes</h3>
+                <h3 className="text-2xl font-black text-rose-50 uppercase tracking-widest">Textos dos Comprovantes</h3>
              </div>
 
              <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
                 <div className="space-y-8">
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Aviso Legal (Cupom)</label>
+                      <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Aviso Legal (Cupom)</label>
                       <textarea 
                         value={settings.receipt_footer || ''}
                         onChange={e => updateField('receipt_footer', e.target.value)}
-                        className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-32 resize-none" 
+                        className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-32 resize-none" 
                       />
                    </div>
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Aviso Legal (Orçamento)</label>
+                      <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Aviso Legal (Orçamento)</label>
                       <textarea 
                         value={settings.quote_footer || ''}
                         onChange={e => updateField('quote_footer', e.target.value)}
-                        className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-32 resize-none" 
+                        className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-32 resize-none" 
                       />
                    </div>
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Mensagem do Comprovante (Para todos os ateliês)</label>
+                      <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Mensagem do Comprovante (Para todos os ateliês)</label>
                       <textarea 
                         value={settings.receipt_message || ''}
                         onChange={e => updateField('receipt_message', e.target.value)}
-                        className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-24 resize-none"
+                        className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-24 resize-none"
                         placeholder="Ex: Obrigado pela sua compra. Seu pedido foi registrado com sucesso."
                       />
                    </div>
                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Mensagem do Cupom (Para todos os ateliês)</label>
+                      <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Mensagem do Cupom (Para todos os ateliês)</label>
                       <textarea 
                         value={settings.coupon_message || ''}
                         onChange={e => updateField('coupon_message', e.target.value)}
-                        className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-24 resize-none"
+                        className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-24 resize-none"
                         placeholder="Ex: Este não é um documento fiscal. Pedido realizado com carinho."
                       />
                    </div>
                 </div>
 
                 <div className="space-y-4">
-                   <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest pl-2">Dica de Variáveis</p>
-                   <div className="p-6 rounded-[2rem] bg-white border border-lilac/10 space-y-4">
-                      <p className="text-[10px] text-gray-400 leading-relaxed font-bold">Use as tags abaixo p/ preencher os dados automaticamente:</p>
+                   <p className="text-[10px] uppercase font-black text-rose-300 tracking-widest pl-2">Dica de Variáveis</p>
+                   <div className="p-6 rounded-[2rem] bg-[#140b0e] border border-lilac/10 space-y-4">
+                      <p className="text-[10px] text-rose-300 leading-relaxed font-bold">Use as tags abaixo p/ preencher os dados automaticamente:</p>
                       <div className="grid grid-cols-2 gap-2 text-[8px] font-black uppercase tracking-wider">
-                         <span className="p-2 bg-white rounded-lg border border-lilac/5">{"{ateliê}"}</span>
-                         <span className="p-2 bg-white rounded-lg border border-lilac/5">{"{cliente}"}</span>
-                         <span className="p-2 bg-white rounded-lg border border-lilac/5">{"{pedido}"}</span>
-                         <span className="p-2 bg-white rounded-lg border border-lilac/5">{"{total}"}</span>
-                         <span className="p-2 bg-white rounded-lg border border-lilac/5">{"{data}"}</span>
+                         <span className="p-2 bg-[#140b0e] rounded-lg border border-lilac/5">{"{ateliê}"}</span>
+                         <span className="p-2 bg-[#140b0e] rounded-lg border border-lilac/5">{"{cliente}"}</span>
+                         <span className="p-2 bg-[#140b0e] rounded-lg border border-lilac/5">{"{pedido}"}</span>
+                         <span className="p-2 bg-[#140b0e] rounded-lg border border-lilac/5">{"{total}"}</span>
+                         <span className="p-2 bg-[#140b0e] rounded-lg border border-lilac/5">{"{data}"}</span>
                       </div>
                    </div>
                 </div>
@@ -526,18 +524,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           <div className="space-y-10">
              <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-purple-100 text-purple-600"><Gift size={24} /></div>
-                <h3 className="text-2xl font-black text-black uppercase tracking-widest">Roleta de Brindes</h3>
+                <h3 className="text-2xl font-black text-rose-50 uppercase tracking-widest">Roleta de Brindes</h3>
              </div>
              
-             <div className="p-6 rounded-2xl bg-white border border-lilac/10">
+             <div className="p-6 rounded-2xl bg-[#140b0e] border border-lilac/10">
                <p className="text-xs text-gray-500 mb-6 uppercase tracking-widest font-black">
                  Configure exatamente 10 opções para a roleta. Ela será exibida no final de compras a partir de R$ 300,00.
                </p>
                
                <div className="space-y-4">
                  {(settings.roulette_prizes || Array.from({length: 10}).map((_, i) => ({ id: `prize-${i}`, name: `Brinde ${i+1}`, active: true, weight: 10 }))).map((prize, idx) => (
-                   <div key={prize.id} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-lilac/20 shadow-sm">
-                     <span className="w-6 font-mono font-bold text-gray-400">{idx + 1}.</span>
+                   <div key={prize.id} className="flex items-center gap-4 p-4 bg-[#140b0e] rounded-xl border border-lilac/20 shadow-sm">
+                     <span className="w-6 font-mono font-bold text-rose-300">{idx + 1}.</span>
                      <input 
                        type="text"
                        value={prize.name}
@@ -546,12 +544,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                          newPrizes[idx].name = e.target.value;
                          updateField('roulette_prizes', newPrizes);
                        }}
-                       className="flex-1 bg-white border border-lilac/20 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-lilac"
+                       className="flex-1 bg-[#140b0e] border border-lilac/20 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-lilac"
                        placeholder="Ex: 10% de Desconto, Brinde Surpresa..."
                      />
                      
                      <div className="flex items-center gap-2">
-                       <label className="text-[10px] uppercase font-black text-gray-400">Peso (1 a 100):</label>
+                       <label className="text-[10px] uppercase font-black text-rose-300">Peso (1 a 100):</label>
                        <input 
                          type="number"
                          min="1" max="100"
@@ -561,7 +559,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                            newPrizes[idx].weight = Number(e.target.value);
                            updateField('roulette_prizes', newPrizes);
                          }}
-                         className="w-16 bg-white border border-lilac/20 rounded-xl px-2 py-3 text-xs font-bold outline-none focus:border-lilac text-center"
+                         className="w-16 bg-[#140b0e] border border-lilac/20 rounded-xl px-2 py-3 text-xs font-bold outline-none focus:border-lilac text-center"
                        />
                      </div>
                      
@@ -571,7 +569,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                          newPrizes[idx].active = !newPrizes[idx].active;
                          updateField('roulette_prizes', newPrizes);
                        }}
-                       className={`w-24 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${prize.active ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}
+                       className={`w-24 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${prize.active ? 'bg-emerald-100 text-emerald-600' : 'bg-[#2b141e] text-rose-600'}`}
                      >
                        {prize.active ? 'Ativo' : 'Inativo'}
                      </button>
@@ -596,16 +594,16 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
         {/* Quick Lite Editor Modal */}
         {showEditor && tempLogo && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-             <div className="bg-white rounded-[3rem] w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-white/50">
+             <div className="bg-[#140b0e] rounded-[3rem] w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                <div className="p-8 border-b border-rose-900/30 flex justify-between items-center bg-[#140b0e]/50">
                    <div className="flex items-center gap-4">
                       <div className="p-3 rounded-2xl bg-black text-white"><Scissors size={20} /></div>
                       <div>
-                        <h4 className="font-black text-black uppercase tracking-widest">Ajustar Logo</h4>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Refine a posição e escala da sua marca</p>
+                        <h4 className="font-black text-rose-50 uppercase tracking-widest">Ajustar Logo</h4>
+                        <p className="text-[9px] font-bold text-rose-300 uppercase tracking-widest mt-1">Refine a posição e escala da sua marca</p>
                       </div>
                    </div>
-                   <button onClick={() => { setShowEditor(false); setEditingAtelierId(null); }} className="p-3 rounded-2xl hover:bg-gray-100 transition-colors text-gray-400">
+                   <button onClick={() => { setShowEditor(false); setEditingAtelierId(null); }} className="p-3 rounded-2xl hover:bg-[#2b141e] transition-colors text-rose-300">
                       <CloseIcon size={24} />
                    </button>
                 </div>
@@ -620,7 +618,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   return (
                     <>
                       <div className="p-12 flex flex-col items-center gap-10">
-                          <div className="relative w-72 h-72 rounded-[2rem] bg-grid-slate-100 border border-gray-100 flex items-center justify-center overflow-hidden shadow-inner">
+                          <div className="relative w-72 h-72 rounded-[2rem] bg-grid-slate-100 border border-rose-900/30 flex items-center justify-center overflow-hidden shadow-inner">
                             <ImageWithFallback 
                               src={tempLogo} 
                               className="max-w-[none] max-h-[none] w-64 h-64 object-contain transition-transform" 
@@ -635,7 +633,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                             <div className="grid grid-cols-2 gap-6">
                                <div className="space-y-3">
                                   <div className="flex justify-between items-center px-1">
-                                     <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Posição X</span>
+                                     <span className="text-[9px] font-black uppercase text-rose-300 tracking-widest">Posição X</span>
                                      <span className="text-[9px] font-mono font-black text-lilac">{currentObj.store_logo_x || 0}px</span>
                                   </div>
                                   <input 
@@ -645,12 +643,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                                     step="1"
                                     value={currentObj.store_logo_x || 0}
                                     onChange={(e) => updateFn('store_logo_x', parseInt(e.target.value))}
-                                    className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-black" 
+                                    className="w-full h-1.5 bg-[#2b141e] rounded-lg appearance-none cursor-pointer accent-black" 
                                   />
                                </div>
                                <div className="space-y-3">
                                   <div className="flex justify-between items-center px-1">
-                                     <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Posição Y</span>
+                                     <span className="text-[9px] font-black uppercase text-rose-300 tracking-widest">Posição Y</span>
                                      <span className="text-[9px] font-mono font-black text-lilac">{currentObj.store_logo_y || 0}px</span>
                                   </div>
                                   <input 
@@ -660,14 +658,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                                     step="1"
                                     value={currentObj.store_logo_y || 0}
                                     onChange={(e) => updateFn('store_logo_y', parseInt(e.target.value))}
-                                    className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-black" 
+                                    className="w-full h-1.5 bg-[#2b141e] rounded-lg appearance-none cursor-pointer accent-black" 
                                   />
                                </div>
                             </div>
 
                             <div className="space-y-4">
                                <div className="flex justify-between items-center px-1">
-                                  <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Escala</span>
+                                  <span className="text-[9px] font-black uppercase text-rose-300 tracking-widest">Escala</span>
                                   <span className="text-[9px] font-mono font-black text-lilac">{( (currentObj.store_logo_scale || 1) * 100 ).toFixed(0)}%</span>
                                </div>
                                <input 
@@ -677,19 +675,19 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                                  step="0.05"
                                  value={currentObj.store_logo_scale || 1}
                                  onChange={(e) => updateFn('store_logo_scale', parseFloat(e.target.value))}
-                                 className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-black" 
+                                 className="w-full h-1.5 bg-[#2b141e] rounded-lg appearance-none cursor-pointer accent-black" 
                                />
                             </div>
 
                             <div className="space-y-4">
                                <div className="flex justify-between items-center px-1">
-                                  <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Rotação</span>
+                                  <span className="text-[9px] font-black uppercase text-rose-300 tracking-widest">Rotação</span>
                                   <span className="text-[9px] font-mono font-black text-lilac">{currentObj.store_logo_rotate || 0}°</span>
                                </div>
                                <div className="flex justify-between items-center gap-4">
                                   <button 
                                     onClick={() => updateFn('store_logo_rotate', (currentObj.store_logo_rotate || 0) - 90)}
-                                    className="p-3 rounded-xl bg-white border border-gray-100 hover:border-lilac transition-all text-black shadow-sm"
+                                    className="p-3 rounded-xl bg-[#140b0e] border border-rose-900/30 hover:border-lilac transition-all text-rose-50 shadow-sm"
                                   >
                                      <RotateCw size={14} className="scale-x-[-1]" />
                                   </button>
@@ -700,11 +698,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                                      step="1"
                                      value={currentObj.store_logo_rotate || 0}
                                      onChange={(e) => updateFn('store_logo_rotate', parseInt(e.target.value))}
-                                     className="flex-1 h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-black" 
+                                     className="flex-1 h-1.5 bg-[#2b141e] rounded-lg appearance-none cursor-pointer accent-black" 
                                   />
                                   <button 
                                     onClick={() => updateFn('store_logo_rotate', (currentObj.store_logo_rotate || 0) + 90)}
-                                    className="p-3 rounded-xl bg-white border border-gray-100 hover:border-lilac transition-all text-black shadow-sm"
+                                    className="p-3 rounded-xl bg-[#140b0e] border border-rose-900/30 hover:border-lilac transition-all text-rose-50 shadow-sm"
                                   >
                                      <RotateCw size={14} />
                                   </button>
@@ -713,7 +711,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                          </div>
                       </div>
 
-                      <div className="p-8 border-t border-gray-100 bg-white/50 flex gap-4">
+                      <div className="p-8 border-t border-rose-900/30 bg-[#140b0e]/50 flex gap-4">
                          <button 
                           onClick={() => {
                             updateFn('store_logo_scale', 1);
@@ -721,7 +719,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                             updateFn('store_logo_x', 0);
                             updateFn('store_logo_y', 0);
                           }}
-                          className="flex-1 py-5 rounded-2xl bg-white border border-gray-200 text-gray-400 font-black text-[10px] uppercase tracking-widest hover:border-lilac hover:text-lilac transition-all"
+                          className="flex-1 py-5 rounded-2xl bg-[#140b0e] border border-rose-900/50 text-rose-300 font-black text-[10px] uppercase tracking-widest hover:border-lilac hover:text-lilac transition-all"
                          >
                            Resetar
                          </button>

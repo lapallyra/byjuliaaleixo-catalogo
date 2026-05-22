@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ChevronLeft, AlertCircle, Gift, ArrowRight } from 'lucide-react';
-import { getOrderByCode, getGiftList } from '../services/firebaseService';
-import { Order, Product } from '../types';
+import { getOrderByCode, getGiftListWithStatus } from '../services/firebaseService';
+import { Order } from '../types';
 import { OrderReceiptModal } from './Admin/OrderReceiptModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { themes } from '../lib/theme';
@@ -38,9 +38,13 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
     }
 
     // Try Gift List
-    const fetchedList = await getGiftList(uppercaseCode);
-    if (fetchedList) {
-      setGiftList(fetchedList);
+    const { data: fetchedList, status } = await getGiftListWithStatus(uppercaseCode);
+    if (status === 'found' && fetchedList) {
+      setLoading(false);
+      window.location.href = `/listadepresentes/${fetchedList.code}`;
+      return;
+    } else if (status === 'expired') {
+      setError('Esta lista de presentes expirou (mais de 60 dias).');
       setLoading(false);
       return;
     }
@@ -103,66 +107,6 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
           </button>
         </form>
       </div>
-
-      <AnimatePresence>
-        {giftList && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm"
-          >
-            <div className="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[80vh]">
-              <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-[#D4AF37]/5">
-                <div className="flex items-center gap-3 text-[#D4AF37]">
-                  <Gift size={24} />
-                  <div>
-                    <h2 className="text-xl font-fancy">Lista de Presentes</h2>
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Código: {giftList.code}</p>
-                  </div>
-                </div>
-                <button onClick={() => setGiftList(null)} className="p-3 bg-white rounded-full text-gray-400 hover:text-black shadow-sm">
-                  <ChevronLeft className="rotate-90 md:rotate-0" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                {(giftList.items || []).map((item: Product, idx: number) => (
-                  <div key={`${item.id}-${idx}`} className="flex gap-4 items-center group">
-                    <div className="w-20 h-20 rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
-                      {item.image ? (
-                        <ImageWithFallback src={item.image} alt={item.product_name} className="w-full h-full object-cover transition-transform group-hover:scale-110" referrerPolicy="no-referrer" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-200">
-                          <Gift size={24} />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-black text-black leading-tight mb-1">{item.product_name}</h3>
-                      <p className="text-xs text-[#D4AF37] font-bold">R$ {item.retail_price.toFixed(2)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="p-8 bg-gray-50 border-t border-gray-100">
-                <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
-                  Compartilhado via Ateliês de Julia Aleixo
-                </p>
-                <div className="flex gap-4">
-                  <button 
-                    onClick={() => setGiftList(null)}
-                    className="flex-1 py-4 text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-black transition-colors"
-                  >
-                    Fechar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {order && (
         <OrderReceiptModal 

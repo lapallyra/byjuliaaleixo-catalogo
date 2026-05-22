@@ -85,7 +85,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
             <Sparkles size={24} />
           </div>
           <div>
-             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter italic">Toque Final</h3>
+             <h3 className="text-2xl font-black text-rose-50 uppercase tracking-tighter italic">Toque Final</h3>
              <p className="text-[10px] text-lilac font-bold uppercase tracking-[0.2em] mt-1">Gestão de Adicionais Premium</p>
           </div>
         </div>
@@ -94,7 +94,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
           {addons.length === 0 && (
             <button 
               onClick={createDefaultAddons}
-              className="px-6 py-4 bg-white border border-lilac/30 text-lilac rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-lilac/5 transition-all"
+              className="px-6 py-4 bg-[#140b0e] border border-lilac/30 text-lilac rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-lilac/5 transition-all"
             >
               Criar Padrões
             </button>
@@ -112,11 +112,11 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
       </div>
 
       <div className="relative">
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-rose-300" size={18} />
         <input 
           type="text" 
           placeholder="BUSCAR ADICIONAL..."
-          className="w-full bg-white border border-slate-100 rounded-2xl pl-16 pr-6 py-5 text-[10px] uppercase font-black tracking-widest outline-none focus:border-lilac transition-all shadow-sm"
+          className="w-full bg-[#140b0e] border border-rose-900/30 rounded-2xl pl-16 pr-6 py-5 text-[10px] uppercase font-black tracking-widest outline-none focus:border-lilac transition-all shadow-sm"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -127,50 +127,68 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
             <div className="w-8 h-8 border-4 border-lilac border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredAddons.map((addon) => (
+        <div className="space-y-4">
+          {filteredAddons.map((addon, idx) => (
             <motion.div 
               layout
               key={addon.id}
-              className="bg-white rounded-[2rem] border border-slate-100 p-6 space-y-4 hover:shadow-xl hover:shadow-lilac/5 transition-all group relative"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: idx * 0.03 }}
+              className="bg-[#140b0e] rounded-2xl border border-rose-900/30 p-4 flex flex-col md:flex-row md:items-center gap-6 hover:border-lilac/30 hover:shadow-lg transition-all group relative"
             >
-              <div className="aspect-square rounded-2xl bg-slate-50 overflow-hidden relative border border-slate-50">
-                {addon.image.length > 5 ? (
-                  <img src={addon.image} alt={addon.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-tr from-lilac/5 to-white">
-                    {addon.image || '✨'}
+               {/* Small Thumnail (not enormous anymore) */}
+               <div className="w-20 h-20 rounded-xl bg-[#1f0e16] overflow-hidden shrink-0 border border-slate-50">
+                  {addon.image.length > 5 ? (
+                    <img src={addon.image} alt={addon.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-tr from-lilac/5 to-white">
+                      {addon.image || '✨'}
+                    </div>
+                  )}
+               </div>
+
+               <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-[12px] font-black uppercase tracking-widest text-rose-50 line-clamp-1 group-hover:text-lilac transition-colors">{addon.name}</h4>
+                    <p className={`text-[8px] font-black uppercase tracking-widest mt-1 ${addon.active ? 'text-emerald-500' : 'text-rose-400'}`}>
+                       {addon.active ? 'Ativo na Loja' : 'Pausado'}
+                    </p>
                   </div>
-                )}
-                <div className={`absolute top-4 right-4 px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${addon.active ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                  {addon.active ? 'Ativo' : 'Inativo'}
-                </div>
-              </div>
 
-              <div>
-                <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-900 line-clamp-1">{addon.name}</h4>
-                <p className="text-xl font-elegant text-lilac mt-1">{formatCurrency(addon.price)}</p>
-              </div>
+                  <div className="flex flex-wrap items-center gap-8">
+                     <div className="text-right">
+                        <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Valor Adicional</p>
+                        <p className="text-lg font-elegant text-lilac leading-tight">{formatCurrency(addon.price)}</p>
+                     </div>
 
-              <div className="flex gap-2 pt-2">
-                <button 
-                  onClick={() => {
-                    setEditingAddon(addon);
-                    setIsModalOpen(true);
-                  }}
-                  className="flex-1 py-3 bg-slate-50 text-slate-600 rounded-xl hover:bg-lilac/10 hover:text-lilac transition-all"
-                >
-                  <Edit2 size={14} className="mx-auto" />
-                </button>
-                <button 
-                  onClick={() => handleDelete(addon.id)}
-                  className="flex-1 py-3 bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all"
-                >
-                  <Trash2 size={14} className="mx-auto" />
-                </button>
-              </div>
+                     <div className="flex gap-2">
+                        <button 
+                          onClick={() => {
+                            setEditingAddon(addon);
+                            setIsModalOpen(true);
+                          }}
+                          className="p-3 bg-[#1f0e16] text-rose-300 rounded-xl hover:bg-lilac hover:text-white transition-all border border-transparent shadow-sm"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(addon.id)}
+                          className="p-3 bg-[#1f0e16] text-rose-300 rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-transparent shadow-sm"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                     </div>
+                  </div>
+               </div>
             </motion.div>
           ))}
+          {filteredAddons.length === 0 && (
+             <div className="py-20 text-center rounded-[2rem] bg-[#140b0e] border-2 border-dashed border-rose-900/30 flex flex-col items-center justify-center opacity-40">
+                <Sparkles size={40} className="mb-4 text-lilac" />
+                <p className="text-[10px] font-black uppercase tracking-widest">Nenhum adicional encontrado</p>
+             </div>
+          )}
         </div>
       )}
 
@@ -188,13 +206,13 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl p-10 overflow-hidden"
+              className="relative w-full max-w-lg bg-[#140b0e] rounded-[3rem] shadow-2xl p-10 overflow-hidden"
             >
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-black text-black uppercase tracking-tighter italic">
+                <h3 className="text-xl font-black text-rose-50 uppercase tracking-tighter italic">
                   {editingAddon?.id ? 'Editar Adicional' : 'Novo Adicional'}
                 </h3>
-                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-xl text-slate-400">
+                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-[#1f0e16] rounded-xl text-rose-300">
                   <X size={24} />
                 </button>
               </div>
@@ -209,11 +227,11 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
                 />
                 
                 <div className="space-y-1">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome do Adicional</label>
+                   <label className="text-[10px] font-black text-rose-300 uppercase tracking-widest ml-2">Nome do Adicional</label>
                    <input 
                     required
                     type="text" 
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all"
+                    className="w-full bg-[#1f0e16] border border-rose-900/30 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all"
                     value={editingAddon?.name || ''}
                     onChange={(e) => setEditingAddon(prev => ({ ...prev, name: e.target.value }))}
                   />
@@ -221,22 +239,22 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Valor (R$)</label>
+                    <label className="text-[10px] font-black text-rose-300 uppercase tracking-widest ml-2">Valor (R$)</label>
                     <input 
                       required
                       type="number" 
                       step="0.01"
-                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all"
+                      className="w-full bg-[#1f0e16] border border-rose-900/30 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all"
                       value={editingAddon?.price || 0}
                       onChange={(e) => setEditingAddon(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Status</label>
+                    <label className="text-[10px] font-black text-rose-300 uppercase tracking-widest ml-2">Status</label>
                     <button 
                       type="button"
                       onClick={() => setEditingAddon(prev => ({ ...prev, active: !prev?.active }))}
-                      className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${editingAddon?.active ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}
+                      className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${editingAddon?.active ? 'bg-emerald-100 text-emerald-600' : 'bg-[#2b141e] text-rose-600'}`}
                     >
                       {editingAddon?.active ? 'Ativo' : 'Inativo'}
                     </button>

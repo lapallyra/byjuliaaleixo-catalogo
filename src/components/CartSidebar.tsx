@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ShoppingBag, Trash2, Plus, Minus, Tag, ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import { X, ShoppingCart, Trash2, Plus, Minus, Tag, ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import { SafeImage } from './ui/SafeImage';
 import { CartItem, CompanyId } from '../types';
 import { formatCurrency } from '../lib/currencyUtils';
@@ -135,7 +135,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                 <ChevronLeft size={20} />
               </button>
               <div className="relative">
-                <ShoppingBag size={24} className={theme.textPrimary} />
+                <ShoppingCart size={24} className={theme.textPrimary} />
                 {cart.length > 0 && (
                   <span className={`absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 ${theme.bg === 'bg-[#FFFFFF]' ? 'border-white' : 'border-slate-900'}`}>
                     {cart.reduce((sum, i) => sum + i.quantity, 0)}
@@ -178,7 +178,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
             ))
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 gap-4">
-              <ShoppingBag size={isCollapsed ? 30 : 60} className="opacity-10" />
+              <ShoppingCart size={isCollapsed ? 30 : 60} className="opacity-10" />
               {!isCollapsed && <p className="text-sm">Seu carrinho está vazio</p>}
             </div>
           )}
