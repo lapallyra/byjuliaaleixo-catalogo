@@ -70,11 +70,11 @@ export const AdminNotificationPortal: React.FC = () => {
             initial={{ opacity: 0, x: 50, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 20, scale: 0.9 }}
-            className="pointer-events-auto bg-white/90 backdrop-blur-xl border border-gray-100 rounded-2xl p-4 shadow-[0_10px_30px_rgba(0,0,0,0.08)] flex items-start gap-3 relative overflow-hidden group"
+            className="pointer-events-auto bg-[#140b0e]/95 backdrop-blur-xl border border-rose-900/30 rounded-2xl p-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex items-start gap-3 relative overflow-hidden group"
           >
             {/* Minimal Progress Bar */}
             <motion.div 
-              className="absolute bottom-0 left-0 h-0.5 bg-gray-200"
+              className="absolute bottom-0 left-0 h-0.5"
               initial={{ width: "100%" }}
               animate={{ width: "0%" }}
               transition={{ duration: 8, ease: "linear" }}
@@ -82,7 +82,7 @@ export const AdminNotificationPortal: React.FC = () => {
             />
 
             <div 
-              className="p-2.5 rounded-xl shrink-0"
+              className="p-2.5 rounded-xl shrink-0 border border-current shadow-inner"
               style={{ backgroundColor: `${n.color}15`, color: n.color }}
             >
               <n.icon size={18} />
@@ -90,17 +90,17 @@ export const AdminNotificationPortal: React.FC = () => {
 
             <div className="flex-1 min-w-0 pr-4">
               <div className="flex justify-between items-center mb-0.5">
-                <span className="text-[8px] font-black uppercase tracking-[0.15em] opacity-50" style={{ color: n.color }}>{n.title}</span>
-                <span className="text-[8px] font-bold text-gray-400 capitalize">{n.time}</span>
+                <span className="text-[8px] font-black uppercase tracking-[0.15em] opacity-80" style={{ color: n.color }}>{n.title}</span>
+                <span className="text-[8px] font-bold text-rose-300 capitalize">{n.time}</span>
               </div>
-              <p className="text-[10px] font-bold text-gray-800 leading-tight">
+              <p className="text-[10px] font-bold text-rose-50 leading-tight">
                 {n.message}
               </p>
             </div>
 
             <button 
               onClick={() => removeNotification(n.id)}
-              className="absolute top-3 right-3 p-1 rounded-full text-gray-300 hover:text-gray-900 transition-colors"
+              className="absolute top-3 right-3 p-1 rounded-full text-rose-400 hover:text-white transition-colors"
             >
               <X size={14} />
             </button>

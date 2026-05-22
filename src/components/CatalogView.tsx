@@ -689,7 +689,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             onUpdateQty={onUpdateQuantity}
             onSetQty={onSetQuantity}
             onCheckout={() => {
-              navigate('/checkout', { state: { companyId } });
+              setCheckoutItems(cart);
+              setIsCheckoutOpen(true);
             }}
             companyId={companyId}
           />

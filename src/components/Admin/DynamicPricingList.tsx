@@ -57,37 +57,37 @@ export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({ title, s
   const total = items.reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
 
   return (
-    <div className="p-8 rounded-[2rem] bg-[#FDFBF9] border border-lilac/10 space-y-8 shadow-sm">
+    <div className="p-8 rounded-[2rem] bg-[#0b0507] border border-lilac/10 space-y-8 shadow-sm">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-lilac/5 pb-6">
         <div>
-          <h4 className="text-[14px] font-black uppercase text-black tracking-widest">{title}</h4>
+          <h4 className="text-[14px] font-black uppercase text-rose-50 tracking-widest">{title}</h4>
           <p className="text-[9px] font-bold text-lilac uppercase tracking-widest mt-1">{subtitle}</p>
         </div>
         <div className="text-right">
-           <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Total acumulado</p>
-           <p className="text-xl font-mono font-black text-black">{!isPercentage && 'R$'} {total.toFixed(2)} {isPercentage && '%'}</p>
+           <p className="text-[8px] font-black text-rose-300 uppercase tracking-widest mb-1">Total acumulado</p>
+           <p className="text-xl font-mono font-black text-rose-50">{!isPercentage && 'R$'} {total.toFixed(2)} {isPercentage && '%'}</p>
         </div>
       </div>
 
       <div className="space-y-3">
         {items.map(item => (
-          <div key={item.id} className="group flex items-center gap-4 bg-white p-5 rounded-2xl border border-lilac/5 hover:border-lilac/20 transition-all hover:shadow-md">
+          <div key={item.id} className="group flex items-center gap-4 bg-[#140b0e] p-5 rounded-2xl border border-lilac/5 hover:border-lilac/20 transition-all hover:shadow-md">
             {editingId === item.id ? (
               <div className="flex-1 flex flex-wrap gap-3">
                 <input 
                   type="text" 
                   defaultValue={item.name}
-                  className="flex-1 min-w-[150px] bg-gray-50 border border-lilac/10 rounded-xl px-4 py-3 text-[11px] font-bold text-black outline-none focus:border-lilac"
+                  className="flex-1 min-w-[150px] bg-[#1f0e16] border border-lilac/10 rounded-xl px-4 py-3 text-[11px] font-bold text-rose-50 outline-none focus:border-lilac"
                   onBlur={(e) => handleUpdate(item.id, e.target.value, item.value)}
                   autoFocus
                 />
                 <input 
                   type="number" 
                   defaultValue={item.value}
-                  className="w-24 bg-gray-50 border border-lilac/10 rounded-xl px-4 py-3 text-[11px] font-black text-black outline-none focus:border-lilac"
+                  className="w-24 bg-[#1f0e16] border border-lilac/10 rounded-xl px-4 py-3 text-[11px] font-black text-rose-50 outline-none focus:border-lilac"
                   onBlur={(e) => handleUpdate(item.id, item.name, Number(e.target.value))}
                 />
-                <button onClick={() => setEditingId(null)} className="p-3 text-emerald-500 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-colors">
+                <button onClick={() => setEditingId(null)} className="p-3 text-emerald-500 bg-emerald-950/30 rounded-xl hover:bg-emerald-100 transition-colors">
                   <Check size={16} />
                 </button>
               </div>
@@ -95,22 +95,22 @@ export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({ title, s
               <>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                     <span className="text-[11px] font-black text-black uppercase">{item.name}</span>
+                     <span className="text-[11px] font-black text-rose-50 uppercase">{item.name}</span>
                      {item.category && (
                        <span className="text-[7px] font-bold bg-lilac/10 text-lilac px-2 py-0.5 rounded-full uppercase tracking-widest">{item.category}</span>
                      )}
                   </div>
-                  <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Registrado em base global</p>
+                  <p className="text-[8px] text-rose-300 font-bold uppercase tracking-widest">Registrado em base global</p>
                 </div>
                 <div className="text-right flex items-center gap-6">
-                   <div className="font-mono text-sm font-black text-black">
+                   <div className="font-mono text-sm font-black text-rose-50">
                      {!isPercentage && 'R$'} {item.value.toFixed(2)} {isPercentage && '%'}
                    </div>
                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <button onClick={() => setEditingId(item.id)} className="p-2 text-gray-300 hover:text-lilac hover:bg-lilac/5 rounded-lg transition-all">
+                     <button onClick={() => setEditingId(item.id)} className="p-2 text-rose-400 hover:text-lilac hover:bg-lilac/5 rounded-lg transition-all">
                        <Edit2 size={14} />
                      </button>
-                     <button onClick={() => handleRemove(item.id)} className="p-2 text-gray-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all">
+                     <button onClick={() => handleRemove(item.id)} className="p-2 text-rose-400 hover:text-rose-500 hover:bg-[#1f0e16] rounded-lg transition-all">
                        <Trash2 size={14} />
                      </button>
                    </div>
@@ -121,13 +121,13 @@ export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({ title, s
         ))}
         
         {items.length === 0 && (
-          <div className="text-center py-12 bg-white/50 border-2 border-dashed border-lilac/10 rounded-[2rem] text-[9px] text-gray-400 font-black uppercase tracking-[0.3em]">
+          <div className="text-center py-12 bg-[#140b0e]/50 border-2 border-dashed border-lilac/10 rounded-[2rem] text-[9px] text-rose-300 font-black uppercase tracking-[0.3em]">
             Nenhum registro de custo ativo
           </div>
         )}
       </div>
 
-      <div className="bg-white p-6 rounded-[2rem] border border-lilac/10 shadow-inner space-y-4">
+      <div className="bg-[#140b0e] p-6 rounded-[2rem] border border-lilac/10 shadow-inner space-y-4">
         <h5 className="text-[9px] font-black text-lilac uppercase tracking-[0.3em] mb-4">Adicionar novo item</h5>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -136,7 +136,7 @@ export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({ title, s
             placeholder="NOME (EX: ALUGUEL)"
             value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
-            className="w-full bg-[#FDFBF9] border border-lilac/10 rounded-xl px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-lilac transition-all"
+            className="w-full bg-[#0b0507] border border-lilac/10 rounded-xl px-5 py-4 text-[10px] font-black uppercase tracking-widest outline-none focus:border-lilac transition-all"
           />
           
           <input 
@@ -144,7 +144,7 @@ export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({ title, s
             placeholder={isPercentage ? "VALOR %" : "VALOR R$"}
             value={newItemValue}
             onChange={(e) => setNewItemValue(e.target.value)}
-            className="w-full bg-[#FDFBF9] border border-lilac/10 rounded-xl px-5 py-4 text-[10px] font-black outline-none focus:border-lilac transition-all"
+            className="w-full bg-[#0b0507] border border-lilac/10 rounded-xl px-5 py-4 text-[10px] font-black outline-none focus:border-lilac transition-all"
           />
 
           <div className="flex gap-2">
@@ -153,7 +153,7 @@ export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({ title, s
                 <select 
                   value={newItemCategory}
                   onChange={(e) => setNewItemCategory(e.target.value)}
-                  className="flex-1 bg-[#FDFBF9] border border-lilac/10 rounded-xl px-4 py-4 text-[9px] font-black uppercase tracking-widest outline-none focus:border-lilac"
+                  className="flex-1 bg-[#0b0507] border border-lilac/10 rounded-xl px-4 py-4 text-[9px] font-black uppercase tracking-widest outline-none focus:border-lilac"
                 >
                   <option value="">CATEGORIA...</option>
                   {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -173,12 +173,12 @@ export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({ title, s
                   placeholder="NOVA CATEGORIA..."
                   value={customCategory}
                   onChange={(e) => setCustomCategory(e.target.value)}
-                  className="flex-1 bg-[#FDFBF9] border border-lilac/10 rounded-xl px-4 py-4 text-[9px] font-black uppercase outline-none focus:border-lilac"
+                  className="flex-1 bg-[#0b0507] border border-lilac/10 rounded-xl px-4 py-4 text-[9px] font-black uppercase outline-none focus:border-lilac"
                 />
                 <button 
                   type="button"
                   onClick={() => setShowNewCatInput(false)}
-                  className="p-4 bg-rose-50 text-rose-400 rounded-xl"
+                  className="p-4 bg-[#1f0e16] text-rose-400 rounded-xl"
                 >
                   <X size={16} />
                 </button>

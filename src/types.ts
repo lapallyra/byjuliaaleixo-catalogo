@@ -230,7 +230,7 @@ export interface CheckoutData {
   city: string;
   state: string;
   zipCode: string;
-  paymentMethod: 'pix' | 'credit_card' | 'pix_parcelado' | 'cash';
+  paymentMethod: 'pix' | 'credit_card' | 'pix_parcelado' | 'cash' | 'mercadopago';
   installments?: number;
   needsChange?: 'SIM' | 'NÃO';
   changeAmount?: string;

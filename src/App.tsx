@@ -11,14 +11,15 @@ import { SalesNotificationPortal } from './components/SalesNotificationPortal';
 import { AuthProvider } from './components/AuthProvider';
 import { DocumentSearch } from './components/DocumentSearch';
 import { GiftListView } from './components/GiftListView';
-import { CheckoutView } from './components/CheckoutView';
 import { CookieBanner } from './components/CookieBanner';
 import { SuggestionBox } from './components/SuggestionBox';
 import { INITIAL_CONFIG, PRODUCTS } from './constants';
 import { AppConfig, CompanyId, CartItem, Product } from './types';
 import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
 
-// Fairy dust wrapper for the whole site
+import { PrizeRouletteModal } from './components/PrizeRouletteModal';
+import { sendNotifications } from './services/notificationService';
+import { updateOrder } from './services/firebaseService';
 function SparklesContainer({ children }: { children: React.ReactNode }) {
   const createSparkles = (e: React.MouseEvent) => {
     // Soft glow element that follows cursor exactly (throttled)
@@ -55,7 +56,50 @@ function SparklesContainer({ children }: { children: React.ReactNode }) {
 // Wrapper to handle company paths
 function CompanyCatalogWrapper({ companyId, config, carts, setCart, giftLists, setGiftLists, allProducts }: { companyId: CompanyId, config: AppConfig, carts: Record<string, CartItem[]>, setCart: any, giftLists: Record<string, Product[]>, setGiftLists: any, allProducts: Product[] }) {
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showMPRoulette, setShowMPRoulette] = useState(false);
+  const [mpPendingOrderData, setMpPendingOrderData] = useState<any>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  const handleClearCart = useCallback(() => {
+    setCart((prev: Record<string, CartItem[]>) => ({ ...prev, [companyId]: [] }));
+  }, [setCart, companyId]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const paymentStatus = params.get('collection_status') || params.get('payment_status') || params.get('status');
+    const orderId = params.get('external_reference') || params.get('preference_id');
+    const pendingOrderStr = localStorage.getItem('mp_pending_order');
+    
+    if (paymentStatus === 'approved' && pendingOrderStr) {
+      try {
+        const pendingOrder = JSON.parse(pendingOrderStr);
+        // We ensure it belongs to the current session.
+        if (pendingOrder && pendingOrder.companyName) {
+          console.log("Mercado Pago payment OK. Resuming flow...");
+          handleClearCart();
+          
+          if (pendingOrder.total >= 300) {
+            setMpPendingOrderData(pendingOrder);
+            setShowMPRoulette(true);
+          } else {
+            setShowSuccess(true);
+            sendNotifications(pendingOrder.config || config, pendingOrder.cart, pendingOrder.formData, pendingOrder.total, pendingOrder.companyName).then(url => {
+              if (url) {
+                setTimeout(() => window.open(url, '_blank'), 1500);
+              }
+            });
+          }
+          
+          localStorage.removeItem('mp_pending_order');
+          // cleanup URL params
+          navigate(location.pathname, { replace: true });
+        }
+      } catch(e) {
+        console.error("Error parsing mp_pending_order", e);
+      }
+    }
+  }, [location.search, config, navigate, location.pathname, handleClearCart]);
   
   const handleAddToCart = (product: Product, quantity: number = 1) => {
     setCart((prev: Record<string, CartItem[]>) => {
@@ -105,8 +149,6 @@ function CompanyCatalogWrapper({ companyId, config, carts, setCart, giftLists, s
     });
   };
 
-  const handleClearCart = () => setCart((prev: Record<string, CartItem[]>) => ({ ...prev, [companyId]: [] }));
-
   const handleAddToGiftList = (product: Product) => {
     setGiftLists((prev: Record<string, Product[]>) => {
       const companyList = prev[companyId] || [];
@@ -152,33 +194,34 @@ function CompanyCatalogWrapper({ companyId, config, carts, setCart, giftLists, s
           }} 
         />
       )}
+      {showMPRoulette && mpPendingOrderData && (
+        <PrizeRouletteModal 
+          isOpen={showMPRoulette}
+          onClose={() => {
+            setShowMPRoulette(false);
+            setShowSuccess(true);
+            // Send whatsapp without prize or just close
+          }}
+          onResult={async (prize) => {
+            setShowMPRoulette(false);
+            setShowSuccess(true);
+            try {
+              if (mpPendingOrderData.orderId) {
+                await updateOrder(mpPendingOrderData.orderId, { giftInfo: prize });
+              }
+              const url = await sendNotifications(mpPendingOrderData.config || config, mpPendingOrderData.cart, { ...mpPendingOrderData.formData, wonPrize: prize }, mpPendingOrderData.total, mpPendingOrderData.companyName);
+              if (url) {
+                setTimeout(() => window.open(url, '_blank'), 1500);
+              }
+            } catch(e) {
+              console.error("Error generating whatsapp after MP roulette", e);
+            }
+          }}
+          prizes={mpPendingOrderData.config?.roulette_prizes || []}
+          theme={{ accentColor: mpPendingOrderData.config?.theme?.primary_color || '#000000' }}
+        />
+      )}
     </>
-  );
-}
-
-// Wrapper for Checkout Page
-function CheckoutPageWrapper({ carts, setCarts, config }: { carts: Record<string, CartItem[]>, setCarts: any, config: AppConfig }) {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const companyId = (location.state?.companyId || 'pallyra') as CompanyId;
-  const cart = carts[companyId] || [];
-
-  if (cart.length === 0 && !location.state?.isSuccess) {
-    return <Navigate to="/" replace />;
-  }
-
-  return (
-    <CheckoutView 
-      cart={cart}
-      companyId={companyId}
-      config={config}
-      onCheckoutComplete={() => {
-        // Handle post-checkout if needed
-      }}
-      onClearCart={() => {
-        setCarts((prev: Record<string, CartItem[]>) => ({ ...prev, [companyId]: [] }));
-      }}
-    />
   );
 }
 
@@ -270,9 +313,6 @@ function MainApp() {
         
         {/* Gift List View */}
         <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setCarts} config={config} />} />
-
-        {/* Full-Page Checkout */}
-        <Route path="/checkout" element={<CheckoutPageWrapper carts={carts} setCarts={setCarts} config={config} />} />
       </Routes>
     </SparklesContainer>
   );

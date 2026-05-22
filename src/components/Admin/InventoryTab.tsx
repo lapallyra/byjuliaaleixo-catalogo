@@ -45,7 +45,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({ insumos, onSaveInsum
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       {/* Critical Alert */}
       {criticalItems.length > 0 && (
-        <div className="bg-rose-50 border-1 border-rose-200 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in zoom-in-95 duration-500">
+        <div className="bg-[#1f0e16] border-1 border-rose-200 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in zoom-in-95 duration-500">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-200 animate-pulse">
               <AlertTriangle size={24} />
@@ -59,12 +59,12 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({ insumos, onSaveInsum
           </div>
           <div className="flex -space-x-3 overflow-hidden p-1">
             {criticalItems.slice(0, 5).map((item, idx) => (
-              <div key={`crit-${item.id}-${idx}`} className="w-10 h-10 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-black text-rose-500 shadow-sm" title={item.name}>
+              <div key={`crit-${item.id}-${idx}`} className="w-10 h-10 rounded-full border-2 border-white bg-[#140b0e] flex items-center justify-center text-[10px] font-black text-rose-500 shadow-sm" title={item.name}>
                 {item.name.charAt(0)}
               </div>
             ))}
             {criticalItems.length > 5 && (
-              <div className="w-10 h-10 rounded-full border-2 border-white bg-rose-100 flex items-center justify-center text-[8px] font-black text-rose-500 shadow-sm">
+              <div className="w-10 h-10 rounded-full border-2 border-white bg-[#2b141e] flex items-center justify-center text-[8px] font-black text-rose-500 shadow-sm">
                 +{criticalItems.length - 5}
               </div>
             )}
@@ -75,11 +75,11 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({ insumos, onSaveInsum
       {/* Top Bar */}
       <div className="flex flex-col md:flex-row gap-6 justify-between items-center">
         <div className="relative w-full md:w-96">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-rose-400" size={16} />
           <input 
             type="text" 
             placeholder="BUSCAR NO ESTOQUE..." 
-            className="w-full pl-14 pr-6 py-4 rounded-[1.25rem] bg-white border border-lilac/10 text-[10px] uppercase font-black tracking-[0.2em] outline-none focus:border-lilac transition-all text-black shadow-sm"
+            className="w-full pl-14 pr-6 py-4 rounded-[1.25rem] bg-[#140b0e] border border-lilac/10 text-[10px] uppercase font-black tracking-[0.2em] outline-none focus:border-lilac transition-all text-rose-50 shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -92,22 +92,22 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({ insumos, onSaveInsum
         </button>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-lilac/10 shadow-sm overflow-hidden overflow-x-auto">
+      <div className="bg-[#140b0e] rounded-[2.5rem] border border-lilac/10 shadow-sm overflow-hidden overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
-            <tr className="bg-gray-50/50 border-b border-gray-50">
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Cod. Insumo</th>
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Nome</th>
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Descrição</th>
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Quantidade</th>
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Vlr. Unitário</th>
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 text-right">Ações</th>
+            <tr className="bg-[#1f0e16]/50 border-b border-gray-50">
+              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-rose-300">Cod. Insumo</th>
+              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-rose-300">Nome</th>
+              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-rose-300">Descrição</th>
+              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-rose-300">Quantidade</th>
+              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-rose-300">Vlr. Unitário</th>
+              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-rose-300 text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 uppercase">
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-24 text-center text-gray-400 italic text-[11px] font-black tracking-widest opacity-50">Nenhum insumo encontrado no catálogo.</td>
+                <td colSpan={6} className="py-24 text-center text-rose-300 italic text-[11px] font-black tracking-widest opacity-50">Nenhum insumo encontrado no catálogo.</td>
               </tr>
             )}
             {filtered.map((insumo, idx) => (
@@ -117,46 +117,46 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({ insumos, onSaveInsum
                     <span className="font-mono text-[10px] font-black text-lilac">#{insumo.code || '---'}</span>
                   </td>
                   <td className="py-6 px-8">
-                    <span className="text-xs font-black text-black tracking-tight">{insumo.name}</span>
+                    <span className="text-xs font-black text-rose-50 tracking-tight">{insumo.name}</span>
                   </td>
                   <td className="py-6 px-8">
-                    <span className="text-[10px] text-gray-400 font-bold truncate max-w-[150px] block">{insumo.description || 'Sem detalhes'}</span>
+                    <span className="text-[10px] text-rose-300 font-bold truncate max-w-[150px] block">{insumo.description || 'Sem detalhes'}</span>
                   </td>
                   <td className="py-6 px-8">
                     <span className={`text-xs font-black ${insumo.quantity <= (insumo.criticalLimit || 5) ? 'text-rose-500' : 'text-emerald-500'}`}>
-                      {insumo.quantity} <span className="text-[9px] uppercase font-sans text-gray-400">{insumo.unit}</span>
+                      {insumo.quantity} <span className="text-[9px] uppercase font-sans text-rose-300">{insumo.unit}</span>
                     </span>
                   </td>
                   <td className="py-6 px-8">
-                    <span className="text-xs font-black text-black">{formatCurrency(insumo.unitValue || 0)}</span>
+                    <span className="text-xs font-black text-rose-50">{formatCurrency(insumo.unitValue || 0)}</span>
                   </td>
                   <td className="py-6 px-8 text-right">
                     <div className="flex justify-end gap-3" onClick={e => e.stopPropagation()}>
                        <button 
                         onClick={() => setIsDetailOpen(isDetailOpen === insumo.id ? null : insumo.id)}
-                        className="p-3 rounded-xl bg-gray-50 text-gray-300 hover:text-lilac transition-all"
+                        className="p-3 rounded-xl bg-[#1f0e16] text-rose-400 hover:text-lilac transition-all"
                       >
                         <Info size={16} />
                       </button>
-                      <button onClick={() => { setEditingInsumo(insumo); setIsModalOpen(true); }} className="p-3 rounded-xl bg-gray-50 text-gray-300 hover:text-black transition-all"><Edit size={16} /></button>
-                      <button onClick={() => setInsumoToDelete(insumo.id || null)} className="p-3 rounded-xl bg-rose-50 text-rose-200 hover:text-rose-500 transition-all"><Trash2 size={16} /></button>
+                      <button onClick={() => { setEditingInsumo(insumo); setIsModalOpen(true); }} className="p-3 rounded-xl bg-[#1f0e16] text-rose-400 hover:text-rose-50 transition-all"><Edit size={16} /></button>
+                      <button onClick={() => setInsumoToDelete(insumo.id || null)} className="p-3 rounded-xl bg-[#1f0e16] text-rose-200 hover:text-rose-500 transition-all"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
                 {isDetailOpen === insumo.id && (
-                  <tr className="bg-gray-50/50">
-                    <td colSpan={6} className="px-12 py-8 border-b border-gray-100">
+                  <tr className="bg-[#1f0e16]/50">
+                    <td colSpan={6} className="px-12 py-8 border-b border-rose-900/30">
                        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
                           <div>
-                            <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-2">Último Valor Pago</p>
-                            <p className="text-sm font-black text-black">{formatCurrency(insumo.costPrice || 0)}</p>
+                            <p className="text-[8px] font-black uppercase tracking-widest text-rose-300 mb-2">Último Valor Pago</p>
+                            <p className="text-sm font-black text-rose-50">{formatCurrency(insumo.costPrice || 0)}</p>
                           </div>
                           <div>
-                            <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-2">Categoria</p>
+                            <p className="text-[8px] font-black uppercase tracking-widest text-rose-300 mb-2">Categoria</p>
                             <p className="text-xs font-black text-lilac italic">{insumo.category || 'Não definida'}</p>
                           </div>
                           <div>
-                            <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-2">Subcategoria</p>
+                            <p className="text-[8px] font-black uppercase tracking-widest text-rose-300 mb-2">Subcategoria</p>
                             <p className="text-xs font-black text-gray-600">{insumo.subcategory || '---'}</p>
                           </div>
                        </div>
@@ -186,14 +186,14 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({ insumos, onSaveInsum
       )}
       {insumoToDelete && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center animate-in zoom-in-95">
+          <div className="bg-[#140b0e] max-w-md w-full rounded-3xl p-8 text-center animate-in zoom-in-95">
             <Trash2 size={48} className="mx-auto text-rose-500 mb-6" />
             <h3 className="text-xl font-black mb-2 uppercase">Excluir Insumo?</h3>
             <p className="text-sm text-gray-500 mb-8">Essa ação não pode ser desfeita.</p>
             <div className="flex gap-4">
               <button 
                 onClick={() => setInsumoToDelete(null)}
-                className="flex-1 py-4 bg-gray-100 rounded-2xl font-black text-gray-500 uppercase text-xs"
+                className="flex-1 py-4 bg-[#2b141e] rounded-2xl font-black text-gray-500 uppercase text-xs"
               >
                 Cancelar
               </button>
@@ -240,11 +240,11 @@ const InsumoFormModal: React.FC<InsumoFormModalProps & { existingInsumos: Insumo
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-       <div className="bg-white  w-full  max-w-xl  rounded-[2rem] border border-lilac/30 p-8 md:p-10 shadow-2xl  relative max-h-[90vh] overflow-y-auto max-h-[90vh] overflow-y-auto">
-          <button onClick={onClose} disabled={loading} className="absolute top-8 right-8 p-1 rounded-full hover:bg-gray-100 text-gray-400">
+       <div className="bg-[#140b0e]  w-full  max-w-xl  rounded-[2rem] border border-lilac/30 p-8 md:p-10 shadow-2xl  relative max-h-[90vh] overflow-y-auto max-h-[90vh] overflow-y-auto">
+          <button onClick={onClose} disabled={loading} className="absolute top-8 right-8 p-1 rounded-full hover:bg-[#2b141e] text-rose-300">
             <X size={24} />
           </button>
-          <h2 className="text-xl font-black text-black uppercase tracking-widest mb-8">{editingInsumo?.id ? 'Editar Insumo' : 'Novo Insumo'}</h2>
+          <h2 className="text-xl font-black text-rose-50 uppercase tracking-widest mb-8">{editingInsumo?.id ? 'Editar Insumo' : 'Novo Insumo'}</h2>
           
           <form onSubmit={async (e) => {
             e.preventDefault();
@@ -272,19 +272,19 @@ const InsumoFormModal: React.FC<InsumoFormModalProps & { existingInsumos: Insumo
             }
           }} className="space-y-6">
             <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-black tracking-widest text-gray-400 pl-2">Nome do Material</label>
-              <input name="name" defaultValue={editingInsumo?.name} required type="text" className="w-full bg-gray-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-black" />
+              <label className="text-[9px] uppercase font-black tracking-widest text-rose-300 pl-2">Nome do Material</label>
+              <input name="name" defaultValue={editingInsumo?.name} required type="text" className="w-full bg-[#1f0e16] border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-rose-50" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-1.5 text-left">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-gray-400 pl-2">Categoria</label>
+                  <label className="text-[9px] uppercase font-black tracking-widest text-rose-300 pl-2">Categoria</label>
                   {!showNewCatInput ? (
                     <div className="flex gap-2">
                       <select 
                         value={category} 
                         onChange={(e) => setCategory(e.target.value)}
-                        className="flex-1 bg-gray-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-black"
+                        className="flex-1 bg-[#1f0e16] border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-rose-50"
                       >
                         <option value="">Selecionar...</option>
                         {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -293,19 +293,19 @@ const InsumoFormModal: React.FC<InsumoFormModalProps & { existingInsumos: Insumo
                     </div>
                   ) : (
                     <div className="flex gap-2">
-                       <input autoFocus placeholder="Nova categoria" value={newCat} onChange={e => setNewCat(e.target.value)} className="flex-1 bg-gray-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-black" />
-                       <button type="button" onClick={() => setShowNewCatInput(false)} className="p-3 bg-gray-200 rounded-xl text-gray-500"><X size={16} /></button>
+                       <input autoFocus placeholder="Nova categoria" value={newCat} onChange={e => setNewCat(e.target.value)} className="flex-1 bg-[#1f0e16] border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-rose-50" />
+                       <button type="button" onClick={() => setShowNewCatInput(false)} className="p-3 bg-[#3e1b29] rounded-xl text-gray-500"><X size={16} /></button>
                     </div>
                   )}
                </div>
                <div className="space-y-1.5 text-left">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-gray-400 pl-2">Subcategoria</label>
+                  <label className="text-[9px] uppercase font-black tracking-widest text-rose-300 pl-2">Subcategoria</label>
                   {!showNewSubInput ? (
                     <div className="flex gap-2">
                       <select 
                         value={subcategory} 
                         onChange={(e) => setSubcategory(e.target.value)}
-                        className="flex-1 bg-gray-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-black"
+                        className="flex-1 bg-[#1f0e16] border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-rose-50"
                       >
                         <option value="">Selecionar...</option>
                         {subcategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
@@ -314,8 +314,8 @@ const InsumoFormModal: React.FC<InsumoFormModalProps & { existingInsumos: Insumo
                     </div>
                   ) : (
                     <div className="flex gap-2">
-                       <input autoFocus placeholder="Nova subcat" value={newSub} onChange={e => setNewSub(e.target.value)} className="flex-1 bg-gray-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-black" />
-                       <button type="button" onClick={() => setShowNewSubInput(false)} className="p-3 bg-gray-200 rounded-xl text-gray-500"><X size={16} /></button>
+                       <input autoFocus placeholder="Nova subcat" value={newSub} onChange={e => setNewSub(e.target.value)} className="flex-1 bg-[#1f0e16] border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-rose-50" />
+                       <button type="button" onClick={() => setShowNewSubInput(false)} className="p-3 bg-[#3e1b29] rounded-xl text-gray-500"><X size={16} /></button>
                     </div>
                   )}
                </div>
@@ -323,7 +323,7 @@ const InsumoFormModal: React.FC<InsumoFormModalProps & { existingInsumos: Insumo
 
             <div className="grid grid-cols-3 gap-4">
                <div className="space-y-1.5 text-left">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-gray-400 pl-2">Qtd em Estoque</label>
+                  <label className="text-[9px] uppercase font-black tracking-widest text-rose-300 pl-2">Qtd em Estoque</label>
                   <input 
                     type="number" 
                     step="1"
@@ -331,11 +331,11 @@ const InsumoFormModal: React.FC<InsumoFormModalProps & { existingInsumos: Insumo
                     onChange={(e) => handleNumericInput(Number(e.target.value), setQty)}
                     required 
                     placeholder="0"
-                    className="w-full bg-gray-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-black outline-none text-black" 
+                    className="w-full bg-[#1f0e16] border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-black outline-none text-rose-50" 
                   />
                </div>
                <div className="space-y-1.5 text-left">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-gray-400 pl-2">Vlr Pago Total (R$)</label>
+                  <label className="text-[9px] uppercase font-black tracking-widest text-rose-300 pl-2">Vlr Pago Total (R$)</label>
                   <input 
                     type="number" 
                     step="0.01"
@@ -343,12 +343,12 @@ const InsumoFormModal: React.FC<InsumoFormModalProps & { existingInsumos: Insumo
                     onChange={(e) => handleNumericInput(Number(e.target.value), setCost)}
                     required 
                     placeholder="0.00"
-                    className="w-full bg-gray-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-black outline-none text-black" 
+                    className="w-full bg-[#1f0e16] border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-black outline-none text-rose-50" 
                   />
                </div>
                <div className="space-y-1.5 text-left">
-                  <label className="text-[9px] uppercase font-black tracking-widest text-gray-400 pl-2">Unidade</label>
-                  <select name="unit" defaultValue={editingInsumo?.unit || 'unid'} className="w-full bg-gray-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-black outline-none text-black appearance-none">
+                  <label className="text-[9px] uppercase font-black tracking-widest text-rose-300 pl-2">Unidade</label>
+                  <select name="unit" defaultValue={editingInsumo?.unit || 'unid'} className="w-full bg-[#1f0e16] border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-black outline-none text-rose-50 appearance-none">
                      <option value="mt">MT</option>
                      <option value="unid">UN</option>
                      <option value="pct">PCT</option>
@@ -358,13 +358,13 @@ const InsumoFormModal: React.FC<InsumoFormModalProps & { existingInsumos: Insumo
             </div>
 
             <div className="p-4 rounded-xl bg-black text-white text-center border-2 border-lilac/20">
-               <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-1">Custo por Unidade (Unidade/M/Pct)</p>
+               <p className="text-[9px] font-black uppercase text-rose-300 tracking-widest mb-1">Custo por Unidade (Unidade/M/Pct)</p>
                <p className="text-xl font-mono font-black">{formatCurrency(unitVal)}</p>
             </div>
 
             <div className="space-y-1.5 text-left">
-               <label className="text-[9px] uppercase font-black tracking-widest text-gray-400 pl-2">Observações / Fornecedor</label>
-               <textarea name="description" defaultValue={editingInsumo?.description} className="w-full bg-gray-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none h-20 text-black resize-none" />
+               <label className="text-[9px] uppercase font-black tracking-widest text-rose-300 pl-2">Observações / Fornecedor</label>
+               <textarea name="description" defaultValue={editingInsumo?.description} className="w-full bg-[#1f0e16] border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none h-20 text-rose-50 resize-none" />
             </div>
 
             <div className="flex gap-4 pt-4">
@@ -372,7 +372,7 @@ const InsumoFormModal: React.FC<InsumoFormModalProps & { existingInsumos: Insumo
                 type="button" 
                 onClick={onClose} 
                 disabled={loading}
-                className="flex-1 py-4 border border-lilac/10 rounded-xl font-bold uppercase text-[9px] tracking-widest text-gray-400"
+                className="flex-1 py-4 border border-lilac/10 rounded-xl font-bold uppercase text-[9px] tracking-widest text-rose-300"
               >
                 Cancelar
               </button>

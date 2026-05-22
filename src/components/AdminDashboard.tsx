@@ -111,13 +111,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
           <Box className="text-gold" size={40} />
         </div>
         <h2 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Acesso Restrito</h2>
-        <p className="text-slate-400 mb-8 max-w-sm font-sans text-xs uppercase tracking-widest leading-loose">
+        <p className="text-rose-300 mb-8 max-w-sm font-sans text-xs uppercase tracking-widest leading-loose">
           Este painel é exclusivo para a administração. Faça login com as credenciais autorizadas.
         </p>
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <button 
             onClick={() => import('../lib/firebase').then(m => m.login())}
-            className="bg-gold text-black font-bold py-4 px-10 rounded-2xl hover:scale-105 transition-all shadow-[0_20px_60px_rgba(212,175,55,0.3)]"
+            className="bg-gold text-rose-50 font-bold py-4 px-10 rounded-2xl hover:scale-105 transition-all shadow-[0_20px_60px_rgba(212,175,55,0.3)]"
           >
             Acessar com Google
           </button>
@@ -149,15 +149,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   ];
 
   return (
-    <div className="feminine-admin min-h-screen bg-[#FDFBF9] text-[#4A4444] flex font-sans overflow-hidden relative scroll-smooth">
+    <div className="feminine-admin min-h-screen bg-[#0b0507] text-rose-100 flex font-sans overflow-hidden relative scroll-smooth">
       <AdminNotificationPortal />
 
       {/* Sidebar navigation - Desktop */}
-      <aside className={`bg-white border-r border-[#F0E6D2] flex flex-col hidden lg:flex flex-shrink-0 relative z-[60] shadow-[10px_0_30px_rgba(240,230,210,0.2)] transition-all duration-300 ${isSidebarCollapsed ? "w-20 items-center" : "w-64"}`}>
+      <aside className={`bg-[#140b0e] border-r border-rose-900/30 flex flex-col hidden lg:flex flex-shrink-0 relative z-[60] shadow-[10px_0_30px_rgba(0,0,0,0.2)] transition-all duration-300 ${isSidebarCollapsed ? "w-20 items-center" : "w-64"}`}>
         
           <button 
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="absolute -right-3 top-10 bg-white border border-[#F0E6D2] p-1.5 rounded-full shadow-sm z-50 text-[#C5A059] hover:text-[#B48E4D] transition-all"
+            className="absolute -right-3 top-10 bg-[#140b0e] border border-rose-900/30 p-1.5 rounded-full shadow-sm z-50 text-[#C5A059] hover:text-[#B48E4D] transition-all"
           >
             <ChevronRight size={14} className={`transition-transform duration-300 ${!isSidebarCollapsed ? "rotate-180" : ""}`} />
           </button>
@@ -169,7 +169,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
              </div>
              {!isSidebarCollapsed && (
                <div>
-                  <h1 className="font-sans font-semibold text-xs tracking-[0.15em] uppercase text-[#4A4444]">Ateliê Admin</h1>
+                  <h1 className="font-sans font-semibold text-xs tracking-[0.15em] uppercase text-rose-100">Ateliê Admin</h1>
                   <p className="text-[8px] text-[#C5A059] uppercase tracking-widest font-medium">Soft Luxury Dashboard</p>
                </div>
              )}
@@ -180,33 +180,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all relative group overflow-hidden ${activeTab === item.id ? 'text-[#D48C8C]' : 'text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FDFBF9]'}`}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all relative group overflow-hidden ${activeTab === item.id ? 'text-[#C5A059]' : 'text-rose-300 hover:text-[#C5A059] hover:bg-[#0b0507]'}`}
               >
                 {activeTab === item.id && (
                   <motion.div 
                     layoutId="activeNavBg"
-                    className="absolute inset-0 bg-[#FDFBF9] rounded-xl"
+                    className="absolute inset-0 bg-[#0b0507] rounded-xl"
                   />
                 )}
-                <item.icon size={18} className={`${activeTab === item.id ? 'text-[#D48C8C]' : 'text-[#D1CACA] group-hover:text-[#D48C8C]'} transition-all relative z-10`} />
+                <item.icon size={18} className={`${activeTab === item.id ? 'text-[#C5A059]' : 'text-rose-400 group-hover:text-[#C5A059]'} transition-all relative z-10`} />
                 {!isSidebarCollapsed && (
                   <span className={`text-[10px] uppercase font-medium tracking-[0.12em] relative z-10 ${activeTab === item.id ? 'font-semibold' : ''}`}>
                     {item.label}
                   </span>
                 )}
                 {activeTab === item.id && !isSidebarCollapsed && (
-                  <motion.div layoutId="activeDot" className="ml-auto w-1 h-1 rounded-full bg-[#D48C8C] relative z-10" />
+                  <motion.div layoutId="activeDot" className="ml-auto w-1 h-1 rounded-full bg-[#C5A059] relative z-10" />
                 )}
               </button>
             ))}
           </nav>
         </div>
 
-        <div className="mt-auto p-6 border-t border-[#F0E6D2] space-y-2">
-           <button onClick={onGoBack} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FDFBF9] transition-all text-[9px] font-medium uppercase tracking-[0.15em] border border-transparent">
+        <div className="mt-auto p-6 border-t border-rose-900/30 space-y-2">
+           <button onClick={onGoBack} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-rose-300 hover:text-[#C5A059] hover:bg-[#0b0507] transition-all text-[9px] font-medium uppercase tracking-[0.15em] border border-transparent">
               <ArrowLeft size={14} /> {!isSidebarCollapsed && "Loja"}
            </button>
-           <button onClick={logout} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[#A09898] hover:bg-[#FDFBF9] transition-all text-[9px] font-medium uppercase tracking-[0.15em] border border-transparent">
+           <button onClick={logout} className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-rose-300 hover:bg-[#0b0507] transition-all text-[9px] font-medium uppercase tracking-[0.15em] border border-transparent">
               <LogOut size={14} /> {!isSidebarCollapsed && "Sair"}
            </button>
         </div>
@@ -226,22 +226,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              className="fixed left-0 top-0 bottom-0 w-72 bg-white z-[110] lg:hidden border-r border-[#F0E6D2] flex flex-col shadow-2xl"
+              className="fixed left-0 top-0 bottom-0 w-72 bg-[#140b0e] z-[110] lg:hidden border-r border-rose-900/30 flex flex-col shadow-2xl"
             >
               <div className="p-6 flex flex-col h-full">
                 <div className="flex items-center justify-between mb-10">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#D48C8C] text-white flex items-center justify-center shadow-lg shadow-rose-100">
+                    <div className="w-9 h-9 rounded-xl bg-[#C5A059] text-white flex items-center justify-center shadow-lg shadow-rose-100">
                       <Sparkles size={18} />
                     </div>
                     <div>
-                      <h1 className="font-sans font-semibold text-xs tracking-[0.1em] uppercase text-[#4A4444]">Admin</h1>
+                      <h1 className="font-sans font-semibold text-xs tracking-[0.1em] uppercase text-rose-100">Admin</h1>
                       <p className="text-[7px] text-[#C5A059] uppercase tracking-widest font-medium">Luxury System</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 bg-[#FDFBF9] rounded-xl text-[#A09898] hover:text-[#D48C8C] transition-all"
+                    className="p-2 bg-[#0b0507] rounded-xl text-rose-300 hover:text-[#C5A059] transition-all"
                   >
                     <X size={20} />
                   </button>
@@ -255,19 +255,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                         setActiveTab(item.id); 
                         setTimeout(() => setIsMobileMenuOpen(false), 100); 
                       }}
-                      className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${activeTab === item.id ? 'bg-[#FDFBF9] text-[#D48C8C]' : 'text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FDFBF9]'}`}
+                      className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${activeTab === item.id ? 'bg-[#0b0507] text-[#C5A059]' : 'text-rose-300 hover:text-[#C5A059] hover:bg-[#0b0507]'}`}
                     >
-                      <item.icon size={18} className={activeTab === item.id ? 'text-[#D48C8C]' : 'text-[#D1CACA]'} />
+                      <item.icon size={18} className={activeTab === item.id ? 'text-[#C5A059]' : 'text-rose-400'} />
                       <span className="text-[9px] uppercase font-semibold tracking-[0.15em]">{item.label}</span>
                     </button>
                   ))}
                 </nav>
 
-                <div className="mt-auto pt-6 border-t border-[#F0E6D2] space-y-2">
-                   <button onClick={() => { setIsMobileMenuOpen(false); onGoBack(); }} className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[#A09898] border border-[#F0E6D2] transition-all text-[9px] font-semibold uppercase tracking-[0.15em]">
+                <div className="mt-auto pt-6 border-t border-rose-900/30 space-y-2">
+                   <button onClick={() => { setIsMobileMenuOpen(false); onGoBack(); }} className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-rose-300 border border-rose-900/30 transition-all text-[9px] font-semibold uppercase tracking-[0.15em]">
                       <ArrowLeft size={14} /> Loja
                    </button>
-                   <button onClick={() => { setIsMobileMenuOpen(false); logout(); }} className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[#D48C8C] bg-[#FDFBF9] transition-all text-[9px] font-semibold uppercase tracking-[0.15em]">
+                   <button onClick={() => { setIsMobileMenuOpen(false); logout(); }} className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[#C5A059] bg-[#0b0507] transition-all text-[9px] font-semibold uppercase tracking-[0.15em]">
                       <LogOut size={14} /> Sair
                    </button>
                 </div>
@@ -280,20 +280,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
         {/* Top Header Bar */}
-        <header className="h-20 bg-white/70 backdrop-blur-md border-b border-[#F0E6D2] px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0">
+        <header className="h-20 bg-[#140b0e]/70 backdrop-blur-md border-b border-rose-900/30 px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0">
           <div className="flex items-center gap-6 flex-1">
              <button 
                onClick={() => setIsMobileMenuOpen(true)}
-               className="lg:hidden p-2 text-[#A09898] hover:text-[#D48C8C] transition-all"
+               className="lg:hidden p-2 text-rose-300 hover:text-[#C5A059] transition-all"
              >
                <LayoutDashboard size={20} />
              </button>
              <div className="relative w-full max-w-md md:block hidden">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D1CACA]" size={16} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-400" size={16} />
                 <input 
                   type="text" 
                   placeholder="Pesquisar..." 
-                  className="w-full bg-[#FDFBF9] border border-[#F0E6D2] focus:border-[#D48C8C] focus:ring-2 focus:ring-[#D48C8C]/5 rounded-xl pl-11 pr-4 py-2.5 text-[10px] uppercase font-medium tracking-[0.1em] outline-none transition-all text-[#4A4444] placeholder:text-[#D1CACA]"
+                  className="w-full bg-[#0b0507] border border-rose-900/30 focus:border-[#C5A059] focus:ring-2 focus:ring-[#D48C8C]/5 rounded-xl pl-11 pr-4 py-2.5 text-[10px] uppercase font-medium tracking-[0.1em] outline-none transition-all text-rose-100 placeholder:text-rose-400"
                   value={globalSearch}
                   onChange={(e) => setGlobalSearch(e.target.value)}
                 />
@@ -304,27 +304,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
              <div className="relative">
                 <button 
                   onClick={() => setIsSuggestionsModalOpen(true)}
-                  className={`p-2.5 rounded-xl transition-all relative border border-transparent ${suggestions.some(s => !s.read) ? 'text-[#D48C8C] bg-[#FDFBF9]' : 'text-[#A09898] hover:bg-[#FDFBF9]'}`}
+                  className={`p-2.5 rounded-xl transition-all relative border border-transparent ${suggestions.some(s => !s.read) ? 'text-[#C5A059] bg-[#0b0507]' : 'text-rose-300 hover:bg-[#0b0507]'}`}
                 >
                    <Bell size={18} />
                    {suggestions.filter(s => !s.read).length > 0 && (
-                     <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#D48C8C] rounded-full ring-2 ring-white" />
+                     <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#C5A059] rounded-full ring-2 ring-white" />
                    )}
                 </button>
              </div>
              
              <div className="h-6 w-px bg-[#F0E6D2] mx-2" />
              
-             <div className="flex items-center gap-3 bg-[#FDFBF9] border border-[#F0E6D2] px-3 py-1.5 rounded-xl">
+             <div className="flex items-center gap-3 bg-[#0b0507] border border-rose-900/30 px-3 py-1.5 rounded-xl">
                 <div className="flex flex-col items-end mr-1 hidden sm:flex">
-                   <span className="text-[9px] font-semibold uppercase text-[#4A4444] tracking-wider">{user?.displayName?.split(' ')[0]}</span>
+                   <span className="text-[9px] font-semibold uppercase text-rose-100 tracking-wider">{user?.displayName?.split(' ')[0]}</span>
                    <span className="text-[7px] font-medium uppercase text-[#C5A059] tracking-widest">Admin</span>
                 </div>
-                <div className="w-8 h-8 rounded-lg bg-white border border-[#F0E6D2] p-0.5 shadow-sm overflow-hidden">
+                <div className="w-8 h-8 rounded-lg bg-[#140b0e] border border-rose-900/30 p-0.5 shadow-sm overflow-hidden">
                   {user?.photoURL ? (
                     <ImageWithFallback src={user.photoURL} alt="" className="w-full h-full object-cover rounded shadow-inner" referrerPolicy="no-referrer" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#D1CACA]">
+                    <div className="w-full h-full flex items-center justify-center text-rose-400">
                       <User size={14} />
                     </div>
                   )}
@@ -349,11 +349,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                      key={activeTab} 
                      fallback={
                        <div className="h-full flex flex-col items-center justify-center p-10 text-center animate-in fade-in">
-                          <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mb-6">
+                          <div className="w-16 h-16 bg-[#1f0e16] rounded-2xl flex items-center justify-center text-rose-500 mb-6">
                              <X size={32} />
                           </div>
-                          <h3 className="text-sm font-black uppercase text-black tracking-widest mb-2">Ops! Algo deu errado nesta aba</h3>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest max-w-xs">Encontramos um erro ao carregar as informações. Tente recarregar a página.</p>
+                          <h3 className="text-sm font-black uppercase text-rose-50 tracking-widest mb-2">Ops! Algo deu errado nesta aba</h3>
+                          <p className="text-[10px] text-rose-300 font-bold uppercase tracking-widest max-w-xs">Encontramos um erro ao carregar as informações. Tente recarregar a página.</p>
                           <button 
                             onClick={() => window.location.reload()}
                             className="mt-8 px-8 py-3 bg-black text-white rounded-xl text-[9px] font-black uppercase tracking-widest"
@@ -488,21 +488,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 100 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="relative w-full max-w-lg bg-[#FAF9F6] h-full lg:rounded-l-[2rem] border-l border-[#F0E6D2] shadow-2xl flex flex-col overflow-hidden"
+                className="relative w-full max-w-lg bg-[#0b0507] h-full lg:rounded-l-[2rem] border-l border-rose-900/30 shadow-2xl flex flex-col overflow-hidden"
               >
-                <div className="p-8 border-b border-[#F0E6D2] flex items-center justify-between bg-white">
+                <div className="p-8 border-b border-rose-900/30 flex items-center justify-between bg-[#140b0e]">
                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#FDFBF9] text-[#D48C8C] flex items-center justify-center border border-[#F0E6D2] shadow-sm">
+                      <div className="w-10 h-10 rounded-xl bg-[#0b0507] text-[#C5A059] flex items-center justify-center border border-rose-900/30 shadow-sm">
                         <Sparkles size={20} />
                       </div>
                       <div>
-                        <h2 className="text-sm font-semibold uppercase tracking-widest text-[#4A4444]">Notificações</h2>
+                        <h2 className="text-sm font-semibold uppercase tracking-widest text-rose-100">Notificações</h2>
                         <p className="text-[8px] text-[#C5A059] font-medium uppercase tracking-[0.1em] mt-0.5">Sugestões e Feedbacks</p>
                       </div>
                    </div>
                    <button 
                      onClick={() => setIsSuggestionsModalOpen(false)} 
-                     className="p-2.5 bg-[#FDFBF9] hover:bg-[#F0E6D2] rounded-xl text-[#A09898] transition-all"
+                     className="p-2.5 bg-[#0b0507] hover:bg-[#F0E6D2] rounded-xl text-rose-300 transition-all"
                    >
                       <X size={20} />
                    </button>
@@ -511,8 +511,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                 <div className="flex-1 overflow-y-auto p-8 space-y-4 scrollbar-hide">
                    {suggestions.length === 0 && (
                      <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-40">
-                        <Box size={40} className="text-[#D1CACA] mb-4" />
-                        <p className="text-[9px] font-medium uppercase tracking-widest text-[#A09898]">Sem novas atualizações no momento.</p>
+                        <Box size={40} className="text-rose-400 mb-4" />
+                        <p className="text-[9px] font-medium uppercase tracking-widest text-rose-300">Sem novas atualizações no momento.</p>
                      </div>
                    )}
                    {[...suggestions].sort((a, b) => {
@@ -526,19 +526,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                        animate={{ opacity: 1, y: 0 }}
                        transition={{ delay: idx * 0.05 }}
                        onClick={() => { if(!s.read) markSuggestionAsRead(s.id); }}
-                       className={`p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${s.read ? 'bg-white/50 border-[#F0E6D2] opacity-50' : 'bg-white border-[#D48C8C]/20 shadow-lg shadow-[#D48C8C]/5'}`}
+                       className={`p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${s.read ? 'bg-[#140b0e]/50 border-rose-900/30 opacity-50' : 'bg-[#140b0e] border-[#C5A059]/20 shadow-lg shadow-[#D48C8C]/5'}`}
                      >
                         <div className="flex justify-between items-center mb-4">
-                           <span className={`text-[8px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded ${s.read ? 'bg-[#F0E6D2] text-[#A09898]' : 'bg-[#D48C8C] text-white'}`}>
+                           <span className={`text-[8px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded ${s.read ? 'bg-[#F0E6D2] text-rose-300' : 'bg-[#C5A059] text-white'}`}>
                              {s.companyId}
                            </span>
-                           <span className="text-[8px] font-medium text-[#A09898] uppercase tracking-widest">{s.createdAt?.toDate ? s.createdAt.toDate().toLocaleDateString() : 'Recent'}</span>
+                           <span className="text-[8px] font-medium text-rose-300 uppercase tracking-widest">{s.createdAt?.toDate ? s.createdAt.toDate().toLocaleDateString() : 'Recent'}</span>
                         </div>
-                        <p className="text-[11px] font-medium text-[#4A4444] leading-relaxed whitespace-pre-wrap">{s.message}</p>
+                        <p className="text-[11px] font-medium text-rose-100 leading-relaxed whitespace-pre-wrap">{s.message}</p>
                         {!s.read && (
                           <div className="mt-4 flex items-center gap-2">
-                             <div className="w-1.5 h-1.5 rounded-full bg-[#D48C8C] shadow-[0_0_8px_rgba(212,140,140,1)] animate-pulse" />
-                             <span className="text-[7px] font-semibold uppercase text-[#D48C8C] tracking-widest">Nova atividade</span>
+                             <div className="w-1.5 h-1.5 rounded-full bg-[#C5A059] shadow-[0_0_8px_rgba(212,140,140,1)] animate-pulse" />
+                             <span className="text-[7px] font-semibold uppercase text-[#C5A059] tracking-widest">Nova atividade</span>
                           </div>
                         )}
                      </motion.div>

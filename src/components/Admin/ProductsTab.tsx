@@ -86,14 +86,14 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({ products, insumos, com
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       {/* Search and Ateliers Bar Refined */}
-      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-[2rem] border border-[#F0E6D2] shadow-[0_10px_40px_rgba(240,230,210,0.1)]">
+      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-[#140b0e] p-6 rounded-[2rem] border border-rose-900/30 shadow-[0_10px_40px_rgba(0,0,0,0.1)]">
         <div className="flex items-center gap-4 w-full lg:w-auto">
           <div className="relative flex-1 lg:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D1CACA]" size={14} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-400" size={14} />
             <input 
               type="text" 
               placeholder="Buscar no catálogo..." 
-              className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#FDFBF9] border border-[#F0E6D2] text-[10px] uppercase font-semibold tracking-widest outline-none focus:border-[#D48C8C] transition-all text-[#4A4444]"
+              className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#0b0507] border border-rose-900/30 text-[10px] uppercase font-semibold tracking-widest outline-none focus:border-[#C5A059] transition-all text-rose-100"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -108,7 +108,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({ products, insumos, com
                 setSelectedAtelier(e.target.value as CompanyId);
               }
             }}
-            className="hidden sm:block px-4 py-3 rounded-xl bg-[#FDFBF9] border border-[#F0E6D2] text-[10px] font-semibold uppercase tracking-widest text-[#A09898] outline-none cursor-pointer"
+            className="hidden sm:block px-4 py-3 rounded-xl bg-[#0b0507] border border-rose-900/30 text-[10px] font-semibold uppercase tracking-widest text-rose-300 outline-none cursor-pointer"
           >
             <option value="all">TODOS ATELIÊS</option>
             {atelieres.map(atl => (
@@ -119,7 +119,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({ products, insumos, com
 
         <button 
           onClick={async () => { setEditingProduct({ company: showAllInList ? companyId : selectedAtelier, isVisible: true, isFeatured: false }); setIsModalOpen(true); }}
-          className="w-full lg:w-auto flex items-center justify-center gap-2 bg-[#D48C8C] text-white font-semibold py-4 px-8 rounded-xl hover:scale-[1.02] transition-all shadow-[0_10px_20px_rgba(212,140,140,0.2)] text-[9px] uppercase tracking-widest border border-[#D48C8C]/20"
+          className="w-full lg:w-auto flex items-center justify-center gap-2 bg-[#C5A059] text-white font-semibold py-4 px-8 rounded-xl hover:scale-[1.02] transition-all shadow-[0_10px_20px_rgba(212,140,140,0.2)] text-[9px] uppercase tracking-widest border border-[#C5A059]/20"
         >
           <Plus size={18} /> Novo Produto
         </button>
@@ -128,7 +128,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({ products, insumos, com
       {/* Luxury Catalog List View */}
       <div className="space-y-4">
         {filtered.length === 0 && (
-          <div className="py-32 text-center bg-white/40 border border-dashed border-[#F0E6D2] rounded-[3rem] text-[#A09898] uppercase tracking-[0.3em] font-semibold text-[9px]">
+          <div className="py-32 text-center bg-[#140b0e]/40 border border-dashed border-rose-900/30 rounded-[3rem] text-rose-300 uppercase tracking-[0.3em] font-semibold text-[9px]">
             Nenhum produto encontrado neste ateliê.
           </div>
         )}
@@ -143,10 +143,10 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({ products, insumos, com
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="group bg-white rounded-2xl overflow-hidden border border-[#F0E6D2] flex flex-col md:flex-row md:items-center p-4 gap-6 hover:border-[#D48C8C]/50 transition-all shadow-sm hover:shadow-md"
+              className="group bg-[#140b0e] rounded-2xl overflow-hidden border border-rose-900/30 flex flex-col md:flex-row md:items-center p-4 gap-6 hover:border-[#C5A059]/50 transition-all shadow-sm hover:shadow-md"
             >
                {/* Small Image (not enormous anymore) */}
-               <div className="w-full md:w-24 h-24 rounded-xl overflow-hidden bg-[#FDFBF9] shrink-0 border border-[#F0E6D2]">
+               <div className="w-full md:w-24 h-24 rounded-xl overflow-hidden bg-[#0b0507] shrink-0 border border-rose-900/30">
                   <ImageWithFallback src={p.image || ''} alt={p.product_name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                </div>
 
@@ -156,22 +156,22 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({ products, insumos, com
                         <span className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest text-white ${companyColor}`}>
                           {companyPrefix}
                         </span>
-                        <h3 className="text-[12px] font-semibold text-[#4A4444] uppercase tracking-tight group-hover:text-[#D48C8C] transition-colors">{p.product_name}</h3>
+                        <h3 className="text-[12px] font-semibold text-rose-100 uppercase tracking-tight group-hover:text-[#C5A059] transition-colors">{p.product_name}</h3>
                      </div>
                      <div className="flex items-center gap-3">
-                        <span className="text-[8px] font-semibold text-[#A09898] uppercase tracking-widest">REF: {p.code}</span>
+                        <span className="text-[8px] font-semibold text-rose-300 uppercase tracking-widest">REF: {p.code}</span>
                         <span className="w-1 h-1 rounded-full bg-[#F0E6D2]"></span>
                         <span className="text-[8px] font-bold text-[#C5A059] uppercase tracking-widest">{p.category} {p.subcategory ? `> ${p.subcategory}` : ''}</span>
-                        {p.isFeatured && <Star size={10} className="text-[#D48C8C]" fill="currentColor" />}
+                        {p.isFeatured && <Star size={10} className="text-[#C5A059]" fill="currentColor" />}
                      </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-8">
                      <div className="text-right">
-                        <p className="text-[8px] font-medium text-[#A09898] uppercase tracking-widest line-through">De: {formatCurrency(oldPrice)}</p>
+                        <p className="text-[8px] font-medium text-rose-300 uppercase tracking-widest line-through">De: {formatCurrency(oldPrice)}</p>
                         <div className="flex items-center gap-2 justify-end">
-                           <span className="text-[9px] font-bold text-[#4A4444] uppercase">Por:</span>
-                           <span className="text-sm font-semibold text-[#D48C8C]">{formatCurrency(p.retail_price || 0)}</span>
+                           <span className="text-[9px] font-bold text-rose-100 uppercase">Por:</span>
+                           <span className="text-sm font-semibold text-[#C5A059]">{formatCurrency(p.retail_price || 0)}</span>
                         </div>
                         <p className="text-[7px] font-medium text-[#C5A059] uppercase tracking-widest">2x de {formatCurrency((p.retail_price || 0) / 2)} s/ juros</p>
                      </div>
@@ -179,14 +179,14 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({ products, insumos, com
                      <div className="flex gap-2">
                         <button 
                           onClick={() => { setEditingProduct(p); setIsModalOpen(true); }}
-                          className="p-3 rounded-xl bg-[#FDFBF9] text-[#A09898] hover:text-[#D48C8C] hover:bg-white transition-all border border-[#F0E6D2]"
+                          className="p-3 rounded-xl bg-[#0b0507] text-rose-300 hover:text-[#C5A059] hover:bg-[#140b0e] transition-all border border-rose-900/30"
                           title="Editar"
                         >
                           <Edit size={16} />
                         </button>
                         <button 
                           onClick={() => setProductToDelete(p.id)}
-                          className="p-3 rounded-xl bg-rose-50 text-rose-300 hover:bg-rose-500 hover:text-white transition-all border border-rose-100"
+                          className="p-3 rounded-xl bg-[#1f0e16] text-rose-300 hover:bg-rose-500 hover:text-white transition-all border border-[#3e1b29]"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -223,11 +223,11 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({ products, insumos, com
                <Trash2 size={32} />
             </div>
             <h3 className="text-2xl font-sans font-black mb-3 uppercase tracking-tighter text-white">Excluir Produto?</h3>
-            <p className="text-[10px] text-slate-400 mb-10 font-bold uppercase tracking-[0.2em]">Esta operação é irreversível e removerá o item de todos os catálogos ativos.</p>
+            <p className="text-[10px] text-rose-300 mb-10 font-bold uppercase tracking-[0.2em]">Esta operação é irreversível e removerá o item de todos os catálogos ativos.</p>
             <div className="flex gap-4">
               <button 
                 onClick={() => setProductToDelete(null)}
-                className="flex-1 py-5 bg-white rounded-2xl font-black text-slate-500 uppercase text-[9px] tracking-widest hover:bg-white/10 transition-all border border-slate-100"
+                className="flex-1 py-5 bg-[#140b0e] rounded-2xl font-black text-slate-500 uppercase text-[9px] tracking-widest hover:bg-[#140b0e]/10 transition-all border border-rose-900/30"
               >
                 Cancelar
               </button>
@@ -381,33 +381,33 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
        <motion.div 
          initial={{ opacity: 0, scale: 0.95, y: 20 }}
          animate={{ opacity: 1, scale: 1, y: 0 }}
-         className="bg-[#FDFBF9] w-full max-w-5xl h-[90vh] flex flex-col rounded-[2.5rem] border border-[#F0E6D2] overflow-hidden shadow-2xl relative"
+         className="bg-[#0b0507] w-full max-w-5xl h-[90vh] flex flex-col rounded-[2.5rem] border border-rose-900/30 overflow-hidden shadow-2xl relative"
        >
           
           {/* Modal Header */}
-          <div className="p-8 md:p-10 border-b border-[#F0E6D2] flex items-center justify-between bg-white">
+          <div className="p-8 md:p-10 border-b border-rose-900/30 flex items-center justify-between bg-[#140b0e]">
              <div>
-                <h2 className="text-2xl font-sans font-semibold text-[#4A4444] uppercase tracking-tight">{editingProduct?.id ? 'Configurações de Produto' : 'Novo Produto'}</h2>
+                <h2 className="text-2xl font-sans font-semibold text-rose-100 uppercase tracking-tight">{editingProduct?.id ? 'Configurações de Produto' : 'Novo Produto'}</h2>
                 <div className="flex gap-2 mt-4">
                    {atelieres.map(atl => (
                      <button 
                        key={atl.id} 
                        type="button"
                        onClick={() => setSelectedAtelier(atl.id as CompanyId)}
-                       className={`px-4 py-1.5 rounded-lg text-[8px] font-semibold uppercase tracking-widest border transition-all ${selectedAtelier === atl.id ? 'bg-[#D48C8C] border-[#D48C8C] text-white shadow-md shadow-[#D48C8C]/20' : 'bg-[#FDFBF9] border-[#F0E6D2] text-[#A09898] hover:border-[#D48C8C]/30'}`}
+                       className={`px-4 py-1.5 rounded-lg text-[8px] font-semibold uppercase tracking-widest border transition-all ${selectedAtelier === atl.id ? 'bg-[#C5A059] border-[#C5A059] text-white shadow-md shadow-[#D48C8C]/20' : 'bg-[#0b0507] border-rose-900/30 text-rose-300 hover:border-[#C5A059]/30'}`}
                      >
                        {atl.name}
                      </button>
                    ))}
                 </div>
              </div>
-             <button type="button" onClick={onClose} className="p-3 rounded-full hover:bg-red-50 text-[#A09898] hover:text-red-400 transition-all">
+             <button type="button" onClick={onClose} className="p-3 rounded-full hover:bg-red-50 text-rose-300 hover:text-red-400 transition-all">
                 <X size={24} />
              </button>
           </div>
 
           {/* Sub-Tabs Navigation */}
-          <div className="flex bg-[#FDFBF9] p-2 gap-2 border-b border-[#F0E6D2]">
+          <div className="flex bg-[#0b0507] p-2 gap-2 border-b border-rose-900/30">
              {[
                 { id: 'info', label: 'Dados Básicos', icon: Info },
                 { id: 'photos', label: 'Galeria', icon: Camera },
@@ -418,7 +418,7 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                  key={tab.id}
                  type="button"
                  onClick={() => setActiveSubTab(tab.id as any)}
-                 className={`flex-1 flex items-center justify-center gap-3 py-3 rounded-xl text-[8px] font-semibold uppercase tracking-widest transition-all ${activeSubTab === tab.id ? 'bg-white text-[#D48C8C] shadow-sm border border-[#F0E6D2]' : 'text-[#A09898] hover:text-[#4A4444]'}`}
+                 className={`flex-1 flex items-center justify-center gap-3 py-3 rounded-xl text-[8px] font-semibold uppercase tracking-widest transition-all ${activeSubTab === tab.id ? 'bg-[#140b0e] text-[#C5A059] shadow-sm border border-rose-900/30' : 'text-rose-300 hover:text-rose-100'}`}
                >
                  <tab.icon size={14} />
                  <span>{tab.label}</span>
@@ -427,78 +427,78 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto p-10 scrollbar-hide bg-white/30">
+          <div className="flex-1 overflow-y-auto p-10 scrollbar-hide bg-[#140b0e]/30">
              {activeSubTab === 'info' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 animate-in fade-in duration-500">
                    <div className="space-y-8">
                       <div className="space-y-2">
-                        <label className="text-[9px] uppercase font-semibold text-[#A09898] tracking-[0.2em] ml-2">Título do Produto</label>
+                        <label className="text-[9px] uppercase font-semibold text-rose-300 tracking-[0.2em] ml-2">Título do Produto</label>
                         <input 
                            id="product-name" 
                            value={productName} 
                            onChange={(e) => setProductName(e.target.value)}
                            required 
                            type="text" 
-                           className="w-full bg-white border border-[#F0E6D2] rounded-xl px-6 py-4 text-[11px] font-semibold outline-none focus:border-[#D48C8C] transition-all text-[#4A4444]" 
+                           className="w-full bg-[#140b0e] border border-rose-900/30 rounded-xl px-6 py-4 text-[11px] font-semibold outline-none focus:border-[#C5A059] transition-all text-rose-100" 
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[9px] uppercase font-semibold text-[#A09898] tracking-[0.2em] ml-2">Categoria</label>
+                          <label className="text-[9px] uppercase font-semibold text-rose-300 tracking-[0.2em] ml-2">Categoria</label>
                           {!showNewCatInput ? (
                             <div className="flex gap-2">
                               <select 
                                 value={category} 
                                 onChange={(e) => setCategory(e.target.value)}
-                                className="flex-1 bg-white border border-[#F0E6D2] rounded-xl px-4 py-4 text-[9px] font-semibold uppercase tracking-widest outline-none text-[#4A4444]"
+                                className="flex-1 bg-[#140b0e] border border-rose-900/30 rounded-xl px-4 py-4 text-[9px] font-semibold uppercase tracking-widest outline-none text-rose-100"
                               >
                                 <option value="">Selecionar...</option>
                                 {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                               </select>
-                              <button type="button" onClick={() => setShowNewCatInput(true)} className="p-4 bg-[#FDFBF9] hover:bg-white text-[#C5A059] border border-[#F0E6D2] rounded-xl transition-all"><Plus size={16} /></button>
+                              <button type="button" onClick={() => setShowNewCatInput(true)} className="p-4 bg-[#0b0507] hover:bg-[#140b0e] text-[#C5A059] border border-rose-900/30 rounded-xl transition-all"><Plus size={16} /></button>
                             </div>
                           ) : (
                             <div className="flex gap-2">
-                               <input autoFocus placeholder="Nova Categoria..." value={newCat} onChange={e => setNewCat(e.target.value)} className="flex-1 bg-white border border-[#F0E6D2] rounded-xl px-4 py-4 text-[9px] font-semibold uppercase outline-none text-[#4A4444]" />
+                               <input autoFocus placeholder="Nova Categoria..." value={newCat} onChange={e => setNewCat(e.target.value)} className="flex-1 bg-[#140b0e] border border-rose-900/30 rounded-xl px-4 py-4 text-[9px] font-semibold uppercase outline-none text-rose-100" />
                                <button type="button" onClick={() => setShowNewCatInput(false)} className="px-3 bg-red-50 text-red-400 rounded-xl"><X size={16} /></button>
                             </div>
                           )}
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[9px] uppercase font-semibold text-[#A09898] tracking-[0.2em] ml-2">Sub-Categoria</label>
+                          <label className="text-[9px] uppercase font-semibold text-rose-300 tracking-[0.2em] ml-2">Sub-Categoria</label>
                           {!showNewSubcatInput ? (
                             <div className="flex gap-2">
                               <select 
                                 value={subcategory} 
                                 onChange={(e) => setSubcategory(e.target.value)}
-                                className="flex-1 bg-white border border-[#F0E6D2] rounded-xl px-4 py-4 text-[9px] font-semibold uppercase tracking-widest outline-none text-[#4A4444]"
+                                className="flex-1 bg-[#140b0e] border border-rose-900/30 rounded-xl px-4 py-4 text-[9px] font-semibold uppercase tracking-widest outline-none text-rose-100"
                               >
                                 <option value="">Nenhuma</option>
                                 {subcategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                               </select>
-                              <button type="button" onClick={() => setShowNewSubcatInput(true)} className="p-4 bg-[#FDFBF9] hover:bg-white text-[#C5A059] border border-[#F0E6D2] rounded-xl transition-all"><Plus size={16} /></button>
+                              <button type="button" onClick={() => setShowNewSubcatInput(true)} className="p-4 bg-[#0b0507] hover:bg-[#140b0e] text-[#C5A059] border border-rose-900/30 rounded-xl transition-all"><Plus size={16} /></button>
                             </div>
                           ) : (
                             <div className="flex gap-2">
-                               <input autoFocus placeholder="Nova Sub-Categoria..." value={newSubcat} onChange={e => setNewSubcat(e.target.value)} className="flex-1 bg-white border border-[#F0E6D2] rounded-xl px-4 py-4 text-[9px] font-semibold uppercase outline-none text-[#4A4444]" />
+                               <input autoFocus placeholder="Nova Sub-Categoria..." value={newSubcat} onChange={e => setNewSubcat(e.target.value)} className="flex-1 bg-[#140b0e] border border-rose-900/30 rounded-xl px-4 py-4 text-[9px] font-semibold uppercase outline-none text-rose-100" />
                                <button type="button" onClick={() => setShowNewSubcatInput(false)} className="px-3 bg-red-50 text-red-400 rounded-xl"><X size={16} /></button>
                             </div>
                           )}
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[9px] uppercase font-semibold text-[#A09898] tracking-[0.2em] ml-2">Descrição de Venda</label>
+                        <label className="text-[9px] uppercase font-semibold text-rose-300 tracking-[0.2em] ml-2">Descrição de Venda</label>
                         <textarea 
                            id="product-desc" 
                            value={description} 
                            onChange={(e) => setDescription(e.target.value)}
-                           className="w-full bg-white border border-[#F0E6D2] rounded-[1.5rem] px-6 py-4 text-[11px] font-medium outline-none h-32 text-[#4A4444] resize-none" 
+                           className="w-full bg-[#140b0e] border border-rose-900/30 rounded-[1.5rem] px-6 py-4 text-[11px] font-medium outline-none h-32 text-rose-100 resize-none" 
                         />
                       </div>
                    </div>
 
                    <div className="space-y-8">
-                      <div className="p-8 bg-white rounded-[2rem] border border-[#F0E6D2] shadow-sm">
+                      <div className="p-8 bg-[#140b0e] rounded-[2rem] border border-rose-900/30 shadow-sm">
                          <h3 className="text-[9px] font-semibold text-[#C5A059] uppercase tracking-[0.3em] mb-6">Mídia Principal</h3>
                          <ImageUpload
                            label="Foto de Capa"
@@ -519,28 +519,28 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                          />
                       </div>
 
-                      <div className="p-8 rounded-[2rem] bg-[#FDFBF9] border border-[#F0E6D2]">
-                         <h3 className="text-[9px] font-semibold text-[#A09898] uppercase tracking-[0.3em] mb-6">Configurações de Exibição</h3>
+                      <div className="p-8 rounded-[2rem] bg-[#0b0507] border border-rose-900/30">
+                         <h3 className="text-[9px] font-semibold text-rose-300 uppercase tracking-[0.3em] mb-6">Configurações de Exibição</h3>
                          <div className="space-y-4">
-                            <label className="flex items-center justify-between p-4 bg-white rounded-xl border border-[#F0E6D2] hover:border-[#D48C8C]/40 transition-all cursor-pointer group">
+                            <label className="flex items-center justify-between p-4 bg-[#140b0e] rounded-xl border border-rose-900/30 hover:border-[#C5A059]/40 transition-all cursor-pointer group">
                                <div className="flex items-center gap-4">
-                                  <div className={`p-2.5 rounded-lg transition-colors ${isFeatured ? 'bg-[#C5A059]/10 text-[#C5A059]' : 'bg-[#FDFBF9] text-[#D1CACA]'}`}><Star size={14} fill={isFeatured ? 'currentColor' : 'none'} /></div>
-                                  <span className="text-[9px] font-semibold uppercase text-[#4A4444] tracking-widest">Produto em Destaque</span>
+                                  <div className={`p-2.5 rounded-lg transition-colors ${isFeatured ? 'bg-[#C5A059]/10 text-[#C5A059]' : 'bg-[#0b0507] text-rose-400'}`}><Star size={14} fill={isFeatured ? 'currentColor' : 'none'} /></div>
+                                  <span className="text-[9px] font-semibold uppercase text-rose-100 tracking-widest">Produto em Destaque</span>
                                </div>
                                <input type="checkbox" checked={isFeatured} onChange={e => setIsFeatured(e.target.checked)} className="hidden" />
-                               <div className={`w-10 h-5 rounded-full relative transition-all ${isFeatured ? 'bg-[#D48C8C]' : 'bg-[#F0E6D2]'}`}>
-                                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${isFeatured ? 'left-5.5' : 'left-0.5'}`} />
+                               <div className={`w-10 h-5 rounded-full relative transition-all ${isFeatured ? 'bg-[#C5A059]' : 'bg-[#F0E6D2]'}`}>
+                                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-[#140b0e] transition-all shadow-sm ${isFeatured ? 'left-5.5' : 'left-0.5'}`} />
                                 </div>
                             </label>
 
-                            <label className="flex items-center justify-between p-4 bg-white rounded-xl border border-[#F0E6D2] hover:border-[#D48C8C]/40 transition-all cursor-pointer group">
+                            <label className="flex items-center justify-between p-4 bg-[#140b0e] rounded-xl border border-rose-900/30 hover:border-[#C5A059]/40 transition-all cursor-pointer group">
                                <div className="flex items-center gap-4">
-                                  <div className={`p-2.5 rounded-lg transition-colors ${activeInCatalog ? 'bg-emerald-50 text-emerald-500' : 'bg-[#FDFBF9] text-[#D1CACA]'}`}><Eye size={14} /></div>
-                                  <span className="text-[9px] font-semibold uppercase text-[#4A4444] tracking-widest">Ativo para Venda</span>
+                                  <div className={`p-2.5 rounded-lg transition-colors ${activeInCatalog ? 'bg-emerald-950/30 text-emerald-500' : 'bg-[#0b0507] text-rose-400'}`}><Eye size={14} /></div>
+                                  <span className="text-[9px] font-semibold uppercase text-rose-100 tracking-widest">Ativo para Venda</span>
                                </div>
                                <input type="checkbox" checked={activeInCatalog} onChange={e => setActiveInCatalog(e.target.checked)} className="hidden" />
                                <div className={`w-10 h-5 rounded-full relative transition-all ${activeInCatalog ? 'bg-emerald-400' : 'bg-[#F0E6D2]'}`}>
-                                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${activeInCatalog ? 'left-5.5' : 'left-0.5'}`} />
+                                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-[#140b0e] transition-all shadow-sm ${activeInCatalog ? 'left-5.5' : 'left-0.5'}`} />
                                </div>
                             </label>
                          </div>
@@ -552,8 +552,8 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
              {activeSubTab === 'photos' && (
                 <div className="animate-in fade-in duration-300 space-y-10">
                    <div className="space-y-4">
-                      <h3 className="text-sm font-black text-black uppercase tracking-widest">Galeria do Produto</h3>
-                      <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest">Selecione até 7 imagens para o catálogo. A primeira será a principal.</p>
+                      <h3 className="text-sm font-black text-rose-50 uppercase tracking-widest">Galeria do Produto</h3>
+                      <p className="text-[10px] text-rose-300 uppercase font-black tracking-widest">Selecione até 7 imagens para o catálogo. A primeira será a principal.</p>
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -576,7 +576,7 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                           />
                           {images[idx] && (
                             <>
-                              <div className="absolute top-[34px] left-4 px-2 py-1 bg-black/60 rounded-md backdrop-blur-md pointer-events-none z-10 shadow-sm border border-slate-200" style={idx === 0 ? {backgroundColor: '#FF007F', color: '#FFF'} : {}}>
+                              <div className="absolute top-[34px] left-4 px-2 py-1 bg-black/60 rounded-md backdrop-blur-md pointer-events-none z-10 shadow-sm border border-rose-900/50" style={idx === 0 ? {backgroundColor: '#FF007F', color: '#FFF'} : {}}>
                                 <span className="text-[7px] font-black text-white uppercase tracking-widest flex items-center gap-1">{idx === 0 ? <Star size={8} fill="currentColor"/> : null} {idx === 0 ? 'CAPA PRINCIPAL' : 'EXTRA'}</span>
                               </div>
                               {idx !== 0 && (
@@ -603,45 +603,45 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                    </div>
 
                    {images[0] && (
-                      <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 space-y-6">
+                      <div className="p-8 bg-[#1f0e16] rounded-[2rem] border border-rose-900/30 space-y-6">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-lilac/10 text-lilac rounded-lg"><Maximize2 size={18} /></div>
-                          <h3 className="text-xs font-black text-black uppercase tracking-widest">Ajuste Fino da Imagem Principal</h3>
+                          <h3 className="text-xs font-black text-rose-50 uppercase tracking-widest">Ajuste Fino da Imagem Principal</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                           <div className="space-y-4">
                             <div className="space-y-2">
-                               <div className="flex justify-between items-center text-[9px] font-black uppercase text-slate-400 tracking-wider">
+                               <div className="flex justify-between items-center text-[9px] font-black uppercase text-rose-300 tracking-wider">
                                  <span>Zoom / Escala</span>
                                  <span>{imgScale.toFixed(2)}x</span>
                                </div>
-                               <input type="range" min="0.1" max="4" step="0.05" value={imgScale} onChange={e => setImgScale(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-lilac" />
+                               <input type="range" min="0.1" max="4" step="0.05" value={imgScale} onChange={e => setImgScale(Number(e.target.value))} className="w-full h-2 bg-[#3e1b29] rounded-lg appearance-none cursor-pointer accent-lilac" />
                             </div>
                             <div className="space-y-2">
-                               <div className="flex justify-between items-center text-[9px] font-black uppercase text-slate-400 tracking-wider">
+                               <div className="flex justify-between items-center text-[9px] font-black uppercase text-rose-300 tracking-wider">
                                  <span>Rotação</span>
                                  <span>{imgRotate}°</span>
                                 </div>
-                               <input type="range" min="-180" max="180" step="1" value={imgRotate} onChange={e => setImgRotate(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-lilac" />
+                               <input type="range" min="-180" max="180" step="1" value={imgRotate} onChange={e => setImgRotate(Number(e.target.value))} className="w-full h-2 bg-[#3e1b29] rounded-lg appearance-none cursor-pointer accent-lilac" />
                             </div>
                           </div>
                           <div className="space-y-4">
                             <div className="space-y-2">
-                               <div className="flex justify-between items-center text-[9px] font-black uppercase text-slate-400 tracking-wider">
+                               <div className="flex justify-between items-center text-[9px] font-black uppercase text-rose-300 tracking-wider">
                                  <span>Deslocamento X</span>
                                  <span>{imgX}px</span>
                                </div>
-                               <input type="range" min="-200" max="200" step="1" value={imgX} onChange={e => setImgX(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-lilac" />
+                               <input type="range" min="-200" max="200" step="1" value={imgX} onChange={e => setImgX(Number(e.target.value))} className="w-full h-2 bg-[#3e1b29] rounded-lg appearance-none cursor-pointer accent-lilac" />
                             </div>
                             <div className="space-y-2">
-                               <div className="flex justify-between items-center text-[9px] font-black uppercase text-slate-400 tracking-wider">
+                               <div className="flex justify-between items-center text-[9px] font-black uppercase text-rose-300 tracking-wider">
                                  <span>Deslocamento Y</span>
                                  <span>{imgY}px</span>
                                </div>
-                               <input type="range" min="-200" max="200" step="1" value={imgY} onChange={e => setImgY(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-lilac" />
+                               <input type="range" min="-200" max="200" step="1" value={imgY} onChange={e => setImgY(Number(e.target.value))} className="w-full h-2 bg-[#3e1b29] rounded-lg appearance-none cursor-pointer accent-lilac" />
                             </div>
                           </div>
-                          <div className="md:col-span-2 flex items-center justify-center bg-white rounded-3xl border border-slate-200 overflow-hidden relative group aspect-video md:aspect-auto">
+                          <div className="md:col-span-2 flex items-center justify-center bg-[#140b0e] rounded-3xl border border-rose-900/50 overflow-hidden relative group aspect-video md:aspect-auto">
                              <ImageWithFallback 
                                 src={images[0] || ''} 
                                 alt="Ajuste" 
@@ -666,7 +666,7 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                          <select 
                            value={selectedInsumoId} 
                            onChange={e => setSelectedInsumoId(e.target.value)}
-                           className="flex-1 bg-white border border-lilac/20 rounded-2xl px-4 py-4 text-[10px] font-black uppercase outline-none text-black"
+                           className="flex-1 bg-[#140b0e] border border-lilac/20 rounded-2xl px-4 py-4 text-[10px] font-black uppercase outline-none text-rose-50"
                          >
                            <option value="">Selecionar Insumo do Estoque...</option>
                            {insumos.map(i => <option key={i.id} value={i.id}>{i.name} (R$ {i.unitValue}/unid)</option>)}
@@ -676,7 +676,7 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                            min="1"
                            value={insumoQty} 
                            onChange={e => setInsumoQty(Number(e.target.value))}
-                           className="w-24 bg-white border border-lilac/20 rounded-2xl px-4 py-4 text-[10px] font-black uppercase outline-none text-black"
+                           className="w-24 bg-[#140b0e] border border-lilac/20 rounded-2xl px-4 py-4 text-[10px] font-black uppercase outline-none text-rose-50"
                            placeholder="Qtd"
                          />
                          <button 
@@ -696,23 +696,23 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                          </button>
                       </div>
                       
-                      <div className="bg-white rounded-[2rem] p-6 space-y-2">
-                        {addedInsumos.length === 0 && <p className="text-[10px] font-black text-gray-400 uppercase text-center p-4">Nenhum insumo adicionado</p>}
+                      <div className="bg-[#140b0e] rounded-[2rem] p-6 space-y-2">
+                        {addedInsumos.length === 0 && <p className="text-[10px] font-black text-rose-300 uppercase text-center p-4">Nenhum insumo adicionado</p>}
                         {addedInsumos.map((ai, index) => {
                            const ins = insumos.find(i => i.id === ai.insumoId);
                            if (!ins) return null;
                            return (
-                             <div key={`${ai.insumoId}-${index}`} className="flex items-center justify-between p-4 bg-white rounded-xl border border-lilac/10 flex-wrap gap-2">
+                             <div key={`${ai.insumoId}-${index}`} className="flex items-center justify-between p-4 bg-[#140b0e] rounded-xl border border-lilac/10 flex-wrap gap-2">
                                <div>
-                                 <span className="font-bold text-xs uppercase text-black">{ins.name}</span>
+                                 <span className="font-bold text-xs uppercase text-rose-50">{ins.name}</span>
                                  <span className="text-[10px] font-black text-lilac uppercase ml-2 bg-lilac/10 px-2 py-1 rounded-md">Qtd: {ai.quantity}</span>
                                </div>
                                <div className="flex items-center gap-4">
-                                 <span className="font-mono font-black text-sm text-gray-400">R$ {(ins.unitValue * ai.quantity).toFixed(2)}</span>
+                                 <span className="font-mono font-black text-sm text-rose-300">R$ {(ins.unitValue * ai.quantity).toFixed(2)}</span>
                                  <button type="button" onClick={async () => {
                                    setAddedInsumos(addedInsumos.filter((_, i) => i !== index));
                                    setCostPrice(prev => Math.max(0, prev - (ins.unitValue * ai.quantity)));
-                                 }} className="text-rose-300 hover:text-rose-500 bg-rose-50 p-2 rounded-lg">
+                                 }} className="text-rose-300 hover:text-rose-500 bg-[#1f0e16] p-2 rounded-lg">
                                    <X size={16} />
                                  </button>
                                </div>
@@ -726,31 +726,31 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
 
              {activeSubTab === 'pricing' && (
                 <div className="animate-in fade-in duration-300 space-y-10">
-                   <div className="p-8 rounded-[2rem] bg-white border border-lilac/20 space-y-6">
+                   <div className="p-8 rounded-[2rem] bg-[#140b0e] border border-lilac/20 space-y-6">
                       <div className="flex items-center gap-4 mb-4">
                          <div className="p-3 bg-amber-100 text-amber-600 rounded-xl"><Calculator size={24} /></div>
-                         <h3 className="text-sm font-black uppercase tracking-widest text-black">Precificação Inteligente</h3>
+                         <h3 className="text-sm font-black uppercase tracking-widest text-rose-50">Precificação Inteligente</h3>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                          <div className="space-y-2">
-                           <label className="text-[10px] uppercase font-black text-gray-400 ml-2">Minutos dedicados ao produto</label>
+                           <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Minutos dedicados ao produto</label>
                            <input 
                              type="number"
                              step="1"
                              min="0"
                              value={laborHours || ''}
                              onChange={e => setLaborHours(Number(e.target.value))} 
-                             className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-black outline-none tracking-widest focus:border-lilac shadow-sm"
+                             className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-black outline-none tracking-widest focus:border-lilac shadow-sm"
                              placeholder="Ex: 30, 45, 120"
                            />
                          </div>
-                         <div className="p-6 rounded-2xl bg-amber-50/50 border border-amber-100 space-y-2">
+                         <div className="p-6 rounded-2xl bg-amber-950/30/50 border border-amber-100 space-y-2">
                             <p className="text-[9px] font-black uppercase text-amber-500 tracking-widest">Base de Cálculo Automática</p>
-                            <ul className="text-[10px] space-y-1 font-bold text-gray-400">
-                               <li>Taxa Fixa/mês: <span className="text-black">R$ {globalCosts.fixed.toFixed(2)}</span></li>
-                               <li>Mão de Obra: <span className="text-black">R$ {globalCosts.labor.toFixed(2)}/h</span></li>
-                               <li>Impostos Venda: <span className="text-black">{globalCosts.tax.toFixed(2)}%</span></li>
+                            <ul className="text-[10px] space-y-1 font-bold text-rose-300">
+                               <li>Taxa Fixa/mês: <span className="text-rose-50">R$ {globalCosts.fixed.toFixed(2)}</span></li>
+                               <li>Mão de Obra: <span className="text-rose-50">R$ {globalCosts.labor.toFixed(2)}/h</span></li>
+                               <li>Impostos Venda: <span className="text-rose-50">{globalCosts.tax.toFixed(2)}%</span></li>
                             </ul>
                             <div className="pt-2 mt-2 border-t border-amber-100">
                                <p className="text-[11px] font-black text-amber-600 uppercase">Sugestão de Preço: <span className="text-xl ml-2">R$ {intelligentRetailPrice.toFixed(2)}</span></p>
@@ -760,21 +760,21 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                    </div>
 
                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                      <div className="p-8 rounded-[2rem] bg-[#FDFBF9] border border-[#F0E6D2]">
-                         <p className="text-[9px] font-black text-[#A09898] uppercase tracking-widest mb-2 flex items-center gap-2">Valor "De:"</p>
-                         <p className="text-[8px] font-bold text-[#D1CACA] mb-4">(Preço Riscado)</p>
+                      <div className="p-8 rounded-[2rem] bg-[#0b0507] border border-rose-900/30">
+                         <p className="text-[9px] font-black text-rose-300 uppercase tracking-widest mb-2 flex items-center gap-2">Valor "De:"</p>
+                         <p className="text-[8px] font-bold text-rose-400 mb-4">(Preço Riscado)</p>
                          <div className="flex items-center gap-2">
-                           <span className="text-[11px] font-black text-[#D1CACA]">R$</span>
+                           <span className="text-[11px] font-black text-rose-400">R$</span>
                            <input 
                               type="number" 
                               step="0.01" 
                               value={originalPrice || ''} 
                               onChange={e => setOriginalPrice(Number(e.target.value))} 
-                              className="bg-transparent border-b border-[#F0E6D2] outline-none text-2xl font-mono font-black text-[#A09898] w-full" 
+                              className="bg-transparent border-b border-rose-900/30 outline-none text-2xl font-mono font-black text-rose-300 w-full" 
                            />
                          </div>
                       </div>
-                      <div className="p-8 rounded-[2rem] bg-rose-50 border border-rose-100">
+                      <div className="p-8 rounded-[2rem] bg-[#1f0e16] border border-[#3e1b29]">
                          <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest mb-2 flex items-center gap-2"><TrendingUp size={14} /> Custo Variável Total</p>
                          <p className="text-[8px] font-bold text-rose-400 mb-4">(Custo dos Insumos / Produção Direta)</p>
                          <div className="flex items-center gap-2">
@@ -782,7 +782,7 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                            <input type="number" step="0.01" value={costPrice || ''} onChange={e => setCostPrice(Number(e.target.value))} className="bg-transparent border-b border-rose-200 outline-none text-3xl font-mono font-black text-rose-600 w-full" />
                          </div>
                       </div>
-                      <div className="p-8 rounded-[2rem] bg-emerald-50 border border-emerald-100 relative">
+                      <div className="p-8 rounded-[2rem] bg-emerald-950/30 border border-emerald-100 relative">
                          <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-2"><DollarSign size={14} /> Preço de Venda Varejo</p>
                          <p className="text-[8px] font-bold text-emerald-400 mb-4">(Valor final cobrado do cliente)</p>
                          <button 
@@ -798,19 +798,19 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                          </div>
                       </div>
                       <div className="p-8 rounded-[2rem] bg-black border border-black shadow-xl">
-                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Margem Bruta (Varejo)</p>
+                         <p className="text-[9px] font-black text-rose-300 uppercase tracking-widest mb-2">Margem Bruta (Varejo)</p>
                          <div className="flex items-baseline gap-2 mt-4">
-                           <span className={`text-4xl font-mono font-black ${retailPrice && costPrice ? (((retailPrice - costPrice) / retailPrice) * 100) > 30 ? 'text-emerald-400' : 'text-amber-400' : 'text-gray-400'}`}>
+                           <span className={`text-4xl font-mono font-black ${retailPrice && costPrice ? (((retailPrice - costPrice) / retailPrice) * 100) > 30 ? 'text-emerald-400' : 'text-amber-400' : 'text-rose-300'}`}>
                              {retailPrice && costPrice ? (((retailPrice - costPrice) / retailPrice) * 100).toFixed(0) : '0'}
                            </span>
-                           <span className="text-gray-400 font-bold">%</span>
+                           <span className="text-rose-300 font-bold">%</span>
                          </div>
                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2 flex items-center gap-2">Líquido Bruto: <span className="font-mono text-slate-800">R$ {(retailPrice - costPrice).toFixed(2)}</span></p>
                       </div>
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="p-8 rounded-[2rem] bg-white border border-lilac/10 shadow-sm space-y-6">
+                      <div className="p-8 rounded-[2rem] bg-[#140b0e] border border-lilac/10 shadow-sm space-y-6">
                        <div className="flex items-center gap-4 mb-4">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input 
@@ -819,21 +819,21 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
                               onChange={(e) => setIsWholesaleEnabled(e.target.checked)}
                               className="w-5 h-5 accent-black" 
                             />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-black">Ativar Atacado</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-rose-50">Ativar Atacado</span>
                           </label>
                        </div>
                        
                        {isWholesaleEnabled && (
                          <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
-                               <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Valor Unitário</label>
-                               <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 border border-lilac/10">
-                                  <span className="text-[10px] font-black text-gray-400">R$</span>
-                                  <input type="number" step="0.01" value={wholesalePrice || ''} onChange={e => setWholesalePrice(Number(e.target.value))} className="bg-transparent outline-none text-sm font-black text-black w-full" />
+                               <label className="text-[8px] font-black text-rose-300 uppercase tracking-widest">Valor Unitário</label>
+                               <div className="flex items-center gap-2 bg-[#140b0e] rounded-xl px-4 py-3 border border-lilac/10">
+                                  <span className="text-[10px] font-black text-rose-300">R$</span>
+                                  <input type="number" step="0.01" value={wholesalePrice || ''} onChange={e => setWholesalePrice(Number(e.target.value))} className="bg-transparent outline-none text-sm font-black text-rose-50 w-full" />
                                </div>
                             </div>
                             <div className="space-y-2">
-                               <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Margem Atacado</label>
+                               <label className="text-[8px] font-black text-rose-300 uppercase tracking-widest">Margem Atacado</label>
                                <div className="flex items-center justify-center h-[46px] px-4 bg-lilac/5 text-lilac rounded-xl border border-lilac/10 font-bold text-xs italic">
                                   {costPrice > 0 && wholesalePrice > 0 ? (((wholesalePrice - costPrice) / wholesalePrice) * 100).toFixed(0) : 0}%
                                </div>
@@ -843,32 +843,32 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
 
                        {isWholesaleEnabled && <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
-                               <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Mínimo Produtos</label>
+                               <label className="text-[8px] font-black text-rose-300 uppercase tracking-widest">Mínimo Produtos</label>
                                <input 
                                  value={wholesaleMinQty} 
                                  onChange={e => setWholesaleMinQty(Number(e.target.value))} 
                                  type="number" 
-                                 className="w-full bg-white border border-lilac/20 rounded-xl px-4 py-3 text-sm font-black outline-none text-black" 
+                                 className="w-full bg-[#140b0e] border border-lilac/20 rounded-xl px-4 py-3 text-sm font-black outline-none text-rose-50" 
                                />
                             </div>
                             <div className="space-y-2">
-                               <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Máximo Produtos</label>
+                               <label className="text-[8px] font-black text-rose-300 uppercase tracking-widest">Máximo Produtos</label>
                                <input 
                                  value={wholesaleMaxQty} 
                                  onChange={e => setWholesaleMaxQty(Number(e.target.value))} 
                                  type="number" 
-                                 className="w-full bg-white border border-lilac/20 rounded-xl px-4 py-3 text-sm font-black outline-none text-black" 
+                                 className="w-full bg-[#140b0e] border border-lilac/20 rounded-xl px-4 py-3 text-sm font-black outline-none text-rose-50" 
                                />
                             </div>
                        </div>}
                       </div>
 
-                      <div className="p-8 rounded-[2rem] bg-white/50 border border-transparent shadow-inner flex flex-col justify-center">
+                      <div className="p-8 rounded-[2rem] bg-[#140b0e]/50 border border-transparent shadow-inner flex flex-col justify-center">
                          <div className="text-center space-y-2">
                             <Calculator size={32} className="text-lilac mx-auto mb-4" />
-                            <h5 className="text-[10px] font-black text-black uppercase tracking-widest">Simulação de Venda Varejo</h5>
-                            <p className="text-2xl font-mono font-black text-black">{formatCurrency(retailPrice)}</p>
-                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-loose">
+                            <h5 className="text-[10px] font-black text-rose-50 uppercase tracking-widest">Simulação de Venda Varejo</h5>
+                            <p className="text-2xl font-mono font-black text-rose-50">{formatCurrency(retailPrice)}</p>
+                            <p className="text-[9px] font-black text-rose-300 uppercase tracking-widest leading-loose">
                                Custo: {formatCurrency(costPrice)} <br />
                                Impostos/Taxas (aprox): {formatCurrency(retailPrice * 0.1)} <br />
                                <span className="text-emerald-500 font-bold">LUCRO REAL ESTIMADO: {formatCurrency(profit - (retailPrice * 0.1))}</span>
@@ -881,8 +881,8 @@ const ProductFormModal: React.FC<ProductFormModalProps & { existingProducts: Pro
           </div>
 
           {/* Modal Footer */}
-          <div className="p-8 border-t border-[#F0E6D2] bg-white flex gap-4 justify-end">
-             <button type="button" onClick={onClose} className="px-8 py-4 rounded-xl bg-white border border-[#F0E6D2] text-[9px] uppercase font-semibold tracking-widest text-[#A09898] hover:text-[#4A4444] transition-all">Cancelar</button>
+          <div className="p-8 border-t border-rose-900/30 bg-[#140b0e] flex gap-4 justify-end">
+             <button type="button" onClick={onClose} className="px-8 py-4 rounded-xl bg-[#140b0e] border border-rose-900/30 text-[9px] uppercase font-semibold tracking-widest text-rose-300 hover:text-rose-100 transition-all">Cancelar</button>
              <button 
                 type="button"
                 disabled={loading || uploadsInProgress > 0}

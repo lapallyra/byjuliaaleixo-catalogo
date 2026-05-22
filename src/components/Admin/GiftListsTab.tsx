@@ -74,17 +74,17 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({ companyId }) => 
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h2 className="text-2xl font-black uppercase tracking-tighter">Lista de Presentes</h2>
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Gerencie as listas criadas pelos clientes</p>
+          <p className="text-xs text-rose-300 font-bold uppercase tracking-widest mt-1">Gerencie as listas criadas pelos clientes</p>
         </div>
         
         <div className="relative w-full md:w-64">
-           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-rose-300" size={16} />
            <input 
              type="text" 
              placeholder="BUSCAR CÓDIGO..." 
              value={search}
              onChange={(e) => setSearch(e.target.value)}
-             className="w-full bg-white border border-gray-100 rounded-xl pl-10 pr-4 py-2.5 text-[10px] font-black uppercase outline-none focus:border-lilac/30 transition-all"
+             className="w-full bg-[#140b0e] border border-rose-900/30 rounded-xl pl-10 pr-4 py-2.5 text-[10px] font-black uppercase outline-none focus:border-lilac/30 transition-all"
            />
         </div>
       </header>
@@ -97,14 +97,14 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({ companyId }) => 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all group flex flex-col"
+              className="bg-[#140b0e] border border-rose-900/30 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all group flex flex-col"
             >
               <div className="flex justify-between items-start mb-6">
                 <div className="p-3 bg-lilac/10 rounded-2xl text-lilac">
                   <Gift size={20} />
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => handlePrint(list)} className="p-2 text-gray-400 hover:text-black transition-colors" title="Imprimir">
+                  <button onClick={() => handlePrint(list)} className="p-2 text-rose-300 hover:text-rose-50 transition-colors" title="Imprimir">
                     <Printer size={16} />
                   </button>
                   <button onClick={() => handleDelete(list.id)} className="p-2 text-rose-300 hover:text-rose-500 transition-colors" title="Excluir">
@@ -114,7 +114,7 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({ companyId }) => 
               </div>
 
               <div className="mb-4">
-                <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">CÓDIGO</span>
+                <span className="text-[10px] font-black text-rose-400 uppercase tracking-[0.2em]">CÓDIGO</span>
                 <div className="text-2xl font-mono font-black tracking-tight">{list.code}</div>
               </div>
 
@@ -131,7 +131,7 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({ companyId }) => 
 
               <button 
                 onClick={() => setSelectedList(list)}
-                className="w-full py-3 bg-white hover:bg-black hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                className="w-full py-3 bg-[#140b0e] hover:bg-black hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
               >
                 Ver Detalhes
               </button>
@@ -141,7 +141,7 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({ companyId }) => 
       </div>
 
       {filtered.length === 0 && !loading && (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-300 grayscale opacity-40">
+        <div className="flex flex-col items-center justify-center py-20 text-rose-400 grayscale opacity-40">
            <Gift size={60} className="mb-4" />
            <p className="text-[10px] font-black uppercase tracking-widest">Nenhuma lista encontrada</p>
         </div>
@@ -162,7 +162,7 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({ companyId }) => 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+              className="relative w-full max-w-lg bg-[#140b0e] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
             >
               <div className="p-6 border-b border-gray-50 flex items-center justify-between">
                 <h3 className="font-black uppercase tracking-widest text-sm">Resumo da Lista: {selectedList.code}</h3>
@@ -172,21 +172,21 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({ companyId }) => 
                       handleDelete(selectedList.id);
                       setSelectedList(null);
                     }} 
-                    className="p-2 text-rose-300 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors" 
+                    className="p-2 text-rose-300 hover:text-rose-500 hover:bg-[#1f0e16] rounded-full transition-colors" 
                     title="Excluir"
                   >
                     <Trash2 size={20} />
                   </button>
-                  <button onClick={() => setSelectedList(null)} className="p-2 hover:bg-white rounded-full"><X size={20} /></button>
+                  <button onClick={() => setSelectedList(null)} className="p-2 hover:bg-[#140b0e] rounded-full"><X size={20} /></button>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-6 space-y-2">
                 {selectedList.items.map((item: any, idx: number) => (
-                  <div key={item.id || item.product_name || idx} className="flex items-center gap-4 p-3 bg-white rounded-xl border border-gray-100">
-                    <div className="w-12 h-12 rounded-lg bg-white overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  <div key={item.id || item.product_name || idx} className="flex items-center gap-4 p-3 bg-[#140b0e] rounded-xl border border-rose-900/30">
+                    <div className="w-12 h-12 rounded-lg bg-[#140b0e] overflow-hidden flex-shrink-0 flex items-center justify-center">
                        {item.image ? (
                           <ImageWithFallback src={item.image} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                       ) : <Package size={16} className="text-gray-300" />}
+                       ) : <Package size={16} className="text-rose-400" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-black uppercase tracking-tight line-clamp-1">{item.product_name}</div>
@@ -195,8 +195,8 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({ companyId }) => 
                   </div>
                 ))}
               </div>
-              <div className="p-6 border-t border-gray-50 bg-white/50 flex justify-between items-center">
-                <div className="text-xs font-black uppercase text-gray-400">Total Sugerido</div>
+              <div className="p-6 border-t border-gray-50 bg-[#140b0e]/50 flex justify-between items-center">
+                <div className="text-xs font-black uppercase text-rose-300">Total Sugerido</div>
                 <div className="text-xl font-mono font-black">R$ {selectedList.items.reduce((acc: number, i: any) => acc + i.retail_price, 0).toFixed(2)}</div>
               </div>
             </motion.div>

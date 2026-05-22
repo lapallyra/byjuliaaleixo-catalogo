@@ -44,8 +44,8 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
       return { ...prev, [companyId]: updatedCart };
     });
 
-    // Navigate to checkout directly
-    navigate('/checkout', { state: { companyId } });
+    // Navigate to home, cart is available via floating button
+    navigate('/');
   };
 
   if (loading) {
