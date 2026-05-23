@@ -1,9 +1,5 @@
-const {onRequest} = require("firebase-functions/v2/https");
+const functions = require("firebase-functions");
 
-exports.createPreference = onRequest(
-    {secrets: ["MERCADOPAGO_ACCESS_TOKEN"]},
-    async (req, res) => {
-      res.status(200).json({test: "ok"});
-    },
-);
-
+exports.createPreference = functions.https.onRequest((req, res) => {
+  res.send("FUNCIONANDO");
+});
