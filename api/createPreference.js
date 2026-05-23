@@ -1,14 +1,16 @@
-const mercadopago = require("mercadopago");
+import { MercadoPagoConfig, Preference } from "mercadopago";
 
-mercadopago.configure({
-  access_token: process.env.MP_ACCESS_TOKEN,
+const client = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN,
 });
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
 
   try {
 
+    // 🔥 TESTE
     if (req.method === "GET") {
+
       return res.status(200).json({
         ok: true,
         message: "API funcionando"
@@ -56,32 +58,45 @@ module.exports = async (req, res) => {
         ];
     }
 
-    const preference = {
-      items: [
-        {
-          title: product,
-          quantity: 1,
-          unit_price: Number(
-            valorCobrado.toFixed(2)
-          ),
+    const preference = new Preference(client);
+
+    const response = await preference.create({
+      body: {
+
+        items: [
+          {
+            title: product,
+            quantity: 1,
+            unit_price: Number(
+              valorCobrado.toFixed(2)
+            ),
+          },
+        ],
+
+        metadata: {
+          total,
+          valorCobrado,
+          saldoRestante,
+          premioRoleta,
         },
-      ],
 
-      metadata: {
-        total,
-        valorCobrado,
-        saldoRestante,
-        premioRoleta,
+        back_urls: {
+          success:
+            "https://www.byjuliaaleixo.online/sucesso",
+
+          failure:
+            "https://www.byjuliaaleixo.online/erro",
+
+          pending:
+            "https://www.byjuliaaleixo.online/pendente",
+        },
+
+        auto_return: "approved",
       },
-    };
-
-    const response =
-      await mercadopago.preferences.create(
-        preference
-      );
+    });
 
     return res.status(200).json({
-      init_point: response.body.init_point,
+      init_point: response.init_point,
       total,
       valorCobrado,
       saldoRestante,
@@ -95,6 +110,7 @@ module.exports = async (req, res) => {
 
     return res.status(500).json({
       error: error.message,
+      cause: error.cause || null,
     });
   }
-};
+}
