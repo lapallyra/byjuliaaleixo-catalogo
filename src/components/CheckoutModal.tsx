@@ -199,8 +199,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       
       if (requiresOnlinePayment) {
         console.log('Calling createPreference');
-        const createPreference = httpsCallable(functions, 'createPreference');
-        
+const response = await fetch("/api/createPreference", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(preferenceData),
+});
+
+const result = await response.json();
+
         const mpItems = cart.map(item => ({
           title: String(item.product_name || "Item"),
           quantity: Number(item.quantity) || 1,
@@ -228,11 +236,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         let initPoint: string | null = null;
         let preferenceId: string | null = null;
 
-        try {
-          const result = await createPreference(preferencePayload);
-          data = result.data;
-          console.log('Preference created');
-          
+      const response = await fetch("/api/createPreference", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(preferencePayload),
+});
+
+const data = await response.json();
+
+console.log("Preference created");
+         
           const responseData = data as any;
           initPoint = responseData?.init_point || 
                             responseData?.url || 
