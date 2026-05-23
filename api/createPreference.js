@@ -1,14 +1,13 @@
-import mercadopago from "mercadopago";
+const mercadopago = require("mercadopago");
 
 mercadopago.configure({
-  access_token: "TEST-8748255036550408-051807-a0d25e1df0755decf51e038ea4f23026-163294559",
+  access_token: process.env.MP_ACCESS_TOKEN,
 });
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
 
   try {
 
-    // 🔥 TESTE GET
     if (req.method === "GET") {
       return res.status(200).json({
         ok: true,
@@ -21,7 +20,7 @@ export default async function handler(req, res) {
     const total =
       Number(price) * Number(quantity || 1);
 
-    // 🔥 REGRAS
+    // 🔥 REGRA SINAL
     const LIMITE = 100;
     const TAXA_SINAL = 0.5;
 
@@ -57,7 +56,6 @@ export default async function handler(req, res) {
         ];
     }
 
-    // 🔥 PREFERENCE
     const preference = {
       items: [
         {
@@ -75,19 +73,6 @@ export default async function handler(req, res) {
         saldoRestante,
         premioRoleta,
       },
-
-      back_urls: {
-        success:
-          "https://www.byjuliaaleixo.online/sucesso",
-
-        failure:
-          "https://www.byjuliaaleixo.online/erro",
-
-        pending:
-          "https://www.byjuliaaleixo.online/pendente",
-      },
-
-      auto_return: "approved",
     };
 
     const response =
@@ -105,10 +90,11 @@ export default async function handler(req, res) {
 
   } catch (error) {
 
+    console.error("ERRO MP:");
     console.error(error);
 
     return res.status(500).json({
       error: error.message,
     });
   }
-}
+};
