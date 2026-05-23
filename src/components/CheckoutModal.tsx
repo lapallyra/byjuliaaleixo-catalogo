@@ -198,99 +198,103 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const requiresOnlinePayment = formData.paymentMethod !== 'cash';
       
       if (requiresOnlinePayment) {
-        console.log('Calling createPreference');
-const response = await fetch("/api/createPreference", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify(preferenceData),
-});
 
-const result = await response.json();
+  try {
 
-        const mpItems = cart.map(item => ({
-          title: String(item.product_name || "Item"),
-          quantity: Number(item.quantity) || 1,
-          unit_price: Number(item.retail_price) || 0,
-          currency_id: 'BRL'
-        }));
+    console.log("Calling createPreference");
 
-        const preferencePayload = {
-          orderId: savedOrderCode,
-          companyId: companyId,
-          items: mpItems,
-          payer: {
-            name: formData.name,
-            email: "cliente@loja.com" 
-          },
-          back_urls: {
-            success: `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`,
-            failure: `${window.location.origin}${window.location.pathname}?payment_status=failed&order_id=${savedOrderCode}`,
-            pending: `${window.location.origin}${window.location.pathname}?payment_status=pending&order_id=${savedOrderCode}`
-          },
-          auto_return: "approved"
-        };
+    const mpItems = cart.map(item => ({
+      title: String(item.product_name || "Item"),
+      quantity: Number(item.quantity) || 1,
+      unit_price: Number(item.retail_price) || 0,
+      currency_id: "BRL"
+    }));
 
-        let data: any;
-        let initPoint: string | null = null;
-        let preferenceId: string | null = null;
+    const preferencePayload = {
+      orderId: savedOrderCode,
+      companyId: companyId,
+      items: mpItems,
+      payer: {
+        name: formData.name,
+        email: "cliente@loja.com"
+      },
+      back_urls: {
+        success: `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`,
+        failure: `${window.location.origin}${window.location.pathname}?payment_status=failed&order_id=${savedOrderCode}`,
+        pending: `${window.location.origin}${window.location.pathname}?payment_status=pending&order_id=${savedOrderCode}`
+      },
+      auto_return: "approved"
+    };
 
-      const response = await fetch("/api/createPreference", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify(preferencePayload),
-});
+    const response = await fetch("/api/createPreference", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(preferencePayload),
+    });
 
-const data = await response.json();
+    const data = await response.json();
 
-console.log("Preference created");
-         
-          const responseData = data as any;
-          initPoint = responseData?.init_point || 
-                            responseData?.url || 
-                            responseData?.body?.init_point || 
-                            responseData?.response?.init_point ||
-                            (typeof responseData === 'string' && responseData.startsWith('http') ? responseData : null);
-          preferenceId = responseData?.id || null;
-          
-          if (!initPoint && preferenceId) {
-             initPoint = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preferenceId}`;
-          }
+    console.log("Preference created");
 
-          if (initPoint) {
-             console.log('Redirecting to Mercado Pago');
-             console.log(initPoint);
-             
-             // Setup return handling logic
-             localStorage.setItem('mp_pending_order', JSON.stringify({
-                orderId: savedOrderCode,
-                formData,
-                cart,
-                total,
-                companyName,
-                config: siteSettings
-             }));
-             
-             if (typeof window !== 'undefined') {
-                window.dispatchEvent(new CustomEvent('clear-cart'));
-             }
-             
-             window.location.href = initPoint;
-             return; 
-          } else {
-             throw new Error("init_point não foi retornado pelo Mercado Pago.");
-          }
-        } catch (callError: any) {
-          console.error("Erro ao chamar o Mercado Pago:", callError);
-          // NO fallback to local success!
-          alert(`Falha no pagamento: ${callError.message || callError}`);
-          return; // Stop execution here instead of throwing which triggers the generic catch handler.
-        }
-      }
+    const responseData = data as any;
 
+    let initPoint =
+      responseData?.init_point ||
+      responseData?.url ||
+      responseData?.body?.init_point ||
+      responseData?.response?.init_point ||
+      (typeof responseData === "string" &&
+      responseData.startsWith("http")
+        ? responseData
+        : null);
+
+    const preferenceId = responseData?.id || null;
+
+    if (!initPoint && preferenceId) {
+      initPoint = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preferenceId}`;
+    }
+
+    if (!initPoint) {
+      throw new Error("init_point não foi retornado pelo Mercado Pago.");
+    }
+
+    console.log("Redirecting to Mercado Pago");
+    console.log(initPoint);
+
+    localStorage.setItem(
+      "mp_pending_order",
+      JSON.stringify({
+        orderId: savedOrderCode,
+        formData,
+        cart,
+        total,
+        companyName,
+        config: siteSettings
+      })
+    );
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("clear-cart"));
+    }
+
+    window.location.href = initPoint;
+    return;
+
+  } catch (callError: any) {
+
+    console.error("Erro ao chamar o Mercado Pago:", callError);
+
+    alert(
+      `Falha no pagamento: ${
+        callError.message || callError
+      }`
+    );
+
+    return;
+  }
+}
       // Trigger notification if not done yet
       if (!requiresOnlinePayment) {
         const realNotif = {
