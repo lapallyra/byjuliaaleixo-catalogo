@@ -8,28 +8,42 @@ export default async function handler(req, res) {
 
   try {
 
-    // 🔥 TESTE
     if (req.method === "GET") {
-
       return res.status(200).json({
         ok: true,
         message: "API funcionando"
       });
     }
 
-    const { product, price, quantity } = req.body;
+    const {
+      items,
+      payer,
+      orderId,
+      companyId
+    } = req.body;
 
-    const total =
-      Number(price) * Number(quantity || 1);
+    if (!items || !items.length) {
+      return res.status(400).json({
+        error: "Items não enviados"
+      });
+    }
 
-    // 🔥 REGRA SINAL
+    // 🔥 TOTAL
+    const total = items.reduce((acc, item) => {
+      return acc + (
+        Number(item.unit_price || 0) *
+        Number(item.quantity || 1)
+      );
+    }, 0);
+
+    // 🔥 REGRA DO SINAL
     const LIMITE = 100;
     const TAXA_SINAL = 0.5;
 
     let valorCobrado;
     let saldoRestante;
 
-    if (total > LIMITE) {
+    if (total >= LIMITE) {
 
       valorCobrado = total * TAXA_SINAL;
       saldoRestante = total - valorCobrado;
@@ -65,19 +79,27 @@ export default async function handler(req, res) {
 
         items: [
           {
-            title: product,
+            title: `Pedido ${companyId || ""}`,
             quantity: 1,
             unit_price: Number(
               valorCobrado.toFixed(2)
             ),
-          },
+            currency_id: "BRL"
+          }
         ],
 
+        payer: {
+          name: payer?.name || "Cliente",
+          email: payer?.email || "cliente@email.com"
+        },
+
         metadata: {
+          orderId,
+          companyId,
           total,
           valorCobrado,
           saldoRestante,
-          premioRoleta,
+          premioRoleta
         },
 
         back_urls: {
@@ -95,8 +117,12 @@ export default async function handler(req, res) {
       },
     });
 
+    console.log("MP RESPONSE:");
+    console.log(response);
+
     return res.status(200).json({
       init_point: response.init_point,
+      id: response.id,
       total,
       valorCobrado,
       saldoRestante,
