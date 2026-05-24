@@ -77,16 +77,14 @@ export default async function handler(req, res) {
     const response = await preference.create({
       body: {
 
-        items: [
-          {
-            title: `Pedido ${companyId || ""}`,
-            quantity: 1,
-            unit_price: Number(
-              valorCobrado.toFixed(2)
-            ),
-            currency_id: "BRL"
-          }
-        ],
+   items: [
+  {
+    title: `Pedido ${companyId || ""}`,
+    quantity: 1,
+    unit_price: 5,
+    currency_id: "BRL"
+  }
+],
 
         payer: {
           name: payer?.name || "Cliente",
