@@ -1,7 +1,10 @@
-import React, { useState, useRef } from 'react';
-import { Upload, X, ImageIcon, Loader2, Ban } from 'lucide-react';
-import { uploadImage, compressImage } from '../../services/firebaseStorageService';
-import { ImageWithFallback } from '../ImageWithFallback';
+import React, { useState, useRef } from "react";
+import { Upload, X, ImageIcon, Loader2, Ban } from "lucide-react";
+import {
+  uploadImage,
+  compressImage,
+} from "../../services/firebaseStorageService";
+import { ImageWithFallback } from "../ImageWithFallback";
 
 interface ImageUploadProps {
   onUploadComplete: (url: string) => void;
@@ -13,14 +16,14 @@ interface ImageUploadProps {
   onUploadFinished?: () => void;
 }
 
-export const ImageUpload: React.FC<ImageUploadProps> = ({ 
-  onUploadComplete, 
-  onRemove, 
-  currentUrl, 
+export const ImageUpload: React.FC<ImageUploadProps> = ({
+  onUploadComplete,
+  onRemove,
+  currentUrl,
   path,
   label = "Imagem",
   onUploadStarted,
-  onUploadFinished
+  onUploadFinished,
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -33,9 +36,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     if (!file) return;
 
     // Validate type
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      setError('Formato não suportado.');
+      setError("Formato não suportado.");
       return;
     }
 
@@ -46,17 +49,21 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     try {
       const compressedFile = await compressImage(file);
-      const { promise, task } = uploadImage(compressedFile, path, (progress) => {
-        setUploadProgress(Math.round(progress));
-      });
+      const { promise, task } = uploadImage(
+        compressedFile,
+        path,
+        (progress) => {
+          setUploadProgress(Math.round(progress));
+        },
+      );
       uploadTaskRef.current = task;
       const url = await promise;
       onUploadComplete(url);
     } catch (err: any) {
-      if (err.code === 'storage/canceled') {
-        setError('O upload foi cancelado.');
+      if (err.code === "storage/canceled") {
+        setError("O upload foi cancelado.");
       } else {
-        setError(err.message || 'Erro ao enviar.');
+        setError(err.message || "Erro ao enviar.");
       }
       console.error(err);
     } finally {
@@ -80,7 +87,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const file = e.dataTransfer.files?.[0];
     if (file) {
       const dataTransfer = new DataTransfer();
@@ -94,20 +101,24 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
   return (
     <div className="space-y-2">
-      <label className="text-[10px] uppercase font-black text-rose-300 ml-2">{label}</label>
-      
-      <div 
-        className={`relative rounded-3xl border-2 border-dashed transition-all overflow-hidden flex items-center justify-center min-h-[160px] bg-[#140b0e] ${
-          currentUrl ? 'border-lilac/30' : 'border-rose-900/30 hover:border-lilac/30'
+      <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+        {label}
+      </label>
+
+      <div
+        className={`relative rounded-3xl border-2 border-dashed transition-all overflow-hidden flex items-center justify-center min-h-[160px] bg-white ${
+          currentUrl
+            ? "border-lilac/30"
+            : "border-[#F0E6D2] hover:border-lilac/30"
         }`}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
         {currentUrl ? (
           <div className="relative group w-full h-full p-2 flex items-center justify-center">
-            <ImageWithFallback 
-              src={currentUrl} 
-              alt="Preview" 
+            <ImageWithFallback
+              src={currentUrl}
+              alt="Preview"
               className="max-h-[140px] rounded-2xl object-contain shadow-sm"
               referrerPolicy="no-referrer"
             />
@@ -122,7 +133,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             </button>
           </div>
         ) : (
-          <div 
+          <div
             onClick={() => fileInputRef.current?.click()}
             className="flex flex-col items-center gap-3 p-8 cursor-pointer w-full text-center"
           >
@@ -130,17 +141,21 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               <Upload size={24} />
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-black text-rose-50">Clique ou arraste a imagem</p>
-              <p className="text-[9px] font-bold text-rose-300 uppercase tracking-widest">PNG, JPG ou WEBP até 5MB</p>
+              <p className="text-xs font-black text-slate-900">
+                Clique ou arraste a imagem
+              </p>
+              <p className="text-[9px] font-bold text-[#A09898] uppercase tracking-widest">
+                PNG, JPG ou WEBP até 5MB
+              </p>
             </div>
           </div>
         )}
 
         {isUploading && (
-          <div className="absolute inset-0 bg-[#140b0e]/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-10">
+          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 z-10">
             <Loader2 size={24} className="text-lilac animate-spin mb-4" />
-            <div className="w-full max-w-[200px] h-1.5 bg-[#2b141e] rounded-full overflow-hidden">
-              <div 
+            <div className="w-full max-w-[200px] h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div
                 className="h-full bg-lilac transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               />
@@ -148,26 +163,26 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             <p className="text-[10px] font-black text-lilac mt-2 uppercase tracking-widest">
               Enviando... {uploadProgress}%
             </p>
-            <button 
+            <button
               onClick={cancelUpload}
-              className="mt-4 flex items-center gap-1 text-[10px] font-bold text-rose-500 hover:text-rose-600"
+              className="mt-4 flex items-center gap-1 text-[10px] font-bold text-slate-9000 hover:text-rose-600"
             >
               <Ban size={12} /> Cancelar
             </button>
           </div>
         )}
 
-        <input 
+        <input
           ref={fileInputRef}
-          type="file" 
-          className="hidden" 
+          type="file"
+          className="hidden"
           accept="image/*"
           onChange={handleFileChange}
         />
       </div>
-      
+
       {error && (
-        <p className="text-[10px] font-bold text-rose-500 ml-2 mt-1 uppercase tracking-widest flex items-center gap-1">
+        <p className="text-[10px] font-bold text-slate-9000 ml-2 mt-1 uppercase tracking-widest flex items-center gap-1">
           <X size={10} /> {error}
         </p>
       )}
