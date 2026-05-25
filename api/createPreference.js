@@ -87,10 +87,13 @@ export default async function handler(req, res) {
 ],
 
         payer: {
-          name: payer?.name || "Cliente",
-          email: payer?.email || "cliente@email.com"
-        },
-
+  name: formData.name,
+  email: formData.email,
+  identification: {
+    type: "CPF",
+    number: formData.cpfCnpj
+  }
+},
         metadata: {
           orderId,
           companyId,

@@ -215,9 +215,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       companyId: companyId,
       items: mpItems,
       payer: {
-        name: formData.name,
-        email: "cliente@loja.com"
-      },
+  name: formData.name,
+  email: formData.email,
+  identification: {
+    type: "CPF",
+    number: formData.cpfCnpj
+  }
+},
       back_urls: {
         success: `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`,
         failure: `${window.location.origin}${window.location.pathname}?payment_status=failed&order_id=${savedOrderCode}`,
