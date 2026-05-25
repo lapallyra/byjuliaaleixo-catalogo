@@ -234,13 +234,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       });
       
       if (!response.ok) {
+        const textResponse = await response.text();
         let errorData;
         try {
-           errorData = await response.json();
+           errorData = JSON.parse(textResponse);
         } catch(e) {
-           errorData = await response.text();
+           errorData = { error: textResponse };
         }
-        throw new Error(errorData.error || response.statusText);
+        throw new Error(errorData?.error || response.statusText);
       }
 
       const data = await response.json();
