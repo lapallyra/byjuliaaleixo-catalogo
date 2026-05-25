@@ -13,7 +13,7 @@ interface CartSidebarProps {
   onRemove: (id: string) => void;
   onUpdateQty: (id: string, delta: number) => void;
   onSetQty: (id: string, quantity: number) => void;
-  onCheckout: (email: string) => void;
+  onCheckout: () => void;
   isCheckoutLoading?: boolean;
   companyId: CompanyId;
 }
@@ -65,28 +65,6 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   const [coupon, setCoupon] = useState('');
   const [discount, setDiscount] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
-
-  const validateEmail = (email: string) => {
-    const re = /\S+@\S+\.\S+/;
-    return re.test(email);
-  };
-
-  const handleCheckoutClick = () => {
-    if (!customerEmail.trim()) {
-      setEmailError('O e-mail é obrigatório');
-      if (isCollapsed) setIsCollapsed(false);
-      return;
-    }
-    if (!validateEmail(customerEmail)) {
-      setEmailError('E-mail inválido. Verifique o formato.');
-      if (isCollapsed) setIsCollapsed(false);
-      return;
-    }
-    setEmailError('');
-    onCheckout(customerEmail);
-  };
 
   const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
   const total = subtotal * (1 - discount);
@@ -256,26 +234,8 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                   </span>
                 </div>
 
-                <div className="w-full flex justify-start items-center">
-                  <div className="w-full relative">
-                    <input 
-                      type="email"
-                      placeholder="SEU E-MAIL PARA CONTATO"
-                      value={customerEmail}
-                      onChange={(e) => {
-                        setCustomerEmail(e.target.value);
-                        if (emailError) setEmailError('');
-                      }}
-                      className={`w-full px-4 py-4 bg-transparent border ${emailError ? 'border-rose-500' : theme.borderLine} ${theme.textPrimary} rounded-xl text-xs ${theme.inputPlaceholder} outline-none transition-colors uppercase tracking-widest`}
-                    />
-                    {emailError && (
-                      <span className="absolute -top-6 left-1 text-[9px] text-rose-500 font-bold uppercase tracking-widest">{emailError}</span>
-                    )}
-                  </div>
-                </div>
-
                 <button 
-                  onClick={handleCheckoutClick}
+                  onClick={() => onCheckout()}
                   disabled={isCheckoutLoading}
                   className={`w-full py-5 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-700 active:scale-95 ${theme.btnPrimary} disabled:opacity-50 flex items-center justify-center gap-2`}
                 >
@@ -289,7 +249,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                   R$ {total >= 1000 ? (total/1000).toFixed(1)+'k' : total.toLocaleString('pt-BR')}
                 </div>
                 <button 
-                  onClick={handleCheckoutClick}
+                  onClick={() => onCheckout()}
                   disabled={isCheckoutLoading}
                   className={`w-12 h-12 ${theme.btnPrimary} rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-all disabled:opacity-50`}
                   title="Finalizar"

@@ -167,7 +167,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isDirectCheckoutLoading, setIsDirectCheckoutLoading] = useState(false);
 
-  const handleDirectCheckout = async (email: string) => {
+  const handleDirectCheckout = async () => {
     if (cart.length === 0) return;
     setIsDirectCheckoutLoading(true);
     
@@ -177,10 +177,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
       console.log("Saving initial sale...");
       const docId = await saveSale({
-        customerName: email.split('@')[0],
-        customerEmail: email,
+        customerName: "Cliente (Checkout Direto MP)",
+        customerEmail: "",
         customerCpfCnpj: "",
-        contact: email,
+        contact: "",
         total,
         companyId,
         items: cart.map(item => ({
@@ -197,7 +197,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         isEmergency: false,
         paymentMethod: 'mercadopago',
         source: 'catalog',
-        observations: `Pagamento via MP Direto - ${email}`
+        observations: "Pagamento via MP Direto"
       });
 
       const savedOrderCode = docId || crypto.randomUUID();
@@ -215,8 +215,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         companyId: companyId,
         items: mpItems,
         payer: {
-          name: email.split('@')[0],
-          email: email
+          name: "Cliente",
+          email: "cliente@loja.com" 
         },
         back_urls: {
           success: `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`,
@@ -272,7 +272,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
          throw new Error("init_point não retornado pelo MP.");
       }
     } catch (e: any) {
-      console.error("Direct Checkout Error:", e);
+      console.error("Checkout Error:", e);
       alert(`Falha ao ir para o pagamento: ${e.message || "Erro desconhecido"}`);
       setIsDirectCheckoutLoading(false);
     }
