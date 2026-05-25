@@ -16,7 +16,7 @@ import { SuggestionBox } from './components/SuggestionBox';
 import { INITIAL_CONFIG, PRODUCTS } from './constants';
 import { AppConfig, CompanyId, CartItem, Product } from './types';
 import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
-
+import PremiumCheckout from './components/PremiumCheckout';
 import { PrizeRouletteModal } from './components/PrizeRouletteModal';
 import { sendNotifications } from './services/notificationService';
 import { updateOrder } from './services/firebaseService';
@@ -267,7 +267,7 @@ function MainApp() {
       <CookieBanner />
       <Routes>
         <Route path="/" element={<EntryView config={config} />} />
-        
+
         <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts.filter(p => p.company === 'pallyra')} companyId="pallyra" config={config} carts={carts} setCart={setCarts} giftLists={giftLists} setGiftLists={setGiftLists} />} />
         <Route path="/lapallyra/admin" element={<Navigate to="/admin" replace />} />
         
@@ -313,6 +313,7 @@ function MainApp() {
         
         {/* Gift List View */}
         <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setCarts} config={config} />} />
+      <Route path="/checkout-premium" element={<PremiumCheckout />} />
       </Routes>
     </SparklesContainer>
   );

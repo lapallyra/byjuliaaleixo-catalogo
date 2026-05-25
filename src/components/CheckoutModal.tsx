@@ -238,7 +238,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       body: JSON.stringify(preferencePayload),
     });
 
-    const data = await response.json();
+     const text = await response.text();
+
+console.log("RAW RESPONSE:");
+console.log(text);
+
+const data = text ? JSON.parse(text) : {};
 
     console.log("Preference created");
 
