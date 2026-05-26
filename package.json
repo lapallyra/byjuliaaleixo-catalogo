@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
+    "dev": "tsx server.ts",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
@@ -32,10 +33,15 @@
   "devDependencies": {
     "@firebase/eslint-plugin-security-rules": "^0.0.2",
     "@types/express": "^5.0.6",
+<<<<<<< HEAD
     "@types/node": "^22.19.19",
+=======
+    "@types/node": "^22.14.0",
+>>>>>>> 68eae5bcd3770273edda2112d71f8be3462c10f9
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.21",
+    "esbuild": "^0.28.0",
     "replace-in-file": "^8.4.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",

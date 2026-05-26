@@ -37,14 +37,15 @@ import { CartSidebar } from './CartSidebar';
 import { GiftListSidebar } from './GiftListSidebar';
 import { SuggestionBox } from './SuggestionBox';
 import { ProductDetailModal } from './ProductDetailModal';
-import { CheckoutModal } from './CheckoutModal';
 
 import { CatalogHeader } from './Catalog/CatalogHeader';
 import { CatalogInfoBar } from './Catalog/CatalogInfoBar';
 import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
-import { subscribeToProducts, addProduct, getSiteSettings, getGiftList } from '../services/firebaseService';
+import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGiftList } from '../services/firebaseService';
+import { functions } from '../lib/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { PRODUCTS, INITIAL_CONFIG } from '../constants';
 import { useAuth } from './AuthProvider';
 import { login } from '../lib/firebase';
@@ -163,9 +164,121 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isReadOnlyProduct, setIsReadOnlyProduct] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isDirectCheckoutLoading, setIsDirectCheckoutLoading] = useState(false);
+
+  const handleDirectCheckout = async () => {
+    if (cart.length === 0) return;
+    setIsDirectCheckoutLoading(true);
+    
+    try {
+      const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
+      const total = subtotal;
+
+      console.log("Saving initial sale...");
+      const docId = await saveSale({
+        customerName: "Cliente (Checkout Direto MP)",
+        customerEmail: "",
+        customerCpfCnpj: "",
+        contact: "",
+        total,
+        companyId,
+        items: cart.map(item => ({
+          ...item,
+          productId: item.id || '',
+          product_name: item.product_name || '',
+          quantity: item.quantity || 1,
+          retail_price: item.retail_price || 0,
+          insumos: item.insumos || []
+        })),
+        isWholesale: false, // Could check if min qty met but to keep simple we assume false unless explicitly handled
+        deliveryType: 'delivery',
+        deliveryDate: "Agendar",
+        isEmergency: false,
+        paymentMethod: 'mercadopago',
+        source: 'catalog',
+        observations: "Pagamento via MP Direto"
+      });
+
+      const savedOrderCode = docId || crypto.randomUUID();
+      
+      console.log('Calling createPreference');
+      const mpItems = cart.map(item => ({
+        title: String(item.product_name || "Item"),
+        quantity: Number(item.quantity) || 1,
+        unit_price: Number(item.retail_price) || 0,
+        currency_id: 'BRL'
+      }));
+
+      const preferencePayload = {
+        orderId: savedOrderCode,
+        companyId: companyId,
+        items: mpItems,
+        payer: {
+          name: "Cliente",
+          email: "cliente@loja.com" 
+        },
+        back_urls: {
+          success: `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`,
+          failure: `${window.location.origin}${window.location.pathname}?payment_status=failed&order_id=${savedOrderCode}`,
+          pending: `${window.location.origin}${window.location.pathname}?payment_status=pending&order_id=${savedOrderCode}`
+        },
+        auto_return: "approved"
+      };
+
+      console.log('Fetching /api/createPreference...');
+      const response = await fetch('/api/createPreference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(preferencePayload)
+      });
+      
+      if (!response.ok) {
+        const textResponse = await response.text();
+        let errorData;
+        try {
+           errorData = JSON.parse(textResponse);
+        } catch(e) {
+           errorData = { error: textResponse };
+        }
+        throw new Error(errorData?.error || response.statusText);
+      }
+
+      const data = await response.json();
+      let initPoint = data?.init_point || 
+                        data?.url || 
+                        data?.body?.init_point || 
+                        data?.response?.init_point ||
+                        (typeof data === 'string' && data.startsWith('http') ? data : null);
+      
+      const preferenceId = data?.id || null;
+      if (!initPoint && preferenceId) {
+         initPoint = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preferenceId}`;
+      }
+
+      if (initPoint) {
+         console.log('Redirecting to Mercado Pago:', initPoint);
+         
+         localStorage.setItem('mp_pending_order', JSON.stringify({
+            orderId: savedOrderCode,
+            cart,
+            total,
+            companyName,
+            config: siteSettings
+         }));
+         
+         window.dispatchEvent(new CustomEvent('clear-cart'));
+         window.location.href = initPoint;
+      } else {
+         throw new Error("init_point não retornado pelo MP.");
+      }
+    } catch (e: any) {
+      console.error("Checkout Error:", e);
+      alert(`Falha ao ir para o pagamento: ${e.message || "Erro desconhecido"}`);
+      setIsDirectCheckoutLoading(false);
+    }
+  };
+
   const [isSeeding, setIsSeeding] = useState(false);
   const [adminClickCount, setAdminClickCount] = useState(0);
   const [isAdminLoggingIn, setIsAdminLoggingIn] = useState(false);
@@ -688,10 +801,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             onRemove={onRemoveFromCart}
             onUpdateQty={onUpdateQuantity}
             onSetQty={onSetQuantity}
-            onCheckout={() => {
-              setCheckoutItems(cart);
-              setIsCheckoutOpen(true);
-            }}
+            onCheckout={handleDirectCheckout}
+            isCheckoutLoading={isDirectCheckoutLoading}
             companyId={companyId}
           />
         )}
@@ -785,22 +896,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           />
         )}
 
-        {isCheckoutOpen && (
-          <CheckoutModal 
-            cart={checkoutItems}
-            config={config}
-            onClose={() => setIsCheckoutOpen(false)}
-            onSubmit={() => {
-              setIsCheckoutOpen(false);
-              setIsCartOpen(false);
-              onCheckoutComplete();
-            }}
-            companyName={companyName}
-            companyId={companyId}
-            siteSettings={siteSettings}
-          />
-        )}
-
         {toast && (
           <motion.div
             initial={{ opacity: 0, y: 50, x: '-50%' }}
@@ -826,7 +921,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: (isCartOpen || isGiftListOpen || isCheckoutOpen || isSearchingList || selectedProduct || isSuggestionOpen) ? 0 : 1, y: 0 }}
+          animate={{ opacity: (isCartOpen || isGiftListOpen || isSearchingList || selectedProduct || isSuggestionOpen) ? 0 : 1, y: 0 }}
           transition={{ duration: 0.3 }}
           className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[1000] flex flex-row items-center gap-2"
         >

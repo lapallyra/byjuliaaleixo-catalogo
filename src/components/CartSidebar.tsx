@@ -14,6 +14,7 @@ interface CartSidebarProps {
   onUpdateQty: (id: string, delta: number) => void;
   onSetQty: (id: string, quantity: number) => void;
   onCheckout: () => void;
+  isCheckoutLoading?: boolean;
   companyId: CompanyId;
 }
 
@@ -55,6 +56,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   onUpdateQty,
   onSetQty,
   onCheckout,
+  isCheckoutLoading,
   companyId
 }) => {
   const theme = themes[companyId] || themes.pallyra;
@@ -233,10 +235,11 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                 </div>
 
                 <button 
-                  onClick={onCheckout}
-                  className={`w-full py-5 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-700 active:scale-95 ${theme.btnPrimary}`}
+                  onClick={() => onCheckout()}
+                  disabled={isCheckoutLoading}
+                  className={`w-full py-5 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-700 active:scale-95 ${theme.btnPrimary} disabled:opacity-50 flex items-center justify-center gap-2`}
                 >
-                  Finalizar Pedido
+                  {isCheckoutLoading ? 'PROCESSANDO...' : 'Finalizar Pedido'}
                 </button>
               </>
             ) : (
@@ -246,11 +249,12 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                   R$ {total >= 1000 ? (total/1000).toFixed(1)+'k' : total.toLocaleString('pt-BR')}
                 </div>
                 <button 
-                  onClick={onCheckout}
-                  className={`w-12 h-12 ${theme.btnPrimary} rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-all`}
+                  onClick={() => onCheckout()}
+                  disabled={isCheckoutLoading}
+                  className={`w-12 h-12 ${theme.btnPrimary} rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-all disabled:opacity-50`}
                   title="Finalizar"
                 >
-                  <ChevronRight size={20} />
+                  {isCheckoutLoading ? '...' : <ChevronRight size={20} />}
                 </button>
               </div>
             )}

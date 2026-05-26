@@ -1,67 +1,94 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  Users, Search, UserPlus, Edit, Trash2, 
-  Phone, Hash, Plus, X, Cake, TrendingUp,
-  MapPin, Calendar as CalendarIcon, Mail
-} from 'lucide-react';
-import { Customer, CompanyId } from '../../types';
-import { deleteCustomer, updateCustomer, addCustomer } from '../../services/firebaseService';
-import { isWithinInterval, addDays, startOfDay, endOfDay } from 'date-fns';
+import React, { useState, useMemo } from "react";
+import {
+  Users,
+  Search,
+  UserPlus,
+  Edit,
+  Trash2,
+  Phone,
+  Hash,
+  Plus,
+  X,
+  Cake,
+  TrendingUp,
+  MapPin,
+  Calendar as CalendarIcon,
+  Mail,
+} from "lucide-react";
+import { Customer, CompanyId } from "../../types";
+import {
+  deleteCustomer,
+  updateCustomer,
+  addCustomer,
+} from "../../services/firebaseService";
+import { isWithinInterval, addDays, startOfDay, endOfDay } from "date-fns";
 
 interface ClientsTabProps {
   companyId: CompanyId;
   customers: Customer[];
 }
 
-export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+export const ClientsTab: React.FC<ClientsTabProps> = ({
+  companyId,
+  customers,
+}) => {
+  const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
 
-  const filteredCustomers = useMemo(() => 
-    customers.filter(c => {
-      const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           (c.cpfCnpj && c.cpfCnpj.includes(searchTerm)) ||
-                           (c.code && c.code.includes(searchTerm));
-      return matchesSearch;
-    }),
-    [customers, searchTerm]
+  const filteredCustomers = useMemo(
+    () =>
+      customers.filter((c) => {
+        const matchesSearch =
+          c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (c.cpfCnpj && c.cpfCnpj.includes(searchTerm)) ||
+          (c.code && c.code.includes(searchTerm));
+        return matchesSearch;
+      }),
+    [customers, searchTerm],
   );
 
-  const birthdayCustomers = useMemo(() => 
-    customers.filter(c => {
-      if (!c.birthDate) return false;
-      try {
-        const parts = c.birthDate.split('/');
-        if (parts.length < 2) return false;
-        const [day, month] = parts;
-        const currentYear = new Date().getFullYear();
-        const birthDate = new Date(currentYear, parseInt(month) - 1, parseInt(day));
-        return isWithinInterval(birthDate, {
-          start: startOfDay(new Date()),
-          end: endOfDay(addDays(new Date(), 7))
-        });
-      } catch (e) {
-        return false;
-      }
-    }),
-    [customers]
+  const birthdayCustomers = useMemo(
+    () =>
+      customers.filter((c) => {
+        if (!c.birthDate) return false;
+        try {
+          const parts = c.birthDate.split("/");
+          if (parts.length < 2) return false;
+          const [day, month] = parts;
+          const currentYear = new Date().getFullYear();
+          const birthDate = new Date(
+            currentYear,
+            parseInt(month) - 1,
+            parseInt(day),
+          );
+          return isWithinInterval(birthDate, {
+            start: startOfDay(new Date()),
+            end: endOfDay(addDays(new Date(), 7)),
+          });
+        } catch (e) {
+          return false;
+        }
+      }),
+    [customers],
   );
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    contact: '',
-    cpfCnpj: '',
-    birthDate: '',
-    address: '',
-    number: '',
-    neighborhood: '',
-    city: '',
-    state: '',
-    zipCode: ''
+    name: "",
+    contact: "",
+    cpfCnpj: "",
+    birthDate: "",
+    address: "",
+    number: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    zipCode: "",
   });
 
   const handleOpenEdit = (customer: Customer) => {
@@ -71,12 +98,12 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
       contact: customer.contact,
       cpfCnpj: customer.cpfCnpj,
       birthDate: customer.birthDate,
-      address: customer.address || '',
-      number: customer.number || '',
-      neighborhood: customer.neighborhood || '',
-      city: customer.city || '',
-      state: customer.state || '',
-      zipCode: customer.zipCode || ''
+      address: customer.address || "",
+      number: customer.number || "",
+      neighborhood: customer.neighborhood || "",
+      city: customer.city || "",
+      state: customer.state || "",
+      zipCode: customer.zipCode || "",
     });
     setIsModalOpen(true);
   };
@@ -87,7 +114,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
       try {
         await deleteCustomer(customerToDelete);
       } catch (error) {
-        console.error('Erro ao deletar cliente:', error);
+        console.error("Erro ao deletar cliente:", error);
       } finally {
         setLoading(false);
         setCustomerToDelete(null);
@@ -99,7 +126,6 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
     setCustomerToDelete(id);
   };
 
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -107,25 +133,36 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
       if (selectedCustomer) {
         await updateCustomer(selectedCustomer.id, {
           ...formData,
-          companyId: companyId
+          companyId: companyId,
         });
-        alert('Cliente atualizado!');
+        alert("Cliente atualizado!");
       } else {
         await addCustomer({
           ...formData,
           companyId: companyId,
           totalSpent: 0,
-          ordersCount: 0
+          ordersCount: 0,
         });
-        alert('Cliente cadastrado com sucesso!');
+        alert("Cliente cadastrado com sucesso!");
       }
-      
+
       setIsModalOpen(false);
-      setFormData({ name: '', contact: '', cpfCnpj: '', birthDate: '', address: '', number: '', neighborhood: '', city: '', state: '', zipCode: '' });
+      setFormData({
+        name: "",
+        contact: "",
+        cpfCnpj: "",
+        birthDate: "",
+        address: "",
+        number: "",
+        neighborhood: "",
+        city: "",
+        state: "",
+        zipCode: "",
+      });
       setSelectedCustomer(null);
     } catch (error) {
-      console.error('Erro ao salvar cliente:', error);
-      alert('Erro ao salvar cliente.');
+      console.error("Erro ao salvar cliente:", error);
+      alert("Erro ao salvar cliente.");
     } finally {
       setLoading(false);
     }
@@ -135,17 +172,23 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
         <div className="relative w-full max-w-md">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-rose-400" size={18} />
-          <input 
-            type="text" 
-            placeholder="BUSCAR CLIENTE NO SISTEMA..." 
-            className="w-full pl-14 pr-6 py-4 rounded-[1.25rem] bg-[#140b0e] border border-lilac/10 text-[10px] uppercase font-black tracking-[0.2em] outline-none focus:border-lilac transition-all shadow-sm text-rose-50"
+          <Search
+            className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D1CACA]"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="BUSCAR CLIENTE NO SISTEMA..."
+            className="w-full pl-14 pr-6 py-4 rounded-[1.25rem] bg-white border border-lilac/10 text-[10px] uppercase font-black tracking-[0.2em] outline-none focus:border-lilac transition-all shadow-sm text-slate-900"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button 
-          onClick={() => { setSelectedCustomer(null); setIsModalOpen(true); }}
+        <button
+          onClick={() => {
+            setSelectedCustomer(null);
+            setIsModalOpen(true);
+          }}
           className="flex items-center gap-3 px-10 py-4 bg-black text-white rounded-[1.25rem] font-black font-sans text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl border border-black/10"
         >
           <UserPlus size={18} /> Novo Cliente
@@ -155,57 +198,87 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
       {birthdayCustomers.length > 0 && (
         <div className="p-8 rounded-[2.5rem] bg-lilac/5 border border-lilac/10 backdrop-blur-xl flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-5">
-            <div className="p-4 rounded-2xl bg-[#140b0e] text-lilac shadow-sm border border-lilac/10">
+            <div className="p-4 rounded-2xl bg-white text-lilac shadow-sm border border-lilac/10">
               <Cake size={24} />
             </div>
             <div>
-              <h4 className="font-black text-xs text-rose-50 uppercase tracking-widest leading-tight">Aniversariantes da Semana</h4>
+              <h4 className="font-black text-xs text-slate-900 uppercase tracking-widest leading-tight">
+                Aniversariantes da Semana
+              </h4>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1 opacity-70">
-                {birthdayCustomers.map(c => c.name).join(', ')}
+                {birthdayCustomers.map((c) => c.name).join(", ")}
               </p>
             </div>
           </div>
-          <p className="text-[9px] text-lilac font-black uppercase tracking-widest bg-[#140b0e] px-5 py-2 rounded-2xl border border-lilac/10 shadow-sm">
+          <p className="text-[9px] text-lilac font-black uppercase tracking-widest bg-white px-5 py-2 rounded-2xl border border-lilac/10 shadow-sm">
             {birthdayCustomers.length} Aviso(s)
           </p>
         </div>
       )}
 
-      <div className="bg-[#140b0e] rounded-[2.5rem] border border-lilac/10 shadow-sm overflow-hidden overflow-x-auto">
+      <div className="bg-white rounded-[2.5rem] border border-lilac/10 shadow-sm overflow-hidden overflow-x-auto">
         <table className="w-full text-left uppercase">
           <thead>
-            <tr className="bg-[#140b0e]/50 border-b border-gray-50">
-              <th className="py-6 px-8 text-[9px] font-black text-rose-300 tracking-[0.2em]">Cód</th>
-              <th className="py-6 text-[9px] font-black text-rose-300 tracking-[0.2em]">Cliente</th>
-              <th className="py-6 text-[9px] font-black text-rose-300 tracking-[0.2em]">Contato</th>
-              <th className="py-6 text-[9px] font-black text-rose-300 tracking-[0.2em] text-center">Compras</th>
-              <th className="py-6 text-[9px] font-black text-rose-300 tracking-[0.2em] text-right">Investido</th>
-              <th className="py-6 text-[9px] font-black text-rose-300 tracking-[0.2em] text-right pr-8">Ações</th>
+            <tr className="bg-white/50 border-b border-gray-50">
+              <th className="py-6 px-8 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
+                Cód
+              </th>
+              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
+                Cliente
+              </th>
+              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
+                Contato
+              </th>
+              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em] text-center">
+                Compras
+              </th>
+              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em] text-right">
+                Investido
+              </th>
+              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em] text-right pr-8">
+                Ações
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {filteredCustomers.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-24 text-center text-rose-300 italic font-black text-[10px] tracking-widest opacity-50 uppercase">Nenhum cliente encontrado no sistema</td>
+                <td
+                  colSpan={6}
+                  className="py-24 text-center text-[#A09898] italic font-black text-[10px] tracking-widest opacity-50 uppercase"
+                >
+                  Nenhum cliente encontrado no sistema
+                </td>
               </tr>
             )}
             {filteredCustomers.map((c, idx) => (
-              <tr key={c.id} className="group hover:bg-lilac-baby/30 transition-all cursor-pointer">
+              <tr
+                key={c.id}
+                className="group hover:bg-lilac-baby/30 transition-all cursor-pointer"
+              >
                 <td className="py-6 px-8">
-                  <span className="font-mono text-[10px] text-lilac font-black tracking-tight">#{c.code}</span>
+                  <span className="font-mono text-[10px] text-lilac font-black tracking-tight">
+                    #{c.code}
+                  </span>
                 </td>
                 <td className="py-6">
                   <div className="flex flex-col">
-                    <span className="font-black text-xs text-rose-50 tracking-tight group-hover:text-lilac transition-colors">{c.name}</span>
-                    <span className="text-[9px] text-rose-300 font-black tracking-widest mt-1 opacity-70">{c.cpfCnpj}</span>
+                    <span className="font-black text-xs text-slate-900 tracking-tight group-hover:text-lilac transition-colors">
+                      {c.name}
+                    </span>
+                    <span className="text-[9px] text-[#A09898] font-black tracking-widest mt-1 opacity-70">
+                      {c.cpfCnpj}
+                    </span>
                   </div>
                 </td>
                 <td className="py-6">
                   <div className="flex items-center gap-3 text-gray-600">
-                    <div className="p-2 rounded-lg bg-[#140b0e] group-hover:bg-[#140b0e] transition-colors">
+                    <div className="p-2 rounded-lg bg-white group-hover:bg-white transition-colors">
                       <Phone size={14} className="text-lilac" />
                     </div>
-                    <span className="text-[10px] font-black tracking-widest">{c.contact}</span>
+                    <span className="text-[10px] font-black tracking-widest">
+                      {c.contact}
+                    </span>
                   </div>
                 </td>
                 <td className="py-6 text-center">
@@ -213,28 +286,41 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
                     <Hash size={10} /> {c.ordersCount || 0}
                   </div>
                 </td>
-                <td className="py-6 text-right font-mono text-xs text-rose-50 font-black">
-                  R$ {(c.totalSpent || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                <td className="py-6 text-right font-mono text-xs text-slate-900 font-black">
+                  R${" "}
+                  {(c.totalSpent || 0).toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                  })}
                 </td>
                 <td className="py-6 text-right pr-8">
                   <div className="flex justify-end gap-3">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setSelectedCustomer(c); setIsDetailModalOpen(true); }}
-                      className="p-3 rounded-xl bg-[#140b0e] text-rose-400 hover:text-lilac transition-all" 
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCustomer(c);
+                        setIsDetailModalOpen(true);
+                      }}
+                      className="p-3 rounded-xl bg-white text-[#D1CACA] hover:text-lilac transition-all"
                       title="Ver Detalhes"
                     >
                       <Users size={16} />
                     </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleOpenEdit(c); }}
-                      className="p-3 rounded-xl bg-[#140b0e] text-rose-400 hover:text-rose-50 transition-all" 
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenEdit(c);
+                      }}
+                      className="p-3 rounded-xl bg-white text-[#D1CACA] hover:text-slate-900 transition-all"
                       title="Editar"
                     >
                       <Edit size={16} />
                     </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }}
-                      className="p-3 rounded-xl bg-[#1f0e16] text-rose-200 hover:text-rose-500 transition-all" 
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(c.id);
+                      }}
+                      className="p-3 rounded-xl bg-slate-50 text-rose-200 hover:text-slate-9000 transition-all"
                       title="Excluir"
                     >
                       <Trash2 size={16} />
@@ -249,81 +335,136 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
 
       {isDetailModalOpen && selectedCustomer && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#140b0e]  w-full  max-w-2xl  rounded-[3rem] border border-lilac/30 overflow-hidden shadow-2xl  relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
-             <div className="h-32 bg-gradient-to-r from-lilac to-lilac/80 p-8 flex items-end">
-                <div className="w-20 h-20 rounded-[2rem] bg-[#140b0e] text-lilac flex items-center justify-center shadow-xl translate-y-12">
-                   <Users size={32} />
-                </div>
-             </div>
-             <button 
-              onClick={() => { setIsDetailModalOpen(false); setSelectedCustomer(null); }}
-              className="absolute top-6 right-6 p-2 rounded-full bg-black/5 hover:bg-black/10 text-rose-50/60 hover:text-rose-50 transition-all"
-            ><X size={24} /></button>
+          <div className="bg-white  w-full  max-w-2xl  rounded-[3rem] border border-lilac/30 overflow-hidden shadow-2xl  relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+            <div className="h-32 bg-gradient-to-r from-lilac to-lilac/80 p-8 flex items-end">
+              <div className="w-20 h-20 rounded-[2rem] bg-white text-lilac flex items-center justify-center shadow-xl translate-y-12">
+                <Users size={32} />
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setIsDetailModalOpen(false);
+                setSelectedCustomer(null);
+              }}
+              className="absolute top-6 right-6 p-2 rounded-full bg-black/5 hover:bg-black/10 text-slate-900/60 hover:text-slate-900 transition-all"
+            >
+              <X size={24} />
+            </button>
 
             <div className="px-10 pt-20 pb-12">
-               <div className="flex justify-between items-start mb-10">
-                  <div>
-                    <h2 className="text-3xl font-black text-rose-50 uppercase tracking-tighter leading-none">{selectedCustomer.name}</h2>
-                    <p className="text-[10px] font-black text-lilac uppercase tracking-[0.3em] mt-2">Código do Cliente: #{selectedCustomer.code}</p>
-                  </div>
-                  <div className="text-right">
-                     <span className="text-[10px] font-black uppercase text-rose-300 block tracking-widest mb-1">Total Gasto</span>
-                     <span className="text-2xl font-mono font-black text-emerald-500">R$ {(selectedCustomer.totalSpent || 0).toFixed(2)}</span>
-                  </div>
-               </div>
+              <div className="flex justify-between items-start mb-10">
+                <div>
+                  <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter leading-none">
+                    {selectedCustomer.name}
+                  </h2>
+                  <p className="text-[10px] font-black text-lilac uppercase tracking-[0.3em] mt-2">
+                    Código do Cliente: #{selectedCustomer.code}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-black uppercase text-[#A09898] block tracking-widest mb-1">
+                    Total Gasto
+                  </span>
+                  <span className="text-2xl font-mono font-black text-emerald-500">
+                    R$ {(selectedCustomer.totalSpent || 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="space-y-6">
-                     <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-[#140b0e] text-lilac"><Phone size={18} /></div>
-                        <div>
-                           <p className="text-[7px] font-black text-rose-300 uppercase tracking-widest">Contato / WhatsApp</p>
-                           <p className="text-sm font-bold text-rose-50">{selectedCustomer.contact}</p>
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-[#140b0e] text-lilac"><Mail size={18} /></div>
-                        <div>
-                           <p className="text-[7px] font-black text-rose-300 uppercase tracking-widest">Documento</p>
-                           <p className="text-sm font-bold text-rose-50">{selectedCustomer.cpfCnpj || 'NÃO INFORMADO'}</p>
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-[#140b0e] text-lilac"><CalendarIcon size={18} /></div>
-                        <div>
-                           <p className="text-[7px] font-black text-rose-300 uppercase tracking-widest">Nascimento</p>
-                           <p className="text-sm font-bold text-rose-50">{selectedCustomer.birthDate || 'NÃO INFORMADO'}</p>
-                        </div>
-                     </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-2xl bg-white text-lilac">
+                      <Phone size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
+                        Contato / WhatsApp
+                      </p>
+                      <p className="text-sm font-bold text-slate-900">
+                        {selectedCustomer.contact}
+                      </p>
+                    </div>
                   </div>
-                  <div className="space-y-6">
-                     <div className="flex items-start gap-4">
-                        <div className="p-3 rounded-2xl bg-[#140b0e] text-lilac"><MapPin size={18} /></div>
-                        <div>
-                           <p className="text-[7px] font-black text-rose-300 uppercase tracking-widest">Endereço</p>
-                           <p className="text-sm font-bold text-rose-50 leading-tight">
-                              {selectedCustomer.address || 'SEM ENDEREÇO CADASTRADO'}
-                              <br />
-                              <span className="text-[10px] text-rose-300">
-                                 {selectedCustomer.city} {selectedCustomer.state} {selectedCustomer.zipCode}
-                              </span>
-                           </p>
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-[#140b0e] text-lilac"><TrendingUp size={18} /></div>
-                        <div>
-                           <p className="text-[7px] font-black text-rose-300 uppercase tracking-widest">Frequência</p>
-                           <p className="text-sm font-bold text-rose-50 uppercase">{selectedCustomer.ordersCount || 0} PEDIDOS REALIZADOS</p>
-                        </div>
-                     </div>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-2xl bg-white text-lilac">
+                      <Mail size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
+                        Documento
+                      </p>
+                      <p className="text-sm font-bold text-slate-900">
+                        {selectedCustomer.cpfCnpj || "NÃO INFORMADO"}
+                      </p>
+                    </div>
                   </div>
-               </div>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-2xl bg-white text-lilac">
+                      <CalendarIcon size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
+                        Nascimento
+                      </p>
+                      <p className="text-sm font-bold text-slate-900">
+                        {selectedCustomer.birthDate || "NÃO INFORMADO"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-2xl bg-white text-lilac">
+                      <MapPin size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
+                        Endereço
+                      </p>
+                      <p className="text-sm font-bold text-slate-900 leading-tight">
+                        {selectedCustomer.address || "SEM ENDEREÇO CADASTRADO"}
+                        <br />
+                        <span className="text-[10px] text-[#A09898]">
+                          {selectedCustomer.city} {selectedCustomer.state}{" "}
+                          {selectedCustomer.zipCode}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-2xl bg-white text-lilac">
+                      <TrendingUp size={18} />
+                    </div>
+                    <div>
+                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
+                        Frequência
+                      </p>
+                      <p className="text-sm font-bold text-slate-900 uppercase">
+                        {selectedCustomer.ordersCount || 0} PEDIDOS REALIZADOS
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-               <div className="mt-12 pt-8 border-t border-rose-900/30 flex justify-end gap-4">
-                  <button onClick={() => setIsDetailModalOpen(false)} className="px-8 py-4 bg-[#140b0e] rounded-2xl text-[10px] font-black uppercase tracking-widest text-rose-300">Fechar Resumo</button>
-                  <button onClick={() => { setIsDetailModalOpen(false); handleOpenEdit(selectedCustomer); }} className="px-8 py-4 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Editar Dados</button>
-               </div>
+              <div className="mt-12 pt-8 border-t border-[#F0E6D2] flex justify-end gap-4">
+                <button
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="px-8 py-4 bg-white rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#A09898]"
+                >
+                  Fechar Resumo
+                </button>
+                <button
+                  onClick={() => {
+                    setIsDetailModalOpen(false);
+                    handleOpenEdit(selectedCustomer);
+                  }}
+                  className="px-8 py-4 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl"
+                >
+                  Editar Dados
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -331,41 +472,52 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
 
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#140b0e]  w-full  max-w-2xl  rounded-3xl border border-lilac/30 p-8 md:p-12 shadow-2xl  relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
-            <button 
-              onClick={() => { setIsModalOpen(false); setSelectedCustomer(null); }}
-              className="absolute top-8 right-8 p-2 rounded-full hover:bg-[#2b141e] text-rose-300 transition-all"
-            ><X size={24} /></button>
+          <div className="bg-white  w-full  max-w-2xl  rounded-3xl border border-lilac/30 p-8 md:p-12 shadow-2xl  relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+            <button
+              onClick={() => {
+                setIsModalOpen(false);
+                setSelectedCustomer(null);
+              }}
+              className="absolute top-8 right-8 p-2 rounded-full hover:bg-slate-100 text-[#A09898] transition-all"
+            >
+              <X size={24} />
+            </button>
 
-            <h2 className="text-3xl font-black text-rose-50 mb-8 uppercase tracking-tighter">
-              {selectedCustomer ? 'Editar Cliente' : 'Novo Cliente'}
+            <h2 className="text-3xl font-black text-slate-900 mb-8 uppercase tracking-tighter">
+              {selectedCustomer ? "Editar Cliente" : "Novo Cliente"}
             </h2>
-            
+
             <form onSubmit={handleSave} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Nome Completo</label>
-                  <input 
-                    required 
-                    type="text" 
-                    className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-rose-50 font-bold" 
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    Nome Completo
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-rose-300 ml-2">WhatsApp / Contato</label>
-                  <input 
-                    required 
-                    type="text" 
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    WhatsApp / Contato
+                  </label>
+                  <input
+                    required
+                    type="text"
                     placeholder="(00) 0 0000-0000"
-                    className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-rose-50 font-bold" 
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.contact}
-                    onChange={e => {
-                      let v = e.target.value.replace(/\D/g, '');
-                      v = v.replace(/^(\d{2})(\d)/g, '($1) $2');
-                      v = v.replace(/(\d)(\d{4})$/, '$1-$2');
-                      setFormData({...formData, contact: v})
+                    onChange={(e) => {
+                      let v = e.target.value.replace(/\D/g, "");
+                      v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+                      v = v.replace(/(\d)(\d{4})$/, "$1-$2");
+                      setFormData({ ...formData, contact: v });
                     }}
                   />
                 </div>
@@ -373,32 +525,44 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-rose-300 ml-2">CPF / CNPJ</label>
-                  <input 
-                    required 
-                    type="text" 
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    CPF / CNPJ
+                  </label>
+                  <input
+                    required
+                    type="text"
                     placeholder="000.000.000-00"
-                    className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-rose-50 font-bold" 
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.cpfCnpj}
-                    onChange={e => {
-                      let v = e.target.value.replace(/\D/g, '');
-                      if (v.length <= 11) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-                      else v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-                      setFormData({...formData, cpfCnpj: v})
+                    onChange={(e) => {
+                      let v = e.target.value.replace(/\D/g, "");
+                      if (v.length <= 11)
+                        v = v.replace(
+                          /(\d{3})(\d{3})(\d{3})(\d{2})/,
+                          "$1.$2.$3-$4",
+                        );
+                      else
+                        v = v.replace(
+                          /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
+                          "$1.$2.$3/$4-$5",
+                        );
+                      setFormData({ ...formData, cpfCnpj: v });
                     }}
                   />
                 </div>
-                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Data de Nascimento</label>
-                  <input 
-                    type="text" 
-                    placeholder="DD/MM/AAAA" 
-                    className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-rose-50 font-bold" 
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    Data de Nascimento
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="DD/MM/AAAA"
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.birthDate}
-                    onChange={e => {
-                      let v = e.target.value.replace(/\D/g, '');
-                      v = v.replace(/(\d{2})(\d{2})(\d{4})/, '$1/$2/$3');
-                      setFormData({...formData, birthDate: v})
+                    onChange={(e) => {
+                      let v = e.target.value.replace(/\D/g, "");
+                      v = v.replace(/(\d{2})(\d{2})(\d{4})/, "$1/$2/$3");
+                      setFormData({ ...formData, birthDate: v });
                     }}
                   />
                 </div>
@@ -406,76 +570,145 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2 col-span-2">
-                  <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Endereço</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-rose-50 font-bold" 
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    Endereço
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.address}
-                    onChange={e => setFormData({...formData, address: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Nº</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-rose-50 font-bold" 
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    Nº
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.number}
-                    onChange={e => setFormData({...formData, number: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({ ...formData, number: e.target.value })
+                    }
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Bairro</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-rose-50 font-bold" 
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    Bairro
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.neighborhood}
-                    onChange={e => setFormData({...formData, neighborhood: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({ ...formData, neighborhood: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-rose-300 ml-2">Cidade</label>
-                  <input 
-                    type="text" 
-                    className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-rose-50 font-bold" 
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    Cidade
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.city}
-                    onChange={e => setFormData({...formData, city: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-rose-300 ml-2">UF</label>
-                  <select 
-                    className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-lilac outline-none text-rose-50"
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    UF
+                  </label>
+                  <select
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-lilac outline-none text-slate-900"
                     value={formData.state}
-                    onChange={e => setFormData({...formData, state: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({ ...formData, state: e.target.value })
+                    }
                   >
                     <option value="">SELECIONE</option>
-                    {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map(uf => <option key={uf} value={uf}>{uf}</option>)}
+                    {[
+                      "AC",
+                      "AL",
+                      "AP",
+                      "AM",
+                      "BA",
+                      "CE",
+                      "DF",
+                      "ES",
+                      "GO",
+                      "MA",
+                      "MT",
+                      "MS",
+                      "MG",
+                      "PA",
+                      "PB",
+                      "PR",
+                      "PE",
+                      "PI",
+                      "RJ",
+                      "RN",
+                      "RS",
+                      "RO",
+                      "RR",
+                      "SC",
+                      "SP",
+                      "SE",
+                      "TO",
+                    ].map((uf) => (
+                      <option key={uf} value={uf}>
+                        {uf}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-rose-300 ml-2">CEP</label>
-                  <input 
-                    type="text" 
-                    placeholder="00.000-000"
-                    className="w-full bg-[#140b0e] border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-rose-50 font-bold" 
-                    value={formData.zipCode}
-                    onChange={e => {
-                        let v = e.target.value.replace(/\D/g, '');
-                        v = v.replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2-$3');
-                        setFormData({...formData, zipCode: v})
-                    }}
-                  />
+                <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                  CEP
+                </label>
+                <input
+                  type="text"
+                  placeholder="00.000-000"
+                  className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                  value={formData.zipCode}
+                  onChange={(e) => {
+                    let v = e.target.value.replace(/\D/g, "");
+                    v = v.replace(/(\d{2})(\d{3})(\d{3})/, "$1.$2-$3");
+                    setFormData({ ...formData, zipCode: v });
+                  }}
+                />
               </div>
 
               <div className="flex gap-4 pt-6">
-                <button type="button" onClick={() => setIsModalOpen(false)} disabled={loading} className="flex-1 py-4 border border-lilac/10 rounded-2xl font-bold text-rose-300 hover:bg-[#140b0e] transition-all uppercase tracking-widest text-[10px]">Cancelar</button>
-                <button type="submit" disabled={loading} className="flex-1 py-4 bg-black text-white rounded-2xl font-black hover:scale-105 transition-all shadow-xl uppercase tracking-widest text-[10px] disabled:opacity-50">
-                  {loading ? 'Salvando...' : (selectedCustomer ? 'Atualizar Cliente' : 'Salvar Cliente')}
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={loading}
+                  className="flex-1 py-4 border border-lilac/10 rounded-2xl font-bold text-[#A09898] hover:bg-white transition-all uppercase tracking-widest text-[10px]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 py-4 bg-black text-white rounded-2xl font-black hover:scale-105 transition-all shadow-xl uppercase tracking-widest text-[10px] disabled:opacity-50"
+                >
+                  {loading
+                    ? "Salvando..."
+                    : selectedCustomer
+                      ? "Atualizar Cliente"
+                      : "Salvar Cliente"}
                 </button>
               </div>
             </form>
@@ -484,18 +717,23 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({ companyId, customers }) 
       )}
       {customerToDelete && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#140b0e] max-w-md w-full rounded-3xl p-8 text-center animate-in zoom-in-95">
-            <Trash2 size={48} className="mx-auto text-rose-500 mb-6" />
-            <h3 className="text-xl font-black mb-2 uppercase">Excluir Cliente?</h3>
-            <p className="text-sm text-gray-500 mb-8">Essa ação não pode ser desfeita. Isso não apagará os pedidos dele, mas removerá o cadastro.</p>
+          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center animate-in zoom-in-95">
+            <Trash2 size={48} className="mx-auto text-slate-9000 mb-6" />
+            <h3 className="text-xl font-black mb-2 uppercase">
+              Excluir Cliente?
+            </h3>
+            <p className="text-sm text-gray-500 mb-8">
+              Essa ação não pode ser desfeita. Isso não apagará os pedidos dele,
+              mas removerá o cadastro.
+            </p>
             <div className="flex gap-4">
-              <button 
+              <button
                 onClick={() => setCustomerToDelete(null)}
-                className="flex-1 py-4 bg-[#2b141e] rounded-2xl font-black text-gray-500 uppercase text-xs"
+                className="flex-1 py-4 bg-slate-100 rounded-2xl font-black text-gray-500 uppercase text-xs"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={confirmDelete}
                 className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-rose-500/30"
               >
