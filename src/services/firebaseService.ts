@@ -700,6 +700,39 @@ export const markSuggestionAsRead = async (id: string) => {
   await updateDoc(doc(db, 'suggestions', id), { read: true });
 };
 
+export const addFeedback = async (name: string, text: string, stars: number) => {
+  const path = 'feedbacks';
+  try {
+    await addDoc(collection(db, path), sanitize({
+      name,
+      text,
+      stars,
+      createdAt: serverTimestamp()
+    }));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+  }
+};
+
+export const subscribeToFeedbacks = (callback: (feedbacks: any[]) => void) => {
+  const path = 'feedbacks';
+  const q = query(collection(db, path), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (error) => {
+    console.warn("Ordered feedbacks failed, falling back to unordered", error);
+    onSnapshot(collection(db, path), (fallbackSnap) => {
+      const results = fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      results.sort((a: any, b: any) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+        return timeB - timeA;
+      });
+      callback(results);
+    });
+  });
+};
+
 export const subscribeToAddons = (callback: (addons: any[]) => void, companyId: CompanyId) => {
   const path = 'addons';
   const q = query(collection(db, path), where('companyId', '==', companyId));
@@ -792,4 +825,43 @@ export const subscribeToMonthlyProfitHistory = (callback: (entries: any[]) => vo
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   }, (error) => handleFirestoreError(error, OperationType.LIST, path));
+};
+
+export const logCheckoutEvent = async (
+  stepName: string, 
+  data: { 
+    companyId: string; 
+    clientName?: string; 
+    total?: number; 
+    itemsCount?: number; 
+    description?: string; 
+  }
+) => {
+  const path = 'checkout_funnel_logs';
+  try {
+    await addDoc(collection(db, path), sanitize({
+      ...data,
+      stepName,
+      createdAt: serverTimestamp()
+    }));
+  } catch (error) {
+    console.warn("Could not log checkout event", error);
+  }
+};
+
+export const subscribeToCheckoutEvents = (callback: (events: any[]) => void, companyId?: string) => {
+  const path = 'checkout_funnel_logs';
+  const q = companyId 
+    ? query(collection(db, path), where('companyId', '==', companyId))
+    : collection(db, path);
+    
+  return onSnapshot(q, (snapshot) => {
+    const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    list.sort((a: any, b: any) => {
+      const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+      const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+      return timeB - timeA;
+    });
+    callback(list);
+  });
 };

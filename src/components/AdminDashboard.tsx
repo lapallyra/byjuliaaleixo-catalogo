@@ -10,6 +10,7 @@ import {
   subscribeToInsumos,
   subscribeToCustomers,
   subscribeToSuggestions,
+  subscribeToFeedbacks,
   markSuggestionAsRead,
   subscribeToAllSettings,
   addInsumo,
@@ -18,6 +19,7 @@ import {
   updateOrderStatus,
   updateOrder,
   saveSale,
+  subscribeToCheckoutEvents,
 } from "../services/firebaseService";
 import { db } from "../lib/firebase";
 import { doc, deleteDoc } from "firebase/firestore";
@@ -39,6 +41,9 @@ import {
   Sparkles,
   Gift,
   ChevronRight,
+  Star,
+  Heart,
+  TrendingUp,
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 
@@ -56,6 +61,8 @@ import { GiftListsTab } from "./Admin/GiftListsTab";
 import { CommemorativeDatesTab } from "./Admin/CommemorativeDatesTab";
 import { AddonsTab } from "./Admin/AddonsTab";
 import { PrizesTab } from "./Admin/PrizesTab";
+import { FeedbacksTab } from "./Admin/FeedbacksTab";
+import { FunnelLogsTab } from "./Admin/FunnelLogsTab";
 
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
@@ -76,7 +83,9 @@ type TabType =
   | "reports"
   | "settings"
   | "addons"
-  | "prizes";
+  | "prizes"
+  | "feedbacks"
+  | "funnel";
 
 interface AdminDashboardProps {
   onGoBack: () => void;
@@ -108,6 +117,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [checkoutEvents, setCheckoutEvents] = useState<any[]>([]);
+  const [activeNotificationTab, setActiveNotificationTab] = useState<'suggestions' | 'feedbacks'>('suggestions');
   const [settings, setSettings] = useState<Record<string, any>>({});
   const [globalSearch, setGlobalSearch] = useState("");
   const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(false);
@@ -128,6 +140,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     const unsubInsumos = subscribeToInsumos(setInsumos);
     const unsubCustomers = subscribeToCustomers(setCustomers);
     const unsubSuggestions = subscribeToSuggestions(setSuggestions);
+    const unsubFeedbacks = subscribeToFeedbacks(setFeedbacks);
+    const unsubFunnel = subscribeToCheckoutEvents(setCheckoutEvents);
 
     return () => {
       unsubProducts();
@@ -136,6 +150,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       unsubInsumos();
       unsubCustomers();
       unsubSuggestions();
+      unsubFeedbacks();
+      unsubFunnel();
     };
   }, [isAdmin, user]);
 
@@ -190,7 +206,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     { id: "commemorative-dates", label: "Datas Comemorativas", icon: Calendar },
     { id: "finance", label: "Financeiro", icon: DollarSign },
     { id: "gift-lists", label: "Lista de Presentes", icon: Gift },
+    { id: "feedbacks", label: "Feedbacks / Avaliações", icon: Star },
     { id: "reports", label: "Relatórios", icon: BarChart3 },
+    { id: "funnel", label: "Funil de Vendas", icon: TrendingUp },
     { id: "settings", label: "Configurações", icon: Settings },
   ];
 
@@ -590,6 +608,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   {activeTab === "prizes" && (
                     <PrizesTab companyId={selectedCompanyId} />
                   )}
+                  {activeTab === "feedbacks" && (
+                    <FeedbacksTab feedbacks={feedbacks} />
+                  )}
+                  {activeTab === "funnel" && (
+                    <FunnelLogsTab events={checkoutEvents} selectedCompanyId={selectedCompanyId} />
+                  )}
                 </ErrorBoundary>
               </React.Suspense>
             </motion.div>
@@ -614,85 +638,171 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 className="relative w-full max-w-lg bg-[#FAF9F6] h-full lg:rounded-l-[2rem] border-l border-[#F0E6D2] shadow-2xl flex flex-col overflow-hidden"
               >
-                <div className="p-8 border-b border-[#F0E6D2] flex items-center justify-between bg-white">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] text-[#D48C8C] flex items-center justify-center border border-[#F0E6D2] shadow-sm">
-                      <Sparkles size={20} />
+                <div className="p-8 border-b border-[#F0E6D2] bg-white space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] text-[#D48C8C] flex items-center justify-center border border-[#F0E6D2] shadow-sm">
+                        <Sparkles size={20} />
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-semibold uppercase tracking-widest text-[#4A4444]">
+                          Feedback & Sugestões
+                        </h2>
+                        <p className="text-[8px] text-[#D48C8C] font-medium uppercase tracking-[0.1em] mt-0.5">
+                          Notificações e Ideias
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-sm font-semibold uppercase tracking-widest text-[#4A4444]">
-                        Notificações
-                      </h2>
-                      <p className="text-[8px] text-[#D48C8C] font-medium uppercase tracking-[0.1em] mt-0.5">
-                        Sugestões e Feedbacks
-                      </p>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsSuggestionsModalOpen(false)}
+                      className="p-2.5 bg-[#FAF9F6] hover:bg-[#F0E6D2] rounded-xl text-[#A09898] transition-all cursor-pointer outline-none"
+                    >
+                      <X size={20} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setIsSuggestionsModalOpen(false)}
-                    className="p-2.5 bg-[#FAF9F6] hover:bg-[#F0E6D2] rounded-xl text-[#A09898] transition-all"
-                  >
-                    <X size={20} />
-                  </button>
+
+                  {/* Tab menu */}
+                  <div className="flex gap-2 p-1 bg-[#FAF9F6] rounded-xl border border-[#F0E6D2]">
+                    <button
+                      type="button"
+                      onClick={() => setActiveNotificationTab('suggestions')}
+                      className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all cursor-pointer outline-none ${
+                        activeNotificationTab === 'suggestions'
+                          ? 'bg-[#D48C8C] text-white'
+                          : 'text-[#A09898] hover:text-[#4A4444]'
+                      }`}
+                    >
+                      Sugestões ({suggestions.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveNotificationTab('feedbacks')}
+                      className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all cursor-pointer outline-none ${
+                        activeNotificationTab === 'feedbacks'
+                          ? 'bg-[#D48C8C] text-white'
+                          : 'text-[#A09898] hover:text-[#4A4444]'
+                      }`}
+                    >
+                      Feedbacks ({feedbacks.length})
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-8 space-y-4 scrollbar-hide">
-                  {suggestions.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-40">
-                      <Box size={40} className="text-[#D1CACA] mb-4" />
-                      <p className="text-[9px] font-medium uppercase tracking-widest text-[#A09898]">
-                        Sem novas atualizações no momento.
-                      </p>
-                    </div>
-                  )}
-                  {[...suggestions]
-                    .sort((a, b) => {
-                      const timeA =
-                        a.createdAt?.toMillis?.() ||
-                        a.createdAt?.seconds * 1000 ||
-                        0;
-                      const timeB =
-                        b.createdAt?.toMillis?.() ||
-                        b.createdAt?.seconds * 1000 ||
-                        0;
-                      return timeB - timeA;
-                    })
-                    .map((s, idx) => (
-                      <motion.div
-                        key={s.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        onClick={() => {
-                          if (!s.read) markSuggestionAsRead(s.id);
-                        }}
-                        className={`p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${s.read ? "bg-white/50 border-[#F0E6D2] opacity-50" : "bg-white border-[#D48C8C]/20 shadow-lg shadow-[#D48C8C]/5"}`}
-                      >
-                        <div className="flex justify-between items-center mb-4">
-                          <span
-                            className={`text-[8px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded ${s.read ? "bg-[#F0E6D2] text-[#A09898]" : "bg-[#D48C8C] text-white"}`}
-                          >
-                            {s.companyId}
-                          </span>
-                          <span className="text-[8px] font-medium text-[#A09898] uppercase tracking-widest">
-                            {s.createdAt?.toDate
-                              ? s.createdAt.toDate().toLocaleDateString()
-                              : "Recent"}
-                          </span>
+                  {activeNotificationTab === 'suggestions' ? (
+                    <>
+                      {suggestions.length === 0 && (
+                        <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-40">
+                          <Box size={40} className="text-[#D1CACA] mb-4" />
+                          <p className="text-[9px] font-medium uppercase tracking-widest text-[#A09898]">
+                            Sem novas sugestões no momento.
+                          </p>
                         </div>
-                        <p className="text-[11px] font-medium text-[#4A4444] leading-relaxed whitespace-pre-wrap">
-                          {s.message}
-                        </p>
-                        {!s.read && (
-                          <div className="mt-4 flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#D48C8C] shadow-[0_0_8px_rgba(212,140,140,1)] animate-pulse" />
-                            <span className="text-[7px] font-semibold uppercase text-[#D48C8C] tracking-widest">
-                              Nova atividade
-                            </span>
-                          </div>
-                        )}
-                      </motion.div>
-                    ))}
+                      )}
+                      {[...suggestions]
+                        .sort((a, b) => {
+                          const timeA =
+                            a.createdAt?.toMillis?.() ||
+                            a.createdAt?.seconds * 1000 ||
+                            0;
+                          const timeB =
+                            b.createdAt?.toMillis?.() ||
+                            b.createdAt?.seconds * 1000 ||
+                            0;
+                          return timeB - timeA;
+                        })
+                        .map((s, idx) => (
+                          <motion.div
+                            key={s.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            onClick={() => {
+                              if (!s.read) markSuggestionAsRead(s.id);
+                            }}
+                            className={`p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${s.read ? "bg-white/50 border-[#F0E6D2] opacity-50" : "bg-white border-[#D48C8C]/20 shadow-lg shadow-[#D48C8C]/5"}`}
+                          >
+                            <div className="flex justify-between items-center mb-4">
+                              <span
+                                className={`text-[8px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded ${s.read ? "bg-[#F0E6D2] text-[#A09898]" : "bg-[#D48C8C] text-white"}`}
+                              >
+                                {s.companyId}
+                              </span>
+                              <span className="text-[8px] font-medium text-[#A09898] uppercase tracking-widest">
+                                {s.createdAt?.toDate
+                                  ? s.createdAt.toDate().toLocaleDateString()
+                                  : "Recent"}
+                              </span>
+                            </div>
+                            <p className="text-[11px] font-medium text-[#4A4444] leading-relaxed whitespace-pre-wrap">
+                              {s.message}
+                            </p>
+                            {!s.read && (
+                              <div className="mt-4 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#D48C8C] shadow-[0_0_8px_rgba(212,140,140,1)] animate-pulse" />
+                                <span className="text-[7px] font-semibold uppercase text-[#D48C8C] tracking-widest">
+                                  Nova atividade
+                                </span>
+                              </div>
+                            )}
+                          </motion.div>
+                        ))}
+                    </>
+                  ) : (
+                    <>
+                      {feedbacks.length === 0 && (
+                        <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-40">
+                          <Heart size={40} className="text-[#D1CACA] mb-4 animate-pulse text-[#D1CACA]" />
+                          <p className="text-[9px] font-medium uppercase tracking-widest text-[#A09898]">
+                            Nenhum feedback recebido ainda.
+                          </p>
+                        </div>
+                      )}
+                      {[...feedbacks]
+                        .sort((a, b) => {
+                          const timeA =
+                            a.createdAt?.toMillis?.() ||
+                            a.createdAt?.seconds * 1000 ||
+                            0;
+                          const timeB =
+                            b.createdAt?.toMillis?.() ||
+                            b.createdAt?.seconds * 1000 ||
+                            0;
+                          return timeB - timeA;
+                        })
+                        .map((fb, idx) => (
+                          <motion.div
+                            key={fb.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="p-6 rounded-2xl border border-[#F0E6D2] bg-white shadow-sm hover:shadow-md transition-all text-[#4A4444]"
+                          >
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-[10px] font-bold uppercase tracking-widest">
+                                {fb.name}
+                              </span>
+                              <span className="text-[8px] font-medium text-[#A09898] uppercase tracking-widest">
+                                {fb.createdAt?.toDate
+                                  ? fb.createdAt.toDate().toLocaleDateString()
+                                  : "Recent"}
+                              </span>
+                            </div>
+                            
+                            <div className="flex gap-0.5 mb-3 text-[#D48C8C]">
+                              {Array.from({ length: fb.stars || 5 }).map((_, i) => (
+                                <Star key={i} size={11} fill="currentColor" stroke="none" />
+                              ))}
+                            </div>
+
+                            <p className="text-[11px] text-gray-500 leading-relaxed italic">
+                              "{fb.text}"
+                            </p>
+                          </motion.div>
+                        ))}
+                    </>
+                  )}
                 </div>
               </motion.div>
             </div>

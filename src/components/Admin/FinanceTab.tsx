@@ -23,6 +23,7 @@ import {
 } from "../../services/firebaseService";
 import { format, subMonths, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { exportFinanceReportPDF } from "../../utils/pdfGenerator";
 
 interface FinanceTabProps {
   companyId: CompanyId;
@@ -416,8 +417,28 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
           </p>
         </div>
         <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-[#F0E6D2] shadow-sm">
-          <button className="p-3 bg-white hover:bg-slate-100 rounded-xl transition-all text-[#A09898] hover:text-slate-900 hover:shadow-md">
-            <Download size={18} />
+          <button 
+            onClick={() => exportFinanceReportPDF({
+              companyId,
+              filterMonth,
+              grossRevenue,
+              netProfit,
+              totalExpenses,
+              history,
+              currentMonthOrders,
+              fixedCosts,
+              taxesRate,
+              variableTaxes,
+              cogsEstimate,
+              totalManualInflows,
+              totalManualOutflows,
+              monthEntries
+            })}
+            title="Exportar PDF Financeiro"
+            className="p-3 bg-white hover:bg-[#FAF9F6] text-[#6d5443] hover:text-black rounded-xl transition-all hover:shadow-md flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold"
+          >
+            <Download size={16} />
+            <span>Exportar PDF</span>
           </button>
           <div className="h-6 w-px bg-slate-200" />
           <div className="flex items-center gap-3 px-4">

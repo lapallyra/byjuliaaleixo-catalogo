@@ -4,6 +4,7 @@ import { Order, CompanyId, SiteSettings } from "../../types";
 import { getSiteSettings } from "../../services/firebaseService";
 import { safeFormat, safeFormatISO } from "../../lib/dateUtils";
 import { ImageWithFallback } from "../ImageWithFallback";
+import { exportOrderReceiptPDF } from "../../utils/pdfGenerator";
 
 interface OrderReceiptModalProps {
   order: Order;
@@ -61,6 +62,14 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
             </button>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => exportOrderReceiptPDF(order, settings)}
+              className="flex items-center gap-2 px-4 py-3 bg-[#D48C8C] hover:bg-[#c37a7a] text-white rounded-xl transition-all text-xs font-bold uppercase tracking-widest"
+              title="Baixar PDF"
+            >
+              <FileText size={18} />
+              PDF
+            </button>
             <button
               onClick={handlePrint}
               className="flex items-center gap-2 px-4 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all text-xs font-bold uppercase tracking-widest"

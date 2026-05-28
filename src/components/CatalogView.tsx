@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { CompanyId, AppConfig, Product, CartItem, SiteSettings } from '../types';
 import { CartSidebar } from './CartSidebar';
+import { CheckoutModal } from './CheckoutModal';
 import { GiftListSidebar } from './GiftListSidebar';
 import { SuggestionBox } from './SuggestionBox';
 import { ProductDetailModal } from './ProductDetailModal';
@@ -49,7 +50,7 @@ import { httpsCallable } from 'firebase/functions';
 import { PRODUCTS, INITIAL_CONFIG } from '../constants';
 import { useAuth } from './AuthProvider';
 import { login } from '../lib/firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { themes } from '../lib/theme';
 import { formatCurrency } from '../lib/currencyUtils';
 import { ImageWithFallback } from './ImageWithFallback';
@@ -89,10 +90,19 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 }) => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = themes[companyId] || themes['pallyra'];
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchParam = params.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+  }, [location.search]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
@@ -165,22 +175,57 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isReadOnlyProduct, setIsReadOnlyProduct] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isDirectCheckoutLoading, setIsDirectCheckoutLoading] = useState(false);
 
-  const handleDirectCheckout = async () => {
+  const handleOpenCheckout = () => {
+    setIsCheckoutOpen(true);
+  };
+
+  const handleDirectCheckout = async (checkoutData: any = {}) => {
     if (cart.length === 0) return;
     setIsDirectCheckoutLoading(true);
     
     try {
       const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
-      const total = subtotal;
+      let dscto = 0;
+      if (checkoutData?.cupom === 'GANHEI10') {
+        dscto = subtotal * 0.1;
+      }
+      const total = checkoutData?.total ?? (subtotal - dscto);
+      
+      const isFullPayment = checkoutData?.isFullPayment ?? true;
+      const amountToPay = checkoutData?.amountToPay ?? total;
 
       console.log("Saving initial sale...");
+      
+      const pers = checkoutData?.personalization || {};
+      const cli = checkoutData?.client || {};
+      const addr = checkoutData?.address || {};
+
+      let combinedObs = pers.persObs ? `Observações:\n${pers.persObs}` : "Pagamento via MP Direto";
+      if (!isFullPayment) {
+        combinedObs += `\n\nPAGAMENTO: Cliente optou por pagar SINAL DE 50% (R$ ${amountToPay.toFixed(2)}). Falta receber os outros 50%.`;
+      }
+      
+      if (pers.persName || pers.persAge || pers.persTheme || pers.persColors) {
+         combinedObs += `\n\nPersonalização solicitada:`;
+         if (pers.persName) combinedObs += `\nNome: ${pers.persName}`;
+         if (pers.persAge) combinedObs += `\nIdade/Frase: ${pers.persAge}`;
+         if (pers.persTheme) combinedObs += `\nTema: ${pers.persTheme}`;
+         if (pers.persColors) combinedObs += `\nCores: ${pers.persColors}`;
+      }
+
+      let addressString = "";
+      if (addr.rua) {
+         addressString = `${addr.rua}, ${addr.numero} - ${addr.bairro} - ${addr.cidade}/${addr.estado} CEP: ${addr.cep}. Ref: ${addr.ref}`;
+      }
+
       const docId = await saveSale({
-        customerName: "Cliente (Checkout Direto MP)",
-        customerEmail: "",
-        customerCpfCnpj: "",
-        contact: "",
+        customerName: cli.clientName || "Cliente",
+        customerEmail: cli.clientEmail || "",
+        customerCpfCnpj: cli.clientCpf || "",
+        contact: cli.clientContact || "",
         total,
         companyId,
         items: cart.map(item => ({
@@ -191,32 +236,33 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           retail_price: item.retail_price || 0,
           insumos: item.insumos || []
         })),
-        isWholesale: false, // Could check if min qty met but to keep simple we assume false unless explicitly handled
-        deliveryType: 'delivery',
+        isWholesale: false,
+        deliveryType: addr.rua ? 'delivery' : 'pickup',
         deliveryDate: "Agendar",
         isEmergency: false,
         paymentMethod: 'mercadopago',
         source: 'catalog',
-        observations: "Pagamento via MP Direto"
+        observations: combinedObs,
+        address: addressString
       });
 
       const savedOrderCode = docId || crypto.randomUUID();
       
       console.log('Calling createPreference');
-      const mpItems = cart.map(item => ({
-        title: String(item.product_name || "Item"),
-        quantity: Number(item.quantity) || 1,
-        unit_price: Number(item.retail_price) || 0,
+      const finalMpItems = [{
+        title: !isFullPayment ? `Sinal (50%) - Pedido no Ateliê` : `Pedido no Ateliê`,
+        quantity: 1,
+        unit_price: amountToPay,
         currency_id: 'BRL'
-      }));
+      }];
 
-      const preferencePayload = {
+       const preferencePayload = {
         orderId: savedOrderCode,
         companyId: companyId,
-        items: mpItems,
+        items: finalMpItems,
         payer: {
-          name: "Cliente",
-          email: "cliente@loja.com" 
+          name: cli.clientName || "Cliente",
+          email: cli.clientEmail || "cliente@loja.com" 
         },
         back_urls: {
           success: `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`,
@@ -264,7 +310,19 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             cart,
             total,
             companyName,
-            config: siteSettings
+            config: siteSettings,
+            formData: {
+              name: cli.clientName || "Cliente",
+              contact: cli.clientContact || "",
+              cpfCnpj: cli.clientCpf || "",
+              deliveryType: addr.rua ? 'delivery' : 'pickup',
+              address: addressString,
+              city: addr.cidade || "",
+              state: addr.estado || "",
+              zipCode: addr.cep || "",
+              paymentMethod: 'mercadopago',
+              observations: combinedObs
+            }
          }));
          
          window.dispatchEvent(new CustomEvent('clear-cart'));
@@ -801,12 +859,22 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             onRemove={onRemoveFromCart}
             onUpdateQty={onUpdateQuantity}
             onSetQty={onSetQuantity}
-            onCheckout={handleDirectCheckout}
+            onCheckout={handleOpenCheckout}
             isCheckoutLoading={isDirectCheckoutLoading}
             companyId={companyId}
           />
         )}
         
+        <CheckoutModal
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          cart={cart}
+          companyId={companyId}
+          onAddToCart={onAddToCart}
+          onCheckoutSubmit={handleDirectCheckout}
+          isSubmitting={isDirectCheckoutLoading}
+        />
+
         {isGiftListOpen && (
           <GiftListSidebar 
             giftList={giftList}

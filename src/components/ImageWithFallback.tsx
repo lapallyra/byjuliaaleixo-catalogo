@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ImageOff } from 'lucide-react';
+import { ImageOff, Heart } from 'lucide-react';
 
 interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string;
@@ -37,11 +37,35 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const isObjectFitProvided = className.includes('object-');
 
   if (!hasSrc || error) {
+    const initials = alt
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .slice(0, 3)
+      .toUpperCase();
+
+    const isLogo = className.includes('rounded-full') || className.includes('logo') || alt.toLowerCase().includes('ateliê') || alt.toLowerCase().includes('pallyra') || alt.toLowerCase().includes('guennita') || alt.toLowerCase().includes('mimada');
+
+    if (isLogo) {
+      return (
+        <div 
+          className={`flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-[#faf6f0] to-[#f3ebd9] border border-[#e8dcc8]/60 ${className} ${containerClassName}`} 
+          style={{ ...props.style, minWidth: '40px', minHeight: '40px' }}
+        >
+          <span className="font-serif font-black text-[#cca062] tracking-wider text-sm select-none">{initials || 'AT'}</span>
+        </div>
+      );
+    }
+
     return (
-      <div className={`relative overflow-hidden flex-shrink-0 flex items-center justify-center bg-gray-50/50 ${className} ${containerClassName}`} style={props.style}>
-        <div className={`flex flex-col items-center justify-center w-full h-full text-gray-400 p-2 text-center`}>
-           <ImageOff className="w-6 h-6 mb-1 opacity-40 shrink-0" />
-           <span className="text-[9px] uppercase font-bold tracking-widest opacity-40 leading-tight">Indisponível</span>
+      <div 
+        className={`flex-shrink-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#FAF9F6] to-[#E8DCC8]/20 border border-[#e8dcc8]/30 ${className} ${containerClassName}`} 
+        style={props.style}
+      >
+        <div className="flex flex-col items-center justify-center p-4 text-center select-none pointer-events-none">
+          <Heart className="w-5 h-5 mb-1 text-[#c36266]/40 animate-pulse" strokeWidth={1.5} />
+          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#6d5443]/60 mb-0.5 leading-none">{alt || 'Item'}</span>
+          <span className="text-[8px] uppercase tracking-widest text-[#6d5443]/30 font-medium">Exclusivo</span>
         </div>
       </div>
     );
@@ -59,6 +83,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
         className={`w-full h-full transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'} ${isObjectFitProvided ? '' : 'object-cover'} ${className}`}
         onError={handleError}
         onLoad={handleLoad}
+        referrerPolicy="no-referrer"
         loading="lazy"
         {...props}
       />

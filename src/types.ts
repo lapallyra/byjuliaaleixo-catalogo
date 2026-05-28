@@ -169,6 +169,10 @@ export interface SiteSettings {
   theme_accent_color?: string;
   theme_text_color?: string;
   checkout_banner?: string;
+  about_me_photo?: string;
+  about_me_title?: string;
+  about_me_bio?: string;
+  about_me_purpose?: string;
   
   global_fixed_costs?: number;
   global_labor_cost_per_hour?: number;

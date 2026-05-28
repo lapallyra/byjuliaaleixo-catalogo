@@ -20,6 +20,7 @@ import {
   RotateCw,
   X as CloseIcon,
   Calculator,
+  User,
 } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
 import { DynamicPricingList } from "./DynamicPricingList";
@@ -46,6 +47,7 @@ interface BrandSettings {
 export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
   const [activeSubTab, setActiveSubTab] = useState<
     | "brand"
+    | "about"
     | "pix"
     | "pricing"
     | "marketing"
@@ -183,6 +185,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
       <div className="lg:w-72 space-y-2">
         {[
           { id: "brand", label: "Marca & Dados (3 Ateliês)", icon: Building2 },
+          { id: "about", label: "Página Sobre Nós", icon: User },
           { id: "pix", label: "PIX & Checkout", icon: QrCode },
           {
             id: "pricing",
@@ -412,6 +415,89 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === "about" && (
+          <div className="space-y-10">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-[#D48C8C]/15 text-[#D48C8C]">
+                <User size={24} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+                Editar Página Sobre Nós
+              </h3>
+            </div>
+
+            <p className="text-[10px] uppercase font-black text-[#A09898] tracking-widest leading-relaxed">
+              Personalize a apresentação de Julia Aleixo, enviando uma foto profissional e editando os textos de biografia e propósito.
+            </p>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              {/* Photo Upload Card */}
+              <div className="space-y-4">
+                <ImageUpload
+                  label="Minha Foto (Perfil / Ateliê)"
+                  path="sobrenos"
+                  currentUrl={settings.about_me_photo}
+                  onUploadComplete={(url) => updateField("about_me_photo", url)}
+                  onRemove={() => updateField("about_me_photo", "")}
+                />
+                
+                <div className="space-y-1.5 max-w-full pl-1">
+                  <label className="text-[8px] font-black text-[#D1CACA] uppercase tracking-widest">
+                    Link Manual da Imagem (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Link da sua foto..."
+                    className="w-full bg-slate-100/50 border border-lilac/5 rounded-xl px-4 py-2 text-[10px] outline-none font-bold focus:border-lilac transition-all"
+                    value={settings.about_me_photo || ""}
+                    onChange={(e) => updateField("about_me_photo", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Text Fields Editorial */}
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    Título do Perfil / Saudação
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.about_me_title || ""}
+                    onChange={(e) => updateField("about_me_title", e.target.value)}
+                    placeholder="Ex: Olá, sou a Julia Aleixo!"
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    Texto Biográfico / Sua História
+                  </label>
+                  <textarea
+                    value={settings.about_me_bio || ""}
+                    onChange={(e) => updateField("about_me_bio", e.target.value)}
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-40 resize-none shadow-sm"
+                    placeholder="Conte sobre sua paixão pelo artesanato, suas origens e marcas de ateliê..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                    Nosso Propósito / Compromisso
+                  </label>
+                  <textarea
+                    value={settings.about_me_purpose || ""}
+                    onChange={(e) => updateField("about_me_purpose", e.target.value)}
+                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-36 resize-none"
+                    placeholder="Explique o diferencial de qualidade, ciclos de alteração e dedicação nos detalhes..."
+                  />
+                </div>
+              </div>
             </div>
           </div>
         )}

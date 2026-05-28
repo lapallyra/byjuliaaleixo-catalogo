@@ -8,15 +8,20 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { AdminLoginView } from './components/AdminLoginView';
 import { SuccessOverlay } from './components/SuccessOverlay';
 import { SalesNotificationPortal } from './components/SalesNotificationPortal';
+import { PurchaseAlert } from './components/Catalog/PurchaseAlert';
 import { AuthProvider } from './components/AuthProvider';
 import { DocumentSearch } from './components/DocumentSearch';
 import { GiftListView } from './components/GiftListView';
+import { AteliersPresentationView } from './components/AteliersPresentationView';
+import { AboutMeView } from './components/AboutMeView';
+import { GiftListInfoView } from './components/GiftListInfoView';
+import { ColecoesView } from './components/ColecoesView';
 import { CookieBanner } from './components/CookieBanner';
 import { SuggestionBox } from './components/SuggestionBox';
 import { INITIAL_CONFIG, PRODUCTS } from './constants';
 import { AppConfig, CompanyId, CartItem, Product } from './types';
 import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
-import PremiumCheckout from './components/PremiumCheckout';
+
 import { PrizeRouletteModal } from './components/PrizeRouletteModal';
 import { sendNotifications } from './services/notificationService';
 import { updateOrder } from './services/firebaseService';
@@ -54,7 +59,7 @@ function SparklesContainer({ children }: { children: React.ReactNode }) {
 }
 
 // Wrapper to handle company paths
-function CompanyCatalogWrapper({ companyId, config, carts, setCart, giftLists, setGiftLists, allProducts }: { companyId: CompanyId, config: AppConfig, carts: Record<string, CartItem[]>, setCart: any, giftLists: Record<string, Product[]>, setGiftLists: any, allProducts: Product[] }) {
+function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, setGiftList, allProducts }: { companyId: CompanyId, config: AppConfig, cart: CartItem[], setCart: any, giftList: Product[], setGiftList: any, allProducts: Product[] }) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showMPRoulette, setShowMPRoulette] = useState(false);
   const [mpPendingOrderData, setMpPendingOrderData] = useState<any>(null);
@@ -62,8 +67,8 @@ function CompanyCatalogWrapper({ companyId, config, carts, setCart, giftLists, s
   const location = useLocation();
   
   const handleClearCart = useCallback(() => {
-    setCart((prev: Record<string, CartItem[]>) => ({ ...prev, [companyId]: [] }));
-  }, [setCart, companyId]);
+    setCart([]);
+  }, [setCart]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -79,17 +84,8 @@ function CompanyCatalogWrapper({ companyId, config, carts, setCart, giftLists, s
           console.log("Mercado Pago payment OK. Resuming flow...");
           handleClearCart();
           
-          if (pendingOrder.total >= 300) {
-            setMpPendingOrderData(pendingOrder);
-            setShowMPRoulette(true);
-          } else {
-            setShowSuccess(true);
-            sendNotifications(pendingOrder.config || config, pendingOrder.cart, pendingOrder.formData, pendingOrder.total, pendingOrder.companyName).then(url => {
-              if (url) {
-                setTimeout(() => window.open(url, '_blank'), 1500);
-              }
-            });
-          }
+          setMpPendingOrderData(pendingOrder);
+          setShowMPRoulette(true);
           
           localStorage.removeItem('mp_pending_order');
           // cleanup URL params
@@ -102,77 +98,68 @@ function CompanyCatalogWrapper({ companyId, config, carts, setCart, giftLists, s
   }, [location.search, config, navigate, location.pathname, handleClearCart]);
   
   const handleAddToCart = (product: Product, quantity: number = 1) => {
-    setCart((prev: Record<string, CartItem[]>) => {
-      const companyCart = prev[companyId] || [];
-      const existing = companyCart.find(item => item.id === product.id);
+    setCart((prev: CartItem[]) => {
+      const existing = prev.find(item => item.id === product.id);
       let updatedCart;
       if (existing) {
-        updatedCart = companyCart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
+        updatedCart = prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
       } else {
-        updatedCart = [...companyCart, { ...product, quantity }];
+        updatedCart = [...prev, { ...product, quantity }];
       }
-      return { ...prev, [companyId]: updatedCart };
+      return updatedCart;
     });
   };
 
   const handleRemoveFromCart = (productId: string) => {
-    setCart((prev: Record<string, CartItem[]>) => {
-      const companyCart = prev[companyId] || [];
-      return { ...prev, [companyId]: companyCart.filter(item => item.id !== productId) };
-    });
+    setCart((prev: CartItem[]) => prev.filter(item => item.id !== productId));
   };
 
   const handleUpdateQuantity = (productId: string, delta: number) => {
-    setCart((prev: Record<string, CartItem[]>) => {
-      const companyCart = prev[companyId] || [];
-      const updatedCart = companyCart.map(item => {
+    setCart((prev: CartItem[]) => {
+      const updatedCart = prev.map(item => {
         if (item.id === productId) {
           const newQty = Math.max(0, item.quantity + delta);
           return { ...item, quantity: newQty };
         }
         return item;
       }).filter(item => item.quantity > 0);
-      return { ...prev, [companyId]: updatedCart };
+      return updatedCart;
     });
   };
 
   const handleSetQuantity = (productId: string, quantity: number) => {
-    setCart((prev: Record<string, CartItem[]>) => {
-      const companyCart = prev[companyId] || [];
-      const updatedCart = companyCart.map(item => {
+    setCart((prev: CartItem[]) => {
+      const updatedCart = prev.map(item => {
         if (item.id === productId) {
           return { ...item, quantity: Math.max(0, quantity) };
         }
         return item;
       }).filter(item => item.quantity > 0);
-      return { ...prev, [companyId]: updatedCart };
+      return updatedCart;
     });
   };
 
   const handleAddToGiftList = (product: Product) => {
-    setGiftLists((prev: Record<string, Product[]>) => {
-      const companyList = prev[companyId] || [];
-      if (companyList.find(item => item.id === product.id)) return prev;
-      return { ...prev, [companyId]: [...companyList, product] };
+    setGiftList((prev: Product[]) => {
+      if (prev.find(item => item.id === product.id)) return prev;
+      return [...prev, product];
     });
   };
 
   const handleRemoveFromGiftList = (productId: string) => {
-    setGiftLists((prev: Record<string, Product[]>) => {
-      const companyList = prev[companyId] || [];
-      return { ...prev, [companyId]: companyList.filter(item => item.id !== productId) };
-    });
+    setGiftList((prev: Product[]) => prev.filter(item => item.id !== productId));
   };
 
   return (
     <>
       <SalesNotificationPortal currentCompany={companyId} />
+      <PurchaseAlert />
       <CatalogView
         companyId={companyId}
         config={config}
         allProducts={allProducts}
-        cart={carts[companyId] || []}
-        giftList={giftLists[companyId] || []}
+        cart={cart}
+        giftList={giftList}
         onAddToCart={handleAddToCart}
         onRemoveFromCart={handleRemoveFromCart}
         onUpdateQuantity={handleUpdateQuantity}
@@ -197,21 +184,25 @@ function CompanyCatalogWrapper({ companyId, config, carts, setCart, giftLists, s
       {showMPRoulette && mpPendingOrderData && (
         <PrizeRouletteModal 
           isOpen={showMPRoulette}
-          onClose={() => {
+          onClose={async () => {
             setShowMPRoulette(false);
             setShowSuccess(true);
-            // Send whatsapp without prize or just close
+            try {
+              const url = await sendNotifications(mpPendingOrderData.config || config, mpPendingOrderData.cart, mpPendingOrderData.formData, mpPendingOrderData.total, mpPendingOrderData.companyName);
+              if (url) {
+                setTimeout(() => window.open(url, '_blank'), 1500);
+              }
+            } catch(e) {
+              console.error("Error generating whatsapp after MP roulette close", e);
+            }
           }}
           onResult={async (prize) => {
-            setShowMPRoulette(false);
-            setShowSuccess(true);
             try {
               if (mpPendingOrderData.orderId) {
                 await updateOrder(mpPendingOrderData.orderId, { giftInfo: prize });
               }
-              const url = await sendNotifications(mpPendingOrderData.config || config, mpPendingOrderData.cart, { ...mpPendingOrderData.formData, wonPrize: prize }, mpPendingOrderData.total, mpPendingOrderData.companyName);
-              if (url) {
-                setTimeout(() => window.open(url, '_blank'), 1500);
+              if (mpPendingOrderData.formData) {
+                mpPendingOrderData.formData.wonPrize = prize;
               }
             } catch(e) {
               console.error("Error generating whatsapp after MP roulette", e);
@@ -251,30 +242,50 @@ function MainApp() {
     };
   }, []);
 
-  const [carts, setCarts] = useState<Record<string, CartItem[]>>({
-    'pallyra': [],
-    'guennita': [],
-    'mimada': []
+  const [unifiedCart, setUnifiedCart] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('unified_cart_v2');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
-  const [giftLists, setGiftLists] = useState<Record<string, Product[]>>({
-    'pallyra': [],
-    'guennita': [],
-    'mimada': []
+
+  const [unifiedGiftList, setUnifiedGiftList] = useState<Product[]>(() => {
+    try {
+      const saved = localStorage.getItem('unified_gift_list_v2');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
+
+  useEffect(() => {
+    localStorage.setItem('unified_cart_v2', JSON.stringify(unifiedCart));
+  }, [unifiedCart]);
+
+  useEffect(() => {
+    localStorage.setItem('unified_gift_list_v2', JSON.stringify(unifiedGiftList));
+  }, [unifiedGiftList]);
 
   return (
     <SparklesContainer>
       <CookieBanner />
       <Routes>
-        <Route path="/" element={<EntryView config={config} />} />
-
-        <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts.filter(p => p.company === 'pallyra')} companyId="pallyra" config={config} carts={carts} setCart={setCarts} giftLists={giftLists} setGiftLists={setGiftLists} />} />
+        <Route path="/" element={<EntryView config={config} allProducts={allProducts} />} />
+        
+        <Route path="/atelies" element={<AteliersPresentationView />} />
+        <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />
+        <Route path="/sobrenos" element={<AboutMeView />} />
+        <Route path="/listadepresentes-info" element={<GiftListInfoView />} />
+        
+        <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="pallyra" config={config} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
         <Route path="/lapallyra/admin" element={<Navigate to="/admin" replace />} />
         
-        <Route path="/comamorguennita" element={<CompanyCatalogWrapper allProducts={allProducts.filter(p => p.company === 'guennita')} companyId="guennita" config={config} carts={carts} setCart={setCarts} giftLists={giftLists} setGiftLists={setGiftLists} />} />
+        <Route path="/comamorguennita" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="guennita" config={config} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
         <Route path="/comamorguennita/admin" element={<Navigate to="/admin" replace />} />
         
-        <Route path="/mimadasim" element={<CompanyCatalogWrapper allProducts={allProducts.filter(p => p.company === 'mimada')} companyId="mimada" config={config} carts={carts} setCart={setCarts} giftLists={giftLists} setGiftLists={setGiftLists} />} />
+        <Route path="/mimadasim" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="mimada" config={config} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
         <Route path="/mimadasim/admin" element={<Navigate to="/admin" replace />} />
 
         {/* Short Aliases */}
@@ -312,8 +323,7 @@ function MainApp() {
         <Route path="/document" element={<DocumentSearch onGoBack={() => window.history.back()} />} />
         
         {/* Gift List View */}
-        <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setCarts} config={config} />} />
-      <Route path="/checkout-premium" element={<PremiumCheckout />} />
+        <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setUnifiedCart} config={config} />} />
       </Routes>
     </SparklesContainer>
   );

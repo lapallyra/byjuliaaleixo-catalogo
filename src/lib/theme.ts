@@ -31,6 +31,8 @@ export interface Theme {
   cartIcon: string;
   neonBorder: string;
   neonPulse: string;
+  logoUrl?: string;
+  whatsapp?: string;
 }
 
 export const themes: Record<string, Theme> = {

@@ -15,12 +15,14 @@ import {
   Eye,
   Printer,
   Box,
+  FileDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Order, CompanyId, Product, Insumo } from "../../types";
 import { safeFormat, safeFormatISO } from "../../lib/dateUtils";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { OrderReceiptModal } from "./OrderReceiptModal";
+import { exportOrdersReportPDF } from "../../utils/pdfGenerator";
 
 interface OrdersTabProps {
   orders: Order[];
@@ -316,6 +318,13 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
           </div>
 
           <div className="h-6 w-px bg-[#F0E6D2] hidden sm:block" />
+
+          <button
+            onClick={() => exportOrdersReportPDF(filteredOrders, selectedAteliers.length === 1 ? selectedAteliers[0] : "all")}
+            className="flex items-center gap-2 bg-[#f4ebe1] hover:bg-[#ebdcc9] text-[#6d5443] font-semibold py-3 px-5 rounded-xl transition-all text-[9px] uppercase tracking-widest border border-[#e8dcc8]"
+          >
+            <FileDown size={14} /> Exportar PDF
+          </button>
 
           <button
             onClick={() => {
