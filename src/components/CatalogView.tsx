@@ -96,6 +96,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const companyProducts = useMemo(() => {
+    return allProducts.filter(p => p.company === companyId);
+  }, [allProducts, companyId]);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const searchParam = params.get('search');
@@ -107,7 +111,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const itemsPerPage = 10;
   
   const highlights = useMemo(() => {
-    if (!allProducts || allProducts.length === 0) return [];
+    if (!companyProducts || companyProducts.length === 0) return [];
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - d.getDay()); // go back to Sunday
@@ -118,7 +122,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       return x - Math.floor(x);
     };
 
-    const sortedProducts = [...allProducts].sort((a,b) => (a.id || '').localeCompare(b.id || '')); 
+    const sortedProducts = [...companyProducts].sort((a,b) => (a.id || '').localeCompare(b.id || '')); 
     
     const lowTicket = sortedProducts.filter(p => p.retail_price < 100);
     const midTicket = sortedProducts.filter(p => p.retail_price >= 100 && p.retail_price < 200);
@@ -167,7 +171,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     }
     
     return uniqueHl;
-  }, [allProducts]);
+  }, [companyProducts]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isGiftListOpen, setIsGiftListOpen] = useState(false);
@@ -551,18 +555,18 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const defaultLogo = companyId === 'pallyra' ? config.company_1_logo : companyId === 'guennita' ? config.company_2_logo : config.company_3_logo;
   
   const categories = useMemo(() => {
-    return Array.from(new Set(allProducts.map(p => p.category))).sort();
-  }, [allProducts]);
+    return Array.from(new Set(companyProducts.map(p => p.category))).sort();
+  }, [companyProducts]);
 
   const filteredProducts = useMemo(() => {
-    return allProducts.filter(p => {
+    return companyProducts.filter(p => {
       const matchesCategory = !selectedCategory || p.category === selectedCategory;
       const matchesSearch = !searchQuery || 
         p.product_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
         p.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [allProducts, selectedCategory, searchQuery]);
+  }, [companyProducts, selectedCategory, searchQuery]);
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -613,7 +617,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         <DateHighlights theme={theme} companyId={companyId} />
 
         <FeaturedProductsCarousel 
-          products={allProducts.filter(p => p.isFeatured)} 
+          products={companyProducts.filter(p => p.isFeatured)} 
           theme={theme} 
           companyId={companyId}
           onSelectProduct={(product) => setSelectedProduct(product)}
