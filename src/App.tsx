@@ -8,7 +8,6 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { AdminLoginView } from './components/AdminLoginView';
 import { SuccessOverlay } from './components/SuccessOverlay';
 import { SalesNotificationPortal } from './components/SalesNotificationPortal';
-import { PurchaseAlert } from './components/Catalog/PurchaseAlert';
 import { AuthProvider } from './components/AuthProvider';
 import { DocumentSearch } from './components/DocumentSearch';
 import { GiftListView } from './components/GiftListView';
@@ -18,6 +17,7 @@ import { GiftListInfoView } from './components/GiftListInfoView';
 import { ColecoesView } from './components/ColecoesView';
 import { CookieBanner } from './components/CookieBanner';
 import { SuggestionBox } from './components/SuggestionBox';
+import { TrackingView } from './components/TrackingView';
 import { INITIAL_CONFIG, PRODUCTS } from './constants';
 import { AppConfig, CompanyId, CartItem, Product } from './types';
 import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
@@ -153,7 +153,6 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
   return (
     <>
       <SalesNotificationPortal currentCompany={companyId} />
-      <PurchaseAlert />
       <CatalogView
         companyId={companyId}
         config={config}
@@ -174,7 +173,6 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
       />
       {showSuccess && (
         <SuccessOverlay 
-          company={companyId} 
           onContinue={() => {
             setShowSuccess(false);
             handleClearCart();
@@ -321,6 +319,9 @@ function MainApp() {
         
         {/* Document Search */}
         <Route path="/document" element={<DocumentSearch onGoBack={() => window.history.back()} />} />
+        
+        {/* Tracking */}
+        <Route path="/rastreamento" element={<TrackingView onBack={() => window.history.back()} />} />
         
         {/* Gift List View */}
         <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setUnifiedCart} config={config} />} />

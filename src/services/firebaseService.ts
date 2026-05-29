@@ -486,6 +486,27 @@ export const getSiteSettings = async (companyId: CompanyId): Promise<SiteSetting
   }
 };
 
+export const getGlobalSettings = async (): Promise<any> => {
+  try {
+    const docSnap = await getDoc(doc(db, 'settings', 'global'));
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching global settings:', error);
+    return null;
+  }
+};
+
+export const saveGlobalSettings = async (data: any) => {
+  try {
+    await setDoc(doc(db, 'settings', 'global'), data, { merge: true });
+  } catch (error) {
+    console.error('Error saving global settings:', error);
+  }
+};
+
 export const saveSiteSettings = async (companyId: CompanyId, data: Partial<SiteSettings>) => {
   try {
     await setDoc(doc(db, 'settings', companyId), data, { merge: true });
@@ -580,6 +601,23 @@ export const getGiftList = async (code: string) => {
     handleFirestoreError(error, OperationType.GET, path);
     return null;
   }
+};
+
+export const getCustomerByCpf = async (cpf: string, companyId: string): Promise<Customer | null> => {
+  try {
+    const q = query(
+      collection(db, 'customers'),
+      where('companyId', '==', companyId),
+      where('cpfCnpj', '==', cpf)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      return snap.docs[0].data() as Customer;
+    }
+  } catch (error) {
+    console.error('Error fetching customer by CPF:', error);
+  }
+  return null;
 };
 
 export const getGiftListWithStatus = async (code: string): Promise<{ data: any | null, status: 'found' | 'expired' | 'not_found' }> => {

@@ -121,7 +121,7 @@ export const AteliersPresentationView: React.FC = () => {
                 {/* Text Info */}
                 <div className="flex flex-col justify-between flex-1 text-center lg:text-left">
                   <div>
-                    <h2 className="font-serif text-2xl sm:text-3xl font-normal leading-tight mb-1" style={{ color: atelier.accentColor }}>
+                    <h2 className="font-beauty text-2xl sm:text-3xl font-normal leading-tight mb-1" style={{ color: atelier.accentColor }}>
                       {atelier.name}
                     </h2>
                     <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-500 mb-6">

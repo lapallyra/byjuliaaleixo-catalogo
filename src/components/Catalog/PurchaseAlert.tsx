@@ -8,7 +8,6 @@ const MOCK_PURCHASES = [
   { name: 'Maria S.', item: 'Kit Papelaria Personalizada', location: 'São Paulo, SP', time: 'Há 5 min' },
   { name: 'Ana P.', item: 'Caixa Luxo Maternidade', location: 'Curitiba, PR', time: 'Há 12 min' },
   { name: 'Camila R.', item: 'Caderneta de Vacina', location: 'Rio de Janeiro, RJ', time: 'Há 25 min' },
-  { name: 'Juliana T.', item: 'Kit Lembrancinha Batizado', location: 'Belo Horizonte, MG', time: 'Há 1 hora' },
 ];
 
 export function PurchaseAlert() {

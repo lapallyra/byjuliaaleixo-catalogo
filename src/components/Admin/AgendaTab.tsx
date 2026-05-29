@@ -7,17 +7,51 @@ import {
   addMonths,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Order } from "../../types";
+import { Order, CommemorativeDate } from "../../types";
 import { safeFormat, safeFormatISO } from "../../lib/dateUtils";
-import { ChevronLeft, ChevronRight, User, Hash } from "lucide-react";
+import { ChevronLeft, ChevronRight, User, Hash, Star } from "lucide-react";
+
+// Helper for dynamic dates (copied from CommemorativeDatesTab)
+const getMobileDateOccurrence = (mobileId: string, year: number) => {
+  if (mobileId === "mothers_day") {
+    // 2nd Sunday of May
+    const mayFirst = new Date(year, 4, 1);
+    const dayOfWeek = mayFirst.getDay();
+    const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    return { day: 1 + daysUntilSunday + 7, month: 5 };
+  }
+  if (mobileId === "fathers_day") {
+    // 2nd Sunday of August
+    const augFirst = new Date(year, 7, 1);
+    const dayOfWeek = augFirst.getDay();
+    const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    return { day: 1 + daysUntilSunday + 7, month: 8 };
+  }
+  if (mobileId === "easter") {
+    // Simplified Easter calculation
+    return { day: 31, month: 3 }; 
+  }
+  return { day: 1, month: 1 };
+};
+
+const getFullDate = (d: CommemorativeDate, year = new Date().getFullYear()) => {
+  if (d.year_fixed) return new Date(year, d.month - 1, d.day);
+  if (d.mobile_id) {
+    const occurrence = getMobileDateOccurrence(d.mobile_id, year);
+    return new Date(year, occurrence.month - 1, occurrence.day);
+  }
+  return new Date(year, d.month - 1, d.day);
+};
 
 interface AgendaTabProps {
   orders: Order[];
+  dates: CommemorativeDate[];
   onSelectOrder?: (orderId: string) => void;
 }
 
 export const AgendaTab: React.FC<AgendaTabProps> = ({
   orders,
+  dates,
   onSelectOrder,
 }) => {
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
@@ -198,6 +232,18 @@ export const AgendaTab: React.FC<AgendaTabProps> = ({
                           </div>
                         );
                       })}
+                      {dates.filter(d => d.active && isSameDay(getFullDate(d), day)).map((event, eIdx) => (
+                        <div
+                           key={`commem-${day.toISOString()}-${eIdx}`}
+                           className="h-4 mt-0.5 mx-0.5 bg-[#FAF9F6] border border-[#F0E6D2] rounded flex items-center gap-1 px-1"
+                           title={event.name}
+                        >
+                           <Star size={8} className="text-[#D48C8C]" fill="currentColor" />
+                           <span className="text-[6px] font-bold uppercase text-[#D48C8C] truncate w-full">
+                             {event.name}
+                           </span>
+                        </div>
+                      ))}
                     </div>
                   </div>,
                 );

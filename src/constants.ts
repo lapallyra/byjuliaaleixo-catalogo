@@ -28,7 +28,7 @@ export const PRODUCTS: Product[] = [
     id: "LP-4746", 
     code: "LP00001",
     company: "pallyra", 
-    product_name: "Agenda 2024 Personalizada", 
+    product_name: "Agenda 2025 Personalizada", 
     description: "Capa dura laminada com seu nome e frase favorita. 1 dia por página, miolo em 90g.", 
     retail_price: 85, 
     wholesale_price: 60, 

@@ -100,7 +100,7 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
       }, currentCompany);
     }
 
-    const intervals = [5000, 15000, 30000, 60000, 120000]; // 5s, 15s, 30s, 1min, 2min
+    const intervals = [5000, 15000, 30000, 60000]; // 5s, 15s, 30s, 1min
 
     // Fetch products once to use in random notifications
     const scheduleNext = async (index: number) => {
@@ -127,15 +127,6 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [currentCompany, isAdmin]);
-
-  const getTheme = (id: CompanyId) => {
-    switch(id) {
-      case 'pallyra': return { bg: 'bg-[#F8F8F6]', border: 'border-[#161616]/10', text: 'text-[#C6A664]', accent: 'text-[#161616]/70', time: 'text-[#161616]/40' };
-      case 'guennita': return { bg: 'bg-[#450a0a]', border: 'border-[#d4af37]', text: 'text-[#d4af37]', accent: 'text-white/80', time: 'text-[#d4af37]/60' };
-      case 'mimada': return { bg: 'bg-white', border: 'border-[#db2777]', text: 'text-[#db2777]', accent: 'text-gray-600', time: 'text-[#db2777]/60' };
-      default: return { bg: 'bg-white/10', border: 'border-white/20', text: 'text-gold', accent: 'text-white/90', time: 'text-white/40' };
-    }
-  };
 
   const theme = themes[(notification ? notification.companyId : 'pallyra') as keyof typeof themes] || themes.pallyra;
 

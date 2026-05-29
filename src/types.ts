@@ -72,13 +72,19 @@ export interface Order {
   address?: string;
   items: CartItem[];
   total: number;
-  status: 'quote' | 'approval' | 'waiting_deposit' | 'production' | 'assembly' | 'ready' | 'delivered' | 'cancelled' | 'pending' | 'delivery';
+  status: 'quote' | 'approval' | 'waiting_deposit' | 'production' | 'assembly' | 'ready' | 'delivered' | 'cancelled' | 'pending' | 'delivery' | 'waiting_payment' | 'planned_payment' | 'paid' | 'waiting_remaining' | 'planned_active' | 'fully_paid';
   createdAt: any; 
   deliveryDate: string;
   deliveryType?: 'pickup' | 'delivery' | 'shipping';
   shippingCost?: number;
   isEmergency: boolean;
   paymentStatus?: 'pending' | 'paid' | 'cancelled' | 'partial' | 'refunded';
+  paymentMode?: 'full' | 'planned';
+  plannedMethod?: 'credit_card' | 'digital_booklet';
+  remainingAmount?: number;
+  remainingInstallments?: number;
+  remainingInstallmentValue?: number;
+  remainingFee?: number;
   isWholesale: boolean;
   observations: string;
   photos?: string[];
@@ -109,6 +115,7 @@ export interface Customer {
   zipCode: string;
   totalSpent: number;
   ordersCount: number;
+  pendingBalance?: number;
   createdAt: any;
   companyId: CompanyId;
 }
@@ -174,12 +181,26 @@ export interface SiteSettings {
   about_me_bio?: string;
   about_me_purpose?: string;
   
+  // Mercado Pago Pix Automatic
+  mercadopago_token?: string;
+  pix_automatico_active?: boolean;
+  
+  shipping_rules?: {
+    id: string;
+    region: string;
+    cep_start: string;
+    cep_end: string;
+    price: number;
+    active: boolean;
+  }[];
+
   global_fixed_costs?: number;
   global_labor_cost_per_hour?: number;
   global_tax_rate?: number;
   fixed_costs_list?: { id: string; name: string; value: number }[];
   taxes_list?: { id: string; name: string; value: number; type?: string }[];
   labor_list?: { id: string; name: string; value: number }[];
+  test_mode?: boolean;
 }
 
 export interface CartItem extends Product {
@@ -234,7 +255,9 @@ export interface CheckoutData {
   city: string;
   state: string;
   zipCode: string;
-  paymentMethod: 'pix' | 'credit_card' | 'pix_parcelado' | 'cash' | 'mercadopago';
+  paymentMethod: 'pix' | 'credit_card' | 'pix_parcelado' | 'cash' | 'mercadopago' | 'planned';
+  paymentMode?: 'full' | 'planned';
+  plannedMethod?: 'credit_card' | 'digital_booklet';
   installments?: number;
   needsChange?: 'SIM' | 'NÃO';
   changeAmount?: string;

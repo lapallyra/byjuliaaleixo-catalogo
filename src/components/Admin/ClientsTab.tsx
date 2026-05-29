@@ -14,6 +14,7 @@ import {
   MapPin,
   Calendar as CalendarIcon,
   Mail,
+  Printer,
 } from "lucide-react";
 import { Customer, CompanyId } from "../../types";
 import {
@@ -48,7 +49,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
           (c.cpfCnpj && c.cpfCnpj.includes(searchTerm)) ||
           (c.code && c.code.includes(searchTerm));
         return matchesSearch;
-      }),
+      }).sort((a, b) => a.name.localeCompare(b.name)),
     [customers, searchTerm],
   );
 
@@ -169,7 +170,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
       <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
         <div className="relative w-full max-w-md">
           <Search
@@ -184,15 +185,24 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button
-          onClick={() => {
-            setSelectedCustomer(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-3 px-10 py-4 bg-black text-white rounded-[1.25rem] font-black font-sans text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl border border-black/10"
-        >
-          <UserPlus size={18} /> Novo Cliente
-        </button>
+        <div className="flex gap-4 w-full md:w-auto">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center justify-center p-4 bg-white text-[#D1CACA] border border-lilac/10 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group"
+            title="Exportar Relatório PDF"
+          >
+            <Printer size={18} className="group-hover:scale-110 transition-transform" />
+          </button>
+          <button
+            onClick={() => {
+              setSelectedCustomer(null);
+              setIsModalOpen(true);
+            }}
+            className="flex-1 md:flex-none flex items-center justify-center gap-3 px-10 py-4 bg-black text-white rounded-[1.25rem] font-black font-sans text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl border border-black/10"
+          >
+            <UserPlus size={18} /> Novo Cliente
+          </button>
+        </div>
       </div>
 
       {birthdayCustomers.length > 0 && (

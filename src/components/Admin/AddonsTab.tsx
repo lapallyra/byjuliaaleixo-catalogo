@@ -91,7 +91,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-2xl bg-lilac/10 text-lilac shadow-lg shadow-lilac/5">

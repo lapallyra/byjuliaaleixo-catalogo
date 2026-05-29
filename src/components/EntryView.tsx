@@ -34,7 +34,7 @@ const AtelierCarousel = ({
   return (
     <div className="mb-12">
       <div className="flex justify-between items-end mb-4 px-2">
-        <h4 className="font-serif text-xl sm:text-2xl text-left font-normal select-none" style={{ color: accent }}>
+        <h4 className="font-beauty text-xl sm:text-2xl text-left font-normal select-none" style={{ color: accent }}>
           {title}
         </h4>
         <div className="flex gap-2">
@@ -286,10 +286,6 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
   return (
     <div className="bg-[#fffdfa] min-h-[100dvh] w-full relative font-sans text-[#6d5443] selection:bg-[#e8dcc8] selection:text-[#3A312D] overflow-x-hidden">
-      <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
-        .font-cursive { font-family: 'Great Vibes', cursive; font-weight: normal; }
-      `}} />
       
       {/* HEADER (NAME ONLY, CENTRALIZED) */}
       <header className="w-full bg-[#fffdfa] py-6 flex justify-center items-center z-50 select-none">
@@ -299,7 +295,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </header>
 
       {/* NAVEGAÇÃO / FAIXA SLIM (Ateliês, Coleções, Sobre Nós, Lista de Presentes, Sugestões + Pesquisa interactiva) */}
-      <div className="w-full bg-white border-y border-[#e8dcc8]/40 py-2 px-6 shadow-sm flex flex-col sm:flex-row justify-between items-center sticky top-0 z-40 transition-all">
+      <div className="w-full bg-white border-y border-[#e8dcc8]/40 py-2 px-6 shadow-sm flex flex-col sm:flex-row justify-between items-center sticky top-0 z-50 transition-all">
         <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center gap-4 px-4">
           
           {/* Links de navegação */}
@@ -403,7 +399,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                   </div>
                 )}
                 
-                <h3 className="font-serif text-2xl sm:text-3xl font-semibold text-center leading-none mb-2 select-none" style={{ color: company.accent }}>
+                <h3 className="font-beauty text-2xl sm:text-3xl font-normal text-center leading-none mb-2 select-none" style={{ color: company.accent }}>
                   {company.name}
                 </h3>
                 
@@ -687,7 +683,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                <li><a href="#" className="hover:text-[#cca062] transition-colors">Prazos e entregas</a></li>
                <li><a href="#" className="hover:text-[#cca062] transition-colors">Trocas e devoluções</a></li>
                <li><a href="#" className="hover:text-[#cca062] transition-colors">Políticas</a></li>
-               <li><a href="#" className="hover:text-[#cca062] transition-colors">Acompanhamento</a></li>
+               <li><button onClick={() => navigate('/rastreamento')} className="hover:text-[#cca062] transition-colors uppercase cursor-pointer outline-none bg-transparent border-none p-0 inline-block">Rastreamento</button></li>
              </ul>
           </div>
         </div>

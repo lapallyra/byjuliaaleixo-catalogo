@@ -1,9 +1,11 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Lock, Check, ChevronRight, UploadCloud, MapPin, Search, ShieldCheck, HeartHandshake, Box, UserCheck, Gift } from 'lucide-react';
+import { X, Lock, Check, ChevronRight, UploadCloud, MapPin, Search, ShieldCheck, HeartHandshake, Box, UserCheck, Gift, Truck, Clock, Calendar } from 'lucide-react';
 import { CartItem, CompanyId } from '../types';
 import { themes } from '../lib/theme';
-import { logCheckoutEvent } from '../services/firebaseService';
+import { logCheckoutEvent, getSiteSettings, getGlobalSettings, getCustomerByCpf } from '../services/firebaseService';
+import { SiteSettings } from '../types';
+import { useAuth } from './AuthProvider';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -26,6 +28,26 @@ export function CheckoutModal({
 }: CheckoutModalProps) {
   const [step, setStep] = useState(1);
   const theme = themes[companyId] || themes.pallyra;
+  const [siteSettings, setSiteSettings] = useState<Partial<SiteSettings> | null>(null);
+  const [globalSettings, setGlobalSettings] = useState<any>(null);
+  const { isAdmin } = useAuth();
+
+  const isTestModeActive = !!(globalSettings?.test_mode || siteSettings?.test_mode);
+  const showSimulatedButton = isTestModeActive && isAdmin;
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const settings = await getSiteSettings(companyId);
+      if (settings) {
+        setSiteSettings(settings);
+      }
+      const global = await getGlobalSettings();
+      if (global) {
+        setGlobalSettings(global);
+      }
+    };
+    loadSettings();
+  }, [companyId]);
 
   // Step 1: Personalização
   const [persName, setPersName] = useState('');
@@ -48,14 +70,130 @@ export function CheckoutModal({
   const [estado, setEstado] = useState('');
   const [ref, setRef] = useState('');
 
+  const [deliveryType, setDeliveryType] = useState<'mãos' | 'correios' | 'retirada'>('mãos');
+  const [retiradaDate, setRetiradaDate] = useState('');
+  const [retiradaTime, setRetiradaTime] = useState('');
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+
   // Step 3: Pagamento
   const [cupom, setCupom] = useState('');
   const [payFullAmount, setPayFullAmount] = useState(false);
+  
+  const [selectedMainOption, setSelectedMainOption] = useState<'full' | 'planned' | ''>('');
+  const [plannedMethod, setPlannedMethod] = useState<'credit_card' | 'digital_booklet' | ''>('');
+  const [installments, setInstallments] = useState<number>(1);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [pendingBalance, setPendingBalance] = useState<number>(0);
+
+  const fetchCustomerBalance = useCallback(async () => {
+    if (!clientCpf) return;
+    const cleanCpf = clientCpf.replace(/\D/g, '');
+    if (cleanCpf.length === 11 || cleanCpf.length === 14) {
+      const customer = await getCustomerByCpf(cleanCpf, companyId);
+      if (customer && customer.pendingBalance) {
+        setPendingBalance(customer.pendingBalance);
+      } else {
+        setPendingBalance(0);
+      }
+    }
+  }, [clientCpf, companyId]);
+
+  useEffect(() => {
+    if (clientCpf.replace(/\D/g, '').length >= 11) {
+       fetchCustomerBalance();
+    }
+  }, [clientCpf, fetchCustomerBalance]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchBookings = async () => {
+      try {
+        const { collection, getDocs } = await import('firebase/firestore');
+        const { db } = await import('../lib/firebase');
+        const salesRef = collection(db, 'sales');
+        const querySnapshot = await getDocs(salesRef);
+        const slots: string[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data && data.deliveryType === 'retirada' && data.retiradaDate && data.retiradaTime) {
+            slots.push(`${data.retiradaDate}_${data.retiradaTime}`);
+          }
+        });
+        setBookedSlots(slots);
+      } catch (error) {
+        console.error("Erro ao buscar agendamentos de retirada:", error);
+      }
+    };
+    fetchBookings();
+  }, [isOpen]);
+
+  const generateTimeSlots = (dateStr: string) => {
+    if (!dateStr) return [];
+    
+    const d = new Date(dateStr + 'T12:00:00');
+    const day = d.getDay();
+    const isWeekend = day === 0 || day === 6;
+
+    const slots: string[] = [];
+
+    if (!isWeekend) {
+      // Mon-Fri: 11:40 to 12:40, 18:00 to 21:00
+      let h = 11, m = 40;
+      while (h < 12 || (h === 12 && m <= 40)) {
+        slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+        m += 20;
+        if (m >= 60) {
+          h += 1;
+          m = 0;
+        }
+      }
+      h = 18; m = 0;
+      while (h < 21 || (h === 21 && m <= 0)) {
+        slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+        m += 20;
+        if (m >= 60) {
+          h += 1;
+          m = 0;
+        }
+      }
+    } else {
+      // Sat-Sun: 09:00 to 14:00
+      let h = 9, m = 0;
+      while (h < 14 || (h === 14 && m <= 0)) {
+        slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+        m += 20;
+        if (m >= 60) {
+          h += 1;
+          m = 0;
+        }
+      }
+    }
+    return slots;
+  };
 
   const subtotal: number = useMemo(() => cart.reduce((sum, item) => sum + ((item.retail_price || 0) * (item.quantity || 1)), 0), [cart]);
   const discount: number = cupom === 'GANHEI10' ? subtotal * 0.1 : 0; // Fake discount implementation, should be from backend
-  const delivery: number = 0; // Calculation could go here
-  const total: number = subtotal - discount + delivery;
+  
+  const delivery: number = useMemo(() => {
+    if (deliveryType === 'retirada') return 0;
+    const rules = globalSettings?.shipping_rules || siteSettings?.shipping_rules;
+    if (!cep || !rules) return 0;
+    
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length < 8) return 0;
+
+    const numericCep = parseInt(cleanCep, 10);
+    
+    const rule = rules.find((r: any) => 
+      r.active && 
+      numericCep >= parseInt(r.cep_start, 10) && 
+      numericCep <= parseInt(r.cep_end, 10)
+    );
+
+    return rule ? rule.price : 0;
+  }, [cep, siteSettings, globalSettings]);
+
+  const total: number = subtotal - discount + delivery + pendingBalance;
 
   // Log on start
   useEffect(() => {
@@ -69,8 +207,45 @@ export function CheckoutModal({
     }
   }, [isOpen, companyId]);
 
+  const validateStep1 = () => {
+    const newErrors: Record<string, string> = {};
+    if (cart.length === 0) {
+      newErrors.cart = 'Você precisa ter pelo menos 1 produto selecionado para iniciar a personalização.';
+    }
+    if (!persName.trim()) {
+      newErrors.persName = 'Por favor, informe o nome para a personalização.';
+    }
+    if (!persTheme) {
+      newErrors.persTheme = 'Por favor, selecione um tema ou estilo.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const newErrors: Record<string, string> = {};
+    if (!clientName) newErrors.clientName = 'Nome é obrigatório.';
+    if (!clientContact) newErrors.clientContact = 'Contato é obrigatório.';
+    if (!clientCpf) newErrors.clientCpf = 'CPF é obrigatório.';
+    
+    if (deliveryType !== 'retirada') {
+      if (!cep) newErrors.cep = 'CEP é obrigatório.';
+      if (!rua) newErrors.rua = 'Rua é obrigatória.';
+      if (!numero) newErrors.numero = 'Número é obrigatório.';
+      if (!bairro) newErrors.bairro = 'Bairro é obrigatório.';
+      if (!cidade) newErrors.cidade = 'Cidade é obrigatória.';
+      if (!estado) newErrors.estado = 'Estado é obrigatório.';
+    } else {
+      if (!retiradaDate) newErrors.retiradaDate = 'Selecione a data para a retirada.';
+      if (!retiradaTime) newErrors.retiradaTime = 'Selecione o horário para a retirada.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleNext = () => {
     if (step === 1) {
+      if (!validateStep1()) return;
       logCheckoutEvent('Seleção de Personalização', {
         companyId,
         clientName: clientName || undefined,
@@ -78,13 +253,38 @@ export function CheckoutModal({
         itemsCount: cart.reduce((sum, item) => sum + (item.quantity || 1), 0),
         description: `Tema: ${persTheme || 'Sem tema'}, Cores: ${persColors || 'Sem cor'}, Nome: ${persName || 'Sem nome'}`
       });
+    } else if (step === 2) {
+      if (!validateStep2()) return;
     }
     setStep(s => Math.min(3, s + 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
   const handleFinalize = () => {
-    const isFullPayment = total <= 100 || payFullAmount;
+    if (total > 100) {
+       if (!selectedMainOption) {
+         setErrors({ payment: 'Selecione uma forma de pagamento' });
+         return;
+       }
+       if (selectedMainOption === 'planned' && !plannedMethod) {
+         setErrors({ payment: 'Selecione um método de pagamento planejado' });
+         return;
+       }
+    }
+
+    const isFullPayment = total <= 100 || selectedMainOption === 'full';
     const amountToPay = isFullPayment ? total : total / 2;
+
+    const remainingAmount = isFullPayment ? 0 : total / 2;
+    let remainingFee = 0;
+    if (selectedMainOption === 'planned') {
+      if (plannedMethod === 'credit_card') {
+         remainingFee = remainingAmount * 0.05; // mp fee mock
+      } else if (plannedMethod === 'digital_booklet') {
+         remainingFee = remainingAmount * 0.02; // booklet fee mock
+      }
+    }
+    const remainingInstallmentValue = (remainingAmount + remainingFee) / installments;
 
     logCheckoutEvent('Pagamento MP', {
       companyId,
@@ -96,12 +296,78 @@ export function CheckoutModal({
 
     onCheckoutSubmit({
       personalization: { persName, persAge, persTheme, persColors, persObs },
-      client: { clientName, clientContact, clientCpf, clientEmail },
-      address: { cep, rua, numero, bairro, cidade, estado, ref },
+      client: { clientName, clientContact, clientCpf, clientEmail, pendingBalance },
+      address: deliveryType !== 'retirada' ? { cep, rua, numero, bairro, cidade, estado, ref } : undefined,
       cupom,
+      shippingCost: deliveryType === 'retirada' ? 0 : delivery,
       total,
       isFullPayment,
-      amountToPay
+      amountToPay,
+      paymentMode: total <= 100 ? 'full' : selectedMainOption,
+      plannedMethod: selectedMainOption === 'planned' ? plannedMethod : undefined,
+      remainingInstallments: selectedMainOption === 'planned' ? installments : undefined,
+      remainingAmount,
+      remainingFee,
+      remainingInstallmentValue,
+      deliveryType,
+      retiradaDate: deliveryType === 'retirada' ? retiradaDate : undefined,
+      retiradaTime: deliveryType === 'retirada' ? retiradaTime : undefined
+    });
+  };
+
+  const handleSimulatedCheckout = () => {
+    if (total > 100) {
+       if (!selectedMainOption) {
+         setErrors({ payment: 'Selecione uma forma de pagamento' });
+         return;
+       }
+       if (selectedMainOption === 'planned' && !plannedMethod) {
+         setErrors({ payment: 'Selecione um método de pagamento planejado' });
+         return;
+       }
+    }
+
+    const isFullPayment = total <= 100 || selectedMainOption === 'full';
+    const amountToPay = isFullPayment ? total : total / 2;
+
+    const remainingAmount = isFullPayment ? 0 : total / 2;
+    let remainingFee = 0;
+    if (selectedMainOption === 'planned') {
+      if (plannedMethod === 'credit_card') {
+         remainingFee = remainingAmount * 0.05;
+      } else if (plannedMethod === 'digital_booklet') {
+         remainingFee = remainingAmount * 0.02;
+      }
+    }
+    const remainingInstallmentValue = (remainingAmount + remainingFee) / installments;
+
+    logCheckoutEvent('Pagamento MP Simulado', {
+      companyId,
+      clientName: clientName || 'Anônimo',
+      total,
+      itemsCount: cart.reduce((sum, item) => sum + (item.quantity || 1), 0),
+      description: `Método: Teste Simulado, Sinal: ${isFullPayment ? 'Integral' : '50%'}, Valor: R$ ${amountToPay.toFixed(2)}`
+    });
+
+    onCheckoutSubmit({
+      personalization: { persName, persAge, persTheme, persColors, persObs },
+      client: { clientName, clientContact, clientCpf, clientEmail, pendingBalance },
+      address: deliveryType !== 'retirada' ? { cep, rua, numero, bairro, cidade, estado, ref } : undefined,
+      cupom,
+      shippingCost: deliveryType === 'retirada' ? 0 : delivery,
+      total,
+      isFullPayment,
+      amountToPay,
+      paymentMode: total <= 100 ? 'full' : selectedMainOption,
+      plannedMethod: selectedMainOption === 'planned' ? plannedMethod : undefined,
+      remainingInstallments: selectedMainOption === 'planned' ? installments : undefined,
+      remainingAmount,
+      remainingFee,
+      remainingInstallmentValue,
+      isSimulated: true,
+      deliveryType,
+      retiradaDate: deliveryType === 'retirada' ? retiradaDate : undefined,
+      retiradaTime: deliveryType === 'retirada' ? retiradaTime : undefined
     });
   };
 
@@ -194,8 +460,18 @@ export function CheckoutModal({
   );
 
   const renderOrderSummary = (isInMobileFlow = false, isStep3 = false) => (
-    <div className={`w-full ${!isStep3 ? 'lg:w-[350px] xl:w-[400px] lg:border-l border-gray-200' : ''} bg-[#F8F5F2] shrink-0 overflow-y-auto p-6 lg:p-8 hide-scrollbar flex flex-col ${!isStep3 ? 'lg:sticky lg:top-[85px] lg:h-[calc(100vh-85px)]' : ''} shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.05)]`}>
+    <div className={`w-full ${!isStep3 ? 'lg:w-[325px] xl:w-[350px]' : ''} bg-white rounded-3xl border border-gray-100/80 p-6 lg:p-8 flex flex-col ${!isStep3 ? 'lg:sticky lg:top-[115px]' : ''} shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]`}>
        
+       {pendingBalance > 0 && (
+         <div className="bg-[#FAF9F6] border border-[#F0E6D2] rounded-3xl p-6 mb-6 shadow-sm">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-amber-800 mb-2">Aviso Importante</h4>
+            <p className="text-[11px] text-gray-600 leading-relaxed font-medium">
+              Seu cadastro possui um saldo pendente de <span className="font-bold text-amber-800">R$ {pendingBalance.toFixed(2).replace('.', ',')}</span> referente a um pedido anterior.<br/>
+              Esse valor será integrado automaticamente ao total do novo pedido.
+            </p>
+         </div>
+       )}
+
        {/* BLOCO 1: RESUMO DO PEDIDO */}
        <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 mb-6">
           <h3 className="font-bold text-gray-900 tracking-wider flex items-center gap-2 mb-6 uppercase text-sm">
@@ -232,8 +508,14 @@ export function CheckoutModal({
               </div>
             )}
             <div className="flex justify-between text-sm text-gray-500">
-              <span>Entrega</span>
-              <span className="font-medium">{delivery === 0 ? 'A calcular' : `R$ ${delivery.toFixed(2).replace('.', ',')}`}</span>
+              <span className="flex items-center gap-1">
+                <Truck size={14} className="opacity-40" /> Entrega
+              </span>
+              <span className="font-medium">
+                {cep.replace(/\D/g, '').length < 8 ? 'Informe o CEP' : 
+                 delivery === 0 && (globalSettings?.shipping_rules?.some((r: any) => r.active) || siteSettings?.shipping_rules?.some(r => r.active)) ? 'Sob Consulta' : 
+                 `R$ ${delivery.toFixed(2).replace('.', ',')}`}
+              </span>
             </div>
             
             <div className="flex justify-between text-xl font-bold pt-5 border-t border-gray-100 mt-2" style={{ color: theme.accentColor }}>
@@ -309,36 +591,42 @@ export function CheckoutModal({
                Falar com Suporte
              </a>
            </div>
-         </>
-       )}
-    </div>
+                    </>
+    )}
+  </div>
   );
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[2000] flex flex-col bg-[#F8F5F2] overflow-hidden text-gray-600 font-sans">
+    <div className="fixed inset-0 z-[2000] flex flex-col bg-[#F8F5F2] overflow-y-auto text-gray-600 font-sans pb-16">
       {renderHeader()}
 
       {/* Two Columns Layout for Steps 1 & 2 */}
       {step < 3 && (
-        <div className="flex flex-1 overflow-hidden flex-col lg:flex-row relative">
+        <div className="w-full max-w-5xl mx-auto px-4 lg:px-8 py-6 md:py-8 flex flex-col lg:flex-row gap-8 items-start relative">
           
           {/* Left Column (Dynamic Forms) */}
-          <div className="flex-1 overflow-y-auto w-full bg-white relative p-6 lg:p-12 xl:p-16 hide-scrollbar rounded-tr-3xl">
-             <div className="max-w-2xl mx-auto w-full">
+          <div className="flex-grow w-full bg-white p-6 md:p-8 lg:p-12 rounded-3xl border border-gray-100/80 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]">
+             <div className="w-full">
                
                {step === 1 && (
                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-8">
                    <div>
                      <h2 className="text-3xl font-bold text-gray-900 mb-2">Personalização</h2>
                      <p className="text-sm text-gray-500">Preencha com atenção para criarmos algo único para você.</p>
+                    {errors.cart && (
+                      <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-800 text-xs font-semibold shadow-sm mt-4">
+                        ⚠️ {errors.cart}
+                      </div>
+                    )}
                    </div>
                    
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border border-gray-100 p-6 md:p-8 rounded-3xl bg-white shadow-[0_4px_24px_-10px_rgba(0,0,0,0.03)]">
                      <div className="space-y-2">
-                       <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nome da Criança / Pessoa</label>
-                       <input value={persName} onChange={e => setPersName(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium text-gray-800" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Ex: Maria Alice" />
+                       <label className="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1">Nome da Criança / Pessoa <span className="text-rose-400 font-bold">*</span></label>
+                       <input value={persName} onChange={e => { setPersName(e.target.value); setErrors(p => ({...p, persName: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border ${errors.persName ? 'border-rose-300 focus:ring-rose-100' : 'border-transparent'} rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium text-gray-800`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Ex: Maria Alice" />
+                       {errors.persName && <p className="text-rose-500 text-xs font-semibold mt-1.5 flex items-center gap-1">✨ {errors.persName}</p>}
                      </div>
                      <div className="space-y-2">
                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Idade / Frase</label>
@@ -347,8 +635,8 @@ export function CheckoutModal({
                    </div>
 
                    <div className="space-y-2">
-                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tema / Estilo</label>
-                     <select value={persTheme} onChange={e => setPersTheme(e.target.value)} className="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-2 focus:border-transparent outline-none transition-all text-sm font-medium cursor-pointer" style={{ '--tw-ring-color': theme.accentColor + '50' } as any}>
+                     <label className="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1">Tema / Estilo <span className="text-rose-400 font-bold">*</span></label>
+                     <select value={persTheme} onChange={e => { setPersTheme(e.target.value); setErrors(p => ({...p, persTheme: ''})) }} className={`w-full p-4 bg-white border ${errors.persTheme ? 'border-rose-300 focus:ring-rose-100' : 'border-gray-200'} rounded-2xl focus:ring-2 focus:border-transparent outline-none transition-all text-sm font-medium cursor-pointer`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any}>
                        <option value="">Selecione o tema desejado</option>
                        <option value="Sereia">A Pequena Sereia</option>
                        <option value="Safari">Safari Baby</option>
@@ -356,6 +644,7 @@ export function CheckoutModal({
                        <option value="Jardim">Jardim Encantado</option>
                        <option value="Outro">Outro (Especifique abaixo)</option>
                      </select>
+                     {errors.persTheme && <p className="text-rose-500 text-xs font-semibold mt-1.5 flex items-center gap-1">✨ {errors.persTheme}</p>}
                    </div>
 
                    <div className="space-y-2">
@@ -390,21 +679,66 @@ export function CheckoutModal({
                {step === 2 && (
                  <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }} className="space-y-10 pb-20 lg:pb-0">
                    <div>
-                     <h2 className="text-3xl font-bold text-gray-900 mb-2">Entrega</h2>
-                     <p className="text-sm text-gray-500">Para onde enviaremos o seu pedido?</p>
-                   </div>
+                     <h2 className="text-3xl font-bold text-[#4E3F30] mb-2">Forma de Entrega</h2>
+                      <p className="text-sm text-gray-500">Escolha como deseja receber ou retirar o seu pedido.</p>
+                    </div>
+
+                    {/* Opções de Entrega */}
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                          { id: 'mãos', label: 'Entrega em mãos', description: 'Entregamos em seu endereço', icon: MapPin },
+                          { id: 'correios', label: 'Correios', description: 'Envio nacional via Correios', icon: Truck },
+                          { id: 'retirada', label: 'Retirada no Ateliê', description: 'Retire diretamente conosco', icon: Clock }
+                        ].map((opt) => {
+                          const Icon = opt.icon;
+                          const isSelected = deliveryType === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => {
+                                setDeliveryType(opt.id as any);
+                                setErrors(p => ({ ...p, cep: '', rua: '', numero: '', bairro: '', cidade: '', estado: '', retiradaDate: '', retiradaTime: '' }));
+                              }}
+                              className={`flex flex-col items-start p-5 rounded-2xl border text-left transition-all ${
+                                isSelected
+                                  ? 'bg-rose-50/50 border-rose-350 ring-2'
+                                  : 'bg-white border-gray-100 hover:border-gray-300'
+                              }`}
+                              style={isSelected ? { borderColor: theme.accentColor, '--tw-ring-color': theme.accentColor + '20' } as any : {}}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <Icon size={18} className={isSelected ? 'text-[theme.accentColor]' : 'text-gray-400'} style={isSelected ? { color: theme.accentColor } : {}} />
+                                <span className={`text-xs font-bold ${isSelected ? 'text-gray-900' : 'text-gray-600'}`}>
+                                  {opt.label}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-gray-400 leading-snug">
+                                {opt.description}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    
                    
                    <div className="space-y-4">
                      <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest border-b border-gray-100 pb-2">Seus Dados</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        <div className="space-y-1 md:col-span-2">
-                         <input value={clientName} onChange={e => setClientName(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Nome Completo" />
+                         <input value={clientName} onChange={e => { setClientName(e.target.value); setErrors(p => ({...p, clientName: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.clientName ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Nome Completo" />
+                         {errors.clientName && <p className="text-red-500 text-xs px-2">{errors.clientName}</p>}
                        </div>
                        <div className="space-y-1">
-                         <input value={clientContact} onChange={e => setClientContact(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="WhatsApp (DDD + Número)" />
+                         <input value={clientContact} onChange={e => { setClientContact(e.target.value); setErrors(p => ({...p, clientContact: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.clientContact ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="WhatsApp (DDD + Número)" />
+                         {errors.clientContact && <p className="text-red-500 text-xs px-2">{errors.clientContact}</p>}
                        </div>
                        <div className="space-y-1 relative">
-                         <input value={clientCpf} onChange={e => setClientCpf(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="CPF / CNPJ" />
+                         <input value={clientCpf} onChange={e => { setClientCpf(e.target.value); setErrors(p => ({...p, clientCpf: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.clientCpf ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="CPF / CNPJ" />
+                         {errors.clientCpf && <p className="text-red-500 text-xs px-2">{errors.clientCpf}</p>}
                        </div>
                        <div className="space-y-1 md:col-span-2">
                          <input value={clientEmail} onChange={e => setClientEmail(e.target.value)} type="email" className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="E-mail" />
@@ -412,39 +746,115 @@ export function CheckoutModal({
                      </div>
                    </div>
 
-                   <div className="space-y-4">
-                     <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest border-b border-gray-100 pb-2">Endereço</h3>
+                   {deliveryType !== 'retirada' && (
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest border-b border-gray-100 pb-2">Endereço</h3>
                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                        <div className="space-y-1 md:col-span-2 relative">
                          <div className="flex gap-2">
-                           <input value={cep} onChange={e => setCep(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="CEP" />
+                           <input value={cep} onChange={e => { setCep(e.target.value); setErrors(p => ({...p, cep: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.cep ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="CEP" />
                            <button onClick={handleBuscarCep} className="bg-gray-800 text-white px-5 rounded-2xl hover:bg-gray-900 transition-colors flex items-center justify-center shrink-0">
                              <Search size={18} />
                            </button>
                          </div>
+                         {errors.cep && <p className="text-red-500 text-xs px-2">{errors.cep}</p>}
                        </div>
                        <div className="space-y-1 md:col-span-4">
-                         <input value={rua} onChange={e => setRua(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Endereço (Rua, Av.)" />
+                         <input value={rua} onChange={e => { setRua(e.target.value); setErrors(p => ({...p, rua: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.rua ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Endereço (Rua, Av.)" />
+                         {errors.rua && <p className="text-red-500 text-xs px-2">{errors.rua}</p>}
                        </div>
                        <div className="space-y-1 md:col-span-1">
-                         <input value={numero} onChange={e => setNumero(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Número" />
+                         <input value={numero} onChange={e => { setNumero(e.target.value); setErrors(p => ({...p, numero: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.numero ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Número" />
+                         {errors.numero && <p className="text-red-500 text-xs px-2">{errors.numero}</p>}
                        </div>
                        <div className="space-y-1 md:col-span-3">
                          <input value={ref} onChange={e => setRef(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Complemento / Referência" />
                        </div>
                        <div className="space-y-1 md:col-span-2">
-                         <input value={bairro} onChange={e => setBairro(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Bairro" />
+                         <input value={bairro} onChange={e => { setBairro(e.target.value); setErrors(p => ({...p, bairro: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.bairro ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Bairro" />
+                         {errors.bairro && <p className="text-red-500 text-xs px-2">{errors.bairro}</p>}
                        </div>
                        <div className="space-y-1 md:col-span-1">
-                         <input value={cidade} onChange={e => setCidade(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Cidade" />
+                         <input value={cidade} onChange={e => { setCidade(e.target.value); setErrors(p => ({...p, cidade: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.cidade ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Cidade" />
+                         {errors.cidade && <p className="text-red-500 text-xs px-2">{errors.cidade}</p>}
                        </div>
                        <div className="space-y-1 md:col-span-1">
-                         <input value={estado} onChange={e => setEstado(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium uppercase" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="UF" maxLength={2} />
+                         <input value={estado} onChange={e => { setEstado(e.target.value); setErrors(p => ({...p, estado: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium uppercase ${errors.estado ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="UF" maxLength={2} />
+                         {errors.estado && <p className="text-red-500 text-xs px-2">{errors.estado}</p>}
                        </div>
                      </div>
-                   </div>
-                   
-                   <div className="flex gap-4 pt-4 border-t border-gray-100">
+                    </div>
+                    )}
+
+                    {deliveryType === 'retirada' && (
+                      <div className="space-y-6 animate-in fade-in duration-300">
+                        <div className="space-y-2">
+                          <h3 className="text-xs font-bold text-gray-901 uppercase tracking-widest border-b border-gray-100 pb-2">Agendamento de Retirada</h3>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-loose">Selecione uma data e um horário disponível abaixo.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Data da Retirada</label>
+                            <input
+                              type="date"
+                              min={new Date().toISOString().split('T')[0]}
+                              value={retiradaDate}
+                              onChange={(e) => {
+                                setRetiradaDate(e.target.value);
+                                setRetiradaTime('');
+                                setErrors(p => ({ ...p, retiradaDate: '', retiradaTime: '' }));
+                              }}
+                              className={`w-full p-4 bg-[#F8F5F2] border ${errors.retiradaDate ? 'border-red-300' : 'border-transparent'} rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium text-gray-800`}
+                              style={{ '--tw-ring-color': theme.accentColor + '50' } as any}
+                            />
+                            {errors.retiradaDate && <p className="text-red-500 text-xs px-2 mt-1">{errors.retiradaDate}</p>}
+                          </div>
+
+                          {retiradaDate && (
+                            <div className="space-y-2 md:col-span-2 mt-2">
+                              <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Horários de Retirada Disponíveis (De 20 em 20 min)</label>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-2">
+                                {generateTimeSlots(retiradaDate).map((time) => {
+                                  const isBooked = bookedSlots.includes(`${retiradaDate}_${time}`);
+                                  const isSelected = retiradaTime === time;
+
+                                  return (
+                                    <button
+                                      key={time}
+                                      type="button"
+                                      disabled={isBooked}
+                                      onClick={() => {
+                                        setRetiradaTime(time);
+                                        setErrors(p => ({ ...p, retiradaTime: '' }));
+                                      }}
+                                      className={`p-3 rounded-xl text-center border text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 ${
+                                        isBooked
+                                          ? 'bg-gray-100 text-gray-300 border-gray-100 cursor-not-allowed opacity-50'
+                                          : isSelected
+                                          ? 'bg-rose-50 border-rose-300 shadow-sm'
+                                          : 'bg-white text-gray-700 border-gray-100 hover:border-rose-200'
+                                      }`}
+                                      style={isSelected && !isBooked ? { color: theme.accentColor, borderColor: theme.accentColor, backgroundColor: theme.accentColor + '10' } : {}}
+                                    >
+                                      <span>{time}</span>
+                                      {isBooked ? (
+                                        <span className="text-[7px] uppercase tracking-widest text-[#B45309] font-black">Ocupado</span>
+                                      ) : (
+                                        <span className={`text-[7px] uppercase tracking-widest font-bold ${isSelected ? 'text-gray-900' : 'text-emerald-500'}`} style={isSelected ? { color: theme.accentColor } : {}}>Livre</span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              {errors.retiradaTime && <p className="text-red-500 text-xs px-2 mt-1">{errors.retiradaTime}</p>}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-4 pt-4 border-t border-gray-100">
                      <button onClick={() => setStep(1)} className="py-5 px-8 bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-2xl font-bold uppercase tracking-widest transition-colors">
                        Voltar
                      </button>
@@ -514,8 +924,14 @@ export function CheckoutModal({
                           <span className="font-medium text-gray-700">R$ {subtotal.toFixed(2).replace('.', ',')}</span>
                         </div>
                         <div className="flex justify-between text-sm text-gray-500">
-                          <span>Entrega</span>
-                          <span className="font-medium text-gray-700">{delivery === 0 ? 'A calcular' : `R$ ${delivery.toFixed(2).replace('.', ',')}`}</span>
+                          <span className="flex items-center gap-1">
+                            <Truck size={14} className="opacity-40" /> Entrega
+                          </span>
+                          <span className="font-medium text-gray-700">
+                            {cep.replace(/\D/g, '').length < 8 ? 'Informe o CEP' : 
+                             delivery === 0 && (globalSettings?.shipping_rules?.some((r: any) => r.active) || siteSettings?.shipping_rules?.some(r => r.active)) ? 'Sob Consulta' : 
+                             `R$ ${delivery.toFixed(2).replace('.', ',')}`}
+                          </span>
                         </div>
                         
                         <div className="flex gap-2 pt-2">
@@ -543,71 +959,120 @@ export function CheckoutModal({
                   {/* Right: Payment & Submit */}
                   <div className="space-y-6">
                     <div className="bg-white border border-gray-100 p-6 md:p-8 rounded-3xl shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                       <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                         <Lock size={120} />
-                       </div>
-                       
                        <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2 text-sm uppercase tracking-wider relative z-10">
-                          Forma de Pagamento
+                          Escolha como deseja finalizar seu pedido
                        </h3>
 
-                       <label className="flex items-start gap-4 p-5 border-2 rounded-2xl cursor-pointer transition-all bg-gray-50 hover:bg-gray-100 relative z-10" style={{ borderColor: theme.accentColor, backgroundColor: theme.accentColor + '08' }}>
-                         <div className="mt-1">
-                           <input type="radio" checked readOnly className="w-5 h-5" style={{ accentColor: theme.accentColor }} />
+                       {total <= 100 ? (
+                         <div className="p-4 rounded-xl bg-orange-50 border border-orange-100 relative z-10 text-orange-800">
+                           <p className="text-sm font-medium">Pagamento integral obrigatório para pedidos até R$100.</p>
+                           <p className="text-xs mt-1">Métodos aceitos: PIX e Cartão de Crédito via Mercado Pago.</p>
                          </div>
-                         <div>
-                           <span className="block font-bold text-gray-900 mb-2 flex items-center gap-2 text-base">
-                             Mercado Pago <span className="bg-blue-100 text-blue-700 text-[9px] px-2 py-0.5 rounded uppercase tracking-wider font-bold">Oficial</span>
-                           </span>
-                           <span className="text-xs text-gray-500 leading-relaxed block mb-3">Pague com Pix, Cartão de Crédito ou Boleto. Ambiente 100% seguro do Mercado Pago. Aprovação imediata via Pix.</span>
-                           <div className="flex gap-2">
-                             <img src="https://logospng.org/download/mercado-pago/logo-mercado-pago-icone-1024.png" alt="Mercado Pago" className="h-6 w-auto object-contain grayscale opacity-60" />
-                             <img src="https://logospng.org/download/pix/logo-pix-icone-1024.png" alt="Pix" className="h-6 w-auto object-contain grayscale opacity-60" />
+                       ) : (
+                         <div className="space-y-4">
+                           <div className="p-4 rounded-xl bg-[#F8F5F2] border border-gray-100 text-sm font-medium text-gray-700">
+                             Para iniciar a produção do seu pedido, trabalhamos com uma entrada inicial de 50% (<span className="font-bold text-gray-950">R$ {(total / 2).toFixed(2).replace('.', ',')}</span>). Escolha abaixo como deseja finalizar o valor restante.
+                             
                            </div>
-                         </div>
-                       </label>
 
-                       {total > 100 && (
-                         <div className="mt-6 p-4 rounded-xl bg-[#F8F5F2] border border-gray-100 relative z-10">
-                           <div className="flex items-center gap-2 mb-2 text-sm font-bold text-gray-800">
-                             <ShieldCheck size={16} style={{ color: theme.accentColor }} />
-                             Pagamento de Sinal Obrigatório (50%)
-                           </div>
-                           <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-                             Pedidos acima de R$ 100,00 exigem o pagamento de pelo menos 50% (R$ {(total/2).toFixed(2).replace('.', ',')}) para iniciar a produção.
-                           </p>
+                           {/* Card 1: Pagamento Total */}
+                           <label className={`flex flex-col p-5 border-2 rounded-2xl cursor-pointer transition-all ${selectedMainOption === 'full' ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'}`} style={{ borderColor: selectedMainOption === 'full' ? theme.accentColor : '#F3F4F6' }}>
+                             <div className="flex items-start gap-4">
+                               <div className="mt-1">
+                                 <input type="radio" name="paymentOption" checked={selectedMainOption === 'full'} onChange={() => { setSelectedMainOption('full'); setErrors(p => ({...p, payment: ''})) }} className="w-5 h-5 cursor-pointer" style={{ accentColor: theme.accentColor }} />
+                               </div>
+                               <div>
+                                 <span className="block font-bold text-gray-900 mb-1 flex items-center gap-2 text-base">
+                                   ⚡ Pagamento total
+                                 </span>
+                                 <span className="text-xs text-gray-500 leading-relaxed block">
+                                   Finalize agora o restante do pedido com aprovação imediata.
+                                 </span>
+                               </div>
+                             </div>
+                           </label>
 
-                           <label className="flex items-center gap-3 cursor-pointer">
-                             <input 
-                               type="checkbox" 
-                               checked={payFullAmount} 
-                               onChange={() => setPayFullAmount(!payFullAmount)} 
-                               className="w-4 h-4 rounded border-gray-300 focus:ring-2"
-                               style={{ accentColor: theme.accentColor }}
-                             />
-                             <span className="text-sm font-medium text-gray-700">Desejo pagar o valor integral (R$ {total.toFixed(2).replace('.', ',')}) agora</span>
+                           {/* Card 2: Pagamento Planejado */}
+                           <label className={`flex flex-col p-5 border-2 rounded-2xl cursor-pointer transition-all ${selectedMainOption === 'planned' ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'}`} style={{ borderColor: selectedMainOption === 'planned' ? theme.accentColor : '#F3F4F6' }}>
+                             <div className="flex items-start gap-4">
+                               <div className="mt-1">
+                                 <input type="radio" name="paymentOption" checked={selectedMainOption === 'planned'} onChange={() => { setSelectedMainOption('planned'); setErrors(p => ({...p, payment: ''})) }} className="w-5 h-5 cursor-pointer" style={{ accentColor: theme.accentColor }} />
+                               </div>
+                               <div className="w-full">
+                                 <span className="block font-bold text-gray-900 mb-1 flex items-center gap-2 text-base">
+                                   📅 Pagamento planejado
+                                 </span>
+                                 <span className="text-xs text-gray-500 leading-relaxed block">
+                                   Parcele o valor restante com cobrança automática e acompanhamento personalizado.
+                                 </span>
+
+                                 {/* Planned options */}
+                                 {selectedMainOption === 'planned' && (
+                                   <div className="mt-4 space-y-3 pt-4 border-t border-gray-200" onClick={e => e.stopPropagation()}>
+                                     <div className="flex flex-col gap-2">
+                                       <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                                         <input type="radio" name="plannedMethod" checked={plannedMethod === 'credit_card'} onChange={() => { setPlannedMethod('credit_card'); setInstallments(1); }} className="w-4 h-4" />
+                                         Cartão de crédito
+                                       </label>
+                                       <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                                         <input type="radio" name="plannedMethod" checked={plannedMethod === 'digital_booklet'} onChange={() => { setPlannedMethod('digital_booklet'); setInstallments(1); }} className="w-4 h-4" />
+                                         Carnê digital
+                                       </label>
+                                     </div>
+
+                                     {plannedMethod && (
+                                       <div className="mt-3">
+                                         <span className="text-xs font-bold text-gray-500 uppercase">Parcelas:</span>
+                                         <select value={installments} onChange={e => setInstallments(parseInt(e.target.value))} className="mt-1 w-full p-3 bg-white border border-gray-200 rounded-xl text-sm font-medium outline-none focus:ring-2" style={{ '--tw-ring-color': theme.accentColor + '50' } as any}>
+                                            {[1, 2, 3, 4].map(num => {
+                                              const remainingBase = total / 2;
+                                              const modFee = plannedMethod === 'credit_card' ? 0.05 : 0.02;
+                                              const feeAmount = remainingBase * modFee;
+                                              const instValue = (remainingBase + feeAmount) / num;
+                                              return (
+                                                <option key={num} value={num}>{num}x de R$ {instValue.toFixed(2).replace('.', ',')} (com taxa)</option>
+                                              )
+                                            })}
+                                         </select>
+                                       </div>
+                                     )}
+                                   </div>
+                                 )}
+                               </div>
+                             </div>
                            </label>
                          </div>
                        )}
+                       {errors.payment && <p className="text-red-500 text-xs mt-3 px-2 text-center font-medium">{errors.payment}</p>}
                     </div>
 
-                    <div className="pt-2">
-                      <button 
-                        onClick={handleFinalize}
-                        disabled={isSubmitting}
-                        className="w-full py-6 text-white rounded-2xl font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-transform hover:scale-[1.01] active:scale-[0.98] shadow-lg hover:shadow-xl disabled:opacity-70 disabled:hover:scale-100"
-                        style={{ backgroundColor: isSubmitting ? '#9CA3AF' : theme.accentColor, boxShadow: isSubmitting ? 'none' : `0 10px 25px -5px ${theme.accentColor}50` }}
-                      >
-                        <Lock size={18} /> {isSubmitting ? 'Processando...' : `Pagar R$ ${(total > 100 && !payFullAmount ? total/2 : total).toFixed(2).replace('.', ',')}`}
-                      </button>
-                      
-                      <div className="text-center text-xs text-gray-400 mt-6 flex flex-col items-center justify-center gap-2">
-                        <div className="flex items-center gap-1 font-medium">
-                          <Lock size={12} /> Integração Direta com Mercado Pago
-                        </div>
-                        <p className="max-w-[250px] leading-relaxed">Você será redirecionado para concluir o pagamento de forma segura.</p>
-                      </div>
-                    </div>
+                     <div className="pt-2">
+                       <button 
+                         onClick={handleFinalize}
+                         disabled={isSubmitting}
+                         className="w-full py-6 text-white rounded-2xl font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-transform hover:scale-[1.01] active:scale-[0.98] shadow-lg hover:shadow-xl disabled:opacity-70 disabled:hover:scale-100 mb-3"
+                         style={{ backgroundColor: isSubmitting ? '#9CA3AF' : theme.accentColor, boxShadow: isSubmitting ? 'none' : `0 10px 25px -5px ${theme.accentColor}50` }}
+                       >
+                         <Lock size={18} /> {isSubmitting ? 'Processando...' : `Pagar R$ ${(total > 100 && !payFullAmount ? total/2 : total).toFixed(2).replace('.', ',')}`}
+                       </button>
+                       
+                       {showSimulatedButton && (
+                         <button 
+                           onClick={handleSimulatedCheckout}
+                           disabled={isSubmitting}
+                           className="w-full py-5 bg-amber-500 hover:bg-amber-600 text-white rounded-2xl font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-transform hover:scale-[1.01] active:scale-[0.98] shadow-md hover:shadow-lg disabled:opacity-70 disabled:hover:scale-100 border border-amber-400 mb-6"
+                         >
+                           <Check size={18} /> Simular pagamento aprovado [MODO TESTE]
+                         </button>
+                       )}
+                       
+                       <div className="text-center text-xs text-gray-400 mt-6 flex flex-col items-center justify-center gap-2">
+                         <div className="flex items-center gap-1 font-medium">
+                           <Lock size={12} /> Integração Direta com Mercado Pago
+                         </div>
+                         <p className="max-w-[250px] leading-relaxed">Você será redirecionado para concluir o pagamento de forma segura.</p>
+                       </div>
+                     </div>
                     
                     <div className="flex justify-center mt-2">
                       <button onClick={() => setStep(2)} className="py-4 px-6 text-gray-400 hover:text-gray-700 font-bold uppercase tracking-widest transition-colors text-xs flex items-center gap-2">

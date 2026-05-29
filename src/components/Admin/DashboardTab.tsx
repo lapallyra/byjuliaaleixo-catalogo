@@ -75,9 +75,9 @@ const OpportunitiesWidget: React.FC = () => {
     return dates.filter((d) => isToday(getFullDate(d)) && d.active);
   }, [dates]);
 
-  const upcomingDates = useMemo(() => {
+  const groupedUpcomingDates = useMemo(() => {
     const today = startOfDay(new Date());
-    return dates
+    const upcoming = dates
       .filter((d) => {
         const occurrence = getFullDate(d);
         return (
@@ -86,14 +86,27 @@ const OpportunitiesWidget: React.FC = () => {
             startOfDay(new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000))
         );
       })
-      .sort((a, b) => getFullDate(a).getTime() - getFullDate(b).getTime())
-      .slice(0, 3);
+      .sort((a, b) => getFullDate(a).getTime() - getFullDate(b).getTime());
+
+    const grouped: { date: Date; events: CommemorativeDate[] }[] = [];
+    upcoming.forEach(event => {
+       const occurrence = getFullDate(event);
+       const existingGroup = grouped.find(g => startOfDay(g.date).getTime() === startOfDay(occurrence).getTime());
+       if (existingGroup) {
+         existingGroup.events.push(event);
+       } else {
+         grouped.push({ date: occurrence, events: [event] });
+       }
+    });
+
+    return grouped.slice(0, 5); // show up to 5 days
   }, [dates]);
 
   return (
     <div className="space-y-6">
       {todayDates.length > 0 && (
         <motion.div
+           // ... (keep today section the same)
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[1.5rem] p-6 border border-[#F0E6D2] shadow-[0_15px_40px_rgba(240,230,210,0.3)] relative overflow-hidden group"
@@ -130,22 +143,22 @@ const OpportunitiesWidget: React.FC = () => {
 
       <div className="flex items-center gap-3 px-2">
         <div className="p-2 rounded-xl bg-[#FAF9F6] text-[#D48C8C] border border-[#F0E6D2]">
-          <Calendar size={16} />
+           <Calendar size={16} />
         </div>
         <div>
-          <h3 className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#4A4444]">
-            Radar de Campanhas
-          </h3>
-          <p className="text-[7px] text-[#A09898] font-medium uppercase mt-0.5">
-            Próximos 60 dias estratégicos
-          </p>
+           <h3 className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#4A4444]">
+              Próximos 60 dias
+           </h3>
+           <p className="text-[7px] text-[#A09898] font-medium uppercase mt-0.5">
+              Eventos e Datas Comemorativas
+           </p>
         </div>
       </div>
 
       <div className="space-y-3">
-        {upcomingDates.map((data, idx) => {
+        {groupedUpcomingDates.map((group, idx) => {
           const daysLeft = Math.ceil(
-            (getFullDate(data).getTime() - startOfDay(new Date()).getTime()) /
+            (group.date.getTime() - startOfDay(new Date()).getTime()) /
               (1000 * 60 * 60 * 24),
           );
           return (
@@ -157,26 +170,19 @@ const OpportunitiesWidget: React.FC = () => {
               className="p-4 rounded-[1.2rem] bg-white border border-[#F0E6D2] transition-all hover:bg-[#FAF9F6] shadow-sm flex items-center justify-between group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] flex flex-col items-center justify-center text-[#A09898] group-hover:text-[#D48C8C] transition-all">
-                  <span className="text-[9px] font-semibold leading-none">
-                    {getFullDate(data).getDate()}
-                  </span>
-                  <span className="text-[6px] font-semibold uppercase">
-                    {safeFormat(getFullDate(data), "MMM")}
-                  </span>
-                </div>
-                <div>
-                  <h4 className="text-[10px] font-semibold text-[#4A4444] uppercase tracking-tight">
-                    {data.name}
-                  </h4>
-                  <p className="text-[7px] font-medium uppercase text-[#A09898] tracking-widest mt-0.5">
-                    {data.category} • {daysLeft} dias
-                  </p>
-                </div>
+                 <div>
+                    <div className="flex flex-col gap-1">
+                      {group.events.map((ev, i) => (
+                        <h4 key={i} className="text-[10px] font-bold text-[#4A4444] uppercase tracking-tight">
+                           {ev.name}
+                        </h4>
+                      ))}
+                    </div>
+                    <p className="text-[8px] font-bold text-[#D48C8C] uppercase tracking-widest mt-1.5">
+                       {safeFormat(group.date, "dd/MM")} • {daysLeft} dias
+                    </p>
+                 </div>
               </div>
-              <button className="w-8 h-8 rounded-lg bg-[#FAF9F6] border border-[#F0E6D2] flex items-center justify-center text-[#D1CACA] hover:text-[#D48C8C] transition-all">
-                <ArrowRight size={14} />
-              </button>
             </motion.div>
           );
         })}
@@ -197,77 +203,61 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     null,
   );
 
-  // Stats Calculation
   const {
-    currentMonthRevenue,
+    activeOrdersCount,
+    deliveredCount,
+    cancelledCount,
+    waitingCount,
     currentMonthNetProfit,
-    goalProgress,
-    totalRevenue,
     pendingOrders,
-    daysInMonth,
   } = useMemo(() => {
+    let activeCount = 0;
+    let delivCount = 0;
+    let cancCount = 0;
+    let waitCount = 0;
+
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-    const revenueSinceStartOfMonth =
-      orders.reduce((sum, o) => {
-        if (o.status === "cancelled") return sum;
-        const date = new Date(
-          o.createdAt?.toDate
-            ? o.createdAt.toDate()
-            : o.createdAt || Date.now(),
-        );
-        if (
-          date.getMonth() === currentMonth &&
-          date.getFullYear() === currentYear
-        ) {
-          return sum + (Number(o.total) || 0);
-        }
-        return sum;
-      }, 0) || 0;
+    let revenueSinceStartOfMonth = 0;
 
-    const currentGoalProgress =
-      monthlyGoal > 0 ? (revenueSinceStartOfMonth / monthlyGoal) * 100 : 0;
-    const revenueTotal =
-      orders.reduce(
-        (sum, o) =>
-          o.status !== "cancelled" ? sum + (Number(o.total) || 0) : sum,
-        0,
-      ) || 0;
+    orders.forEach(o => {
+      const status = o.status.toLowerCase();
+      if (status === 'delivered') delivCount++;
+      else if (status === 'cancelled') cancCount++;
+      else if (['pending', 'quote', 'waiting_deposit'].includes(status)) {
+         waitCount++;
+         activeCount++; // Count them as active as well, or maybe active = all non-final? Let's say all non-cancelled/delivered is active
+      }
+      else activeCount++;
+
+      const date = new Date(o.createdAt?.toDate ? o.createdAt.toDate() : o.createdAt || Date.now());
+      if (date.getMonth() === currentMonth && date.getFullYear() === currentYear && status !== 'cancelled') {
+        revenueSinceStartOfMonth += (Number(o.total) || 0);
+      }
+    });
 
     const netProfitEstimate = revenueSinceStartOfMonth * 0.35;
 
     const pending = orders
-      .filter(
-        (o) =>
-          !["delivered", "cancelled", "finalizado"].includes(
-            o.status.toLowerCase(),
-          ),
-      )
+      .filter((o) => !["delivered", "cancelled", "finalizado"].includes(o.status.toLowerCase()))
       .sort((a, b) => {
-        const timeA =
-          a.createdAt?.toMillis?.() ||
-          (a.createdAt as any)?.seconds * 1000 ||
-          Date.now();
-        const timeB =
-          b.createdAt?.toMillis?.() ||
-          (b.createdAt as any)?.seconds * 1000 ||
-          Date.now();
+        const timeA = a.createdAt?.toMillis?.() || (a.createdAt as any)?.seconds * 1000 || Date.now();
+        const timeB = b.createdAt?.toMillis?.() || (b.createdAt as any)?.seconds * 1000 || Date.now();
         return timeB - timeA;
       })
-      .slice(0, 4);
+      .slice(0, 10); // show a few more
 
     return {
-      currentMonthRevenue: revenueSinceStartOfMonth,
+      activeOrdersCount: activeCount,
+      deliveredCount: delivCount,
+      cancelledCount: cancCount,
+      waitingCount: waitCount,
       currentMonthNetProfit: netProfitEstimate,
-      goalProgress: currentGoalProgress,
-      totalRevenue: revenueTotal,
       pendingOrders: pending,
-      daysInMonth: lastDayOfMonth,
     };
-  }, [orders, monthlyGoal]);
+  }, [orders]);
 
   const brandConfig: Record<
     string,
@@ -298,7 +288,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   );
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-300 pb-20 max-w-7xl mx-auto overflow-x-hidden">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-300 pb-6 max-w-7xl mx-auto overflow-x-hidden">
       {/* 0. Meta Mensal (CLT Escape) */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -384,33 +374,33 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       <header className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           {
-            title: "Volume Bruto",
-            value: formatCurrency(totalRevenue),
-            icon: DollarSign,
+            title: "Ativos",
+            value: activeOrdersCount.toString(),
+            icon: Package,
             color: "text-[#D48C8C]",
             bg: "bg-[#FAF9F6]",
             border: "border-[#F0E6D2]",
           },
           {
-            title: "Lucro Estimado",
-            value: formatCurrency(totalRevenue * 0.35),
-            icon: TrendingUp,
+            title: "Aguardando",
+            value: waitingCount.toString(),
+            icon: Clock,
             color: "text-[#D48C8C]",
             bg: "bg-[#FAF9F6]",
             border: "border-[#F0E6D2]",
           },
           {
-            title: "Total Pedidos",
-            value: orders.length.toString(),
-            icon: ShoppingBag,
-            color: "text-[#4A4444]",
+            title: "Entregues",
+            value: deliveredCount.toString(),
+            icon: CheckCircle,
+            color: "text-emerald-600",
             bg: "bg-[#FAF9F6]",
             border: "border-[#F0E6D2]",
           },
           {
-            title: "Meus Clientes",
-            value: customers.length.toString(),
-            icon: Users,
+            title: "Cancelados",
+            value: cancelledCount.toString(),
+            icon: XCircle,
             color: "text-[#A09898]",
             bg: "bg-[#FAF9F6]",
             border: "border-[#F0E6D2]",
@@ -421,24 +411,45 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.05 }}
-            className="bg-white p-6 rounded-[1.5rem] border border-[#F0E6D2] flex items-center gap-5 shadow-[0_10px_30px_rgba(240,230,210,0.15)] hover:shadow-[0_15px_40px_rgba(240,230,210,0.25)] transition-all group"
+            className="bg-white p-6 rounded-[1.5rem] border border-[#F0E6D2] flex items-center justify-between shadow-sm hover:shadow-md transition-all group"
           >
-            <div
-              className={`p-3.5 rounded-xl ${stat.bg} ${stat.color} border ${stat.border} transition-transform group-hover:scale-110`}
-            >
-              <stat.icon size={18} />
-            </div>
             <div>
-              <p className="text-[8px] font-semibold uppercase text-[#A09898] tracking-[0.2em]">
+              <p className="text-[8px] font-bold uppercase text-[#A09898] tracking-[0.2em] mb-1">
                 {stat.title}
               </p>
-              <p className="text-lg font-sans font-semibold text-[#4A4444] mt-0.5">
+              <p className="text-2xl font-sans font-semibold text-[#4A4444]">
                 {stat.value}
               </p>
+            </div>
+            <div
+              className={`p-3.5 rounded-[1.2rem] ${stat.bg} ${stat.color} border ${stat.border} transition-transform group-hover:scale-110`}
+            >
+              <stat.icon size={20} />
             </div>
           </motion.div>
         ))}
       </header>
+
+      {/* Caixa */}
+      <div className="bg-white p-6 rounded-[1.5rem] border border-[#F0E6D2] flex items-center justify-between shadow-sm">
+         <div className="flex items-center gap-4">
+           <div className="w-12 h-12 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] flex items-center justify-center text-[#D48C8C]">
+             <DollarSign size={20} />
+           </div>
+           <div>
+             <h3 className="text-[10px] font-black uppercase text-[#4A4444] tracking-[0.2em]">Fluxo de Caixa Diário</h3>
+             <p className="text-[8px] text-[#A09898] font-bold uppercase tracking-widest mt-0.5">Nenhum caixa aberto</p>
+           </div>
+         </div>
+         <div className="flex gap-3">
+           <button className="bg-[#FAF9F6] border border-[#F0E6D2] text-[#4A4444] px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#F0E6D2] transition-colors">
+              Fechar Caixa
+           </button>
+           <button className="bg-[#D48C8C] text-white px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#C07B7B] shadow-lg shadow-[#D48C8C]/20 transition-all">
+              Abrir Caixa
+           </button>
+         </div>
+      </div>
 
       {/* 2. Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
@@ -515,17 +526,33 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between md:justify-end gap-6">
-                      <div className="text-right">
-                        <p className="text-[9px] font-semibold text-[#4A4444]">
+                    <div className="flex items-center justify-between md:justify-end gap-4">
+                      <div className="text-right mr-4">
+                        <p className="text-[10px] font-bold text-[#4A4444]">
                           {formatCurrency(Number(order.total) || 0)}
                         </p>
-                        <p className="text-[7px] text-[#A09898] font-medium uppercase tracking-widest">
+                        <p className="text-[7px] text-[#A09898] font-medium uppercase tracking-widest mt-0.5">
                           {order.code}
                         </p>
                       </div>
-                      <div className="w-9 h-9 rounded-xl bg-white border border-[#F0E6D2] flex items-center justify-center text-[#A09898] group-hover:bg-[#D48C8C] group-hover:text-white group-hover:border-[#D48C8C] transition-all">
-                        <ArrowRight size={14} />
+                      
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onOpenOrder(order); }}
+                          className="px-4 py-2 rounded-lg bg-[#FAF9F6] border border-[#F0E6D2] text-[8px] font-bold uppercase tracking-widest text-[#4A4444] hover:bg-[#F0E6D2] transition-colors"
+                        >
+                          Visualizar
+                        </button>
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            // Using a CustomEvent to prompt the app to open the order
+                            window.dispatchEvent(new CustomEvent('edit-order', { detail: order.id }));
+                          }}
+                          className="px-4 py-2 rounded-lg bg-black text-white border border-transparent text-[8px] font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors"
+                        >
+                          Editar
+                        </button>
                       </div>
                     </div>
                   </motion.div>

@@ -30,8 +30,8 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
     // Try Order first
     const fetchedOrder = await getOrderByCode(searchVal);
     if (fetchedOrder) {
-      setOrder(fetchedOrder);
       setLoading(false);
+      window.location.href = `/rastreamento?code=${fetchedOrder.code}`;
       return;
     }
 

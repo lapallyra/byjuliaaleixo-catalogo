@@ -13,6 +13,7 @@ import {
   Hash,
   DollarSign,
   X,
+  Printer,
 } from "lucide-react";
 import { Insumo } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
@@ -60,7 +61,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
   const [isDetailOpen, setIsDetailOpen] = useState<string | null>(null);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
       {/* Critical Alert */}
       {criticalItems.length > 0 && (
         <div className="bg-slate-50 border-1 border-rose-200 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in zoom-in-95 duration-500">
@@ -113,6 +114,13 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        <button
+          onClick={() => window.print()}
+          className="flex items-center justify-center p-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group"
+          title="Exportar Relatório PDF"
+        >
+          <Printer size={18} className="group-hover:scale-110 transition-transform" />
+        </button>
         <button
           onClick={() => {
             setEditingInsumo({});

@@ -44,7 +44,7 @@ export const AdminNotificationPortal: React.FC = () => {
             time: 'Agora'
           };
 
-          setNotifications(prev => [newNotif, ...prev].slice(0, 3));
+          setNotifications(prev => [newNotif, ...prev].slice(0, 2));
           setTimeout(() => removeNotification(id), 8000);
         }
       }

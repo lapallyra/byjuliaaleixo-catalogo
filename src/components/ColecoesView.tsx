@@ -97,7 +97,7 @@ const AtelierCarousel = ({
   return (
     <div className="mb-14 relative" ref={containerRef}>
       <div className="flex justify-between items-end mb-4 px-2">
-        <h4 className="font-serif text-xl sm:text-2xl text-left font-normal select-none" style={{ color: accent }}>
+        <h4 className="font-beauty text-xl sm:text-2xl text-left font-normal select-none" style={{ color: accent }}>
           {title}
         </h4>
         <div className="flex gap-2">

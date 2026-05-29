@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Printer, FileText, Flower2 } from "lucide-react";
 import { Order, CompanyId, SiteSettings } from "../../types";
-import { getSiteSettings } from "../../services/firebaseService";
+import { getGlobalSettings, getSiteSettings } from "../../services/firebaseService";
 import { safeFormat, safeFormatISO } from "../../lib/dateUtils";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { exportOrderReceiptPDF } from "../../utils/pdfGenerator";
@@ -23,7 +23,12 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
   useEffect(() => {
     const load = async () => {
       const data = await getSiteSettings(order.companyId as CompanyId);
-      if (data) setSettings(data);
+      const globalData = await getGlobalSettings();
+      if (data) {
+        setSettings({ ...data, ...globalData });
+      } else if (globalData) {
+        setSettings(globalData);
+      }
     };
     load();
   }, [order.companyId]);
@@ -223,7 +228,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
         {/* Footer for desktop view - Not Printed */}
         <div className="p-8 bg-slate-50 border-t border-[#F0E6D2] print:hidden text-center">
           <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest">
-            Sistema de Gestão Ateliê © 2024
+            Sistema de Gestão Ateliê © 2025
           </p>
         </div>
       </div>

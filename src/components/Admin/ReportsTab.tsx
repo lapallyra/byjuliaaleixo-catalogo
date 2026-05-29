@@ -14,6 +14,7 @@ import {
   BarChart2,
   Zap,
   Layout,
+  Printer,
 } from "lucide-react";
 import {
   BarChart,
@@ -131,7 +132,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
   }, [customers, products, orders, insumos]);
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
       {/* Month Selector */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
@@ -143,6 +144,14 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
           </p>
         </div>
         <div className="flex items-center gap-3 bg-white border border-lilac/20 p-2 px-4 rounded-2xl shadow-sm">
+          <button
+            onClick={() => window.print()}
+            className="p-2 hover:bg-slate-50 text-[#A09898] hover:text-lilac rounded-xl transition-all"
+            title="Imprimir Relatório"
+          >
+            <Printer size={14} />
+          </button>
+          <div className="w-px h-4 bg-slate-200" />
           <Filter size={14} className="text-lilac" />
           <select
             value={selectedMonth}

@@ -132,6 +132,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
 
     console.log("Attaching admin listeners as:", user.email);
 
+    const handleEditOrder = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setSelectedOrderId(customEvent.detail);
+        setActiveTab("orders");
+      }
+    };
+
+    window.addEventListener('edit-order', handleEditOrder);
+
     const unsubProducts = subscribeToProducts(setProducts);
     const unsubSales = subscribeToSales((loaded) =>
       setSales(loaded as Order[]),
@@ -144,6 +154,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     const unsubFunnel = subscribeToCheckoutEvents(setCheckoutEvents);
 
     return () => {
+      window.removeEventListener('edit-order', handleEditOrder);
       unsubProducts();
       unsubSales();
       unsubSettings();
@@ -194,23 +205,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     );
   }
 
-  const menuItems: { id: TabType; label: string; icon: any }[] = [
-    { id: "dashboard", label: "Painel", icon: LayoutDashboard },
-    { id: "orders", label: "Pedidos", icon: ShoppingBag },
-    { id: "agenda", label: "Agenda", icon: Calendar },
-    { id: "inventory", label: "Estoque", icon: Archive },
-    { id: "products", label: "Produtos", icon: Box },
-    { id: "clients", label: "Clientes", icon: User },
-    { id: "addons", label: "Adicionais", icon: Sparkles },
-    { id: "prizes", label: "Roleta de Prêmios", icon: Gift },
-    { id: "commemorative-dates", label: "Datas Comemorativas", icon: Calendar },
-    { id: "finance", label: "Financeiro", icon: DollarSign },
-    { id: "gift-lists", label: "Lista de Presentes", icon: Gift },
-    { id: "feedbacks", label: "Feedbacks / Avaliações", icon: Star },
-    { id: "reports", label: "Relatórios", icon: BarChart3 },
-    { id: "funnel", label: "Funil de Vendas", icon: TrendingUp },
-    { id: "settings", label: "Configurações", icon: Settings },
+  const menuItems: { id: TabType; label: string; icon: any; category: string }[] = [
+    { id: "dashboard", label: "Dashboard", category: "PAINEL", icon: LayoutDashboard },
+    { id: "orders", label: "Pedidos", category: "OPERAÇÃO", icon: ShoppingBag },
+    { id: "clients", label: "Clientes", category: "OPERAÇÃO", icon: User },
+    { id: "products", label: "Produtos", category: "OPERAÇÃO", icon: Box },
+    { id: "inventory", label: "Estoque", category: "OPERAÇÃO", icon: Archive },
+    { id: "agenda", label: "Agenda", category: "OPERAÇÃO", icon: Calendar },
+    { id: "finance", label: "Financeiro", category: "FINANCEIRO", icon: DollarSign },
+    { id: "reports", label: "Relatórios", category: "FINANCEIRO", icon: BarChart3 },
+    { id: "settings", label: "Configurações", category: "SISTEMA", icon: Settings },
   ];
+
+  const groupedMenu = menuItems.reduce((acc, item) => {
+    if (!acc[item.category]) acc[item.category] = [];
+    acc[item.category].push(item);
+    return acc;
+  }, {} as Record<string, typeof menuItems>);
 
   return (
     <div className="feminine-admin min-h-screen bg-[#FAF9F6] text-[#4A4444] flex font-sans overflow-hidden relative scroll-smooth">
@@ -231,69 +242,69 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         </button>
 
         <div className={`p-6 ${isSidebarCollapsed ? "px-4" : ""}`}>
-          <div className="flex items-center gap-3 mb-12 px-2">
+          <div className="flex items-center gap-3 mb-10 px-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D48C8C] to-[#F0E6D2] flex items-center justify-center text-white shadow-[0_8px_20px_rgba(212,140,140,0.2)]">
               <Sparkles size={20} />
             </div>
             {!isSidebarCollapsed && (
               <div>
-                <h1 className="font-sans font-semibold text-xs tracking-[0.15em] uppercase text-[#4A4444]">
-                  Ateliê Admin
+                <h1 className="font-sans font-semibold text-xs tracking-[0.1em] uppercase text-[#4A4444]">
+                  By Julia Aleixo
                 </h1>
-                <p className="text-[8px] text-[#D48C8C] uppercase tracking-widest font-medium">
-                  Soft Luxury Dashboard
+                <p className="text-[7px] text-[#D48C8C] uppercase tracking-widest font-bold">
+                  CEO PRINCIPAL
                 </p>
               </div>
             )}
           </div>
 
-          <nav className="space-y-1">
-            {menuItems.map((item, idx) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all relative group overflow-hidden ${activeTab === item.id ? "text-[#D48C8C]" : "text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FAF9F6]"}`}
-              >
-                {activeTab === item.id && (
-                  <motion.div
-                    layoutId="activeNavBg"
-                    className="absolute inset-0 bg-[#FAF9F6] rounded-xl"
-                  />
-                )}
-                <item.icon
-                  size={18}
-                  className={`${activeTab === item.id ? "text-[#D48C8C]" : "text-[#D1CACA] group-hover:text-[#D48C8C]"} transition-all relative z-10`}
-                />
+          <nav className="space-y-6">
+            {Object.entries(groupedMenu).map(([category, items]) => (
+              <div key={category}>
                 {!isSidebarCollapsed && (
-                  <span
-                    className={`text-[10px] uppercase font-medium tracking-[0.12em] relative z-10 ${activeTab === item.id ? "font-semibold" : ""}`}
-                  >
-                    {item.label}
-                  </span>
+                  <h3 className="text-[9px] font-black uppercase text-[#D1CACA] tracking-widest pl-4 mb-2">{category}</h3>
                 )}
-                {activeTab === item.id && !isSidebarCollapsed && (
-                  <motion.div
-                    layoutId="activeDot"
-                    className="ml-auto w-1 h-1 rounded-full bg-[#D48C8C] relative z-10"
-                  />
-                )}
-              </button>
+                <div className="space-y-1">
+                  {items.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative group overflow-hidden ${activeTab === item.id ? "text-[#D48C8C]" : "text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FAF9F6]"}`}
+                    >
+                      {activeTab === item.id && (
+                        <motion.div
+                          layoutId="activeNavBg"
+                          className="absolute inset-0 bg-[#FAF9F6] rounded-xl"
+                        />
+                      )}
+                      <item.icon
+                        size={18}
+                        className={`${activeTab === item.id ? "text-[#D48C8C]" : "text-[#D1CACA] group-hover:text-[#D48C8C]"} transition-all relative z-10 w-5 h-5`}
+                      />
+                      {!isSidebarCollapsed && (
+                        <span
+                          className={`text-[10px] uppercase font-medium tracking-[0.12em] relative z-10 ${activeTab === item.id ? "font-semibold" : ""}`}
+                        >
+                          {item.label}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </nav>
         </div>
 
-        <div className="mt-auto p-6 border-t border-[#F0E6D2] space-y-2">
+        <div className="mt-auto p-4 border-t border-[#F0E6D2]">
           <button
-            onClick={onGoBack}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FAF9F6] transition-all text-[9px] font-medium uppercase tracking-[0.15em] border border-transparent"
+            onClick={() => {
+              logout();
+              window.location.href = "/";
+            }}
+            className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[#A09898] hover:bg-[#FAF9F6] hover:text-[#D48C8C] transition-all text-[9px] font-bold uppercase tracking-[0.15em] border border-transparent"
           >
-            <ArrowLeft size={14} /> {!isSidebarCollapsed && "Loja"}
-          </button>
-          <button
-            onClick={logout}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[#A09898] hover:bg-[#FAF9F6] transition-all text-[9px] font-medium uppercase tracking-[0.15em] border border-transparent"
-          >
-            <LogOut size={14} /> {!isSidebarCollapsed && "Sair"}
+            <LogOut size={16} /> {!isSidebarCollapsed && "Sair"}
           </button>
         </div>
       </aside>
@@ -322,10 +333,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     </div>
                     <div>
                       <h1 className="font-sans font-semibold text-xs tracking-[0.1em] uppercase text-[#4A4444]">
-                        Admin
+                        By Julia Aleixo
                       </h1>
-                      <p className="text-[7px] text-[#D48C8C] uppercase tracking-widest font-medium">
-                        Luxury System
+                      <p className="text-[7px] text-[#D48C8C] uppercase tracking-widest font-bold">
+                        CEO PRINCIPAL
                       </p>
                     </div>
                   </div>
@@ -337,49 +348,48 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   </button>
                 </div>
 
-                <nav className="space-y-1 overflow-y-auto pr-2 scrollbar-hide">
-                  {menuItems.map((item, idx) => (
-                    <button
-                      key={`mob-${item.id}`}
-                      onClick={() => {
-                        setActiveTab(item.id);
-                        setTimeout(() => setIsMobileMenuOpen(false), 100);
-                      }}
-                      className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${activeTab === item.id ? "bg-[#FAF9F6] text-[#D48C8C]" : "text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FAF9F6]"}`}
-                    >
-                      <item.icon
-                        size={18}
-                        className={
-                          activeTab === item.id
-                            ? "text-[#D48C8C]"
-                            : "text-[#D1CACA]"
-                        }
-                      />
-                      <span className="text-[9px] uppercase font-semibold tracking-[0.15em]">
-                        {item.label}
-                      </span>
-                    </button>
+                <nav className="space-y-6 overflow-y-auto pr-2 scrollbar-hide">
+                  {Object.entries(groupedMenu).map(([category, items]) => (
+                    <div key={`mob-cat-${category}`}>
+                      <h3 className="text-[9px] font-black uppercase text-[#D1CACA] tracking-widest pl-4 mb-2">{category}</h3>
+                      <div className="space-y-1">
+                        {items.map((item) => (
+                          <button
+                            key={`mob-${item.id}`}
+                            onClick={() => {
+                              setActiveTab(item.id);
+                              setTimeout(() => setIsMobileMenuOpen(false), 100);
+                            }}
+                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${activeTab === item.id ? "bg-[#FAF9F6] text-[#D48C8C]" : "text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FAF9F6]"}`}
+                          >
+                            <item.icon
+                              size={18}
+                              className={
+                                activeTab === item.id
+                                  ? "text-[#D48C8C]"
+                                  : "text-[#D1CACA]"
+                              }
+                            />
+                            <span className="text-[9px] uppercase font-semibold tracking-[0.15em]">
+                              {item.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </nav>
 
-                <div className="mt-auto pt-6 border-t border-[#F0E6D2] space-y-2">
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      onGoBack();
-                    }}
-                    className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[#A09898] border border-[#F0E6D2] transition-all text-[9px] font-semibold uppercase tracking-[0.15em]"
-                  >
-                    <ArrowLeft size={14} /> Loja
-                  </button>
+                <div className="mt-auto pt-4 border-t border-[#F0E6D2] space-y-2">
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);
                       logout();
+                      window.location.href = "/";
                     }}
-                    className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[#D48C8C] bg-[#FAF9F6] transition-all text-[9px] font-semibold uppercase tracking-[0.15em]"
+                    className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[#D48C8C] bg-[#FAF9F6] transition-all text-[9px] font-bold uppercase tracking-[0.15em]"
                   >
-                    <LogOut size={14} /> Sair
+                    <LogOut size={16} /> Sair
                   </button>
                 </div>
               </div>
@@ -431,11 +441,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
 
             <div className="flex items-center gap-3 bg-[#FAF9F6] border border-[#F0E6D2] px-3 py-1.5 rounded-xl">
               <div className="flex flex-col items-end mr-1 hidden sm:flex">
-                <span className="text-[9px] font-semibold uppercase text-[#4A4444] tracking-wider">
-                  {user?.displayName?.split(" ")[0]}
+                <span className="text-[9px] font-bold uppercase text-[#4A4444] tracking-wider">
+                  JULIA ALEIXO
                 </span>
-                <span className="text-[7px] font-medium uppercase text-[#D48C8C] tracking-widest">
-                  Admin
+                <span className="text-[7px] font-black uppercase text-[#D48C8C] tracking-widest">
+                  CEO PRINCIPAL
                 </span>
               </div>
               <div className="w-8 h-8 rounded-lg bg-white border border-[#F0E6D2] p-0.5 shadow-sm overflow-hidden">
@@ -541,6 +551,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   {activeTab === "agenda" && (
                     <AgendaTab
                       orders={sales}
+                      dates={settings.commercial?.commemorative_dates || []}
                       onSelectOrder={(id) => {
                         setSelectedOrderId(id);
                         setActiveTab("orders");

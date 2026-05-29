@@ -21,6 +21,8 @@ import {
   X as CloseIcon,
   Calculator,
   User,
+  Truck,
+  X,
 } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
 import { DynamicPricingList } from "./DynamicPricingList";
@@ -28,6 +30,8 @@ import { CompanyId, SiteSettings } from "../../types";
 import {
   getSiteSettings,
   saveSiteSettings,
+  getGlobalSettings,
+  saveGlobalSettings,
   saveAppConfig,
 } from "../../services/firebaseService";
 import { format } from "date-fns";
@@ -54,6 +58,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
     | "whatsapp"
     | "receipt"
     | "roulette"
+    | "shipping"
   >("brand");
   const [settings, setSettings] = useState<Partial<SiteSettings>>({});
   const [loading, setLoading] = useState(true);
@@ -76,7 +81,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
   useEffect(() => {
     const load = async () => {
       const data = await getSiteSettings(companyId);
-      if (data) setSettings(data);
+      const globalData = await getGlobalSettings();
+      if (data) {
+         setSettings({ ...data, ...globalData });
+      } else if (globalData) {
+         setSettings(globalData);
+      }
 
       // Load others for branding overview
       const ids: CompanyId[] = ["pallyra", "guennita", "mimada"];
@@ -113,18 +123,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           await saveAppConfig(configUpdate);
         }
       } else if (activeSubTab === "pricing") {
-        // Save pricing to all ateliers so it stays consistent globally
-        for (const id in allAteliers) {
-          const currentData = allAteliers[id as CompanyId] || {};
-          await saveSiteSettings(id as CompanyId, {
-            ...currentData,
-            global_fixed_costs: settings.global_fixed_costs,
-            global_labor_cost_per_hour: settings.global_labor_cost_per_hour,
-            global_tax_rate: settings.global_tax_rate,
-          });
-        }
-        // Update local settings too
-        await saveSiteSettings(companyId, settings);
+        // Save pricing globally
+        await saveGlobalSettings({
+          global_fixed_costs: settings.global_fixed_costs,
+          global_labor_cost_per_hour: settings.global_labor_cost_per_hour,
+          global_tax_rate: settings.global_tax_rate,
+        });
+      } else if (['pix', 'marketing', 'receipt', 'roulette', 'shipping'].includes(activeSubTab)) {
+        await saveGlobalSettings(settings);
       } else {
         await saveSiteSettings(companyId, settings);
 
@@ -180,40 +186,39 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
     );
 
   return (
-    <div className="flex flex-col lg:flex-row gap-10 animate-in fade-in slide-in-from-left-4 duration-500 pb-20">
-      {/* Sidebar Nav */}
-      <div className="lg:w-72 space-y-2">
+    <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-top-4 duration-500 pb-6 w-full">
+      {/* Horizontal Nav */}
+      <div className="w-full bg-white p-2 rounded-2xl border border-lilac/10 shadow-sm overflow-x-auto hide-scrollbar scroll-smooth flex items-center gap-1.5">
         {[
-          { id: "brand", label: "Marca & Dados (3 Ateliês)", icon: Building2 },
+          { id: "brand", label: "Marca & Dados", icon: Building2 },
           { id: "about", label: "Página Sobre Nós", icon: User },
           { id: "pix", label: "PIX & Checkout", icon: QrCode },
-          {
-            id: "pricing",
-            label: "Precificação / Custos Globais",
-            icon: Calculator,
-          },
+          { id: "pricing", label: "Precificação", icon: Calculator },
           { id: "marketing", label: "Pixel Facebook", icon: Facebook },
           { id: "whatsapp", label: "WhatsApp", icon: Phone },
           { id: "receipt", label: "Comprovantes", icon: FileText },
+          { id: "shipping", label: "Cálculo de Frete", icon: Truck },
+          { id: "roulette", label: "Roleta de Brindes", icon: Gift },
         ].map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveSubTab(item.id as any)}
-            className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${activeSubTab === item.id ? "bg-black text-white shadow-lg" : "bg-white text-[#A09898] border border-lilac/20 hover:border-lilac hover:text-slate-900"}`}
+            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all whitespace-nowrap shrink-0 border ${
+              activeSubTab === item.id
+                ? "bg-black text-white border-black font-extrabold shadow-sm scale-[1.01]"
+                : "bg-[#FCFBFA] text-[#A09898] border-lilac/15 hover:border-lilac hover:bg-white hover:text-slate-900"
+            }`}
           >
-            <div className="flex items-center gap-3">
-              <item.icon size={18} />
-              <span className="text-[10px] uppercase font-black tracking-widest">
-                {item.label}
-              </span>
-            </div>
-            {activeSubTab === item.id && <ChevronRight size={16} />}
+            <item.icon size={14} className={activeSubTab === item.id ? "text-white" : "text-[#A09898]"} />
+            <span className="text-[10px] uppercase font-bold tracking-wider">
+              {item.label}
+            </span>
           </button>
         ))}
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 p-8 md:p-12 rounded-[2.5rem] bg-white border border-lilac/20 shadow-sm min-h-[600px]">
+      <div className="w-full p-6 md:p-10 rounded-[2.5rem] bg-white border border-lilac/20 shadow-sm min-h-0">
         {activeSubTab === "brand" && (
           <div className="space-y-12">
             <div className="flex items-center gap-4">
@@ -584,6 +589,60 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     placeholder="Ex: Ateliê Sob Medida LTDA"
                   />
                 </div>
+
+                {/* Mercado Pago Integration */}
+                <div className="pt-6 border-t border-lilac/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-xl bg-sky-50 text-sky-600">
+                      <CreditCard size={18} />
+                    </div>
+                    <h4 className="text-[10px] uppercase font-black text-slate-900 tracking-widest">Pix Automático (Mercado Pago)</h4>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[9px] uppercase font-bold text-[#A09898] ml-2">Access Token</label>
+                      <input
+                        type="password"
+                        value={settings.mercadopago_token || ""}
+                        onChange={(e) => updateField("mercadopago_token", e.target.value)}
+                        className="w-full bg-white border border-lilac/20 rounded-2xl px-5 py-3 text-[11px] font-mono outline-none focus:border-lilac transition-all"
+                        placeholder="APP_USR-..."
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between bg-lilac/5 p-4 rounded-2xl border border-lilac/10">
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-slate-700 tracking-wider">Ativar Geração Dinâmica</p>
+                        <p className="text-[8px] font-bold text-[#A09898] uppercase tracking-widest">QR Code gerado automaticamente</p>
+                      </div>
+                      <button 
+                        onClick={() => updateField("pix_automatico_active", !settings.pix_automatico_active)}
+                        className={`w-10 h-5 rounded-full relative transition-all ${settings.pix_automatico_active ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                      >
+                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${settings.pix_automatico_active ? 'right-0.5' : 'left-0.5'}`} />
+                      </button>
+                    </div>
+
+                    {/* Modo teste */}
+                    <div className="pt-4 border-t border-lilac/10">
+                      <div className="flex items-center justify-between bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                        <div>
+                          <p className="text-[10px] font-black uppercase text-amber-900 tracking-wider">Modo teste de Vendas & Checkout</p>
+                          <p className="text-[8px] font-bold text-amber-700 uppercase tracking-widest leading-relaxed">
+                            Simula pagamentos aprovados sem cobrança real ou Mercado Pago
+                          </p>
+                        </div>
+                        <button 
+                          onClick={() => updateField("test_mode", !settings.test_mode)}
+                          className={`w-10 h-5 rounded-full relative transition-all ${settings.test_mode ? 'bg-amber-500' : 'bg-slate-300'}`}
+                        >
+                          <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${settings.test_mode ? 'right-0.5' : 'left-0.5'}`} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -953,6 +1012,143 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === "shipping" && (
+          <div className="space-y-10">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-sky-100 text-sky-600">
+                <Truck size={24} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+                Configuração de Frete
+              </h3>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 border border-lilac/10 space-y-8">
+               <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">Faixas de Preço por CEP</h4>
+                    <p className="text-[10px] text-[#A09898] uppercase font-bold tracking-widest mt-1">Defina valores de entrega baseados em intervalos de CEP.</p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      const newRules = [...(settings.shipping_rules || [])];
+                      newRules.push({
+                        id: crypto.randomUUID(),
+                        region: 'Nova Região',
+                        cep_start: '',
+                        cep_end: '',
+                        price: 0,
+                        active: true
+                      });
+                      updateField('shipping_rules', newRules);
+                    }}
+                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all"
+                  >
+                    + Adicionar Região
+                  </button>
+               </div>
+
+               <div className="space-y-4">
+                  {(settings.shipping_rules || []).map((rule, idx) => (
+                    <div key={rule.id} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-5 bg-[#F8F5F2] rounded-2xl border border-lilac/5 items-center">
+                      <div className="md:col-span-2 space-y-1">
+                        <label className="text-[8px] font-black text-[#A09898] uppercase">Nome da Região / Cidade</label>
+                        <input 
+                          value={rule.region}
+                          onChange={(e) => {
+                            const newRules = [...(settings.shipping_rules || [])];
+                            newRules[idx].region = e.target.value;
+                            updateField('shipping_rules', newRules);
+                          }}
+                          className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-bold outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[#A09898] uppercase">CEP Inicial</label>
+                        <input 
+                          value={rule.cep_start}
+                          onChange={(e) => {
+                            const newRules = [...(settings.shipping_rules || [])];
+                            newRules[idx].cep_start = e.target.value.replace(/\D/g, '');
+                            updateField('shipping_rules', newRules);
+                          }}
+                          className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-mono outline-none"
+                          placeholder="00000000"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[#A09898] uppercase">CEP Final</label>
+                        <input 
+                          value={rule.cep_end}
+                          onChange={(e) => {
+                            const newRules = [...(settings.shipping_rules || [])];
+                            newRules[idx].cep_end = e.target.value.replace(/\D/g, '');
+                            updateField('shipping_rules', newRules);
+                          }}
+                          className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-mono outline-none"
+                          placeholder="99999999"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[#A09898] uppercase">Valor (R$)</label>
+                        <input 
+                          type="number"
+                          value={rule.price}
+                          onChange={(e) => {
+                            const newRules = [...(settings.shipping_rules || [])];
+                            newRules[idx].price = Number(e.target.value);
+                            updateField('shipping_rules', newRules);
+                          }}
+                          className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-bold outline-none"
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end pt-4 md:pt-0">
+                        <button 
+                          onClick={() => {
+                            const newRules = [...(settings.shipping_rules || [])];
+                            newRules[idx].active = !newRules[idx].active;
+                            updateField('shipping_rules', newRules);
+                          }}
+                          className={`p-2 rounded-xl transition-all ${rule.active ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}
+                          title={rule.active ? 'Desativar' : 'Ativar'}
+                        >
+                          {rule.active ? <CheckCircle size={16} /> : <X size={16} />}
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const newRules = (settings.shipping_rules || []).filter(r => r.id !== rule.id);
+                            updateField('shipping_rules', newRules);
+                          }}
+                          className="p-2 bg-slate-100 text-slate-400 hover:text-rose-600 rounded-xl transition-all"
+                          title="Remover"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {(settings.shipping_rules || []).length === 0 && (
+                    <div className="p-12 text-center border-2 border-dashed border-lilac/10 rounded-[2rem] space-y-3">
+                      <Truck size={32} className="mx-auto text-lilac/20" />
+                      <p className="text-[10px] text-[#A09898] uppercase font-black tracking-widest">Nenhuma regra de frete cadastrada.</p>
+                    </div>
+                  )}
+               </div>
+            </div>
+
+            <div className="bg-lilac/5 rounded-3xl p-8 border border-lilac/10">
+               <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2">Instruções de Uso</h4>
+               <ul className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest space-y-2 leading-relaxed">
+                  <li>• O sistema buscará o CEP do cliente no checkout e aplicará o valor da primeira regra que coincidir com o intervalo.</li>
+                  <li>• Insira apenas números nos campos de CEP.</li>
+                  <li>• Regras desativadas serão ignoradas.</li>
+                  <li>• Se nenhum CEP coincidir, o sistema poderá exibir "Sob Consulta" ou um valor padrão (se implementado).</li>
+               </ul>
             </div>
           </div>
         )}

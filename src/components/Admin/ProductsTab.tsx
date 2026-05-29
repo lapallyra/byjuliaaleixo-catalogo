@@ -32,7 +32,8 @@ import {
 } from "../../services/firebaseStorageService";
 import { Product, CompanyId, Insumo, Variation } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
-import { getSiteSettings } from "../../services/firebaseService";
+import { getSiteSettings, getGlobalSettings } from "../../services/firebaseService";
+
 import { ImageWithFallback } from "../ImageWithFallback";
 
 interface ProductsTabProps {
@@ -96,6 +97,16 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
       p.code?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesAtelier = showAllInList || p.company === selectedAtelier;
     return matchesSearch && matchesAtelier;
+  }).sort((a, b) => {
+    // Assuming we have a createdAt or we rely on some id assuming it's sequential or we just reverse
+    // The easiest is just to sort by id descending (assuming ids are time-based or generated sequentially)
+    // Or if we don't have createdAt, we can reverse the list
+    if ((b as any).createdAt && (a as any).createdAt) {
+      const db = (b as any).createdAt.toMillis ? (b as any).createdAt.toMillis() : new Date((b as any).createdAt).getTime();
+      const da = (a as any).createdAt.toMillis ? (a as any).createdAt.toMillis() : new Date((a as any).createdAt).getTime();
+      return db - da;
+    }
+    return b.id.localeCompare(a.id);
   });
 
   const getCompanyColor = (compId: string) => {
@@ -163,19 +174,28 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
           </select>
         </div>
 
-        <button
-          onClick={async () => {
-            setEditingProduct({
-              company: showAllInList ? companyId : selectedAtelier,
-              isVisible: true,
-              isFeatured: false,
-            });
-            setIsModalOpen(true);
-          }}
-          className="w-full lg:w-auto flex items-center justify-center gap-2 bg-[#D48C8C] text-white font-semibold py-4 px-8 rounded-xl hover:scale-[1.02] transition-all shadow-[0_10px_20px_rgba(212,140,140,0.2)] text-[9px] uppercase tracking-widest border border-[#D48C8C]/20"
-        >
-          <Plus size={18} /> Novo Produto
-        </button>
+        <div className="flex gap-4 w-full lg:w-auto">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center justify-center p-4 bg-[#FAF9F6] text-[#A09898] border border-[#F0E6D2] rounded-xl hover:text-[#D48C8C] hover:bg-white hover:border-[#D48C8C]/30 transition-all shadow-sm group"
+            title="Exportar Relatório PDF"
+          >
+            <Printer size={18} className="group-hover:scale-110 transition-transform" />
+          </button>
+          <button
+            onClick={async () => {
+              setEditingProduct({
+                company: showAllInList ? companyId : selectedAtelier,
+                isVisible: true,
+                isFeatured: false,
+              });
+              setIsModalOpen(true);
+            }}
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-[#D48C8C] text-white font-semibold py-4 px-8 rounded-xl hover:scale-[1.02] transition-all shadow-lg shadow-[#D48C8C]/20 text-[9px] uppercase tracking-widest border border-[#D48C8C]/20"
+          >
+            <Plus size={18} /> Novo Produto
+          </button>
+        </div>
       </div>
 
       {/* Luxury Catalog List View */}
@@ -449,7 +469,7 @@ const ProductFormModal: React.FC<
   });
 
   useEffect(() => {
-    getSiteSettings(companyId).then((settings) => {
+    getGlobalSettings().then((settings) => {
       if (settings) {
         setGlobalCosts({
           fixed: settings.global_fixed_costs || 0,

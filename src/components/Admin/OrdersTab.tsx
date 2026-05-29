@@ -111,6 +111,21 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
         "bg-emerald-100/50 text-emerald-600 border-emerald-200 shadow-[0_0_10px_rgba(16,185,129,0.2)]",
     },
     {
+      value: "waiting_remaining",
+      label: "AGUARDANDO PAGAMENTO RESTANTE",
+      color: "bg-red-50 text-red-600 border-red-200",
+    },
+    {
+      value: "planned_active",
+      label: "PAGAMENTO PLANEJADO ATIVO",
+      color: "bg-indigo-50 text-indigo-600 border-indigo-200",
+    },
+    {
+      value: "fully_paid",
+      label: "PEDIDO QUITADO",
+      color: "bg-green-50 text-green-600 border-green-200",
+    },
+    {
       value: "pending",
       label: "PENDENTE",
       color: "bg-yellow-100/50 text-yellow-600 border-yellow-200",
@@ -136,6 +151,9 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
     production: "Produção",
     assembly: "Montagem",
     ready: "Pronto",
+    waiting_remaining: "Pgto. Restante",
+    planned_active: "Pgto. Planejado",
+    fully_paid: "Quitado",
     pending: "Pendente",
     delivered: "Entregue",
     cancelled: "Cancelado",
@@ -257,7 +275,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
     return "budget";
   };
 
-  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
+  const [viewMode, setViewMode] = useState<"kanban" | "list">("list");
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -276,20 +294,6 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </div>
-          <div className="flex bg-[#FAF9F6] border border-[#F0E6D2] rounded-xl p-1">
-            <button
-              onClick={() => setViewMode("kanban")}
-              className={`px-3 py-1.5 rounded-lg text-[8px] font-semibold uppercase tracking-widest transition-all ${viewMode === "kanban" ? "bg-white text-[#D48C8C] shadow-sm" : "text-[#A09898]"}`}
-            >
-              Kanban
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`px-3 py-1.5 rounded-lg text-[8px] font-semibold uppercase tracking-widest transition-all ${viewMode === "list" ? "bg-white text-[#D48C8C] shadow-sm" : "text-[#A09898]"}`}
-            >
-              Lista
-            </button>
           </div>
         </div>
 
@@ -508,25 +512,31 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                     >
                       {currentStatus?.label || order.status}
                     </span>
-                    <span
-                      className={`px-4 py-1.5 rounded-full text-[8px] font-semibold tracking-widest border uppercase ${
-                        order.paymentStatus === "paid"
-                          ? "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-[0_0_10px_rgba(52,211,153,0.1)]"
-                          : order.paymentStatus === "cancelled"
+                    {order.paymentMode === 'planned' ? (
+                      <span className="px-3 py-1.5 rounded-full text-[8px] font-bold tracking-widest border uppercase bg-indigo-50 text-indigo-500 border-indigo-100">
+                        PLANEJADO {order.remainingInstallments ? `(${order.remainingInstallments}X)` : ''}
+                      </span>
+                    ) : order.paymentStatus === 'paid' || order.paymentMode === 'full' ? (
+                      <span className="px-3 py-1.5 rounded-full text-[8px] font-bold tracking-widest border uppercase bg-emerald-50 text-emerald-600 border-emerald-100 shadow-[0_0_10px_rgba(52,211,153,0.1)]">
+                        PEDIDO QUITADO
+                      </span>
+                    ) : (
+                      <span
+                        className={`px-4 py-1.5 rounded-full text-[8px] font-semibold tracking-widest border uppercase ${
+                          order.paymentStatus === "cancelled"
                             ? "bg-slate-50 text-rose-600 border-rose-100"
                             : order.paymentStatus === "partial"
                               ? "bg-amber-50 text-amber-600 border-amber-100"
                               : "bg-orange-50 text-orange-600 border-orange-100 shadow-[0_0_10px_rgba(251,146,60,0.1)] animate-pulse"
-                      }`}
-                    >
-                      {order.paymentStatus === "paid"
-                        ? "PAGO"
-                        : order.paymentStatus === "partial"
-                          ? "PARCIAL"
-                          : order.paymentStatus === "cancelled"
-                            ? "CANC"
+                        }`}
+                      >
+                        {order.paymentStatus === "cancelled"
+                          ? "CANC"
+                          : order.paymentStatus === "partial"
+                            ? "SALDO PENDENTE"
                             : "PENDENTE"}
-                    </span>
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
@@ -747,7 +757,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
 
                     <div className="space-y-6">
                       <h3 className="text-[10px] font-semibold uppercase tracking-[0.4em] text-[#D48C8C] border-b border-[#F0E6D2] pb-3">
-                        Logística & Observações
+                        Logística & Pagamento
                       </h3>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="p-4 bg-[#FAF9F6] rounded-2xl border border-[#F0E6D2]">
@@ -763,16 +773,37 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                         </div>
                         <div className="p-4 bg-[#FAF9F6] rounded-2xl border border-[#F0E6D2]">
                           <p className="text-[8px] font-semibold uppercase text-[#A09898] tracking-widest mb-1">
-                            Pagamento
+                            Status Pagto.
                           </p>
                           <p className="text-[10px] font-semibold text-[#D48C8C] uppercase">
                             {
                               orders.find((o) => o.id === isDetailOpen)
-                                ?.paymentStatus
+                                ?.paymentStatus === 'paid' ? 'PAGO' : 
+                                orders.find((o) => o.id === isDetailOpen)?.paymentStatus
                             }
                           </p>
                         </div>
                       </div>
+
+                      {orders.find((o) => o.id === isDetailOpen)?.paymentMode === 'planned' && (
+                        <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex flex-col gap-2">
+                          <p className="text-[9px] font-bold uppercase text-indigo-800 tracking-widest mb-1">
+                            Detalhes do Planejamento
+                          </p>
+                          <div className="flex justify-between text-[10px] text-indigo-700">
+                             <span className="font-semibold">Valor Restante:</span>
+                             <span>{formatCurrency(orders.find(o => o.id === isDetailOpen)?.remainingAmount || 0)}</span>
+                          </div>
+                          <div className="flex justify-between text-[10px] text-indigo-700">
+                             <span className="font-semibold">Método Escolhido:</span>
+                             <span className="uppercase">{orders.find(o => o.id === isDetailOpen)?.plannedMethod === 'credit_card' ? 'Cartão de Crédito' : 'Carnê Digital (WhatsApp)'}</span>
+                          </div>
+                          <div className="flex justify-between text-[10px] text-indigo-700">
+                             <span className="font-semibold">Parcelamento:</span>
+                             <span>{orders.find(o => o.id === isDetailOpen)?.remainingInstallments}x de {formatCurrency(orders.find(o => o.id === isDetailOpen)?.remainingInstallmentValue || 0)}</span>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="p-5 bg-white border border-[#F0E6D2] rounded-2xl min-h-[100px]">
                         <p className="text-[8px] font-semibold uppercase text-[#A09898] tracking-widest mb-3">

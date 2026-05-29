@@ -85,26 +85,16 @@ export const CatalogHeader: React.FC<{
                      initial={{ opacity: 0, x: -20 }}
                      animate={{ opacity: 1, x: 0 }}
                      transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-                     className={`text-5xl md:text-7xl lg:text-[100px] leading-[0.8] tracking-tight font-beauty mb-2`}
+                     className={`text-4xl md:text-5xl lg:text-[70px] leading-[0.8] tracking-tight font-beauty mb-2`}
                      style={{ 
-                       color: isMimada && theme.primaryColor === '#FFFFFF' ? '#FF007F' : (isMimada ? '#ffffff' : theme.accentColor),
+                       color: theme.accentColor,
                        textShadow: `0px 10px 40px ${theme.accentColor}33`,
                        letterSpacing: '-2px'
                      }}>
                   {companyName}
                 </motion.h1>
                 
-                {/* Emotional Tagline unified style */}
-                <motion.p 
-                   initial={{ opacity: 0 }}
-                   animate={{ opacity: 1 }}
-                   transition={{ delay: 0.6, duration: 1 }}
-                   className={`max-w-lg text-[10px] md:text-xs tracking-[0.4em] leading-relaxed uppercase font-black opacity-60`}
-                   
-                >
-                  Exclusividade em cada detalhe. 
-                  <span className="block mt-1.5 opacity-100 font-black">Edições limitadas.</span>
-                </motion.p>
+                {/* Emotional Tagline unified style - Elements removed as requested */}
               </div>
             </div>
             

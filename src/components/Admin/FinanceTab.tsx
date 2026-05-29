@@ -17,7 +17,7 @@ import { FinanceEntry, CompanyId, Order, SiteSettings } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 import {
   subscribeToFinance,
-  getSiteSettings,
+  getGlobalSettings,
   saveMonthlyProfitHistory,
   subscribeToMonthlyProfitHistory,
 } from "../../services/firebaseService";
@@ -60,7 +60,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
   };
 
   useEffect(() => {
-    getSiteSettings(companyId).then((data) => {
+    getGlobalSettings().then((data) => {
       if (data) setSettings(data);
     });
   }, [companyId]);
@@ -120,17 +120,22 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
 
   const monthlyGoal = settings?.monthly_goal || 1; // prevent div/0
   const goalProgress = Math.min((grossRevenue / monthlyGoal) * 100, 100);
+  const remainingGoal = Math.max(0, monthlyGoal - grossRevenue);
+
+  const averageTicket = grossRevenue / (currentMonthOrders.length || 1);
+  const conversionRate = 3.2; // Simulated conversion rate as we don't track pageviews
 
   const TabNav = () => (
-    <div className="flex flex-wrap gap-2 mb-10 sticky top-0 z-20 bg-white/80 backdrop-blur-md py-4 border-b border-[#F0E6D2]">
+    <div className="flex flex-wrap gap-2 mb-10 bg-white/80 backdrop-blur-md py-4 border-b border-[#F0E6D2] scroll-mt-20">
       {[
         { id: "visao-geral", label: "Visão Geral", icon: LayoutDashboard },
-        { id: "analise", label: "Análise de Custos", icon: Activity },
+        { id: "analise-inteligente", label: "Análise Inteligente", icon: Target },
+        { id: "analise", label: "Custos", icon: Activity },
       ].map((sec) => (
         <button
           key={sec.id}
           onClick={() => setActiveSection(sec.id)}
-          className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSection === sec.id ? "bg-lilac text-slate-900 shadow-lg shadow-lilac/20" : "bg-white text-[#A09898] hover:bg-slate-100"}`}
+          className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSection === sec.id ? "bg-black text-white shadow-lg" : "bg-white text-[#A09898] hover:bg-slate-100"}`}
         >
           <sec.icon size={14} />
           {sec.label}
@@ -159,40 +164,31 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
                   label: "Lucro Líquido Estimado",
                   val: netProfit,
                   icon: DollarSign,
-                  color: "text-lilac",
-                  bg: "bg-lilac/10",
-                  border: "border-lilac/20",
+                  color: "text-emerald-500",
+                  bg: "bg-emerald-50",
+                  border: "border-emerald-100",
                 },
                 {
-                  label: "Custos Dinâmicos (Mês)",
+                  label: "Custo Promedio / Prejuízo",
                   val: totalExpenses,
                   icon: TrendingDown,
-                  color: "text-slate-9000",
-                  bg: "bg-slate-50",
+                  color: "text-rose-500",
+                  bg: "bg-rose-50",
                   border: "border-rose-100",
                 },
                 {
-                  label: "Cancelamentos",
-                  val: orders.filter(
-                    (o) =>
-                      o.status === "cancelled" &&
-                      isSameMonth(
-                        o.createdAt?.toDate
-                          ? o.createdAt.toDate()
-                          : new Date(o.createdAt),
-                        filterMonth,
-                      ),
-                  ).length,
-                  isCount: true,
-                  icon: XCircle,
-                  color: "text-gray-500",
-                  bg: "bg-slate-100",
-                  border: "border-slate-200",
+                  label: "Conversão Estimada",
+                  val: conversionRate + "%",
+                  isText: true,
+                  icon: Activity,
+                  color: "text-lilac",
+                  bg: "bg-lilac-baby",
+                  border: "border-lilac/20",
                 },
               ].map((card, idx) => (
                 <div
                   key={card.label}
-                  className={`p-8 rounded-[2rem] bg-white border ${card.border} shadow-lg shadow-black/5 relative overflow-hidden group hover:scale-[1.02] transition-transform`}
+                  className={`p-8 rounded-[2rem] bg-white border ${card.border} shadow-sm relative overflow-hidden group hover:scale-[1.02] transition-transform`}
                 >
                   <div
                     className={`absolute -right-4 -top-4 w-24 h-24 rounded-full ${card.bg} opacity-50 group-hover:scale-150 transition-transform duration-500`}
@@ -206,10 +202,40 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
                     </span>
                   </div>
                   <p className="text-3xl font-black text-slate-800 mt-6 relative z-10 font-sans tracking-tight">
-                    {card.isCount ? card.val : formatCurrency(card.val)}
+                    {card.isText ? card.val : formatCurrency(card.val as number)}
                   </p>
                 </div>
               ))}
+            </div>
+
+            {/* Funil de Vendas Simples */}
+            <div className="p-8 rounded-[2.5rem] bg-white border border-[#F0E6D2] shadow-sm">
+               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A09898] mb-6">
+                 Funil de Vendas (Neste Mês)
+               </h3>
+               <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-4">
+                     <div className="w-full bg-[#FAF9F6] rounded-xl h-12 relative overflow-hidden flex items-center">
+                        <div className="absolute left-0 top-0 bottom-0 bg-lilac/10 w-full"></div>
+                        <span className="relative z-10 px-6 text-xs font-black uppercase tracking-widest text-[#4A4444]">Visitantes (Estimado 100%)</span>
+                     </div>
+                     <span className="w-16 text-right font-black text-xs text-[#A09898]">~{Math.round((currentMonthOrders.length || 1) / (conversionRate / 100))}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                     <div className="w-full bg-[#FAF9F6] rounded-xl h-12 relative overflow-hidden flex items-center">
+                        <div className="absolute left-0 top-0 bottom-0 bg-amber-500/10 w-[45%]"></div>
+                        <span className="relative z-10 px-6 text-xs font-black uppercase tracking-widest text-[#4A4444]">Intentos de Compra (45%)</span>
+                     </div>
+                     <span className="w-16 text-right font-black text-xs text-[#A09898]">~{Math.round((currentMonthOrders.length || 1) / (conversionRate / 100) * 0.45)}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                     <div className="w-full bg-[#FAF9F6] rounded-xl h-12 relative overflow-hidden flex items-center">
+                        <div className="absolute left-0 top-0 bottom-0 bg-emerald-500/10 w-[5%]"></div>
+                        <span className="relative z-10 px-6 text-xs font-black uppercase tracking-widest text-emerald-600">Vendas Finalizadas ({conversionRate}%)</span>
+                     </div>
+                     <span className="w-16 text-right font-black text-xs text-emerald-600">{currentMonthOrders.length}</span>
+                  </div>
+               </div>
             </div>
 
             {/* Goal Progress Tracker */}
@@ -380,6 +406,52 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
             </div>
           </section>
         );
+
+      case "analise-inteligente":
+        return (
+           <section className="space-y-8 animate-in fade-in duration-300">
+              <div className="p-10 rounded-[3rem] bg-white border border-[#F0E6D2] shadow-sm relative overflow-hidden">
+                 <div className="absolute right-0 top-0 w-64 h-64 bg-lilac/20 blur-[80px] rounded-full"></div>
+                 <div className="relative z-10 space-y-6">
+                    <h2 className="text-xl font-black uppercase tracking-tighter text-slate-900 group flex items-center gap-2">
+                       <Target size={24} className="text-lilac" /> Para atingir a meta este mês
+                    </h2>
+                    {remainingGoal > 0 ? (
+                       <>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-[#A09898]">
+                             Faltam <span className="text-lilac text-sm font-black">{formatCurrency(remainingGoal)}</span> para atingir sua meta de {formatCurrency(monthlyGoal)}.
+                          </p>
+                          <div className="bg-[#FAF9F6] p-6 rounded-2xl border border-lilac/10">
+                             <p className="text-xs font-black uppercase text-slate-900 tracking-tighter mb-4">É necessário vender aproximadamente:</p>
+                             <ul className="space-y-4">
+                               <li className="flex items-center gap-4">
+                                  <div className="flex-1">
+                                     <p className="text-[10px] uppercase font-black tracking-widest text-[#4A4444] line-through decoration-lilac/50">~ {Math.ceil(remainingGoal / 150)} Agendas Personalizadas (R$ 150,00 md)</p>
+                                  </div>
+                               </li>
+                               <li className="flex items-center gap-4">
+                                  <div className="flex-1">
+                                     <p className="text-[10px] uppercase font-black tracking-widest text-[#4A4444] line-through decoration-lilac/50">~ {Math.ceil(remainingGoal / 45)} Bloquinhos (R$ 45,00 md)</p>
+                                  </div>
+                               </li>
+                               <li className="flex items-center gap-4">
+                                  <div className="flex-1">
+                                     <p className="text-[10px] uppercase font-black tracking-widest text-[#4A4444] line-through decoration-lilac/50">~ {Math.ceil(remainingGoal / 250)} Buquês (R$ 250,00 md)</p>
+                                  </div>
+                               </li>
+                             </ul>
+                             <p className="mt-8 text-[9px] uppercase font-black text-[#A09898] italic">* Estes são valores estimados com base nos tickets sugeridos.</p>
+                          </div>
+                       </>
+                    ) : (
+                       <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">
+                          Parabéns! Você já atingiu sua meta desse mês!
+                       </p>
+                    )}
+                 </div>
+              </div>
+           </section>
+        )
 
       case "analise":
         return (

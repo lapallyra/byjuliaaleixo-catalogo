@@ -25,9 +25,9 @@ async function startServer() {
   app.post("/api/createPreference", async (req, res) => {
     console.log("HIT /api/createPreference POST", req.body);
     try {
-      const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+      const accessToken = req.body.accessToken || process.env.MERCADOPAGO_ACCESS_TOKEN;
       if (!accessToken) {
-        throw new Error("MERCADOPAGO_ACCESS_TOKEN is missing");
+        throw new Error("MERCADOPAGO_ACCESS_TOKEN is missing. Please configure it in the Admin Settings.");
       }
 
       const client = new MercadoPagoConfig({
