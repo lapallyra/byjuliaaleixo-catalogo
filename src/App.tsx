@@ -153,7 +153,6 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
 
   return (
     <>
-      <SalesNotificationPortal currentCompany={companyId} />
       <CatalogView
         companyId={companyId}
         config={config}

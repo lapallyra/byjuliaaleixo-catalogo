@@ -82,6 +82,7 @@ export function CheckoutModal({
   const [selectedMainOption, setSelectedMainOption] = useState<'full' | 'planned' | ''>('');
   const [plannedMethod, setPlannedMethod] = useState<'credit_card' | 'digital_booklet' | ''>('');
   const [installments, setInstallments] = useState<number>(1);
+  const [digitalBookletPayDay, setDigitalBookletPayDay] = useState<string>('01');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pendingBalance, setPendingBalance] = useState<number>(0);
 
@@ -482,7 +483,7 @@ export function CheckoutModal({
             {cart.map((item, idx) => (
               <div key={idx} className="flex gap-4">
                 <div className="w-20 h-20 rounded-2xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100 shadow-sm relative group">
-                  <img src={item.image} alt={item.product_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={item.image} alt={item.product_name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="flex-1 flex flex-col justify-center">
                   <h4 className="text-sm font-semibold text-gray-800 pr-2 line-clamp-2 leading-tight">{item.product_name}</h4>
@@ -1008,7 +1009,7 @@ export function CheckoutModal({
 
                                  {/* Planned options */}
                                  {selectedMainOption === 'planned' && (
-                                   <div className="mt-4 space-y-3 pt-4 border-t border-gray-200" onClick={e => e.stopPropagation()}>
+                                   <div className="mt-4 space-y-4 pt-4 border-t border-gray-200" onClick={e => e.stopPropagation()}>
                                      <div className="flex flex-col gap-2">
                                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
                                          <input type="radio" name="plannedMethod" checked={plannedMethod === 'credit_card'} onChange={() => { setPlannedMethod('credit_card'); setInstallments(1); }} className="w-4 h-4" />
@@ -1022,18 +1023,52 @@ export function CheckoutModal({
 
                                      {plannedMethod && (
                                        <div className="mt-3">
-                                         <span className="text-xs font-bold text-gray-500 uppercase">Parcelas:</span>
-                                         <select value={installments} onChange={e => setInstallments(parseInt(e.target.value))} className="mt-1 w-full p-3 bg-white border border-gray-200 rounded-xl text-sm font-medium outline-none focus:ring-2" style={{ '--tw-ring-color': theme.accentColor + '50' } as any}>
-                                            {[1, 2, 3, 4].map(num => {
-                                              const remainingBase = total / 2;
-                                              const modFee = plannedMethod === 'credit_card' ? 0.05 : 0.02;
-                                              const feeAmount = remainingBase * modFee;
-                                              const instValue = (remainingBase + feeAmount) / num;
-                                              return (
-                                                <option key={num} value={num}>{num}x de R$ {instValue.toFixed(2).replace('.', ',')} (com taxa)</option>
-                                              )
-                                            })}
-                                         </select>
+                                         {plannedMethod === 'digital_booklet' ? (
+                                           <div className="space-y-4 pt-4 border-t border-gray-200">
+                                             <div>
+                                               <span className="text-xs font-bold text-gray-500 uppercase block mb-1">Melhor dia para pagamento:</span>
+                                               <select value={digitalBookletPayDay} onChange={e => setDigitalBookletPayDay(e.target.value)} className="w-full p-3 bg-white border border-gray-200 rounded-xl text-sm font-medium outline-none focus:ring-2" style={{ '--tw-ring-color': theme.accentColor + '50' } as any}>
+                                                 {['01', '05', '15', '20'].map(day => <option key={day} value={day}>Dia {day}</option>)}
+                                               </select>
+                                             </div>
+                                             
+                                             <p className="text-[10px] text-amber-700 bg-amber-50 p-2 rounded-md">Após o vencimento será aplicada multa de 5% e juros de 0,50%.</p>
+
+                                             <div>
+                                               <span className="text-xs font-bold text-gray-500 uppercase block mb-1">Parcelas:</span>
+                                               <select value={installments} onChange={e => setInstallments(parseInt(e.target.value))} className="w-full p-3 bg-white border border-gray-200 rounded-xl text-sm font-medium outline-none focus:ring-2" style={{ '--tw-ring-color': theme.accentColor + '50' } as any}>
+                                                 {[1, 2, 3, 4, 5, 6].map(num => {
+                                                   const fees: Record<number, number> = { 1: 0, 2: 0.0609, 3: 0.0701, 4: 0.0791, 5: 0.0880, 6: 0.1000 };
+                                                   const fee = fees[num] || 0;
+                                                   const finalTotal = total * (1 + fee);
+                                                   const instValue = finalTotal / num;
+                                                   return <option key={num} value={num}>{num}x {num===1 ? 'sem acréscimo' : `de R$ ${instValue.toFixed(2).replace('.', ',')}`}</option>
+                                                 })}
+                                               </select>
+                                             </div>
+
+                                             <div className="bg-gray-50 p-3 rounded-xl text-xs space-y-1">
+                                               <div className="flex justify-between"><span>Valor original:</span><span className="font-bold">R$ {total.toFixed(2).replace('.', ',')}</span></div>
+                                               <div className="flex justify-between"><span>Taxa aplicada:</span><span className="font-bold">{( ({1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000}[installments] || 0) * 100).toFixed(2)}%</span></div>
+                                               <div className="flex justify-between font-bold text-gray-900 border-t border-gray-200 mt-1 pt-1"><span>Valor final:</span><span>R$ {(total * (1 + ({1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000}[installments] || 0))).toFixed(2).replace('.', ',')}</span></div>
+                                               <div className="flex justify-between"><span>Parcelamento:</span><span className="font-bold">{installments}x de R$ {( (total * (1 + ({1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000}[installments] || 0))) / installments ).toFixed(2).replace('.', ',')}</span></div>
+                                             </div>
+                                           </div>
+                                         ) : (
+                                           <>
+                                            <span className="text-xs font-bold text-gray-500 uppercase block mb-1">Parcelas:</span>
+                                            <select value={installments} onChange={e => setInstallments(parseInt(e.target.value))} className="mt-1 w-full p-3 bg-white border border-gray-200 rounded-xl text-sm font-medium outline-none focus:ring-2" style={{ '--tw-ring-color': theme.accentColor + '50' } as any}>
+                                               {[1, 2, 3, 4].map(num => {
+                                                 const remainingBase = total / 2;
+                                                 const feeAmount = remainingBase * 0.05;
+                                                 const instValue = (remainingBase + feeAmount) / num;
+                                                 return (
+                                                   <option key={num} value={num}>{num}x de R$ {instValue.toFixed(2).replace('.', ',')} (com taxa)</option>
+                                                 )
+                                               })}
+                                            </select>
+                                           </>
+                                         )}
                                        </div>
                                      )}
                                    </div>

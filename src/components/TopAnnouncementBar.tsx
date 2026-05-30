@@ -11,7 +11,7 @@ export const TopAnnouncementBar: React.FC = () => {
 
   return (
     <div 
-      className="bg-[#4A3525] text-[#F8F8F6] text-center py-2 px-4 text-[10px] sm:text-xs font-semibold uppercase tracking-widest select-none relative z-50 border-b border-[#FAF9F6]/5 flex justify-center items-center font-sans shadow-md"
+      className="bg-[#4A3525] text-[#F8F8F6] text-center py-1 px-4 text-[9px] font-semibold uppercase tracking-widest select-none relative z-50 border-b border-[#FAF9F6]/5 flex justify-center items-center font-sans"
     >
       <div className="max-w-7xl mx-auto flex items-center justify-center gap-1.5 flex-wrap leading-relaxed">
         <span>Compras acima de</span>

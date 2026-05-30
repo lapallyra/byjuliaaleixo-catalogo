@@ -37,10 +37,10 @@ import { CartSidebar } from './CartSidebar';
 import { CheckoutModal } from './CheckoutModal';
 import { GiftListSidebar } from './GiftListSidebar';
 import { SuggestionBox } from './SuggestionBox';
-import { ProductDetailModal } from './ProductDetailModal';
+import { ProductDetailPage } from './ProductDetailPage';
+
 
 import { CatalogHeader } from './Catalog/CatalogHeader';
-import { CatalogInfoBar } from './Catalog/CatalogInfoBar';
 import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
@@ -214,6 +214,36 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isDirectCheckoutLoading, setIsDirectCheckoutLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    // Auto deep-link to product details on load
+    const prodParam = params.get('product');
+    if (prodParam && allProducts.length > 0) {
+      const found = allProducts.find(p => p.id === prodParam);
+      if (found) {
+        setSelectedProduct(found);
+      }
+    }
+  }, [location.search, allProducts]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (selectedProduct) {
+      if (params.get('product') !== selectedProduct.id) {
+        params.set('product', selectedProduct.id);
+        const newSearch = params.toString();
+        window.history.pushState(null, '', `${window.location.pathname}?${newSearch}`);
+      }
+    } else {
+      if (params.has('product')) {
+        params.delete('product');
+        const newSearch = params.toString();
+        const newPath = newSearch ? `${window.location.pathname}?${newSearch}` : window.location.pathname;
+        window.history.pushState(null, '', newPath);
+      }
+    }
+  }, [selectedProduct]);
 
   const handleOpenCheckout = () => {
     setIsCheckoutOpen(true);
@@ -693,8 +723,36 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       />
       
       <div className="flex-1 flex overflow-hidden">
-        {/* Vertical Collapsible Category Sidebar */}
-        <aside className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} hidden md:flex flex-col border-r ${theme.borderLine} transition-all duration-500 bg-white/50 backdrop-blur-md sticky top-0 h-full overflow-hidden shrink-0`}>
+        {selectedProduct ? (
+          <div className="flex-1 overflow-y-auto bg-[#FAFAF9]" id="product-detail-scroll-container">
+            <ProductDetailPage 
+              product={selectedProduct}
+              onClose={() => {
+                setSelectedProduct(null);
+                setIsReadOnlyProduct(false);
+              }}
+              onAddToCart={(prod, qty) => {
+                if (qty === 0) {
+                  setSelectedProduct(prod);
+                  const container = document.getElementById('product-detail-scroll-container');
+                  if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                  onAddToCart(prod, qty);
+                  setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
+                }
+              }}
+              onAddToGiftList={isReadOnlyProduct ? undefined : (prod) => {
+                onAddToGiftList?.(prod);
+                setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
+              }}
+              allProducts={allProducts}
+              companyId={companyId}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Vertical Collapsible Category Sidebar */}
+            <aside className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} hidden md:flex flex-col border-r ${theme.borderLine} transition-all duration-500 bg-white/50 backdrop-blur-md sticky top-0 h-full overflow-hidden shrink-0`}>
           <div className="p-4 border-b border-black/5 flex items-center justify-between">
             {!isSidebarCollapsed && (
               <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Categorias</span>
@@ -733,18 +791,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         {/* Content Area */}
         <div className="flex-1 flex flex-col min-h-0 bg-white/30 overflow-y-auto scrollbar-none">
           <div className="pt-0"> 
-            <div className="max-w-[1600px] mx-auto px-4 mt-1">
-               <CatalogInfoBar theme={theme} />
-            </div>
 
-            <DateHighlights theme={theme} companyId={companyId} />
-
-            <FeaturedProductsCarousel 
-              products={highlights} 
-              theme={theme} 
-              companyId={companyId}
-              onSelectProduct={(product) => setSelectedProduct(product)}
-            />
           </div>
 
           {/* Main Scroll Content */}
@@ -809,58 +856,53 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                               viewport={{ once: true, margin: "-50px" }}
                               transition={{ duration: 0.6, delay: (idx % 3) * 0.05 }}
                               onClick={() => setSelectedProduct(product)}
-                              className="group relative flex p-3 cursor-pointer bg-white rounded-2xl border border-neutral-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
+                              className="group relative flex flex-col p-3 cursor-pointer bg-white rounded-2xl border border-neutral-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
                             >
-                              {/* Small Square Image */}
-                              <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-xl overflow-hidden shrink-0 bg-neutral-50">
-                                {renderProductImage(product.image, "w-full h-full object-cover")}
-                                {isNew && (
-                                  <div className="absolute top-1 left-1 z-10">
-                                    <span 
-                                      className="px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-wider text-white shadow-sm"
-                                      style={{ backgroundColor: theme.accentColor }}
-                                    >
-                                      Novo
-                                    </span>
-                                  </div>
+                              {/* Thumbnail Image with Hover Change */}
+                              <div className="relative w-full h-48 rounded-xl overflow-hidden bg-neutral-50 shrink-0">
+                                <ImageWithFallback 
+                                  src={product.image || ''} 
+                                  alt="Product"
+                                  className={`w-full h-full object-cover transition-opacity duration-300 ${product.image_hover ? 'group-hover:opacity-0' : ''}`}
+                                  containerClassName="w-full h-full absolute inset-0"
+                                />
+                                {product.image_hover && (
+                                  <ImageWithFallback 
+                                    src={product.image_hover || ''} 
+                                    alt="Product Hover"
+                                    className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                    containerClassName="w-full h-full absolute inset-0"
+                                  />
                                 )}
                               </div>
 
-                              {/* Info - Right side */}
-                              <div className="flex-1 ml-4 flex flex-col justify-between py-1">
-                                <div>
-                                  <span className="text-[8px] font-black uppercase tracking-widest text-[#1c1c1c]/30 mb-1 block">
-                                    {product.category}
-                                  </span>
-                                  <h3 className="font-serif text-sm sm:text-base font-semibold leading-tight text-neutral-900 group-hover:text-black transition-colors line-clamp-2">
-                                    {product.product_name}
-                                  </h3>
-                                </div>
-
-                                <div className="mt-2 text-left">
-                                  {product.original_price && (
-                                    <span className="text-[9px] line-through text-neutral-400 block mb-0.5">
-                                      {formatCurrency(product.original_price)}
-                                    </span>
-                                  )}
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-sm font-bold tracking-tight text-neutral-800">
-                                      {formatCurrency(product.retail_price)}
-                                    </span>
-                                    <div className="flex gap-2">
-                                      <button 
-                                        onClick={(e) => { 
-                                          e.stopPropagation();
-                                          onAddToCart(product, 1); 
-                                          setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
-                                        }}
-                                        className="w-8 h-8 flex items-center justify-center rounded-full bg-neutral-900 text-white hover:opacity-90 transition-opacity"
-                                        style={{ backgroundColor: theme.accentColor }}
-                                      >
-                                        <ShoppingCart size={12} />
-                                      </button>
-                                    </div>
-                                  </div>
+                              {/* Info - Product Name + Icons */}
+                              <div className="flex-1 flex flex-col justify-between mt-3 px-1">
+                                <h3 className="font-tahoma text-sm font-bold leading-tight text-neutral-900 line-clamp-2 min-h-[2.5rem]">
+                                  {product.product_name}
+                                </h3>
+                                <div className="flex items-center justify-between mt-3">
+                                  <button 
+                                    onClick={(e) => { 
+                                      e.stopPropagation();
+                                      onAddToCart(product, 1); 
+                                      setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
+                                    }}
+                                    className="p-2 rounded-full bg-neutral-900 text-white hover:opacity-90 transition-opacity"
+                                    style={{ backgroundColor: theme.accentColor }}
+                                  >
+                                    <ShoppingCart size={16} />
+                                  </button>
+                                  <button 
+                                    onClick={(e) => { 
+                                        e.stopPropagation();
+                                        onAddToGiftList?.(product);
+                                        setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
+                                    }}
+                                    className="p-2 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition-colors"
+                                  >
+                                    <Gift size={16} />
+                                  </button>
                                 </div>
                               </div>
                             </motion.div>
@@ -912,6 +954,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           
         </main>
       </div>
+      </>
+      )}
     </div>
 
     {/* Footer Legal & Copyright - Full Width and Side-by-Side */}
@@ -972,7 +1016,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
            isOpenExternal={isSuggestionOpen} 
            onCloseExternal={() => setIsSuggestionOpen(false)} 
         />
-
+        
         {/* List Search Overlay */}
         {isSearchingList && (
            <>
@@ -1030,20 +1074,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
            </>
         )}
 
-        {selectedProduct && (
-          <ProductDetailModal 
-            product={selectedProduct}
-            onClose={() => {
-              setSelectedProduct(null);
-              setIsReadOnlyProduct(false);
-            }}
-            onAddToCart={onAddToCart}
-            onBuyNow={handleBuyNow}
-            onAddToGiftList={isReadOnlyProduct ? undefined : onAddToGiftList}
-            companyId={companyId}
-            isReadOnly={isReadOnlyProduct}
-          />
-        )}
+
 
         {toast && (
           <motion.div

@@ -178,8 +178,22 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
                 >
                   <td className="py-4 font-bold">{item.product_name}</td>
                   <td className="py-4 text-center">{item.quantity}</td>
-                  <td className="py-4 text-gray-500 italic text-xs">
-                    Personalizado
+                  <td className="py-4 text-gray-700 text-xs max-w-[220px]">
+                    {(item as any).selectedVariation && <p className="mb-0.5"><strong>Opção:</strong> {(item as any).selectedVariation}</p>}
+                    {(item as any).customName && <p className="mb-0.5"><strong>Nome:</strong> {(item as any).customName}</p>}
+                    {(item as any).customPhrase && <p className="mb-0.5"><strong>Frase:</strong> {(item as any).customPhrase}</p>}
+                    {(item as any).customFile && (
+                      <p className="mb-0.5">
+                        <strong>Img/Anexo:</strong>{" "}
+                        <a href={(item as any).customFile} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline font-bold">
+                          [Ver Arquivo]
+                        </a>
+                      </p>
+                    )}
+                    {(item as any).customNotes && <p className="mb-0.5 text-neutral-500 italic"><strong>Obs:</strong> {(item as any).customNotes}</p>}
+                    {!((item as any).selectedVariation || (item as any).customName || (item as any).customPhrase || (item as any).customFile || (item as any).customNotes) && (
+                      <span className="text-gray-400 italic">Padrão</span>
+                    )}
                   </td>
                   <td className="py-4 text-right">
                     R$ {(item.retail_price || 0).toFixed(2)}

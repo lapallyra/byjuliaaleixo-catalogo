@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, Gift } from 'lucide-react';
 import { BotaoVoltar } from '../BotaoVoltar';
 import { CompanyId } from '../../types';
+import { CatalogInfoBar } from './CatalogInfoBar';
 import { FestiveBanner } from './FestiveBanner';
 import { motion } from 'motion/react';
 import { ImageWithFallback } from '../ImageWithFallback';
@@ -38,9 +39,9 @@ export const CatalogHeader: React.FC<{
            <div className="w-[80vw] h-[80vw] rounded-full border-[1px] absolute scale-125 animate-[spin_90s_linear_infinite_reverse]" style={{ borderColor: theme.accentColor }} />
         </div>
 
-        <div className="max-w-4xl mx-auto flex flex-col items-center text-center relative z-10">
-            {/* Logo & Name Side-by-Side arrangement standard for all */}
-            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 mb-6">
+        <div className="w-full flex items-center justify-between px-6 py-6 relative z-10">
+            {/* LEFT SIDE: Logo & Name */}
+            <div className="flex items-center gap-4 md:gap-6">
               <motion.div 
                  initial={{ opacity: 0, scale: 0.8 }}
                  animate={{ opacity: 1, scale: 1 }}
@@ -48,7 +49,7 @@ export const CatalogHeader: React.FC<{
                  whileTap={{ scale: 0.97, y: 0 }}
                  transition={{ duration: 0.8, ease: "easeOut" }}
                  onClick={onLogoClick}
-                 className={`w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center relative overflow-hidden cursor-pointer backdrop-blur-xl group`}
+                 className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center relative overflow-hidden cursor-pointer backdrop-blur-xl group`}
                  style={{ 
                    background: isMimada && theme.primaryColor !== '#FFFFFF' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)',
                    borderTop: `1px solid rgba(255,255,255,0.3)`,
@@ -72,46 +73,41 @@ export const CatalogHeader: React.FC<{
                     loading="eager"
                   />
                 ) : (
-                  <div className="text-2xl font-black text-gray-400 font-serif lowercase italic">
+                  <div className="text-xl font-black text-gray-400 font-serif lowercase italic">
                     {companyName.split(' ').map(n => n[0]).join('')}
                   </div>
                 )}
-                {/* Brand Glow Overlay */}
                 <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-20 group-hover:opacity-40 transition-opacity duration-500" style={{ backgroundColor: theme.accentColor }} />
               </motion.div>
               
-              <div className="flex flex-col items-center md:items-start text-center md:text-left">
-                <motion.h1 
-                     initial={{ opacity: 0, x: -20 }}
-                     animate={{ opacity: 1, x: 0 }}
-                     transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-                     className={`text-4xl md:text-5xl lg:text-[70px] leading-[0.8] tracking-tight font-beauty mb-2`}
-                     style={{ 
-                       color: theme.accentColor,
-                       textShadow: `0px 10px 40px ${theme.accentColor}33`,
-                       letterSpacing: '-2px'
-                     }}>
-                  {companyName}
-                </motion.h1>
-                
-                {/* Emotional Tagline unified style - Elements removed as requested */}
-              </div>
+              <motion.h1 
+                   initial={{ opacity: 0, x: -20 }}
+                   animate={{ opacity: 1, x: 0 }}
+                   transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+                   className={`text-2xl md:text-3xl lg:text-4xl leading-[0.8] tracking-tight font-beauty`}
+                   style={{ 
+                     color: theme.accentColor,
+                     textShadow: `0px 10px 40px ${theme.accentColor}33`,
+                     letterSpacing: '-1px'
+                   }}>
+                {companyName}
+              </motion.h1>
             </div>
             
-            {/* Minimalist Search & Access Standardized */}
+            {/* RIGHT SIDE: Minimalist Search & Access */}
             <motion.div 
                initial={{ opacity: 0, y: 10 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: 0.4, duration: 0.8 }}
-               className="flex items-center justify-center gap-6 w-full max-w-md group"
+               className="flex items-center gap-6 group"
             >
-               <div className="flex items-center gap-4 flex-1 border-b-2 pb-2 transition-all duration-500 group-focus-within:border-opacity-100" 
+               <div className="flex items-center gap-4 w-48 md:w-64 border-b-2 pb-2 transition-all duration-500 group-focus-within:border-opacity-100" 
                     style={{ borderColor: `${theme.accentColor}33` }}>
                  <Search size={16} className={`opacity-40 transition-opacity group-focus-within:opacity-100 ${theme.textPrimary}`}  />
                  <input 
                    type="text" 
                    placeholder="O que você procura?" 
-                   className={`bg-transparent text-[11px] md:text-xs font-sans tracking-[0.2em] uppercase outline-none w-full placeholder:text-opacity-40 transition-all text-center focus:text-left font-black`}
+                   className={`bg-transparent text-[11px] font-sans tracking-[0.2em] uppercase outline-none w-full placeholder:text-opacity-40 transition-all font-black`}
                    
                    onChange={(e) => onSearch(e.target.value)}
                  />
@@ -121,7 +117,6 @@ export const CatalogHeader: React.FC<{
                  onClick={onGiftListClick}
                  className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-all duration-300 relative group/btn hover:scale-110"
                  title="Ver Lista de Presentes"
-                 
                >
                  <Gift size={20} strokeWidth={2} />
                  <span className="text-[8px] font-black uppercase tracking-tighter">Listas</span>
@@ -132,8 +127,11 @@ export const CatalogHeader: React.FC<{
                  )}
                </button>
             </motion.div>
-
-            {/* Festive Banner Unified Positioning */}
+        </div>
+        
+        {/* Festive Banner - Keep full width */}
+        <CatalogInfoBar theme={theme} />
+        <div className="px-6 pb-4">
             <FestiveBanner 
               companyId={companyId || 'pallyra'} 
               primaryColor={theme.accentColor} 
