@@ -103,6 +103,11 @@ service cloud.firestore {
     // ----------------------------------------------------
     // FEEDBACKS
     // ----------------------------------------------------
+    match /checkout_funnel_logs/{logId} {
+      allow create: if true;
+      allow get, list, update, delete: if isAdmin();
+    }
+
     match /feedbacks/{feedbackId} {
       allow create: if incoming().keys().hasAll(['name', 'text', 'stars', 'createdAt']) &&
                      incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 200 &&

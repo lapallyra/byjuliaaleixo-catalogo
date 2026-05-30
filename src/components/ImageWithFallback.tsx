@@ -1,10 +1,70 @@
 import React, { useState } from 'react';
 import { ImageOff, Heart } from 'lucide-react';
 
-interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+export interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string;
   containerClassName?: string;
+  isThumbnail?: boolean;
 }
+
+export const getOptimizedWebpUrl = (srcStr: string | undefined | null, isThumbnail?: boolean, className: string = ""): string => {
+  if (!srcStr) return '';
+  const src = srcStr.trim();
+  if (src === '' || src.length < 5) return src;
+
+  // Optimize Unsplash images to WebP with responsive sizes
+  if (src.includes('images.unsplash.com')) {
+    try {
+      const url = new URL(src);
+      url.searchParams.set('fm', 'webp'); // Force WebP format
+
+      const isSmallElement = 
+        className.includes('w-10') || 
+        className.includes('w-12') || 
+        className.includes('w-16') || 
+        className.includes('w-20') || 
+        className.includes('w-24') || 
+        className.includes('w-32') || 
+        className.includes('h-10') || 
+        className.includes('h-12') || 
+        className.includes('h-16') || 
+        className.includes('h-20') || 
+        className.includes('h-24') || 
+        className.includes('h-32');
+
+      if (isThumbnail) {
+        url.searchParams.set('w', '400'); // Compact, optimized size for catalog thumbnails
+        url.searchParams.set('q', '70');  // Fast loading compression
+      } else if (isSmallElement) {
+        url.searchParams.set('w', '200'); // Very compact for small avatars / icons
+        url.searchParams.set('q', '70');
+      } else {
+        url.searchParams.set('w', '1000'); // Optimized HD size for product details page
+        url.searchParams.set('q', '80');
+      }
+      url.searchParams.set('fit', 'crop');
+      return url.toString();
+    } catch (e) {
+      // Fallback if URL constructor fails
+      let optimized = src;
+      if (optimized.includes('auto=format')) {
+        optimized = optimized.replace('auto=format', 'fm=webp');
+      } else if (!optimized.includes('fm=')) {
+        optimized += optimized.includes('?') ? '&fm=webp' : '?fm=webp';
+      }
+      if (isThumbnail) {
+        if (optimized.includes('w=800')) {
+          optimized = optimized.replace('w=800', 'w=400');
+        } else if (!optimized.includes('w=')) {
+          optimized += '&w=400';
+        }
+      }
+      return optimized;
+    }
+  }
+
+  return src;
+};
 
 export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   src,
@@ -12,6 +72,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   className = "",
   fallbackSrc = '/logo_placeholder.png', // this should be a valid fallback image
   containerClassName = "",
+  isThumbnail = false,
   ...props
 }) => {
   const [loading, setLoading] = useState(true);
@@ -35,6 +96,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   const hasSrc = Boolean(src && src.trim() !== '');
   const isObjectFitProvided = className.includes('object-');
+
+  const optimizedSrc = getOptimizedWebpUrl(src, isThumbnail, className);
 
   if (!hasSrc || error) {
     const initials = alt
@@ -78,7 +141,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       )}
       
       <img
-        src={src}
+        src={optimizedSrc}
         alt={alt}
         className={`w-full h-full transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'} ${isObjectFitProvided ? '' : 'object-cover'} ${className}`}
         onError={handleError}

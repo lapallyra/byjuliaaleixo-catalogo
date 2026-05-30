@@ -113,6 +113,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                        src={img || ''} 
                        alt="Thumbnail"
                        className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" 
+                       isThumbnail={true}
                      />
                   </button>
                 ))}

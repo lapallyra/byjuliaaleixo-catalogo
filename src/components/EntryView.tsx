@@ -86,6 +86,7 @@ const AtelierCarousel = ({
                   src={prod.image} 
                   alt={prod.product_name} 
                   className="w-full h-full object-cover transition-transform hover:scale-105 duration-[1.5s]" 
+                  isThumbnail={true}
                 />
               </div>
               <div className="flex flex-col items-center text-center p-4">
@@ -523,6 +524,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                         src={prod.image} 
                         alt={prod.product_name} 
                         className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" 
+                        isThumbnail={true}
                       />
                       <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-xs" style={{ color: accent, border: `1px solid ${accent}30` }}>
                         {name}

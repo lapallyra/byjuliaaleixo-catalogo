@@ -669,6 +669,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         alt="Product"
         className={`${className} object-cover w-full h-full`}
         containerClassName="w-full h-full absolute inset-0"
+        isThumbnail={true}
       />
     );
   };

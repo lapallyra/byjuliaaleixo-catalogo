@@ -690,6 +690,8 @@ export const subscribeToSales = (callback: (sales: any[]) => void, companyId?: C
     const fallbackQ = companyId ? query(collection(db, path), where('companyId', '==', companyId)) : collection(db, path);
     onSnapshot(fallbackQ, (fallbackSnap) => {
       callback(fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (fallbackError) => {
+      handleFirestoreError(fallbackError, OperationType.LIST, path);
     });
   });
 };
@@ -767,6 +769,8 @@ export const subscribeToFeedbacks = (callback: (feedbacks: any[]) => void) => {
         return timeB - timeA;
       });
       callback(results);
+    }, (fallbackError) => {
+      handleFirestoreError(fallbackError, OperationType.GET, path);
     });
   });
 };
@@ -901,5 +905,7 @@ export const subscribeToCheckoutEvents = (callback: (events: any[]) => void, com
       return timeB - timeA;
     });
     callback(list);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.LIST, path);
   });
 };

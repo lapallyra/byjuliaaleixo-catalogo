@@ -18,6 +18,7 @@ import { ColecoesView } from './components/ColecoesView';
 import { CookieBanner } from './components/CookieBanner';
 import { SuggestionBox } from './components/SuggestionBox';
 import { TrackingView } from './components/TrackingView';
+import { TopAnnouncementBar } from './components/TopAnnouncementBar';
 import { INITIAL_CONFIG, PRODUCTS } from './constants';
 import { AppConfig, CompanyId, CartItem, Product } from './types';
 import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
@@ -268,6 +269,7 @@ function MainApp() {
 
   return (
     <SparklesContainer>
+      <TopAnnouncementBar />
       <CookieBanner />
       <Routes>
         <Route path="/" element={<EntryView config={config} allProducts={allProducts} />} />

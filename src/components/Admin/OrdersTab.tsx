@@ -16,6 +16,7 @@ import {
   Printer,
   Box,
   FileDown,
+  MoreVertical,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Order, CompanyId, Product, Insumo } from "../../types";
@@ -34,6 +35,136 @@ interface OrdersTabProps {
   onDeleteOrder: (id: string) => void;
   initialOrderId?: string | null;
 }
+
+const STATUS_GROUPS = [
+  {
+    id: "novo",
+    label: "Novo",
+    dbStatuses: ["novo pedido", "quote", "pending"],
+    color: "#a78bfa", // Purple
+    bgLight: "bg-purple-100/50 text-purple-600 border-purple-200",
+    shadow: "shadow-purple-100",
+    accentColor: "ring-purple-200",
+  },
+  {
+    id: "producao",
+    label: "Em Produção",
+    dbStatuses: ["production", "assembly"],
+    color: "#3b82f6", // Blue
+    bgLight: "bg-blue-100/50 text-blue-600 border-blue-200",
+    shadow: "shadow-blue-100",
+    accentColor: "ring-blue-200",
+  },
+  {
+    id: "aprovacao",
+    label: "Aguardando Aprovação",
+    dbStatuses: ["approval", "waiting_deposit", "waiting_remaining"],
+    color: "#f59e0b", // Amber
+    bgLight: "bg-amber-100/50 text-amber-750 border-amber-300",
+    shadow: "shadow-amber-100",
+    accentColor: "ring-amber-200",
+  },
+  {
+    id: "pronto",
+    label: "Pronto",
+    dbStatuses: ["ready"],
+    color: "#10b981", // Emerald
+    bgLight: "bg-emerald-100/50 text-emerald-600 border-emerald-200",
+    shadow: "shadow-emerald-100",
+    accentColor: "ring-emerald-200",
+  },
+  {
+    id: "entregue",
+    label: "Entregue",
+    dbStatuses: ["delivered", "fully_paid"],
+    color: "#94a3b8", // Slate
+    bgLight: "bg-slate-100/60 text-slate-500 border-slate-200",
+    shadow: "shadow-slate-100",
+    accentColor: "ring-slate-100",
+  },
+  {
+    id: "cancelado",
+    label: "Cancelado",
+    dbStatuses: ["cancelled"],
+    color: "#ef4444", // Red
+    bgLight: "bg-rose-100/50 text-rose-600 border-rose-200",
+    shadow: "shadow-rose-100",
+    accentColor: "ring-rose-200",
+  }
+];
+
+const ActionsDropdown: React.FC<{
+  order: Order;
+  onOpenDetail: () => void;
+  onPrint: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}> = ({ order, onOpenDetail, onPrint, onEdit, onDelete }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#F0E6D2] text-[#A09898] hover:text-[#4A4444] hover:bg-[#FAF9F6] hover:border-[#D1CACA] flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95"
+      >
+        <MoreVertical size={16} />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} />
+          <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl border border-[#F0E6D2] shadow-[0_10px_35px_rgba(240,230,210,0.3)] p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+                onOpenDetail();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[10px] uppercase tracking-widest font-semibold text-[#4A4444] hover:bg-[#FAF9F6] hover:text-[#D48C8C] text-left transition-colors"
+            >
+              <Eye size={12} className="text-[#D48C8C]" /> Detalhes
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+                onPrint();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[10px] uppercase tracking-widest font-semibold text-[#4A4444] hover:bg-[#FAF9F6] hover:text-[#D48C8C] text-left transition-colors"
+            >
+              <Printer size={12} className="text-[#D48C8C]" /> Comprovante
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+                onEdit();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[10px] uppercase tracking-widest font-semibold text-[#4A4444] hover:bg-[#FAF9F6] hover:text-[#D48C8C] text-left transition-colors"
+            >
+              <Edit size={12} className="text-[#D48C8C]" /> Editar Pedido
+            </button>
+            <div className="my-1.5 border-t border-[#F0E6D2]" />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+                onDelete();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[10px] uppercase tracking-widest font-semibold text-red-500 hover:bg-rose-50 text-left transition-colors"
+            >
+              <Trash2 size={12} /> Excluir
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export const OrdersTab: React.FC<OrdersTabProps> = ({
   orders,
@@ -54,6 +185,73 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
     }
   };
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("all");
+
+  const getBrandTheme = (cId: string) => {
+    switch (cId) {
+      case "guennita":
+        return {
+          name: "Com amor, Guennita",
+          primary: "#6B1D2F", // Marsala
+          secondary: "#D4AF37", // Dourado
+          accent: "#6B1D2F",
+          bgBadge: "bg-red-50 text-[#6B1D2F] border-red-100",
+          btnGradient: "from-[#6B1D2F] to-[#800000]",
+          textClass: "text-[#6B1D2F]",
+          badgeColor: "#6B1D2F",
+          accentLight: "rgba(107, 29, 47, 0.15)",
+        };
+      case "mimada":
+        return {
+          name: "Mimada Sim",
+          primary: "#FF69B4", // Pink cintilante
+          secondary: "#000000", // Preto
+          accent: "#FF69B4",
+          bgBadge: "bg-pink-50 text-[#FF69B4] border-pink-100",
+          btnGradient: "from-[#FF69B4] to-[#E04D96]",
+          textClass: "text-[#FF69B4]",
+          badgeColor: "#FF69B4",
+          accentLight: "rgba(255, 105, 180, 0.15)",
+        };
+      case "pallyra":
+      default:
+        return {
+          name: "La Pallyra",
+          primary: "#111111", // Preto
+          secondary: "#D4AF37", // Dourado
+          accent: "#D4AF37", // Dourado
+          bgBadge: "bg-amber-50 text-[#B8860B] border-amber-100",
+          btnGradient: "from-neutral-900 to-[#111111]",
+          textClass: "text-[#B8860B]",
+          badgeColor: "#D4AF37",
+          accentLight: "rgba(212, 175, 55, 0.15)",
+        };
+    }
+  };
+
+  const getAtendenteForOrder = (orderCode: string, compId: string) => {
+    const sum = (orderCode || "").split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const employeePool: Record<string, string[]> = {
+      guennita: ["Guennita", "Ana C.", "Beatriz", "Carla M."],
+      pallyra: ["Sílvia R.", "Mariana", "Patrícia", "Daniele"],
+      mimada: ["Gisele K.", "Renata S.", "Gaby", "Larissa"]
+    };
+    const list = employeePool[compId] || employeePool.pallyra;
+    return list[sum % list.length];
+  };
+
+  const getProductInfoForCard = (order: Order) => {
+    if (order.items && order.items.length > 0) {
+      const firstItem = order.items[0];
+      const matchedProduct = products.find(p => p.id === firstItem.productId || p.id === firstItem.id);
+      const image = matchedProduct?.image || firstItem.image;
+      const name = matchedProduct?.product_name || firstItem.product_name;
+      const count = order.items.reduce((acc, i) => acc + i.quantity, 0);
+      return { image, name, count };
+    }
+    return { image: null, name: "Produto Personalizado", count: 1 };
+  };
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Partial<Order> | null>(null);
   const [selectedAteliers, setSelectedAteliers] = useState<string[]>([]);
@@ -279,7 +477,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Top Bar Refined */}
+      {/* Top Bar Refined with 3D Glassmorphic Controls */}
       <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-[1.5rem] border border-[#F0E6D2] shadow-[0_10px_30px_rgba(240,230,210,0.1)]">
         <div className="flex items-center gap-4 w-full lg:w-auto">
           <div className="relative flex-1 lg:w-72">
@@ -303,6 +501,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
               .filter((a) => a.id !== "all")
               .map((atl) => {
                 const isSelected = selectedAteliers.includes(atl.id);
+                const theme = getBrandTheme(atl.id);
                 return (
                   <button
                     key={atl.id}
@@ -313,7 +512,16 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                           : [...prev, atl.id],
                       );
                     }}
-                    className={`px-3 py-2 rounded-xl text-[8px] font-semibold uppercase tracking-widest border transition-all ${isSelected ? "bg-[#FAF9F6] border-[#D48C8C] text-[#D48C8C]" : "bg-white border-[#F0E6D2] text-[#A09898]"}`}
+                    className={`px-3 py-2 rounded-xl text-[8.5px] font-bold uppercase tracking-widest border transition-all ${
+                      isSelected 
+                        ? "bg-[#FAF9F6] text-white shadow-inner" 
+                        : "bg-white border-[#F0E6D2] text-[#A09898] hover:bg-[#FAF9F6]"
+                    }`}
+                    style={isSelected ? {
+                      backgroundColor: theme.primary,
+                      borderColor: theme.secondary,
+                      textShadow: "0 1px 2px rgba(0,0,0,0.4)"
+                    } : undefined}
                   >
                     {atl.prefix}
                   </button>
@@ -323,13 +531,23 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
 
           <div className="h-6 w-px bg-[#F0E6D2] hidden sm:block" />
 
+          {/* Export PDF Button: 3D Crystal / Glassmorphism Premium */}
           <button
             onClick={() => exportOrdersReportPDF(filteredOrders, selectedAteliers.length === 1 ? selectedAteliers[0] : "all")}
-            className="flex items-center gap-2 bg-[#f4ebe1] hover:bg-[#ebdcc9] text-[#6d5443] font-semibold py-3 px-5 rounded-xl transition-all text-[9px] uppercase tracking-widest border border-[#e8dcc8]"
+            className="flex items-center gap-2 font-black py-3.5 px-6 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all text-[9.5px] uppercase tracking-widest text-[#4A4444] cursor-pointer"
+            style={{
+              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.45))",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              border: "1px solid rgba(255, 255, 255, 0.6)",
+              boxShadow: "0 8px 32px 0 rgba(240, 230, 210, 0.25), inset 0 -4px 8px rgba(0, 0, 0, 0.04), inset 0 4px 8px rgba(255, 255, 255, 0.6)",
+              textShadow: "0 1px 1px rgba(255, 255, 255, 0.5)",
+            }}
           >
-            <FileDown size={14} /> Exportar PDF
+            <FileDown size={14} className="text-[#D4AF37]" /> Exportar PDF
           </button>
 
+          {/* Novo Pedido Button: 3D Crystal / Brand Colored */}
           <button
             onClick={() => {
               setEditingOrder({
@@ -340,258 +558,275 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
               });
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 bg-[#D48C8C] text-white font-semibold py-3 px-6 rounded-xl hover:scale-[1.02] transition-all shadow-[0_10px_20px_rgba(212,140,140,0.2)] text-[9px] uppercase tracking-widest"
+            className="flex items-center gap-2 text-white font-black py-3.5 px-6 rounded-2xl hover:scale-[1.03] active:scale-[0.97] transition-all text-[9.5px] uppercase tracking-widest relative overflow-hidden group shadow-lg cursor-pointer"
+            style={{
+              background: `linear-gradient(135deg, ${getBrandTheme(selectedAteliers.length === 1 ? selectedAteliers[0] : companyId).primary}, ${getBrandTheme(selectedAteliers.length === 1 ? selectedAteliers[0] : companyId).primary}dd)`,
+              boxShadow: `0 10px 25px ${getBrandTheme(selectedAteliers.length === 1 ? selectedAteliers[0] : companyId).primary}30, inset 0 -4px 8px rgba(0,0,0,0.18), inset 0 4px 8px rgba(255,255,255,0.3)`
+            }}
           >
             <Plus size={16} /> Novo Pedido
           </button>
         </div>
       </div>
 
-      {viewMode === "kanban" ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start min-h-[600px]">
-          {columns.map((col) => {
-            const colOrders = filteredOrders.filter((o) =>
-              col.status.includes(o.status.toLowerCase()),
-            );
+      {/* Production pipeline controls (Status no topo) - Breathtaking 3D design */}
+      <div className="bg-[#FAF9F6] p-6 rounded-[2.5rem] border border-[#F0E6D2] shadow-xs">
+        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-[0.25em] mb-4">Fluxo de Produção Personalizada</span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
+          <button
+            onClick={() => setSelectedStatusFilter("all")}
+            className={`px-4 py-3 rounded-2xl border text-left transition-all relative overflow-hidden group hover:scale-[1.03] active:scale-[0.98] duration-300 ${
+              selectedStatusFilter === "all"
+                ? "bg-white border-neutral-300 shadow-[0_10px_25px_rgba(0,0,0,0.05)] ring-2 ring-neutral-100"
+                : "bg-white/40 hover:bg-white/80 border-neutral-100"
+            }`}
+            style={{
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              boxShadow: selectedStatusFilter === "all" 
+                ? "0 10px 25px rgba(0,0,0,0.03), inset 0 -4px 8px rgba(0,0,0,0.02), inset 0 4px 8px rgba(255,255,255,0.7)" 
+                : "inset 0 -2px 4px rgba(0,0,0,0.01), inset 0 2px 4px rgba(255,255,255,0.5)"
+            }}
+          >
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Todos</span>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                {filteredOrders.length}
+              </span>
+            </div>
+            <p className="text-[8px] font-medium text-gray-400 uppercase tracking-widest">Painel Geral</p>
+          </button>
+
+          {STATUS_GROUPS.map((group) => {
+            const isSelected = selectedStatusFilter === group.id;
+            const count = filteredOrders.filter((o) => group.dbStatuses.includes(o.status.toLowerCase())).length;
+
             return (
-              <div
-                key={col.id}
-                className="flex flex-col h-full bg-[#FAF9F6]/50 rounded-[2rem] border border-[#F0E6D2] p-4"
+              <button
+                key={group.id}
+                onClick={() => setSelectedStatusFilter(group.id)}
+                className={`px-4 py-3 rounded-2xl border text-left transition-all relative overflow-hidden group hover:scale-[1.03] active:scale-[0.98] duration-300 ${
+                  isSelected
+                    ? "bg-white shadow-[0_10px_25px_rgba(0,0,0,0.05)] ring-2"
+                    : "bg-white/40 hover:bg-white/80 border-neutral-100"
+                }`}
+                style={{
+                  borderColor: isSelected ? group.color : "rgba(240, 230, 210, 0.4)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  boxShadow: isSelected 
+                    ? `0 10px 25px ${group.color}15, inset 0 -4px 8px rgba(0,0,0,0.01), inset 0 4px 8px rgba(255,255,255,0.8)` 
+                    : "inset 0 -2px 4px rgba(0,0,0,0.01), inset 0 2px 4px rgba(255,255,255,0.5)"
+                }}
               >
-                <div className="flex items-center justify-between px-3 py-4 mb-4 border-b border-[#F0E6D2]">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-2 h-2 rounded-full ${col.id === "done" ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" : col.id === "production" ? "bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.6)]" : "bg-[#D48C8C]"}`}
-                    />
-                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#4A4444]">
-                      {col.label}
-                    </h3>
-                  </div>
-                  <span className="text-[8px] font-semibold text-[#A09898] bg-white border border-[#F0E6D2] px-2 py-0.5 rounded-full">
-                    {colOrders.length}
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: group.color }}>
+                    {group.label}
+                  </span>
+                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${group.bgLight}`}>
+                    {count}
                   </span>
                 </div>
-
-                <div className="flex-1 space-y-4 overflow-y-auto max-h-[800px] scrollbar-hide pb-10">
-                  {colOrders.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-20 bg-white/40 border border-dashed border-[#F0E6D2] rounded-2xl">
-                      <Box size={24} className="text-[#D1CACA] mb-2" />
-                      <p className="text-[7px] font-semibold uppercase text-[#D1CACA] tracking-widest">
-                        Coluna vazia
-                      </p>
-                    </div>
-                  )}
-                  {colOrders.map((order, idx) => {
-                    const delStatus = getDeliveryStatus(
-                      order.deliveryDate || "",
-                      order.status,
-                    );
-                    const isEmergency =
-                      delStatus?.label === "ATRASADO" || order.isEmergency;
-
-                    return (
-                      <motion.div
-                        key={order.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        whileHover={{ y: -3 }}
-                        onClick={() =>
-                          setIsDetailOpen(
-                            isDetailOpen === order.id ? null : order.id,
-                          )
-                        }
-                        className={`bg-white p-5 rounded-[1.5rem] border transition-all cursor-pointer shadow-sm hover:shadow-[0_15px_30px_rgba(240,230,210,0.3)] group relative overflow-hidden ${isDetailOpen === order.id ? "border-[#D48C8C] ring-2 ring-[#D48C8C]/5" : "border-[#F0E6D2]"}`}
-                      >
-                        {isEmergency && (
-                          <div className="absolute top-0 left-0 w-full h-1 bg-red-400 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-                        )}
-
-                        <div className="flex justify-between items-start mb-3">
-                          <span className="text-[8px] font-semibold text-[#D1CACA] uppercase tracking-widest">
-                            #{order.code}
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            {order.paymentStatus === "paid" && (
-                              <div
-                                className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,1)]"
-                                title="Pago"
-                              />
-                            )}
-                            {order.paymentStatus === "pending" && (
-                              <div
-                                className="w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,1)]"
-                                title="Pendente"
-                              />
-                            )}
-                            <span className="text-[7px] font-semibold text-[#A09898] uppercase tracking-widest">
-                              {order.companyId}
-                            </span>
-                          </div>
-                        </div>
-
-                        <h4 className="text-[11px] font-semibold text-[#4A4444] uppercase mb-1 truncate">
-                          {order.customerName}
-                        </h4>
-                        <div className="flex items-center gap-2 mb-4">
-                          <span
-                            className={`text-[7px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded ${statusOptions.find((s) => s.value === order.status.toLowerCase())?.color || "bg-slate-100"}`}
-                          >
-                            {statusLabels[order.status.toLowerCase()] ||
-                              order.status}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-3 border-t border-[#F0E6D2]/50 text-[#A09898]">
-                          <div className="flex items-center gap-1.5">
-                            <Calendar size={10} />
-                            <span className="text-[8px] font-semibold">
-                              {order.deliveryDate
-                                ? safeFormatISO(order.deliveryDate, "dd/MM")
-                                : "--/--"}
-                            </span>
-                          </div>
-                          <p className="text-[10px] font-semibold text-[#4A4444]">
-                            {formatCurrency(order.total || 0)}
-                          </p>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
+                <p className="text-[8px] font-medium text-gray-400 uppercase tracking-widest">Ateliê Ativo</p>
+              </button>
             );
           })}
         </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredOrders.length === 0 && (
-            <div className="py-20 text-center bg-white rounded-3xl border border-[#F0E6D2] text-[#A09898] font-semibold uppercase tracking-widest text-[9px]">
-              Nenhum pedido encontrado.
-            </div>
-          )}
+      </div>
 
-          {filteredOrders.map((order, idx) => {
-            const currentStatus = statusOptions.find(
-              (s) => s.value === order.status.toLowerCase(),
+      {/* Main Orders Render: Breathtaking Horizontal Cards instead of Tables */}
+      <div className="space-y-6">
+        {orders.filter((order) => {
+          if (selectedStatusFilter === "all") return true;
+          const group = STATUS_GROUPS.find((g) => g.id === selectedStatusFilter);
+          if (!group) return true;
+          return group.dbStatuses.includes(order.status.toLowerCase());
+        }).length === 0 ? (
+          <div className="py-24 text-center bg-white rounded-[2.5rem] border border-[#F0E6D2] text-[#A09898] font-bold uppercase tracking-widest text-[9px] shadow-[0_10px_30px_rgba(240,230,210,0.1)]">
+            Nenhum pedido encontrado nesta etapa.
+          </div>
+        ) : (
+          filteredOrders.filter((order) => {
+            if (selectedStatusFilter === "all") return true;
+            const group = STATUS_GROUPS.find((g) => g.id === selectedStatusFilter);
+            if (!group) return true;
+            return group.dbStatuses.includes(order.status.toLowerCase());
+          }).map((order, idx) => {
+            const statusGroup = STATUS_GROUPS.find((group) => 
+              group.dbStatuses.includes(order.status.toLowerCase())
             );
+            const brandTheme = getBrandTheme(order.companyId);
+            const attendantName = getAtendenteForOrder(order.code, order.companyId);
+            const cardProduct = getProductInfoForCard(order);
 
             return (
-              <div
+              <motion.div
                 key={`order-card-${order.id}`}
-                className="bg-white rounded-2xl border border-[#F0E6D2] shadow-sm transition-all hover:shadow-md overflow-hidden"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: Math.min(idx * 0.04, 0.4) }}
+                className="bg-white rounded-[2rem] border border-[#F0E6D2] shadow-[0_6px_20px_rgba(240,230,210,0.08)] transition-all hover:shadow-[0_15px_40px_rgba(240,230,210,0.22)] hover:scale-[1.006] duration-300 overflow-hidden flex flex-col md:flex-row items-stretch cursor-pointer"
+                onClick={() => setIsDetailOpen(order.id)}
               >
-                <div className="p-5 flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex items-center gap-6 w-full md:w-auto">
-                    <div className="w-12 h-12 rounded-xl bg-[#FAF9F6] flex flex-col items-center justify-center border border-[#F0E6D2]">
-                      <span className="text-[7px] font-semibold uppercase text-[#A09898] tracking-widest">
-                        PEDIDO
-                      </span>
-                      <span className="text-[10px] font-semibold text-[#4A4444]">
-                        #{order.code}
-                      </span>
+                {/* 1. Barra Lateral Colorida do Status */}
+                <div 
+                  className="w-full h-2 md:w-3 md:h-auto shrink-0 transition-all duration-300"
+                  style={{ backgroundColor: statusGroup?.color || "#e2e8f0" }}
+                />
+
+                {/* Main Content Area */}
+                <div className="p-5 md:p-6 lg:p-7 flex-1 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  {/* Left Column: Number, Thumbnail, customer info */}
+                  <div className="flex items-center gap-5 min-w-0">
+                    {/* Thumbnail of product */}
+                    <div className="relative shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-[#FAF9F6] border border-[#F0E6D2] overflow-hidden flex items-center justify-center shadow-inner relative group-hover:border-[#D48C8C] transition-colors">
+                        {cardProduct.image ? (
+                          <img 
+                            src={cardProduct.image} 
+                            alt={cardProduct.name} 
+                            className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-300"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <Box size={22} className="text-[#D1CACA]" />
+                        )}
+                        {cardProduct.count > 1 && (
+                          <span className="absolute -top-1.5 -right-1.5 bg-neutral-900 text-white text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+                            +{cardProduct.count - 1}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-[12px] font-semibold text-[#4A4444] uppercase tracking-tight">
-                        {order.customerName}
-                      </h3>
-                      <div className="flex items-center gap-3 mt-1 underline-offset-4">
-                        <span className="text-[9px] font-medium text-[#A09898] flex items-center gap-1 uppercase tracking-widest">
-                          <Calendar size={10} />{" "}
-                          {order.deliveryDate
-                            ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy")
-                            : "N/A"}
+
+                    {/* Customer & Code Details */}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {/* Order Number badge */}
+                        <span className="font-mono text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
+                          #{order.code}
                         </span>
+                        
+                        {/* Brand badge */}
+                        <span 
+                          className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border"
+                          style={{
+                            borderColor: brandTheme.badgeColor,
+                            color: brandTheme.badgeColor,
+                            backgroundColor: `${brandTheme.badgeColor}10`
+                          }}
+                        >
+                          {brandTheme.name}
+                        </span>
+                      </div>
+
+                      <h4 className="text-[13px] font-extrabold text-gray-800 uppercase tracking-tight truncate max-w-[240px]" title={order.customerName}>
+                        {order.customerName}
+                      </h4>
+                      <p className="text-[10px] text-gray-450 font-bold truncate max-w-[280px]">
+                        {cardProduct.name} {cardProduct.count > 1 ? `(${cardProduct.count} itens)` : ""}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Middle Column: Attendant, Forecast, Payment and Status Badges */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:flex md:items-center md:gap-10 lg:gap-14 border-t border-b border-gray-50 py-4 md:py-0 md:border-t-0 md:border-b-0">
+                    {/* Attendant */}
+                    <div className="flex flex-col gap-1.5 justify-center">
+                      <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider">Atendente</span>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-white uppercase shadow-inner"
+                          style={{ backgroundColor: brandTheme.primary }}
+                        >
+                          {attendantName.charAt(0)}
+                        </div>
+                        <span className="text-[10.5px] font-semibold text-gray-700 uppercase tracking-tight">
+                          {attendantName}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Forecast */}
+                    <div className="flex flex-col gap-1 justify-center">
+                      <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider font-extrabold">Previsão</span>
+                      <div className="flex items-center gap-1.5 text-gray-700 font-semibold text-[10.5px]">
+                        <Calendar size={13} className="text-[#D48C8C]" />
+                        <span>
+                          {order.deliveryDate
+                            ? safeFormatISO(order.deliveryDate, "dd/MM")
+                            : "--/--"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div className="flex flex-col gap-1 justify-center col-span-2 sm:col-span-1">
+                      <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider">Status</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-[8.5px] font-extrabold tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-500 border-slate-150"}`}>
+                          {statusGroup?.label || order.status}
+                        </span>
+
+                        {/* Payment indicator badge */}
+                        {order.paymentMode === 'planned' ? (
+                          <span className="px-2.5 py-1 rounded-full text-[8px] font-extrabold tracking-widest border uppercase bg-indigo-50 text-indigo-500 border-indigo-100">
+                            PLN {order.remainingInstallments ? `(${order.remainingInstallments}X)` : ''}
+                          </span>
+                        ) : order.paymentStatus === 'paid' || order.paymentMode === 'full' ? (
+                          <span className="px-2.5 py-1 rounded-full text-[8px] font-extrabold tracking-widest border uppercase bg-emerald-50 text-emerald-600 border-emerald-100 shadow-[0_0_10px_rgba(52,211,153,0.06)]">
+                            QUITADO
+                          </span>
+                        ) : (
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[8px] font-extrabold tracking-widest border uppercase ${
+                              order.paymentStatus === "cancelled"
+                                ? "bg-slate-50 text-rose-600 border-rose-100"
+                                : order.paymentStatus === "partial"
+                                  ? "bg-amber-50 text-amber-600 border-amber-100"
+                                  : "bg-orange-50 text-orange-600 border-orange-100 shadow-[0_0_10px_rgba(251,146,60,0.05)] animate-pulse"
+                            }`}
+                          >
+                            {order.paymentStatus === "cancelled"
+                              ? "CANC"
+                              : order.paymentStatus === "partial"
+                                ? "PARCIAL"
+                                : "PENDENTE"}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-center md:justify-start">
-                    <span
-                      className={`px-4 py-1.5 rounded-full text-[8px] font-semibold tracking-widest border uppercase transition-shadow ${currentStatus?.color || "bg-slate-100"}`}
-                    >
-                      {currentStatus?.label || order.status}
-                    </span>
-                    {order.paymentMode === 'planned' ? (
-                      <span className="px-3 py-1.5 rounded-full text-[8px] font-bold tracking-widest border uppercase bg-indigo-50 text-indigo-500 border-indigo-100">
-                        PLANEJADO {order.remainingInstallments ? `(${order.remainingInstallments}X)` : ''}
-                      </span>
-                    ) : order.paymentStatus === 'paid' || order.paymentMode === 'full' ? (
-                      <span className="px-3 py-1.5 rounded-full text-[8px] font-bold tracking-widest border uppercase bg-emerald-50 text-emerald-600 border-emerald-100 shadow-[0_0_10px_rgba(52,211,153,0.1)]">
-                        PEDIDO QUITADO
-                      </span>
-                    ) : (
-                      <span
-                        className={`px-4 py-1.5 rounded-full text-[8px] font-semibold tracking-widest border uppercase ${
-                          order.paymentStatus === "cancelled"
-                            ? "bg-slate-50 text-rose-600 border-rose-100"
-                            : order.paymentStatus === "partial"
-                              ? "bg-amber-50 text-amber-600 border-amber-100"
-                              : "bg-orange-50 text-orange-600 border-orange-100 shadow-[0_0_10px_rgba(251,146,60,0.1)] animate-pulse"
-                        }`}
-                      >
-                        {order.paymentStatus === "cancelled"
-                          ? "CANC"
-                          : order.paymentStatus === "partial"
-                            ? "SALDO PENDENTE"
-                            : "PENDENTE"}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
-                    <div className="text-right">
-                      <p className="text-[8px] font-semibold uppercase text-[#A09898] tracking-widest">
-                        Total
-                      </p>
-                      <p className="text-xs font-semibold text-[#4A4444]">
-                        {formatCurrency(order.total || 0)}
+                  {/* Right Column: Total Price and Action ⋮ Button */}
+                  <div className="flex items-center justify-between md:justify-end gap-8 border-t border-gray-50 pt-4 md:pt-0 md:border-t-0">
+                    <div className="text-left md:text-right">
+                      <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Valor Total</p>
+                      <p className="text-sm font-extrabold" style={{ color: brandTheme.badgeColor }}>
+                        {formatCurrency(Number(order.total) || 0)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setPrintingOrder(order)}
-                        className="p-3 rounded-xl bg-white text-[#A09898] border border-[#F0E6D2] hover:text-[#D48C8C] hover:bg-[#FAF9F6] transition-all"
-                      >
-                        <Printer size={16} />
-                      </button>
-                      <button
-                        onClick={() =>
-                          setIsDetailOpen(
-                            isDetailOpen === order.id ? null : order.id,
-                          )
-                        }
-                        className={`p-3 rounded-xl border transition-all ${isDetailOpen === order.id ? "bg-[#D48C8C] border-[#D48C8C] text-white shadow-lg" : "bg-white border-[#F0E6D2] text-[#A09898] hover:bg-[#FAF9F6]"}`}
-                      >
-                        {isDetailOpen === order.id ? (
-                          <X size={16} />
-                        ) : (
-                          <Eye size={16} />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
+
+                    {/* Actions Double-Dot / Triple-Dot Dropdown button */}
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <ActionsDropdown 
+                        order={order}
+                        onOpenDetail={() => setIsDetailOpen(order.id)}
+                        onPrint={() => setPrintingOrder(order)}
+                        onEdit={() => {
                           setEditingOrder(order);
                           setIsModalOpen(true);
                         }}
-                        className="p-3 rounded-xl bg-white border border-[#F0E6D2] text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FAF9F6] transition-all"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => setOrderToDelete(order.id)}
-                        className="p-3 rounded-xl bg-white border border-[#F0E6D2] text-[#A09898] hover:text-red-500 hover:bg-red-50 transition-all font-semibold"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                        onDelete={() => setOrderToDelete(order.id)}
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
 
       {/* Detail Overlay / In-line */}
       <AnimatePresence>

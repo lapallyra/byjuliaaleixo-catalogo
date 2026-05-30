@@ -167,6 +167,7 @@ const AtelierCarousel = ({
                     src={prod.image} 
                     alt={prod.product_name} 
                     className="w-full h-full object-cover transition-transform hover:scale-105 duration-[1.5s]" 
+                    isThumbnail={true}
                   />
                 </div>
                 <div className="flex flex-col items-center text-center p-4">
