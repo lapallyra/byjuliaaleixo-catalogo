@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingBag, X } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { SaleNotification, CompanyId } from '../types';
-import { themes } from '../lib/theme';
 import { generateRandomNotification } from '../services/saleNotificationService';
 import { subscribeToSales } from '../services/firebaseService';
 import { useAuth } from './AuthProvider';
@@ -39,10 +38,8 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
         osc.stop(start + 0.4);
       };
 
-      // Fofo/Happy "Plim" - Diamond chime sound
+      // Simple elegant ping
       playPlim(1567.98, now, 0.05); // G6
-      playPlim(2093.00, now + 0.05, 0.08); // C7
-      playPlim(3135.96, now + 0.1, 0.05); // G7
     } catch (e) {
       console.warn('Audio not supported', e);
     }
@@ -57,7 +54,7 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
       
       setNotification(notif);
       playFairyChime();
-      setTimeout(() => setNotification(null), 6000);
+      setTimeout(() => setNotification(null), 5000);
     };
 
     window.addEventListener('new-sale-notification', handleCustomNotification);
@@ -67,7 +64,6 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
       return;
     }
 
-    // Subscribe to real sales only if admin
     let unsubscribeSales = () => {};
     if (isAdmin) {
       unsubscribeSales = subscribeToSales((loadedSales) => {
@@ -81,7 +77,6 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
 
         const newest = sorted[0];
 
-        // Only show if it's new (last 30s) AND not seen AND belongs to current company
         const now = Date.now();
         const saleTime = newest.createdAt?.toMillis?.() || 0;
         if (now - saleTime < 30000 && newest.id && !seenSaleIds.current.has(newest.id) && newest.companyId === currentCompany) { 
@@ -89,37 +84,42 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
           const realNotif: SaleNotification = {
             id: newest.id,
             customerName: newest.customerName,
-            productName: `comprou ${newest.items?.[0]?.product_name || 'um produto'}`,
-            timeAgo: 'nesse momento',
+            productName: newest.items?.[0]?.product_name || 'um produto',
+            timeAgo: 'há 1 segundo em São Paulo - SP', // Placeholder for real orders
             companyId: newest.companyId
           };
           setNotification(realNotif);
           playFairyChime();
-          setTimeout(() => setNotification(null), 7000);
+          setTimeout(() => setNotification(null), 5000);
         }
       }, currentCompany);
     }
 
-    const intervals = [5000, 15000, 30000, 60000]; // 5s, 15s, 30s, 1min
+    // Natural random intervals (3s, 8s, 10s, 40s)
+    const getNextDelay = () => {
+      const randomTime = Math.random();
+      if (randomTime < 0.25) return 3000;
+      if (randomTime < 0.5) return 8000;
+      if (randomTime < 0.75) return 10000;
+      return 40000;
+    };
 
-    // Fetch products once to use in random notifications
-    const scheduleNext = async (index: number) => {
+    const scheduleNext = () => {
       if (!currentCompany) return;
-      const delay = intervals[index] || (60000 + Math.random() * 120000);
+      const delay = getNextDelay();
       
       timerRef.current = setTimeout(() => {
         const nextNotif = generateRandomNotification(currentCompany);
-        // Double check company before showing
         if (nextNotif && nextNotif.companyId === currentCompany) {
           setNotification(nextNotif);
           playFairyChime();
-          setTimeout(() => setNotification(null), 7000);
+          setTimeout(() => setNotification(null), 5000);
         }
-        scheduleNext(index + 1);
+        scheduleNext();
       }, delay);
     };
 
-    scheduleNext(0);
+    scheduleNext();
 
     return () => {
       window.removeEventListener('new-sale-notification', handleCustomNotification);
@@ -128,82 +128,27 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
     };
   }, [currentCompany, isAdmin]);
 
-  const theme = themes[(notification ? notification.companyId : 'pallyra') as keyof typeof themes] || themes.pallyra;
-
   return (
-    <div className="fixed bottom-6 left-6 z-[20000] pointer-events-none w-full max-w-[280px]">
+    <div className="fixed bottom-4 left-4 z-[20000] pointer-events-none w-max">
       <AnimatePresence>
         {notification && (
           <motion.div
             key={notification.id}
-            initial={{ opacity: 0, x: -50, scale: 0.9, rotate: -2 }}
-            animate={{ opacity: 1, x: 0, scale: 1, rotate: 0 }}
-            exit={{ opacity: 0, x: -50, scale: 0.9, filter: 'blur(10px)' }}
-            className={`pointer-events-auto ${theme.bg} border ${theme.borderLine} rounded-2xl p-4 flex items-center gap-4 shadow-[0_20px_60px_rgba(0,0,0,0.5)] relative group`}
-            style={{ 
-              boxShadow: `0 0 30px -10px ${notification.companyId === 'mimada' ? '#db2777' : '#d4af37'}66` 
-            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="pointer-events-auto bg-black/60 backdrop-blur-md rounded-2xl px-4 py-2.5 flex items-center gap-3 shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-white/10"
           >
-            {/* Fairy Dust Effect - Outside the card */}
-            <div className="absolute -inset-12 pointer-events-none overflow-visible">
-              {[...Array(40)].map((_, i) => (
-                <motion.div
-                  key={`sparkle-${notification.id}-${i}`}
-                  className="magic-sparkle absolute rounded-full"
-                  initial={{ 
-                    opacity: 0, 
-                    scale: 0,
-                    left: `${Math.random() * 120 - 10}%`,
-                    top: `${Math.random() * 120 - 10}%`
-                  }}
-                  animate={{
-                    opacity: [0, 0.8, 1, 0.8, 0],
-                    scale: [0, Math.random() * 1.5 + 0.5, Math.random() * 0.5 + 0.5, 0],
-                    y: [0, (Math.random() - 0.5) * 80],
-                    x: [0, (Math.random() - 0.5) * 80]
-                  }}
-                  transition={{ 
-                    duration: 1.5 + Math.random() * 2, 
-                    repeat: Infinity, 
-                    delay: i * 0.05,
-                    ease: "easeInOut"
-                  }}
-                  style={{ 
-                    backgroundColor: notification.companyId === 'mimada' ? '#db2777' : '#d4af37',
-                    boxShadow: `0 0 8px ${notification.companyId === 'mimada' ? '#db2777' : '#d4af37'}, 0 0 4px white`,
-                    width: Math.random() * 5 + 1 + 'px',
-                    height: Math.random() * 5 + 1 + 'px'
-                  }}
-                />
-              ))}
-            </div>
-
-            <div className={`p-2.5 rounded-xl border ${theme.borderLine} bg-white/5 relative z-10`}>
-              <ShoppingBag className={theme.textPrimary} size={18} />
-            </div>
-            
-            <div className="flex-1 min-w-0 relative z-10">
-              <p className={`text-[10px] md:text-[11px] leading-relaxed ${theme.textSecondary}`}>
-                <span className={`font-black uppercase tracking-wider ${theme.textPrimary}`}>{notification.customerName}</span> {notification.productName}
+            <div className="flex-1 min-w-0 flex flex-col">
+              <p className="text-[12px] leading-tight text-white/90">
+                <Heart size={10} className="inline-block mr-1.5 shrink-0 stroke-[2] text-white/70" />
+                <span className="font-semibold text-white tracking-tight">{notification.customerName}</span> comprou {notification.productName}
               </p>
-              <p className={`text-[8px] uppercase tracking-[0.2em] font-black mt-1.5 opacity-60 ${theme.textVeryMuted}`}>
-                {notification.timeAgo.includes('segundo') ? `há ${notification.timeAgo}` : notification.timeAgo}
+              <p className="text-[11px] leading-tight mt-0.5 text-white/50 tracking-tight">
+                {notification.timeAgo}
               </p>
             </div>
-            
-            <button 
-              onClick={() => setNotification(null)}
-              className={`absolute top-2 right-2 p-1 opacity-20 hover:opacity-100 transition-opacity ${theme.textPrimary}`}
-            >
-              <X size={12} />
-            </button>
-
-            {/* Fairy Dust Border Glow */}
-            <motion.div 
-              className={`absolute inset-0 border-2 ${theme.borderLine} rounded-2xl pointer-events-none`}
-              animate={{ opacity: [0.2, 0.5, 0.2] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -27,7 +27,11 @@ import { PrizeRouletteModal } from './components/PrizeRouletteModal';
 import { sendNotifications } from './services/notificationService';
 import { updateOrder } from './services/firebaseService';
 function SparklesContainer({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+
   const createSparkles = (e: React.MouseEvent) => {
+    if (location.pathname.includes('/admin')) return;
+
     // Soft glow element that follows cursor exactly (throttled)
     const glow = document.createElement('div');
     glow.className = 'cursor-glow';

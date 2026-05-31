@@ -273,6 +273,13 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       let combinedObs = pers.persObs ? `Observações:\n${pers.persObs}` : "Pagamento via MP Direto";
       if (!isFullPayment) {
         combinedObs += `\n\nPAGAMENTO: Cliente optou por pagar SINAL DE 50% (R$ ${amountToPay.toFixed(2)}). Falta receber os outros 50%.`;
+        if (checkoutData?.plannedMethod === 'digital_booklet') {
+          combinedObs += `\n>> Forma escolhida para o restante: CARNÊ DIGITAL`;
+          combinedObs += `\n>> Condição de parcelamento: ${checkoutData.remainingInstallments}x de R$ ${Number(checkoutData.remainingInstallmentValue).toFixed(2)}`;
+          if (checkoutData?.bookletPayDay) {
+            combinedObs += `\n>> Vencimento: Dia ${checkoutData.bookletPayDay}`;
+          }
+        }
       }
       
       if (pers.persName || pers.persAge || pers.persTheme || pers.persColors) {
@@ -858,52 +865,75 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                               onClick={() => setSelectedProduct(product)}
                               className="group relative flex flex-col p-3 cursor-pointer bg-white rounded-2xl border border-neutral-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
                             >
-                              {/* Thumbnail Image with Hover Change */}
-                              <div className="relative w-full h-48 rounded-xl overflow-hidden bg-neutral-50 shrink-0">
-                                <ImageWithFallback 
-                                  src={product.image || ''} 
-                                  alt="Product"
-                                  className={`w-full h-full object-cover transition-opacity duration-300 ${product.image_hover ? 'group-hover:opacity-0' : ''}`}
-                                  containerClassName="w-full h-full absolute inset-0"
-                                />
-                                {product.image_hover && (
+                              <div className="flex flex-row gap-4 items-stretch">
+                                {/* Thumbnail Image with Hover Change (Left) */}
+                                <div className="relative w-32 md:w-36 h-auto rounded-xl overflow-hidden bg-neutral-50 shrink-0 aspect-square">
                                   <ImageWithFallback 
-                                    src={product.image_hover || ''} 
-                                    alt="Product Hover"
-                                    className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                    src={product.image || ''} 
+                                    alt="Product"
+                                    className={`w-full h-full object-cover transition-opacity duration-300 ${product.image_hover ? 'group-hover:opacity-0' : ''}`}
                                     containerClassName="w-full h-full absolute inset-0"
                                   />
-                                )}
-                              </div>
+                                  {product.image_hover && (
+                                    <ImageWithFallback 
+                                      src={product.image_hover || ''} 
+                                      alt="Product Hover"
+                                      className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                      containerClassName="w-full h-full absolute inset-0"
+                                    />
+                                  )}
+                                </div>
 
-                              {/* Info - Product Name + Icons */}
-                              <div className="flex-1 flex flex-col justify-between mt-3 px-1">
-                                <h3 className="font-tahoma text-sm font-bold leading-tight text-neutral-900 line-clamp-2 min-h-[2.5rem]">
+                                {/* Info - Prices + Icons (Right) */}
+                                <div className="flex-1 flex flex-col justify-between py-1">
+                                  <div>
+                                    <p className="text-xs text-neutral-500 opacity-50 line-through">
+                                      de: R$ {(product.current_price || product.original_price || (product.retail_price * 1.25)).toFixed(2).replace('.', ',')}
+                                    </p>
+                                    <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap">
+                                      <span className="text-xs md:text-sm font-semibold text-neutral-600">por:</span>
+                                      <span className="text-lg md:text-xl font-black text-neutral-900">R$ {(product.retail_price || 0).toFixed(2).replace('.', ',')}</span>
+                                    </div>
+                                    
+                                    {(product.isWholesaleEnabled || product.wholesale_min_qty) && (
+                                      <p className="text-[11px] md:text-xs text-neutral-500 mt-2">
+                                        atacado: R$ {(product.wholesale_price || 0).toFixed(2).replace('.', ',')}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-2 mt-auto pt-3">
+                                    <button 
+                                      onClick={(e) => { 
+                                        e.stopPropagation();
+                                        onAddToCart(product, 1); 
+                                        setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
+                                      }}
+                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity flex-1 flex items-center justify-center shrink-0"
+                                      style={{ backgroundColor: theme.accentColor }}
+                                    >
+                                      <ShoppingCart size={18} />
+                                    </button>
+                                    <button 
+                                      onClick={(e) => { 
+                                          e.stopPropagation();
+                                          onAddToGiftList?.(product);
+                                          setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
+                                      }}
+                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity shrink-0"
+                                      style={{ backgroundColor: theme.accentColor }}
+                                    >
+                                      <Gift size={18} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Bottom - Product Name */}
+                              <div className="mt-3 px-1">
+                                <h3 className="font-tahoma text-sm md:text-base font-bold leading-tight text-neutral-900 line-clamp-2">
                                   {product.product_name}
                                 </h3>
-                                <div className="flex items-center justify-between mt-3">
-                                  <button 
-                                    onClick={(e) => { 
-                                      e.stopPropagation();
-                                      onAddToCart(product, 1); 
-                                      setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
-                                    }}
-                                    className="p-2 rounded-full bg-neutral-900 text-white hover:opacity-90 transition-opacity"
-                                    style={{ backgroundColor: theme.accentColor }}
-                                  >
-                                    <ShoppingCart size={16} />
-                                  </button>
-                                  <button 
-                                    onClick={(e) => { 
-                                        e.stopPropagation();
-                                        onAddToGiftList?.(product);
-                                        setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
-                                    }}
-                                    className="p-2 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition-colors"
-                                  >
-                                    <Gift size={16} />
-                                  </button>
-                                </div>
                               </div>
                             </motion.div>
                           )})}

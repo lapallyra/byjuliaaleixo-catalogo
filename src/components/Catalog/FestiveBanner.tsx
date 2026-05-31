@@ -40,7 +40,7 @@ export const FestiveBanner: React.FC<FestiveBannerProps> = ({ companyId, primary
   const displayColor = primaryColor || (isMimada ? '#FF007F' : '#C6A664');
 
   return (
-    <div className="relative w-full overflow-hidden py-4 mt-4 border-t border-b border-black/5 z-[10] flex items-center justify-center">
+    <div className="relative w-full overflow-hidden py-4 mt-4 border-t border-b border-black/5 z-[10] flex items-center justify-center bg-white">
        {/* Corações mais visíveis e em maior quantidade */}
        <div className="absolute inset-0 pointer-events-none opacity-20 flex items-center justify-around overflow-hidden">
           {[...Array(24)].map((_, i) => (
@@ -73,7 +73,8 @@ export const FestiveBanner: React.FC<FestiveBannerProps> = ({ companyId, primary
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className={`font-serif text-sm md:text-base tracking-wide ${theme.textPrimary} font-semibold`}
+            className="font-serif text-sm md:text-base tracking-wide font-semibold"
+            style={{ color: companyId === 'guennita' ? '#56070c' : '#161616' }}
           >
             garanta hoje o presente que vai marcar para sempre esse momento.
           </motion.p>

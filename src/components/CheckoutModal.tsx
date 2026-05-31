@@ -282,7 +282,8 @@ export function CheckoutModal({
       if (plannedMethod === 'credit_card') {
          remainingFee = remainingAmount * 0.05; // mp fee mock
       } else if (plannedMethod === 'digital_booklet') {
-         remainingFee = remainingAmount * 0.02; // booklet fee mock
+         const feeMap: Record<number, number> = {1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000};
+         remainingFee = remainingAmount * (feeMap[installments] || 0);
       }
     }
     const remainingInstallmentValue = (remainingAmount + remainingFee) / installments;
@@ -310,6 +311,7 @@ export function CheckoutModal({
       remainingAmount,
       remainingFee,
       remainingInstallmentValue,
+      bookletPayDay: selectedMainOption === 'planned' && plannedMethod === 'digital_booklet' ? digitalBookletPayDay : undefined,
       deliveryType,
       retiradaDate: deliveryType === 'retirada' ? retiradaDate : undefined,
       retiradaTime: deliveryType === 'retirada' ? retiradaTime : undefined
@@ -337,7 +339,8 @@ export function CheckoutModal({
       if (plannedMethod === 'credit_card') {
          remainingFee = remainingAmount * 0.05;
       } else if (plannedMethod === 'digital_booklet') {
-         remainingFee = remainingAmount * 0.02;
+         const feeMap: Record<number, number> = {1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000};
+         remainingFee = remainingAmount * (feeMap[installments] || 0);
       }
     }
     const remainingInstallmentValue = (remainingAmount + remainingFee) / installments;
@@ -365,6 +368,7 @@ export function CheckoutModal({
       remainingAmount,
       remainingFee,
       remainingInstallmentValue,
+      bookletPayDay: selectedMainOption === 'planned' && plannedMethod === 'digital_booklet' ? digitalBookletPayDay : undefined,
       isSimulated: true,
       deliveryType,
       retiradaDate: deliveryType === 'retirada' ? retiradaDate : undefined,
@@ -1040,7 +1044,8 @@ export function CheckoutModal({
                                                  {[1, 2, 3, 4, 5, 6].map(num => {
                                                    const fees: Record<number, number> = { 1: 0, 2: 0.0609, 3: 0.0701, 4: 0.0791, 5: 0.0880, 6: 0.1000 };
                                                    const fee = fees[num] || 0;
-                                                   const finalTotal = total * (1 + fee);
+                                                   const baseParaPlanejar = total / 2;
+                                                   const finalTotal = baseParaPlanejar * (1 + fee);
                                                    const instValue = finalTotal / num;
                                                    return <option key={num} value={num}>{num}x {num===1 ? 'sem acréscimo' : `de R$ ${instValue.toFixed(2).replace('.', ',')}`}</option>
                                                  })}
@@ -1048,10 +1053,10 @@ export function CheckoutModal({
                                              </div>
 
                                              <div className="bg-gray-50 p-3 rounded-xl text-xs space-y-1">
-                                               <div className="flex justify-between"><span>Valor original:</span><span className="font-bold">R$ {total.toFixed(2).replace('.', ',')}</span></div>
-                                               <div className="flex justify-between"><span>Taxa aplicada:</span><span className="font-bold">{( ({1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000}[installments] || 0) * 100).toFixed(2)}%</span></div>
-                                               <div className="flex justify-between font-bold text-gray-900 border-t border-gray-200 mt-1 pt-1"><span>Valor final:</span><span>R$ {(total * (1 + ({1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000}[installments] || 0))).toFixed(2).replace('.', ',')}</span></div>
-                                               <div className="flex justify-between"><span>Parcelamento:</span><span className="font-bold">{installments}x de R$ {( (total * (1 + ({1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000}[installments] || 0))) / installments ).toFixed(2).replace('.', ',')}</span></div>
+                                               <div className="flex justify-between"><span>Valor original:</span><span className="font-bold">R$ {(total / 2).toFixed(2).replace('.', ',')}</span></div>
+                                               <div className="flex justify-between"><span>Taxa aplicada:</span><span className="font-bold">{( ({1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000}[installments] || 0) * 100).toFixed(2).replace('.', ',')}%</span></div>
+                                               <div className="flex justify-between font-bold text-gray-900 border-t border-gray-200 mt-1 pt-1"><span>Valor final:</span><span>R$ {((total / 2) * (1 + ({1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000}[installments] || 0))).toFixed(2).replace('.', ',')}</span></div>
+                                               <div className="flex justify-between"><span>Parcelamento:</span><span className="font-bold">{installments}x de R$ {( ((total / 2) * (1 + ({1:0, 2:0.0609, 3:0.0701, 4:0.0791, 5:0.0880, 6:0.1000}[installments] || 0))) / installments ).toFixed(2).replace('.', ',')}</span></div>
                                              </div>
                                            </div>
                                          ) : (
