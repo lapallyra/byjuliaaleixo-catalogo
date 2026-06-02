@@ -70,7 +70,7 @@ export const exportOrderReceiptPDF = (order: Order, settings: Partial<SiteSettin
   doc.setFontSize(9);
   doc.setTextColor("#334155");
   doc.text(`Nome: ${order.customerName}`, 15, y);
-  doc.text(`Tipo Entrega: ${order.deliveryType === "pickup" ? "Retirada no Ateliê" : "Entrega em Domicílio/Frete"}`, 110, y);
+  doc.text(`Tipo Entrega: ${order.deliveryType === "retirada" ? "Retirada no Ateliê" : order.deliveryType === "delivery" ? "Delivery Local" : "Correios/Transportadora"}`, 110, y);
   y += 5;
 
   doc.text(`Contato: ${order.contact || "Não informado"}`, 15, y);

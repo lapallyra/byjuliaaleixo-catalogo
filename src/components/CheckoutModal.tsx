@@ -70,7 +70,7 @@ export function CheckoutModal({
   const [estado, setEstado] = useState('');
   const [ref, setRef] = useState('');
 
-  const [deliveryType, setDeliveryType] = useState<'mãos' | 'correios' | 'retirada'>('mãos');
+  const [deliveryType, setDeliveryType] = useState<'delivery' | 'shipping' | 'retirada'>('delivery');
   const [retiradaDate, setRetiradaDate] = useState('');
   const [retiradaTime, setRetiradaTime] = useState('');
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
@@ -177,6 +177,9 @@ export function CheckoutModal({
   
   const delivery: number = useMemo(() => {
     if (deliveryType === 'retirada') return 0;
+    if (deliveryType === 'delivery') return 2;
+    
+    // shipping
     const rules = globalSettings?.shipping_rules || siteSettings?.shipping_rules;
     if (!cep || !rules) return 0;
     
@@ -192,7 +195,7 @@ export function CheckoutModal({
     );
 
     return rule ? rule.price : 0;
-  }, [cep, siteSettings, globalSettings]);
+  }, [deliveryType, cep, siteSettings, globalSettings]);
 
   const total: number = subtotal - discount + delivery + pendingBalance;
 
@@ -692,9 +695,9 @@ export function CheckoutModal({
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {[
-                          { id: 'mãos', label: 'Entrega em mãos', description: 'Entregamos em seu endereço', icon: MapPin },
-                          { id: 'correios', label: 'Correios', description: 'Envio nacional via Correios', icon: Truck },
-                          { id: 'retirada', label: 'Retirada no Ateliê', description: 'Retire diretamente conosco', icon: Clock }
+                          { id: 'retirada', label: 'Retirada no Ateliê', description: 'Cliente retira pessoalmente', icon: Clock },
+                          { id: 'delivery', label: 'Delivery Local', description: 'Entrega via motoboy (R$ 2,00)', icon: MapPin },
+                          { id: 'shipping', label: 'Correios/Transportadora', description: 'Envio com frete calculado', icon: Truck }
                         ].map((opt) => {
                           const Icon = opt.icon;
                           const isSelected = deliveryType === opt.id;

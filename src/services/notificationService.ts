@@ -32,11 +32,11 @@ export const sendNotifications = async (
     })
     .join('\n\n');
 
-  const deliveryInfo = checkoutData.deliveryType === 'pickup'
-    ? 'Retirada em Loja'
+  const deliveryInfo = checkoutData.deliveryType === 'retirada'
+    ? 'Retirada no Ateliê'
     : checkoutData.deliveryType === 'delivery'
-    ? `Entrega em: ${checkoutData.address}, ${checkoutData.city} - ${checkoutData.state}`
-    : 'Envio Postal';
+    ? `Delivery Local em: ${checkoutData.address}, ${checkoutData.city} - ${checkoutData.state}`
+    : `Envio Correios/Transportadora: ${checkoutData.address}, ${checkoutData.city} - ${checkoutData.state}`;
 
   const paymentInfo = checkoutData.paymentMethod === 'pix'
     ? `Pagamento via PIX\nCNPJ: ${config.store_cnpj}\nValor: R$ ${total.toFixed(2)}`

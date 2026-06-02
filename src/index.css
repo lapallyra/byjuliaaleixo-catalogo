@@ -298,9 +298,8 @@ html {
     background-color: #0b0507;
   }
 
-
   .feminine-admin svg.lucide {
-    stroke-width: 1.2 !important;
+    stroke-width: 1.5 !important;
   }
 
   .feminine-admin .font-black {
@@ -308,36 +307,35 @@ html {
   }
   
   .feminine-admin .font-bold {
-    font-weight: 400 !important;
+    font-weight: 600 !important;
   }
 
   .feminine-admin .tracking-widest {
     letter-spacing: 0.1em !important;
   }
   
-  .feminine-admin .text-slate-900 {
-    color: #fecdd3 !important; /* rose-200 */
+  /* Improve contrast for text */
+  .feminine-admin .text-slate-900, 
+  .feminine-admin .text-slate-800,
+  .feminine-admin .text-slate-700 {
+    color: #fdf2f8 !important; /* rose-50 far cleaner */
   }
 
-  .feminine-admin h1, .feminine-admin h2, .feminine-admin h3 {
+  .feminine-admin h1, .feminine-admin h2, .feminine-admin h3,
+  .feminine-admin h4, .feminine-admin .text-slate-800 {
     font-family: var(--font-sans) !important;
     letter-spacing: 0em !important;
+    color: #fdf2f8 !important;
   }
 
-  .feminine-admin .bg-slate-900 {
-    background-color: #3e1b29 !important;
-  }
-
-  .feminine-admin.bg-slate-950 {
-    background-color: #0b0507 !important; /* dark wine/black */
-  }
-  
-  .feminine-admin .text-slate-400 {
-    color: #fda4af !important; /* rose-300 */
+  .feminine-admin .text-slate-400,
+  .feminine-admin .text-gray-400,
+  .feminine-admin .text-gray-500 {
+    color: #fda4af !important; /* rose-400 - darker for readability */
   }
 
   .feminine-admin .text-slate-500 {
-    color: #fb7185 !important; /* rose-400 */
+    color: #fb7185 !important; /* rose-500 - contrast */
   }
   
   .feminine-admin .text-slate-300 {
@@ -345,11 +343,16 @@ html {
   }
   
   .feminine-admin .border-slate-100 {
-    border-color: #3e1b29 !important; /* dark rose */
+    border-color: #4c1d95 !important; /* contrast */
   }
   
-  .feminine-admin .bg-slate-100 {
-    background-color: #2b141e !important;
+  .feminine-admin .border-gray-100 {
+    border-color: #4c1d95 !important;
+  }
+
+  .feminine-admin .bg-slate-100,
+  .feminine-admin .bg-gray-50 {
+    background-color: #1e1b4b !important; /* darker background */
   }
 
   .feminine-admin .text-gold {

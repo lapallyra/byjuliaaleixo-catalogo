@@ -25,6 +25,7 @@ import { Order, CompanyId, Product, Insumo } from "../../types";
 import { safeFormat, safeFormatISO } from "../../lib/dateUtils";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { OrderReceiptModal } from "./OrderReceiptModal";
+import { OrderPrintA6Modal } from "./OrderPrintA6Modal";
 import { exportOrdersReportPDF } from "../../utils/pdfGenerator";
 
 interface OrdersTabProps {
@@ -260,75 +261,21 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
   ];
 
   const statusOptions = [
-    {
-      value: "novo pedido",
-      label: "NOVO PEDIDO",
-      color: "bg-purple-100/50 text-purple-600 border-purple-200",
-    },
-    {
-      value: "quote",
-      label: "ORÇAMENTO",
-      color: "bg-orange-100/50 text-orange-600 border-orange-200",
-    },
-    {
-      value: "approval",
-      label: "APROVAÇÃO DA ARTE",
-      color: "bg-indigo-100/50 text-indigo-600 border-indigo-200",
-    },
-    {
-      value: "waiting_deposit",
-      label: "AGUARDANDO SINAL",
-      color: "bg-yellow-100/50 text-yellow-700 border-yellow-300",
-    },
-    {
-      value: "production",
-      label: "EM PRODUÇÃO",
-      color:
-        "bg-blue-100/50 text-blue-600 border-blue-200 shadow-[0_0_10px_rgba(59,130,246,0.1)]",
-    },
-    {
-      value: "assembly",
-      label: "EM MONTAGEM",
-      color:
-        "bg-pink-100/50 text-pink-600 border-pink-200 shadow-[0_0_10px_rgba(236,72,153,0.1)]",
-    },
-    {
-      value: "ready",
-      label: "PRONTO PARA ENTREGA",
-      color:
-        "bg-emerald-100/50 text-emerald-600 border-emerald-200 shadow-[0_0_10px_rgba(16,185,129,0.2)]",
-    },
-    {
-      value: "waiting_remaining",
-      label: "AGUARDANDO PAGAMENTO RESTANTE",
-      color: "bg-red-50 text-red-600 border-red-200",
-    },
-    {
-      value: "planned_active",
-      label: "PAGAMENTO PLANEJADO ATIVO",
-      color: "bg-indigo-50 text-indigo-600 border-indigo-200",
-    },
-    {
-      value: "fully_paid",
-      label: "PEDIDO QUITADO",
-      color: "bg-green-50 text-green-600 border-green-200",
-    },
-    {
-      value: "pending",
-      label: "PENDENTE",
-      color: "bg-yellow-100/50 text-yellow-600 border-yellow-200",
-    },
-    {
-      value: "delivered",
-      label: "ENTREGUE",
-      color: "bg-slate-100/50 text-[#A09898] border-slate-200",
-    },
-    {
-      value: "cancelled",
-      label: "CANCELADO",
-      color:
-        "bg-slate-100/50 text-rose-600 border-rose-200 shadow-[0_0_10px_rgba(239,68,68,0.1)]",
-    },
+    { value: "quote", label: "ORÇAMENTO" },
+    { value: "pending", label: "PENDENTE" },
+    { value: "approval", label: "APROVAÇÃO DA ARTE" },
+    { value: "waiting_deposit", label: "AGUARDANDO SINAL" },
+    { value: "waiting_payment", label: "AGUARDANDO PAGAMENTO" },
+    { value: "planned_payment", label: "PAGAMENTO PLANEJADO" },
+    { value: "production", label: "EM PRODUÇÃO" },
+    { value: "assembly", label: "EM MONTAGEM" },
+    { value: "ready", label: "PRONTO PARA ENTREGA" },
+    { value: "waiting_remaining", label: "AGUARDANDO PGTO RESTANTE" },
+    { value: "planned_active", label: "PLANO ATIVO" },
+    { value: "delivery", label: "EM ROTA" },
+    { value: "delivered", label: "ENTREGUE" },
+    { value: "fully_paid", label: "PEDIDO QUITADO" },
+    { value: "cancelled", label: "CANCELADO" },
   ];
 
   const statusLabels: Record<string, string> = {
@@ -406,6 +353,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
     }
   }, [initialOrderId]);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+  const [printingA6Order, setPrintingA6Order] = useState<Order | null>(null);
 
   const filteredOrders = orders
     .filter((o) => {
@@ -643,58 +591,37 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: Math.min(idx * 0.04, 0.4) }}
-                className="bg-[#FFFFFF] rounded-[1.5rem] border border-[#F0E6D2] shadow-[0_6px_20px_rgba(240,230,210,0.5)] transition-all hover:shadow-[0_12px_32px_rgba(240,230,210,0.6)] hover:-translate-y-[2px] duration-300 overflow-hidden flex items-stretch cursor-pointer"
+                className="bg-[#FFFFFF] rounded-[1.5rem] border border-[#F0E6D2] shadow-[0_6px_20px_rgba(240,230,210,0.5)] transition-all hover:shadow-[0_12px_32px_rgba(240,230,210,0.6)] hover:-translate-y-[2px] duration-300 flex items-stretch cursor-pointer relative"
                 onClick={() => setIsDetailOpen(order.id)}
               >
                 {/* 1. Barra Lateral Colorida do Status */}
                 <div 
-                  className="w-2 shrink-0 transition-all duration-300"
+                  className="w-2 shrink-0 transition-all duration-300 rounded-l-[1.5rem]"
                   style={{ backgroundColor: statusGroup?.color || "#e2e8f0" }}
                 />
 
                 {/* Main Content Area - Professional Stripe/Notion Grid */}
                 <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
-                  <div className="grid grid-cols-[minmax(180px,1.5fr)_minmax(180px,1.5fr)_110px_130px_100px_90px_40px] items-center gap-4 px-5 py-4 min-w-[820px]">
+                  <div className="grid grid-cols-[minmax(250px,1.5fr)_130px_160px_120px_50px] items-center gap-4 px-5 py-4 min-w-[700px]">
                     
-                    {/* [1. NOME DO CLIENTE & ATELIÊ] */}
+                    {/* [1. NOME DO CLIENTE & CÓDIGO] */}
                     <div className="flex flex-col justify-center min-w-0 pr-4">
                       <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono text-[14px] font-bold text-slate-800 tracking-wider">
+                          #{order.code}
+                        </span>
                         <span 
                           className="text-[10px] font-medium uppercase tracking-widest px-1.5 py-0.5 rounded text-gray-500 bg-gray-50 border border-gray-100"
                         >
                           {brandTheme.name}
                         </span>
                       </div>
-                      <h4 className="text-[15px] font-medium text-slate-800 tracking-tight truncate w-full" title={order.customerName}>
+                      <h4 className="text-[15px] font-medium text-slate-700 tracking-tight truncate w-full" title={order.customerName}>
                         {order.customerName}
                       </h4>
                     </div>
 
-                    {/* [2. PRODUTO (FOTO + NOME)] */}
-                    <div className="flex items-center gap-3 min-w-0 pr-4">
-                      <div className="w-12 h-12 shrink-0 rounded bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center relative">
-                        {cardProduct.image ? (
-                          <img 
-                            src={cardProduct.image} 
-                            alt={cardProduct.name} 
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <Box size={20} className="text-gray-300" />
-                        )}
-                        {cardProduct.count > 1 && (
-                          <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-                            +{cardProduct.count - 1}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[14px] font-medium text-slate-600 truncate w-full" title={cardProduct.name || "Produto"}>
-                        {cardProduct.name || "Produto Genérico"}
-                      </span>
-                    </div>
-
-                    {/* [3. DATA DE ENTREGA] */}
+                    {/* [2. DATA DE ENTREGA] */}
                     <div className="flex flex-col justify-center gap-1.5">
                       <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Entrega</span>
                       <div className="flex items-center gap-1.5 text-slate-700 text-[14px]">
@@ -707,7 +634,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                       </div>
                     </div>
 
-                    {/* [4. STATUS] */}
+                    {/* [3. STATUS] */}
                     <div className="flex items-center">
                       <span className={`flex items-center justify-center text-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-600 border-slate-200"} w-full`}>
                         {order.status === 'delivered' || order.status === 'fully_paid' ? (
@@ -719,7 +646,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                       </span>
                     </div>
 
-                    {/* [5. VALOR TOTAL] */}
+                    {/* [4. VALOR TOTAL] */}
                     <div className="flex flex-col justify-center gap-1 text-right">
                       <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest text-right">Valor</span>
                       <p className="text-[15px] font-medium text-slate-800">
@@ -727,14 +654,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                       </p>
                     </div>
 
-                    {/* [6. CÓDIGO DO PEDIDO] */}
-                    <div className="flex items-center justify-end">
-                      <span className="font-mono text-[12px] font-medium text-gray-500 uppercase tracking-widest text-right px-2">
-                        #{order.code}
-                      </span>
-                    </div>
-
-                    {/* [7. MENU ...] */}
+                    {/* [5. MENU ...] */}
                     <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
                       <ActionsDropdown 
                         order={order}
@@ -825,7 +745,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                           Status Atual
                         </p>
                         <span
-                          className={`px-6 py-2 rounded-xl text-[10px] font-semibold tracking-widest border uppercase transition-shadow ${statusOptions.find((s) => s.value === orders.find((o) => o.id === isDetailOpen)?.status.toLowerCase())?.color || "bg-slate-100"}`}
+                          className={`px-6 py-2 rounded-xl text-[10px] font-semibold tracking-widest border uppercase transition-shadow ${STATUS_GROUPS.find((g) => g.dbStatuses.includes(orders.find((o) => o.id === isDetailOpen)?.status.toLowerCase() || ''))?.bgLight || "bg-slate-50 text-slate-500 border-slate-200"}`}
                         >
                           {statusOptions.find(
                             (s) =>
@@ -837,16 +757,24 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                             orders.find((o) => o.id === isDetailOpen)?.status}
                         </span>
                       </div>
-                      <div className="text-right mt-2">
-                        <p className="text-[9px] font-semibold uppercase text-[#A09898] tracking-[0.2em] mb-1">
-                          Total do Pedido
-                        </p>
-                        <p className="text-3xl font-sans font-semibold text-[#4A4444]">
-                          {formatCurrency(
-                            orders.find((o) => o.id === isDetailOpen)?.total ||
-                              0,
-                          )}
-                        </p>
+                      <div className="text-right mt-2 flex flex-col items-end gap-3">
+                        <div>
+                          <p className="text-[9px] font-semibold uppercase text-[#A09898] tracking-[0.2em] mb-1">
+                            Total do Pedido
+                          </p>
+                          <p className="text-3xl font-sans font-semibold text-[#4A4444]">
+                            {formatCurrency(
+                              orders.find((o) => o.id === isDetailOpen)?.total ||
+                                0,
+                            )}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setPrintingA6Order(orders.find((o) => o.id === isDetailOpen)!)}
+                          className="flex items-center gap-2 px-4 py-2 mt-2 bg-black text-white hover:bg-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
+                        >
+                          <Printer size={14} /> Imprimir Pedido
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -981,17 +909,21 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                           Alterar Fluxo do Pedido
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          {statusOptions.map((opt) => (
+                          {statusOptions.map((opt) => {
+                            const optGroup = STATUS_GROUPS.find((g) => g.dbStatuses.includes(opt.value));
+                            const isActive = orders.find((o) => o.id === isDetailOpen)?.status.toLowerCase() === opt.value;
+                            return (
                             <button
                               key={opt.value}
                               onClick={() =>
                                 onUpdateStatus(isDetailOpen!, opt.value as any)
                               }
-                              className={`px-3 py-2 rounded-xl text-[8px] font-semibold uppercase tracking-widest border transition-all ${orders.find((o) => o.id === isDetailOpen)?.status.toLowerCase() === opt.value ? "bg-[#D48C8C] border-[#D48C8C] text-white" : "bg-white text-[#A09898] border-[#F0E6D2] hover:bg-[#FAF9F6]"}`}
+                              className={`px-3 py-2 rounded-xl text-[8px] font-semibold uppercase tracking-widest border transition-all ${isActive ? (optGroup?.bgLight || "bg-slate-800 text-white") : "bg-white text-[#A09898] border-[#F0E6D2] hover:bg-[#FAF9F6]"}`}
+                              style={isActive && optGroup?.color ? { borderColor: optGroup.color, borderBottomWidth: '2px' } : {}}
                             >
                               {opt.label}
                             </button>
-                          ))}
+                          )})}
                         </div>
                       </div>
                     </div>
@@ -1029,6 +961,12 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
         <OrderReceiptModal
           order={printingOrder}
           onClose={() => setPrintingOrder(null)}
+        />
+      )}
+      {printingA6Order && (
+        <OrderPrintA6Modal
+          order={printingA6Order}
+          onClose={() => setPrintingA6Order(null)}
         />
       )}
       {orderToDelete && (

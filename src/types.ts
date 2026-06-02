@@ -75,7 +75,7 @@ export interface Order {
   status: 'quote' | 'approval' | 'waiting_deposit' | 'production' | 'assembly' | 'ready' | 'delivered' | 'cancelled' | 'pending' | 'delivery' | 'waiting_payment' | 'planned_payment' | 'paid' | 'waiting_remaining' | 'planned_active' | 'fully_paid';
   createdAt: any; 
   deliveryDate: string;
-  deliveryType?: 'pickup' | 'delivery' | 'shipping';
+  deliveryType?: 'retirada' | 'delivery' | 'shipping';
   shippingCost?: number;
   isEmergency: boolean;
   paymentStatus?: 'pending' | 'paid' | 'cancelled' | 'partial' | 'refunded';
@@ -252,7 +252,7 @@ export interface CheckoutData {
   birthDate: string;
   cpfCnpj: string;
   contact: string;
-  deliveryType: 'pickup' | 'delivery' | 'shipping';
+  deliveryType: 'retirada' | 'delivery' | 'shipping';
   address: string;
   city: string;
   state: string;
