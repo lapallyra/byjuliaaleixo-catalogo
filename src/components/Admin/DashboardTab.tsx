@@ -491,20 +491,17 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   brandConfig[order.companyId] || brandConfig.pallyra;
                   
                 // Status mapping to match OrdersTab
-                const isDelivered = order.status === 'delivered' || order.status === 'fully_paid';
-                const isCancelled = order.status === 'cancelled';
-                let statusColor = "#eab308"; // Default Yellow
-                let statusLabel = statusLabels[order.status] || order.status;
-                let bgLight = "bg-yellow-100 text-yellow-700 border-yellow-200";
+                const isDelivered = ['delivered', 'fully_paid'].includes(order.status);
+                const isCancelled = ['cancelled', 'canceled', 'refunded'].includes(order.status);
+                let statusColor = "#a855f7"; // Default Roxo
+                let statusLabel = "Novo";
+                let bgLight = "bg-[#f3e8ff] text-[#7e22ce] border-[#d8b4fe]";
 
-                if (['approval', 'waiting_deposit', 'waiting_payment', 'planned_payment'].includes(order.status)) { statusColor = "#3b82f6"; bgLight = "bg-blue-100/50 text-blue-700 border-blue-200"; statusLabel = "Aguardando Aprovação"; }
-                else if (['production'].includes(order.status)) { statusColor = "#f97316"; bgLight = "bg-orange-100/50 text-orange-700 border-orange-200"; statusLabel = "Em Produção"; }
-                else if (['assembly'].includes(order.status)) { statusColor = "#ec4899"; bgLight = "bg-pink-100/50 text-pink-700 border-pink-200"; statusLabel = "Últimos detalhes"; }
-                else if (['ready'].includes(order.status)) { statusColor = "#15803d"; bgLight = "bg-green-100/50 text-green-800 border-green-300"; statusLabel = "Pronto"; }
-                else if (['delivery', 'waiting_remaining', 'planned_active'].includes(order.status)) { statusColor = "#22c55e"; bgLight = "bg-green-100/50 text-green-700 border-green-200"; statusLabel = "Aguardando Entrega"; }
-                else if (isDelivered) { statusColor = "#86efac"; bgLight = "bg-green-50 text-green-600 border-green-100"; statusLabel = "Entregue"; }
-                else if (isCancelled) { statusColor = "#ef4444"; bgLight = "bg-red-100/50 text-red-700 border-red-200"; statusLabel = "Cancelado"; }
-                else { statusLabel = "Novo"; }
+                if (['approval', 'waiting_deposit', 'waiting_payment', 'planned_payment'].includes(order.status)) { statusColor = "#3b82f6"; bgLight = "bg-[#eff6ff] text-[#1d4ed8] border-[#93c5fd]"; statusLabel = "Aguardando Aprovação"; }
+                else if (['production', 'in_production', 'assembly'].includes(order.status)) { statusColor = "#f97316"; bgLight = "bg-[#ffedd5] text-[#c2410c] border-[#fdba74]"; statusLabel = "Em Produção"; }
+                else if (['ready', 'delivery', 'waiting_remaining', 'planned_active'].includes(order.status)) { statusColor = "#22c55e"; bgLight = "bg-[#f0fdf4] text-[#15803d] border-[#86efac]"; statusLabel = "Pronto"; }
+                else if (isDelivered) { statusColor = "#86efac"; bgLight = "bg-[#dcfce7] text-[#166534] border-[#86efac]"; statusLabel = "Entregue"; }
+                else if (isCancelled) { statusColor = "#ef4444"; bgLight = "bg-[#fef2f2] text-[#b91c1c] border-[#fca5a5]"; statusLabel = "Cancelado"; }
 
                 const getProductInfoForCard = (o: Order) => {
                   if (o.items && o.items.length > 0) {
@@ -545,72 +542,51 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     />
 
                     <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
-                      <div className="grid grid-cols-[150px_90px_50px_minmax(200px,1fr)_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[820px]">
+                      <div className="grid grid-cols-[minmax(180px,1.5fr)_minmax(180px,1.5fr)_110px_130px_100px_90px_40px] items-center gap-4 px-5 py-4 min-w-[820px]">
                         
-                        {/* [STATUS] */}
-                        <div className="flex items-center">
-                          <span className={`flex items-center justify-center text-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase border ${bgLight} w-full`}>
-                            {isDelivered ? (
-                              <CheckCircle2 size={12} className="text-green-600 shrink-0" />
-                            ) : isCancelled ? (
-                              <XCircle size={12} className="text-red-600 shrink-0" />
-                            ) : null}
-                            <span>{statusLabel}</span>
-                          </span>
-                        </div>
-
-                        {/* [código do pedido] */}
-                        <div className="flex items-center">
-                          <span className="font-mono text-[11px] font-bold text-gray-600 bg-[#FAF9F6] px-2.5 py-1.5 rounded-lg border border-[#F0E6D2] uppercase tracking-widest w-full text-center shadow-sm">
-                            {order.code}
-                          </span>
-                        </div>
-
-                        {/* [FOTO] */}
-                        <div className="flex justify-center">
-                          <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] overflow-hidden flex items-center justify-center shadow-inner relative text-[#A09088]">
-                            {cardProduct.image ? (
-                              <img 
-                                src={cardProduct.image} 
-                                alt={cardProduct.name} 
-                                className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-300"
-                                referrerPolicy="no-referrer"
-                              />
-                            ) : (
-                              <Box size={16} />
-                            )}
-                            {cardProduct.count > 1 && (
-                              <span className="absolute -top-1 -right-1 bg-[#4A3A34] text-white text-[7px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-                                +{cardProduct.count - 1}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* [NOME DO CLIENTE] */}
+                        {/* [1. NOME DO CLIENTE & ATELIÊ] */}
                         <div className="flex flex-col justify-center min-w-0 pr-4">
-                           <div className="flex items-center gap-2 mb-0.5">
+                           <div className="flex items-center gap-2 mb-1">
                             <span 
-                              className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm border"
-                              style={{
-                                borderColor: config.color,
-                                color: config.color,
-                                backgroundColor: `${config.color}10`
-                              }}
+                              className="text-[10px] font-medium uppercase tracking-widest px-1.5 py-0.5 rounded text-gray-500 bg-gray-50 border border-gray-100"
                             >
                               {brandNames[order.companyId] || order.companyId}
                             </span>
                           </div>
-                          <h4 className="text-[13px] font-extrabold text-[#4A3A34] uppercase tracking-tight truncate w-full">
+                          <h4 className="text-[15px] font-medium text-slate-800 tracking-tight truncate w-full">
                             {order.customerName}
                           </h4>
                         </div>
 
-                        {/* [DATA DE ENTREGA] */}
-                        <div className="flex flex-col justify-center gap-1">
-                          <span className="text-[7.5px] font-black text-[#A09088] uppercase tracking-wider font-extrabold">Entrega</span>
-                          <div className="flex items-center gap-1.5 text-[#4A3A34] font-semibold text-[11px]">
-                            <Calendar size={13} className="text-[#A09088]" />
+                        {/* [2. PRODUTO] */}
+                        <div className="flex items-center gap-3 min-w-0 pr-4">
+                          <div className="w-12 h-12 shrink-0 rounded bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center relative text-[#A09088]">
+                            {cardProduct.image ? (
+                              <img 
+                                src={cardProduct.image} 
+                                alt={cardProduct.name} 
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <Box size={20} className="text-gray-300" />
+                            )}
+                            {cardProduct.count > 1 && (
+                              <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                                +{cardProduct.count - 1}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[14px] font-medium text-slate-600 truncate w-full" title={cardProduct.name || "Produto"}>
+                            {cardProduct.name || "Produto Genérico"}
+                          </span>
+                        </div>
+
+                        {/* [3. DATA DE ENTREGA] */}
+                        <div className="flex flex-col justify-center gap-1.5">
+                          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Entrega</span>
+                          <div className="flex items-center gap-1.5 text-slate-700 text-[14px]">
+                            <Calendar size={14} className="text-gray-400" />
                             <span>
                               {order.deliveryDate
                                 ? safeFormatISO(order.deliveryDate, "dd/MM")
@@ -619,15 +595,34 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                           </div>
                         </div>
 
-                        {/* [VALOR TOTAL] */}
+                        {/* [4. STATUS] */}
+                        <div className="flex items-center">
+                          <span className={`flex items-center justify-center text-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase border ${bgLight} w-full`}>
+                            {isDelivered ? (
+                              <CheckCircle2 size={13} className="text-green-600 shrink-0" />
+                            ) : isCancelled ? (
+                              <XCircle size={13} className="text-red-500 shrink-0" />
+                            ) : null}
+                            <span>{statusLabel}</span>
+                          </span>
+                        </div>
+
+                        {/* [5. VALOR TOTAL] */}
                         <div className="flex flex-col justify-center gap-1 text-right">
-                          <span className="text-[8px] font-black text-[#A09088] uppercase tracking-widest text-right">Valor Total</span>
-                          <p className="text-[14px] font-bold text-[#D88D85]">
+                          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest text-right">Valor</span>
+                          <p className="text-[15px] font-medium text-slate-800">
                             {formatCurrency(Number(order.total) || 0)}
                           </p>
                         </div>
 
-                        {/* [MENU ...] */}
+                        {/* [6. CÓDIGO DO PEDIDO] */}
+                        <div className="flex items-center justify-end">
+                          <span className="font-mono text-[12px] font-medium text-gray-500 uppercase tracking-widest text-right px-2">
+                            #{order.code}
+                          </span>
+                        </div>
+
+                        {/* [7. MENU ...] */}
                         <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
                           <div className="relative">
                             <button
@@ -635,7 +630,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                                   e.stopPropagation();
                                   window.dispatchEvent(new CustomEvent('edit-order', { detail: order.id }));
                               }}
-                              className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#F0E6D2] text-[#A09088] hover:text-[#4A3A34] hover:bg-[#FFFFFF] transform active:scale-95 flex items-center justify-center transition-all cursor-pointer shadow-sm"
+                              className="w-10 h-10 rounded-full bg-transparent hover:bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-all cursor-pointer"
                             >
                               <MoreVertical size={16} />
                             </button>

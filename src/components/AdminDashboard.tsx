@@ -239,10 +239,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       >
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-2 top-10 bg-white border border-[#F0E6D2] p-1 rounded-full z-50 text-[#A09088] hover:text-[#B48E4D] transition-all"
+          className="absolute -right-1.5 top-10 bg-white border border-[#F0E6D2] w-4 h-4 flex items-center justify-center rounded-full z-50 text-[#A09088] hover:text-[#B48E4D] transition-all opacity-70 hover:opacity-100"
         >
           <ChevronRight
-            size={12}
+            size={10}
             className={`transition-transform duration-300 ${!isSidebarCollapsed ? "rotate-180" : ""}`}
           />
         </button>

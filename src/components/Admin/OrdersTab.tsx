@@ -43,73 +43,43 @@ const STATUS_GROUPS = [
     id: "novo",
     label: "Novo",
     dbStatuses: ["novo pedido", "quote", "pending"],
-    color: "#eab308", // Yellow
-    bgLight: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    shadow: "shadow-yellow-100",
-    accentColor: "ring-yellow-200",
+    color: "#a855f7", // Roxo
+    bgLight: "bg-[#f3e8ff] text-[#7e22ce] border-[#d8b4fe]",
+  },
+  {
+    id: "producao",
+    label: "Em Produção",
+    dbStatuses: ["production", "in_production", "assembly"],
+    color: "#f97316", // Laranja
+    bgLight: "bg-[#ffedd5] text-[#c2410c] border-[#fdba74]",
   },
   {
     id: "aprovacao",
     label: "Aguardando Aprovação",
     dbStatuses: ["approval", "waiting_deposit", "waiting_payment", "planned_payment"],
-    color: "#3b82f6", // Blue
-    bgLight: "bg-blue-100/50 text-blue-700 border-blue-200",
-    shadow: "shadow-blue-100",
-    accentColor: "ring-blue-200",
-  },
-  {
-    id: "producao",
-    label: "Em Produção",
-    dbStatuses: ["production"],
-    color: "#f97316", // Orange
-    bgLight: "bg-orange-100/50 text-orange-700 border-orange-200",
-    shadow: "shadow-orange-100",
-    accentColor: "ring-orange-200",
-  },
-  {
-    id: "detalhes",
-    label: "Últimos detalhes",
-    dbStatuses: ["assembly"],
-    color: "#ec4899", // Pink
-    bgLight: "bg-pink-100/50 text-pink-700 border-pink-200",
-    shadow: "shadow-pink-100",
-    accentColor: "ring-pink-200",
+    color: "#3b82f6", // Azul
+    bgLight: "bg-[#eff6ff] text-[#1d4ed8] border-[#93c5fd]",
   },
   {
     id: "pronto",
     label: "Pronto",
-    dbStatuses: ["ready"],
-    color: "#15803d", // Dark Green
-    bgLight: "bg-green-100/50 text-green-800 border-green-300",
-    shadow: "shadow-green-100",
-    accentColor: "ring-green-300",
-  },
-  {
-    id: "aguardando_entrega",
-    label: "Aguardando Entrega",
-    dbStatuses: ["delivery", "waiting_remaining", "planned_active"],
-    color: "#22c55e", // Green
-    bgLight: "bg-green-100/50 text-green-700 border-green-200",
-    shadow: "shadow-green-100",
-    accentColor: "ring-green-200",
+    dbStatuses: ["ready", "delivery", "waiting_remaining", "planned_active"],
+    color: "#22c55e", // Verde
+    bgLight: "bg-[#f0fdf4] text-[#15803d] border-[#86efac]",
   },
   {
     id: "entregue",
     label: "Entregue",
     dbStatuses: ["delivered", "fully_paid"],
-    color: "#86efac", // Light Green
-    bgLight: "bg-green-50 text-green-600 border-green-100",
-    shadow: "shadow-green-50",
-    accentColor: "ring-green-100",
+    color: "#86efac", // Verde Claro
+    bgLight: "bg-[#dcfce7] text-[#166534] border-[#86efac]",
   },
   {
     id: "cancelado",
     label: "Cancelado",
-    dbStatuses: ["cancelled"],
-    color: "#ef4444", // Red
-    bgLight: "bg-red-100/50 text-red-700 border-red-200",
-    shadow: "shadow-red-100",
-    accentColor: "ring-red-200",
+    dbStatuses: ["cancelled", "canceled", "refunded"],
+    color: "#ef4444", // Vermelho
+    bgLight: "bg-[#fef2f2] text-[#b91c1c] border-[#fca5a5]",
   }
 ];
 
@@ -597,16 +567,9 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
             onClick={() => setSelectedStatusFilter("all")}
             className={`px-4 py-3 rounded-2xl border text-left transition-all relative overflow-hidden group hover:scale-[1.03] active:scale-[0.98] duration-300 ${
               selectedStatusFilter === "all"
-                ? "bg-white border-neutral-300 shadow-[0_10px_25px_rgba(0,0,0,0.05)] ring-2 ring-neutral-100"
+                ? "bg-white border-neutral-300"
                 : "bg-white/40 hover:bg-white/80 border-neutral-100"
             }`}
-            style={{
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              boxShadow: selectedStatusFilter === "all" 
-                ? "0 10px 25px rgba(0,0,0,0.03), inset 0 -4px 8px rgba(0,0,0,0.02), inset 0 4px 8px rgba(255,255,255,0.7)" 
-                : "inset 0 -2px 4px rgba(0,0,0,0.01), inset 0 2px 4px rgba(255,255,255,0.5)"
-            }}
           >
             <div className="flex justify-between items-center mb-1.5">
               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Todos</span>
@@ -627,16 +590,12 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                 onClick={() => setSelectedStatusFilter(group.id)}
                 className={`px-4 py-3 rounded-2xl border text-left transition-all relative overflow-hidden group hover:scale-[1.03] active:scale-[0.98] duration-300 ${
                   isSelected
-                    ? "bg-white shadow-[0_10px_25px_rgba(0,0,0,0.05)] ring-2"
+                    ? "bg-white"
                     : "bg-white/40 hover:bg-white/80 border-neutral-100"
                 }`}
                 style={{
                   borderColor: isSelected ? group.color : "rgba(240, 230, 210, 0.4)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                  boxShadow: isSelected 
-                    ? `0 10px 25px ${group.color}15, inset 0 -4px 8px rgba(0,0,0,0.01), inset 0 4px 8px rgba(255,255,255,0.8)` 
-                    : "inset 0 -2px 4px rgba(0,0,0,0.01), inset 0 2px 4px rgba(255,255,255,0.5)"
+                  backgroundColor: isSelected ? `${group.color}08` : undefined
                 }}
               >
                 <div className="flex justify-between items-center mb-1.5">
@@ -695,72 +654,51 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
 
                 {/* Main Content Area - Professional Stripe/Notion Grid */}
                 <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
-                  <div className="grid grid-cols-[150px_90px_50px_minmax(200px,1fr)_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[820px]">
+                  <div className="grid grid-cols-[minmax(180px,1.5fr)_minmax(180px,1.5fr)_110px_130px_100px_90px_40px] items-center gap-4 px-5 py-4 min-w-[820px]">
                     
-                    {/* [STATUS] */}
-                    <div className="flex items-center">
-                      <span className={`flex items-center justify-center text-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-500 border-slate-150"} w-full`}>
-                        {order.status === 'delivered' || order.status === 'fully_paid' ? (
-                          <CheckCircle2 size={12} className="text-green-600 shrink-0" />
-                        ) : order.status === 'cancelled' ? (
-                          <XCircle size={12} className="text-red-600 shrink-0" />
-                        ) : null}
-                        <span>{statusGroup?.label || order.status}</span>
-                      </span>
-                    </div>
-
-                    {/* [código do pedido] */}
-                    <div className="flex items-center">
-                      <span className="font-mono text-[11px] font-bold text-gray-600 bg-[#FAF9F6] px-2.5 py-1.5 rounded-lg border border-[#F0E6D2] uppercase tracking-widest w-full text-center shadow-sm">
-                        {order.code}
-                      </span>
-                    </div>
-
-                    {/* [FOTO] */}
-                    <div className="flex justify-center">
-                      <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] overflow-hidden flex items-center justify-center shadow-inner relative">
-                        {cardProduct.image ? (
-                          <img 
-                            src={cardProduct.image} 
-                            alt={cardProduct.name} 
-                            className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-300"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <Box size={16} className="text-[#D1CACA]" />
-                        )}
-                        {cardProduct.count > 1 && (
-                          <span className="absolute -top-1 -right-1 bg-neutral-900 text-white text-[7px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-                            +{cardProduct.count - 1}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* [NOME DO CLIENTE] */}
+                    {/* [1. NOME DO CLIENTE & ATELIÊ] */}
                     <div className="flex flex-col justify-center min-w-0 pr-4">
-                      <div className="flex items-center gap-2 mb-0.5">
+                      <div className="flex items-center gap-2 mb-1">
                         <span 
-                          className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm border"
-                          style={{
-                            borderColor: brandTheme.badgeColor,
-                            color: brandTheme.badgeColor,
-                            backgroundColor: `${brandTheme.badgeColor}10`
-                          }}
+                          className="text-[10px] font-medium uppercase tracking-widest px-1.5 py-0.5 rounded text-gray-500 bg-gray-50 border border-gray-100"
                         >
                           {brandTheme.name}
                         </span>
                       </div>
-                      <h4 className="text-[13px] font-extrabold text-[#4A3A34] uppercase tracking-tight truncate w-full" title={order.customerName}>
+                      <h4 className="text-[15px] font-medium text-slate-800 tracking-tight truncate w-full" title={order.customerName}>
                         {order.customerName}
                       </h4>
                     </div>
 
-                    {/* [DATA DE ENTREGA] */}
-                    <div className="flex flex-col justify-center gap-1">
-                      <span className="text-[7.5px] font-black text-[#A09088] uppercase tracking-wider font-extrabold">Entrega</span>
-                      <div className="flex items-center gap-1.5 text-[#4A3A34] font-semibold text-[11px]">
-                        <Calendar size={13} className="text-[#A09088]" />
+                    {/* [2. PRODUTO (FOTO + NOME)] */}
+                    <div className="flex items-center gap-3 min-w-0 pr-4">
+                      <div className="w-12 h-12 shrink-0 rounded bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center relative">
+                        {cardProduct.image ? (
+                          <img 
+                            src={cardProduct.image} 
+                            alt={cardProduct.name} 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <Box size={20} className="text-gray-300" />
+                        )}
+                        {cardProduct.count > 1 && (
+                          <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                            +{cardProduct.count - 1}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[14px] font-medium text-slate-600 truncate w-full" title={cardProduct.name || "Produto"}>
+                        {cardProduct.name || "Produto Genérico"}
+                      </span>
+                    </div>
+
+                    {/* [3. DATA DE ENTREGA] */}
+                    <div className="flex flex-col justify-center gap-1.5">
+                      <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Entrega</span>
+                      <div className="flex items-center gap-1.5 text-slate-700 text-[14px]">
+                        <Calendar size={14} className="text-gray-400" />
                         <span>
                           {order.deliveryDate
                             ? safeFormatISO(order.deliveryDate, "dd/MM")
@@ -769,15 +707,34 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                       </div>
                     </div>
 
-                    {/* [VALOR TOTAL] */}
+                    {/* [4. STATUS] */}
+                    <div className="flex items-center">
+                      <span className={`flex items-center justify-center text-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-600 border-slate-200"} w-full`}>
+                        {order.status === 'delivered' || order.status === 'fully_paid' ? (
+                          <CheckCircle2 size={13} className="text-green-600 shrink-0" />
+                        ) : order.status === 'cancelled' ? (
+                          <XCircle size={13} className="text-red-500 shrink-0" />
+                        ) : null}
+                        <span>{statusGroup?.label || order.status}</span>
+                      </span>
+                    </div>
+
+                    {/* [5. VALOR TOTAL] */}
                     <div className="flex flex-col justify-center gap-1 text-right">
-                      <span className="text-[8px] font-black text-[#A09088] uppercase tracking-widest text-right">Valor Total</span>
-                      <p className="text-[14px] font-bold text-[#D88D85]">
+                      <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest text-right">Valor</span>
+                      <p className="text-[15px] font-medium text-slate-800">
                         {formatCurrency(Number(order.total) || 0)}
                       </p>
                     </div>
 
-                    {/* [MENU ...] */}
+                    {/* [6. CÓDIGO DO PEDIDO] */}
+                    <div className="flex items-center justify-end">
+                      <span className="font-mono text-[12px] font-medium text-gray-500 uppercase tracking-widest text-right px-2">
+                        #{order.code}
+                      </span>
+                    </div>
+
+                    {/* [7. MENU ...] */}
                     <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
                       <ActionsDropdown 
                         order={order}
