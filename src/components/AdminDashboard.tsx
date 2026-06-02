@@ -239,10 +239,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       >
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-3 top-10 bg-white border border-[#F0E6D2] p-1.5 rounded-full shadow-sm z-50 text-[#D88D85] hover:text-[#B48E4D] transition-all"
+          className="absolute -right-2 top-10 bg-white border border-[#F0E6D2] p-1 rounded-full z-50 text-[#A09088] hover:text-[#B48E4D] transition-all"
         >
           <ChevronRight
-            size={14}
+            size={12}
             className={`transition-transform duration-300 ${!isSidebarCollapsed ? "rotate-180" : ""}`}
           />
         </button>
@@ -275,12 +275,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <button
                       key={item.id}
                       onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative group overflow-hidden ${activeTab === item.id ? "text-[#4A3A34]" : "text-[#7A6A62] hover:text-[#4A3A34] hover:bg-[#FFFFFF]"}`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative group overflow-hidden ${activeTab === item.id ? "text-[#2D221F]" : "text-[#5F524C] hover:text-[#2D221F] hover:bg-[#FFFFFF]"}`}
                     >
                       {activeTab === item.id && (
                         <motion.div
                           layoutId="activeNavBg"
-                          className="absolute inset-0 bg-[#FFFDFB] shadow-[inset_0_2px_4px_rgba(240,230,210,0.5)] border border-[#F0E6D2] rounded-xl"
+                          className="absolute inset-0 bg-[#FFFDFB] border border-[#F0E6D2] rounded-xl"
                         />
                       )}
                       <item.icon
@@ -289,7 +289,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       />
                       {!isSidebarCollapsed && (
                         <span
-                          className={`text-[10px] uppercase font-medium tracking-[0.12em] relative z-10 ${activeTab === item.id ? "font-bold" : ""}`}
+                          className={`text-[10px] uppercase font-bold tracking-[0.12em] relative z-10`}
                         >
                           {item.label}
                         </span>

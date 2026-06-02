@@ -108,7 +108,6 @@ const OpportunitiesWidget: React.FC = () => {
     <div className="space-y-6">
       {todayDates.length > 0 && (
         <motion.div
-           // ... (keep today section the same)
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-[#FFFFFF] rounded-[1.5rem] p-6 border border-[#F0E6D2] shadow-[0_15px_40px_rgba(240,230,210,0.3)] relative overflow-hidden group"
@@ -297,32 +296,31 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         animate={{ opacity: 1, y: 0 }}
         className="bg-white p-8 rounded-[2.5rem] border border-[#F0E6D2] shadow-[0_20px_60px_rgba(240,230,210,0.2)] relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FDFBF9] to-transparent pointer-events-none" />
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] rotate-12">
-          <Target size={240} className="text-[#D48C8C]" />
+          <Target size={240} className="text-[#D88D85]" />
         </div>
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 bg-[#FAF9F6] rounded-lg border border-[#F0E6D2]">
-                  <Target size={14} className="text-[#D48C8C]" />
+                  <Target size={14} className="text-[#D88D85]" />
                 </div>
-                <h3 className="text-[10px] font-black uppercase text-[#4A4444] tracking-[0.25em]">
+                <h3 className="text-[10px] font-black uppercase text-[#4A3A34] tracking-[0.25em]">
                   Meta Mensal de Vendas
                 </h3>
               </div>
-              <p className="text-[9px] text-[#A09898] font-semibold uppercase tracking-wider pl-8">
+              <p className="text-[9px] text-[#A09088] font-semibold uppercase tracking-wider pl-8">
                 Objetivo Financeiro Líquido • Foco no Ateliê
               </p>
             </div>
             <div className="text-left md:text-right bg-[#FAF9F6] px-6 py-3 rounded-2xl border border-[#F0E6D2]">
-              <p className="text-3xl font-sans font-black text-[#D48C8C] leading-none mb-1">
+              <p className="text-3xl font-sans font-bold text-[#D88D85] leading-none mb-1">
                 {formatCurrency(currentMonthNetProfit)}
               </p>
               <div className="flex items-center md:justify-end gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <p className="text-[8px] text-[#D48C8C] font-black uppercase tracking-widest">
+                <p className="text-[8px] text-[#A09088] font-black uppercase tracking-widest">
                   Lucro Estimado Atual
                 </p>
               </div>
@@ -331,10 +329,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
           <div className="relative py-2">
             <div className="flex justify-between mb-3 px-1">
-              <span className="text-[9px] font-black tracking-widest text-[#A09898] uppercase">
+              <span className="text-[9px] font-black tracking-widest text-[#A09088] uppercase">
                 Progresso da Meta
               </span>
-              <span className="text-[9px] font-black tracking-widest text-[#D48C8C] uppercase">
+              <span className="text-[9px] font-black tracking-widest text-[#D88D85] uppercase">
                 {Math.min(
                   Math.round((currentMonthNetProfit / 2000) * 100),
                   100,
@@ -435,16 +433,16 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       {/* Caixa */}
       <div className="bg-white p-6 rounded-[1.5rem] border border-[#F0E6D2] flex items-center justify-between shadow-sm">
          <div className="flex items-center gap-4">
-           <div className="w-12 h-12 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] flex items-center justify-center text-[#D48C8C]">
+           <div className="w-12 h-12 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] flex items-center justify-center text-[#D88D85]">
              <DollarSign size={20} />
            </div>
            <div>
-             <h3 className="text-[10px] font-black uppercase text-[#4A4444] tracking-[0.2em]">Fluxo de Caixa Diário</h3>
-             <p className="text-[8px] text-[#A09898] font-bold uppercase tracking-widest mt-0.5">Nenhum caixa aberto</p>
+             <h3 className="text-[10px] font-black uppercase text-[#4A3A34] tracking-[0.2em]">Fluxo de Caixa Diário</h3>
+             <p className="text-[8px] text-[#A09088] font-bold uppercase tracking-widest mt-0.5">Nenhum caixa aberto</p>
            </div>
          </div>
          <div className="flex gap-3">
-           <button className="bg-[#FAF9F6] border border-[#F0E6D2] text-[#4A4444] px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#F0E6D2] transition-colors">
+           <button className="bg-[#FFFFFF] border border-[#F0E6D2] text-[#4A3A34] px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#F0E6D2] transition-colors shadow-sm">
               Fechar Caixa
            </button>
            <button className="bg-[#D48C8C] text-white px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#C07B7B] shadow-lg shadow-[#D48C8C]/20 transition-all">
@@ -547,17 +545,17 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     />
 
                     <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
-                      <div className="grid grid-cols-[130px_90px_50px_minmax(180px,1fr)_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[750px]">
+                      <div className="grid grid-cols-[150px_90px_50px_minmax(200px,1fr)_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[820px]">
                         
                         {/* [STATUS] */}
                         <div className="flex items-center">
-                          <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase border ${bgLight} truncate w-full`}>
+                          <span className={`flex items-center justify-center text-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase border ${bgLight} w-full`}>
                             {isDelivered ? (
                               <CheckCircle2 size={12} className="text-green-600 shrink-0" />
                             ) : isCancelled ? (
                               <XCircle size={12} className="text-red-600 shrink-0" />
                             ) : null}
-                            <span className="truncate">{statusLabel}</span>
+                            <span>{statusLabel}</span>
                           </span>
                         </div>
 

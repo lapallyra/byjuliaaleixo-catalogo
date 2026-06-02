@@ -695,17 +695,17 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
 
                 {/* Main Content Area - Professional Stripe/Notion Grid */}
                 <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
-                  <div className="grid grid-cols-[130px_90px_50px_minmax(180px,1fr)_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[750px]">
+                  <div className="grid grid-cols-[150px_90px_50px_minmax(200px,1fr)_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[820px]">
                     
                     {/* [STATUS] */}
                     <div className="flex items-center">
-                      <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-500 border-slate-150"} truncate w-full`}>
+                      <span className={`flex items-center justify-center text-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-500 border-slate-150"} w-full`}>
                         {order.status === 'delivered' || order.status === 'fully_paid' ? (
                           <CheckCircle2 size={12} className="text-green-600 shrink-0" />
                         ) : order.status === 'cancelled' ? (
                           <XCircle size={12} className="text-red-600 shrink-0" />
                         ) : null}
-                        <span className="truncate">{statusGroup?.label || order.status}</span>
+                        <span>{statusGroup?.label || order.status}</span>
                       </span>
                     </div>
 
