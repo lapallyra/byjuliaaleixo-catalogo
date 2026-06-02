@@ -111,31 +111,31 @@ const OpportunitiesWidget: React.FC = () => {
            // ... (keep today section the same)
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[1.5rem] p-6 border border-[#F0E6D2] shadow-[0_15px_40px_rgba(240,230,210,0.3)] relative overflow-hidden group"
+          className="bg-[#FFFFFF] rounded-[1.5rem] p-6 border border-[#F0E6D2] shadow-[0_15px_40px_rgba(240,230,210,0.3)] relative overflow-hidden group"
         >
           <div className="absolute -top-10 -right-10 opacity-5 group-hover:rotate-12 transition-transform duration-700">
-            <Sparkles size={160} className="text-[#D48C8C]" />
+            <Sparkles size={160} className="text-[#D88D85]" />
           </div>
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-[#FAF9F6] rounded-xl border border-[#F0E6D2]">
-                <Zap size={14} className="text-[#D48C8C]" />
+                <Zap size={14} className="text-[#D88D85]" />
               </div>
-              <span className="text-[8px] font-semibold uppercase tracking-[0.2em] text-[#D48C8C]">
+              <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-[#D88D85]">
                 Destaque de Hoje
               </span>
             </div>
-            <h3 className="text-xl font-sans font-semibold text-[#4A4444] leading-tight mb-2">
+            <h3 className="text-xl font-sans font-bold text-[#4A3A34] leading-tight mb-2">
               {todayDates.map((d) => d.name).join(" & ")}
             </h3>
-            <p className="text-[10px] text-[#A09898] font-medium leading-relaxed italic mb-6">
+            <p className="text-[10px] text-[#7A6A62] font-medium leading-relaxed italic mb-6">
               "{todayDates[0].marketing_phrase}"
             </p>
             <div className="flex gap-2">
-              <button className="bg-[#D48C8C] text-white px-4 py-2 rounded-xl text-[8px] font-semibold uppercase tracking-widest hover:bg-[#C07B7B] transition-all flex items-center gap-2 shadow-lg shadow-[#D48C8C]/20">
+              <button className="bg-[#D88D85] text-white px-4 py-2 rounded-xl text-[8px] font-semibold uppercase tracking-widest hover:bg-[#C07B7B] transition-all flex items-center gap-2 shadow-lg shadow-[#D88D85]/20">
                 <Tag size={12} /> Postar
               </button>
-              <button className="bg-white text-[#A09898] border border-[#F0E6D2] px-4 py-2 rounded-xl text-[8px] font-semibold uppercase tracking-widest hover:bg-[#FAF9F6] transition-all flex items-center gap-2">
+              <button className="bg-white text-[#A09088] border border-[#F0E6D2] px-4 py-2 rounded-xl text-[8px] font-semibold uppercase tracking-widest hover:bg-[#FAF9F6] transition-all flex items-center gap-2">
                 <Share2 size={12} /> Divulgar
               </button>
             </div>
@@ -144,14 +144,14 @@ const OpportunitiesWidget: React.FC = () => {
       )}
 
       <div className="flex items-center gap-3 px-2">
-        <div className="p-2 rounded-xl bg-[#FAF9F6] text-[#D48C8C] border border-[#F0E6D2]">
+        <div className="p-2 rounded-xl bg-[#FAF9F6] text-[#D88D85] border border-[#F0E6D2]">
            <Calendar size={16} />
         </div>
         <div>
-           <h3 className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#4A4444]">
+           <h3 className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#4A3A34]">
               Próximos 60 dias
            </h3>
-           <p className="text-[7px] text-[#A09898] font-medium uppercase mt-0.5">
+           <p className="text-[7px] text-[#A09088] font-medium uppercase mt-0.5">
               Eventos e Datas Comemorativas
            </p>
         </div>
@@ -175,12 +175,12 @@ const OpportunitiesWidget: React.FC = () => {
                  <div>
                     <div className="flex flex-col gap-1">
                       {group.events.map((ev, i) => (
-                        <h4 key={i} className="text-[10px] font-bold text-[#4A4444] uppercase tracking-tight">
+                        <h4 key={i} className="text-[10px] font-bold text-[#4A3A34] uppercase tracking-tight">
                            {ev.name}
                         </h4>
                       ))}
                     </div>
-                    <p className="text-[8px] font-bold text-[#D48C8C] uppercase tracking-widest mt-1.5">
+                    <p className="text-[8px] font-bold text-[#D88D85] uppercase tracking-widest mt-1.5">
                        {safeFormat(group.date, "dd/MM")} • {daysLeft} dias
                     </p>
                  </div>
@@ -342,14 +342,14 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 % Concluído
               </span>
             </div>
-            <div className="w-full h-5 bg-[#FAF9F6] rounded-full overflow-hidden border border-[#F0E6D2] p-1 shadow-inner">
+            <div className="w-full h-5 bg-[#F3D4D1] rounded-full overflow-hidden border border-[#F0E6D2] shadow-inner">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{
                   width: `${Math.min((currentMonthNetProfit / 2000) * 100, 100)}%`,
                 }}
                 transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
-                className="h-full bg-gradient-to-r from-[#D48C8C] via-[#E9ADAD] to-[#D48C8C] rounded-full relative overflow-hidden"
+                className="h-full bg-gradient-to-r from-[#D88D85] to-[#E6B3AC] rounded-full relative overflow-hidden"
               >
                 <motion.div
                   animate={{ x: ["-200%", "200%"] }}
@@ -379,7 +379,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             title: "Ativos",
             value: activeOrdersCount.toString(),
             icon: Package,
-            color: "text-[#D48C8C]",
+            color: "text-[#D88D85]",
             bg: "bg-[#FAF9F6]",
             border: "border-[#F0E6D2]",
           },
@@ -387,7 +387,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             title: "Aguardando",
             value: waitingCount.toString(),
             icon: Clock,
-            color: "text-[#D48C8C]",
+            color: "text-[#D88D85]",
             bg: "bg-[#FAF9F6]",
             border: "border-[#F0E6D2]",
           },
@@ -403,7 +403,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             title: "Cancelados",
             value: cancelledCount.toString(),
             icon: XCircle,
-            color: "text-[#A09898]",
+            color: "text-[#D88D85]",
             bg: "bg-[#FAF9F6]",
             border: "border-[#F0E6D2]",
           },
@@ -413,18 +413,18 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.05 }}
-            className="bg-white p-6 rounded-[1.5rem] border border-[#F0E6D2] flex items-center justify-between shadow-sm hover:shadow-md transition-all group"
+            className="bg-[#FFFFFF] p-6 rounded-[1.5rem] border border-[#F0E6D2] flex items-center justify-between shadow-[0_8px_24px_rgba(240,230,210,0.5)] hover:shadow-[0_12px_32px_rgba(240,230,210,0.6)] transition-all group"
           >
             <div>
-              <p className="text-[8px] font-bold uppercase text-[#A09898] tracking-[0.2em] mb-1">
+              <p className="text-[8px] font-bold uppercase text-[#7A6A62] tracking-[0.2em] mb-1">
                 {stat.title}
               </p>
-              <p className="text-2xl font-sans font-semibold text-[#4A4444]">
+              <p className="text-3xl font-sans font-extrabold text-[#2D2D2D]">
                 {stat.value}
               </p>
             </div>
             <div
-              className={`p-3.5 rounded-[1.2rem] ${stat.bg} ${stat.color} border ${stat.border} transition-transform group-hover:scale-110`}
+              className={`p-3.5 rounded-[1.2rem] ${stat.bg} ${stat.color} border ${stat.border} transition-transform group-hover:scale-110 opacity-100 mix-blend-multiply`}
             >
               <stat.icon size={20} />
             </div>
@@ -457,21 +457,21 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         {/* Left Column (Main - Pedidos Recentes Sobe) */}
         <div className="lg:col-span-8">
-          <section className="bg-white p-8 rounded-[2rem] border border-[#F0E6D2] shadow-[0_20px_50px_rgba(240,230,210,0.2)] relative overflow-hidden min-h-[400px]">
+          <section className="bg-[#FFFFFF] p-8 rounded-[2rem] border border-[#F0E6D2] shadow-[0_24px_55px_rgba(240,230,210,0.3)] relative overflow-hidden min-h-[400px]">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
               <Package size={200} />
             </div>
 
             <div className="flex items-center justify-between mb-8 relative z-10">
               <div>
-                <h3 className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#4A4444]">
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#4A3A34]">
                   Pedidos recentes
                 </h3>
-                <p className="text-[8px] text-[#D48C8C] font-medium uppercase tracking-[0.1em] mt-1">
+                <p className="text-[8px] text-[#A09088] font-medium uppercase tracking-[0.1em] mt-1">
                   Últimas atividades do sistema
                 </p>
               </div>
-              <button className="text-[8px] font-semibold uppercase text-[#D48C8C] tracking-widest border-b border-transparent hover:border-[#D48C8C] transition-all">
+              <button className="text-[8px] font-semibold uppercase text-[#D88D85] tracking-widest border-b border-transparent hover:border-[#D88D85] transition-all">
                 Ver todos
               </button>
             </div>
@@ -547,7 +547,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     />
 
                     <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
-                      <div className="grid grid-cols-[130px_50px_minmax(180px,1fr)_100px_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[750px]">
+                      <div className="grid grid-cols-[130px_90px_50px_minmax(180px,1fr)_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[750px]">
                         
                         {/* [STATUS] */}
                         <div className="flex items-center">
@@ -561,9 +561,16 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                           </span>
                         </div>
 
+                        {/* [código do pedido] */}
+                        <div className="flex items-center">
+                          <span className="font-mono text-[11px] font-bold text-gray-600 bg-[#FAF9F6] px-2.5 py-1.5 rounded-lg border border-[#F0E6D2] uppercase tracking-widest w-full text-center shadow-sm">
+                            {order.code}
+                          </span>
+                        </div>
+
                         {/* [FOTO] */}
                         <div className="flex justify-center">
-                          <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] overflow-hidden flex items-center justify-center shadow-inner relative text-[#D1CACA]">
+                          <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] overflow-hidden flex items-center justify-center shadow-inner relative text-[#A09088]">
                             {cardProduct.image ? (
                               <img 
                                 src={cardProduct.image} 
@@ -575,7 +582,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                               <Box size={16} />
                             )}
                             {cardProduct.count > 1 && (
-                              <span className="absolute -top-1 -right-1 bg-neutral-900 text-white text-[7px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                              <span className="absolute -top-1 -right-1 bg-[#4A3A34] text-white text-[7px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
                                 +{cardProduct.count - 1}
                               </span>
                             )}
@@ -596,23 +603,16 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                               {brandNames[order.companyId] || order.companyId}
                             </span>
                           </div>
-                          <h4 className="text-[13px] font-extrabold text-[#4A4444] uppercase tracking-tight truncate w-full">
+                          <h4 className="text-[13px] font-extrabold text-[#4A3A34] uppercase tracking-tight truncate w-full">
                             {order.customerName}
                           </h4>
                         </div>
 
-                        {/* [código do pedido] */}
-                        <div className="flex items-center">
-                          <span className="font-mono text-[11px] font-bold text-gray-600 bg-gray-50 px-2 py-1 rounded-md border border-gray-200 uppercase tracking-widest w-full text-center">
-                            {order.code}
-                          </span>
-                        </div>
-
                         {/* [DATA DE ENTREGA] */}
                         <div className="flex flex-col justify-center gap-1">
-                          <span className="text-[7.5px] font-black text-[#A09898] uppercase tracking-wider font-extrabold">Entrega</span>
-                          <div className="flex items-center gap-1.5 text-[#4A4444] font-semibold text-[11px]">
-                            <Calendar size={13} className="text-[#D1CACA]" />
+                          <span className="text-[7.5px] font-black text-[#A09088] uppercase tracking-wider font-extrabold">Entrega</span>
+                          <div className="flex items-center gap-1.5 text-[#4A3A34] font-semibold text-[11px]">
+                            <Calendar size={13} className="text-[#A09088]" />
                             <span>
                               {order.deliveryDate
                                 ? safeFormatISO(order.deliveryDate, "dd/MM")
@@ -623,8 +623,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
                         {/* [VALOR TOTAL] */}
                         <div className="flex flex-col justify-center gap-1 text-right">
-                          <span className="text-[8px] font-black text-[#A09898] uppercase tracking-widest text-right">Valor Total</span>
-                          <p className="text-[13px] font-extrabold text-[#4A4444]">
+                          <span className="text-[8px] font-black text-[#A09088] uppercase tracking-widest text-right">Valor Total</span>
+                          <p className="text-[14px] font-bold text-[#D88D85]">
                             {formatCurrency(Number(order.total) || 0)}
                           </p>
                         </div>
@@ -637,7 +637,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                                   e.stopPropagation();
                                   window.dispatchEvent(new CustomEvent('edit-order', { detail: order.id }));
                               }}
-                              className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#F0E6D2] text-[#A09898] hover:text-[#4A4444] hover:bg-[#FAF9F6] transform active:scale-95 flex items-center justify-center transition-all cursor-pointer shadow-sm"
+                              className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#F0E6D2] text-[#A09088] hover:text-[#4A3A34] hover:bg-[#FFFFFF] transform active:scale-95 flex items-center justify-center transition-all cursor-pointer shadow-sm"
                             >
                               <MoreVertical size={16} />
                             </button>

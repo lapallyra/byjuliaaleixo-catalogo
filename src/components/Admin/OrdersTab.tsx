@@ -411,7 +411,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
       guennita: "CG",
       mimada: "MS",
     };
-    const prefix = prefixMap[cId] || "XX";
+    const prefix = prefixMap[cId] || "LP";
     const randomNumbers = Math.floor(10000 + Math.random() * 90000);
     return `${prefix}${randomNumbers}`;
   };
@@ -684,7 +684,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: Math.min(idx * 0.04, 0.4) }}
-                className="bg-white rounded-[1.5rem] border border-[#F0E6D2] shadow-sm transition-all hover:shadow-[0_8px_30px_rgba(240,230,210,0.25)] hover:scale-[1.002] duration-300 overflow-hidden flex items-stretch cursor-pointer"
+                className="bg-[#FFFFFF] rounded-[1.5rem] border border-[#F0E6D2] shadow-[0_6px_20px_rgba(240,230,210,0.5)] transition-all hover:shadow-[0_12px_32px_rgba(240,230,210,0.6)] hover:-translate-y-[2px] duration-300 overflow-hidden flex items-stretch cursor-pointer"
                 onClick={() => setIsDetailOpen(order.id)}
               >
                 {/* 1. Barra Lateral Colorida do Status */}
@@ -695,7 +695,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
 
                 {/* Main Content Area - Professional Stripe/Notion Grid */}
                 <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
-                  <div className="grid grid-cols-[130px_50px_minmax(180px,1fr)_100px_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[750px]">
+                  <div className="grid grid-cols-[130px_90px_50px_minmax(180px,1fr)_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[750px]">
                     
                     {/* [STATUS] */}
                     <div className="flex items-center">
@@ -706,6 +706,13 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                           <XCircle size={12} className="text-red-600 shrink-0" />
                         ) : null}
                         <span className="truncate">{statusGroup?.label || order.status}</span>
+                      </span>
+                    </div>
+
+                    {/* [código do pedido] */}
+                    <div className="flex items-center">
+                      <span className="font-mono text-[11px] font-bold text-gray-600 bg-[#FAF9F6] px-2.5 py-1.5 rounded-lg border border-[#F0E6D2] uppercase tracking-widest w-full text-center shadow-sm">
+                        {order.code}
                       </span>
                     </div>
 
@@ -744,23 +751,16 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                           {brandTheme.name}
                         </span>
                       </div>
-                      <h4 className="text-[13px] font-extrabold text-gray-800 uppercase tracking-tight truncate w-full" title={order.customerName}>
+                      <h4 className="text-[13px] font-extrabold text-[#4A3A34] uppercase tracking-tight truncate w-full" title={order.customerName}>
                         {order.customerName}
                       </h4>
                     </div>
 
-                    {/* [código do pedido] */}
-                    <div className="flex items-center">
-                      <span className="font-mono text-[11px] font-bold text-gray-600 bg-gray-50 px-2 py-1 rounded-md border border-gray-200 uppercase tracking-widest w-full text-center">
-                        {order.code}
-                      </span>
-                    </div>
-
                     {/* [DATA DE ENTREGA] */}
                     <div className="flex flex-col justify-center gap-1">
-                      <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider font-extrabold">Entrega</span>
-                      <div className="flex items-center gap-1.5 text-gray-700 font-semibold text-[11px]">
-                        <Calendar size={13} className="text-neutral-400" />
+                      <span className="text-[7.5px] font-black text-[#A09088] uppercase tracking-wider font-extrabold">Entrega</span>
+                      <div className="flex items-center gap-1.5 text-[#4A3A34] font-semibold text-[11px]">
+                        <Calendar size={13} className="text-[#A09088]" />
                         <span>
                           {order.deliveryDate
                             ? safeFormatISO(order.deliveryDate, "dd/MM")
@@ -771,8 +771,8 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
 
                     {/* [VALOR TOTAL] */}
                     <div className="flex flex-col justify-center gap-1 text-right">
-                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest text-right">Valor Total</span>
-                      <p className="text-[13px] font-extrabold text-gray-800">
+                      <span className="text-[8px] font-black text-[#A09088] uppercase tracking-widest text-right">Valor Total</span>
+                      <p className="text-[14px] font-bold text-[#D88D85]">
                         {formatCurrency(Number(order.total) || 0)}
                       </p>
                     </div>
@@ -827,8 +827,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                     <div>
                       <div className="flex items-center gap-3 mb-4">
                         <span className="px-3 py-1 bg-[#FAF9F6] border border-[#F0E6D2] rounded-lg text-[10px] font-semibold text-[#4A4444] uppercase tracking-widest">
-                          Pedido #
-                          {orders.find((o) => o.id === isDetailOpen)?.code}
+                          Pedido: {orders.find((o) => o.id === isDetailOpen)?.code}
                         </span>
                         <span className="text-[10px] font-semibold uppercase text-[#D48C8C] tracking-widest">
                           {orders.find((o) => o.id === isDetailOpen)?.companyId}

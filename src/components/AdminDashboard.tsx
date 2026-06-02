@@ -235,10 +235,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       {/* Sidebar navigation - Desktop */}
       <aside
         className={`bg-white border-r border-[#F0E6D2] flex flex-col hidden lg:flex flex-shrink-0 relative z-[60] shadow-[10px_0_30px_rgba(240,230,210,0.2)] transition-all duration-300 ${isSidebarCollapsed ? "w-20 items-center" : "w-64"}`}
+        style={{ background: "linear-gradient(180deg, rgba(255,255,255,1), rgba(250,246,243,1))" }}
       >
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-3 top-10 bg-white border border-[#F0E6D2] p-1.5 rounded-full shadow-sm z-50 text-[#D48C8C] hover:text-[#B48E4D] transition-all"
+          className="absolute -right-3 top-10 bg-white border border-[#F0E6D2] p-1.5 rounded-full shadow-sm z-50 text-[#D88D85] hover:text-[#B48E4D] transition-all"
         >
           <ChevronRight
             size={14}
@@ -248,15 +249,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
 
         <div className={`p-6 ${isSidebarCollapsed ? "px-4" : ""}`}>
           <div className="flex items-center gap-3 mb-10 px-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D48C8C] to-[#F0E6D2] flex items-center justify-center text-white shadow-[0_8px_20px_rgba(212,140,140,0.2)]">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D88D85] to-[#F0E6D2] flex items-center justify-center text-white shadow-[0_8px_20px_rgba(216,141,133,0.3)]">
               <Sparkles size={20} />
             </div>
             {!isSidebarCollapsed && (
               <div>
-                <h1 className="font-sans font-semibold text-xs tracking-[0.1em] uppercase text-[#4A4444]">
-                  By Julia Aleixo
+                <h1 className="font-sans font-semibold text-xs tracking-[0.1em] uppercase text-[#4A3A34]">
+                   By Julia Aleixo
                 </h1>
-                <p className="text-[7px] text-[#D48C8C] uppercase tracking-widest font-bold">
+                <p className="text-[7px] text-[#D88D85] uppercase tracking-widest font-bold">
                   CEO PRINCIPAL
                 </p>
               </div>
@@ -267,28 +268,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
             {Object.entries(groupedMenu).map(([category, items]) => (
               <div key={category}>
                 {!isSidebarCollapsed && (
-                  <h3 className="text-[9px] font-black uppercase text-[#D1CACA] tracking-widest pl-4 mb-2">{category}</h3>
+                  <h3 className="text-[9px] font-black uppercase text-[#A09088] tracking-widest pl-4 mb-2">{category}</h3>
                 )}
                 <div className="space-y-1">
                   {items.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative group overflow-hidden ${activeTab === item.id ? "text-[#D48C8C]" : "text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FAF9F6]"}`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all relative group overflow-hidden ${activeTab === item.id ? "text-[#4A3A34]" : "text-[#7A6A62] hover:text-[#4A3A34] hover:bg-[#FFFFFF]"}`}
                     >
                       {activeTab === item.id && (
                         <motion.div
                           layoutId="activeNavBg"
-                          className="absolute inset-0 bg-[#FAF9F6] rounded-xl"
+                          className="absolute inset-0 bg-[#FFFDFB] shadow-[inset_0_2px_4px_rgba(240,230,210,0.5)] border border-[#F0E6D2] rounded-xl"
                         />
                       )}
                       <item.icon
                         size={18}
-                        className={`${activeTab === item.id ? "text-[#D48C8C]" : "text-[#D1CACA] group-hover:text-[#D48C8C]"} transition-all relative z-10 w-5 h-5`}
+                        className={`${activeTab === item.id ? "text-[#D88D85] opacity-100" : "text-[#A09088] opacity-80 group-hover:text-[#D88D85] group-hover:opacity-100"} transition-all relative z-10 w-5 h-5`}
                       />
                       {!isSidebarCollapsed && (
                         <span
-                          className={`text-[10px] uppercase font-medium tracking-[0.12em] relative z-10 ${activeTab === item.id ? "font-semibold" : ""}`}
+                          className={`text-[10px] uppercase font-medium tracking-[0.12em] relative z-10 ${activeTab === item.id ? "font-bold" : ""}`}
                         >
                           {item.label}
                         </span>
