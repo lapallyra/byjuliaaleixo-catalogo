@@ -226,7 +226,52 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
   const path = `sales/${orderId}`;
   const { id: _, ...dataWithoutId } = data as any;
   try {
-    await updateDoc(doc(db, 'sales', orderId), sanitize(dataWithoutId));
+    let finalData = { ...dataWithoutId };
+    
+    // Automatic stock deduction when entering produced/completed statuses
+    if (['ready', 'delivered', 'fully_paid', 'production'].includes(data.status || '')) {
+      const orderRef = doc(db, 'sales', orderId);
+      const orderSnap = await getDoc(orderRef);
+      if (orderSnap.exists()) {
+        const orderData = orderSnap.data() as Order;
+        if (!orderData.insumosDeducted) {
+          const items = data.items || orderData.items || [];
+          for (const item of items) {
+            if (item.insumos && item.insumos.length > 0) {
+              for (const req of item.insumos) {
+                try {
+                  const insumoRef = doc(db, 'insumos', req.insumoId);
+                  const insumoSnap = await getDoc(insumoRef);
+                  if (insumoSnap.exists()) {
+                    const currentQty = insumoSnap.data().quantity || 0;
+                    const reduction = req.quantity * item.quantity;
+                    const newQty = Math.max(0, currentQty - reduction);
+                    await updateDoc(insumoRef, { quantity: newQty });
+                    
+                    // Log movement
+                    await addDoc(collection(db, 'insumo_movements'), sanitize({
+                      insumoId: req.insumoId,
+                      insumoName: insumoSnap.data().name || 'Material',
+                      orderId: orderId,
+                      orderCode: orderData.code || orderId,
+                      productName: item.product_name || 'Produto',
+                      quantityDeducted: reduction,
+                      timestamp: new Date().toISOString(),
+                      type: 'out'
+                    }));
+                  }
+                } catch (err) {
+                  console.warn(`Could not update stock for insumo ${req.insumoId}:`, err);
+                }
+              }
+            }
+          }
+          finalData.insumosDeducted = true;
+        }
+      }
+    }
+
+    await updateDoc(doc(db, 'sales', orderId), sanitize(finalData));
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
@@ -250,7 +295,8 @@ export const saveSale = async (data: any) => {
       status: 'novo pedido',
       source: 'catalogo',
       deliveryDate: deliveryDate,
-      estimatedDelivery: deliveryDate
+      estimatedDelivery: deliveryDate,
+      insumosDeducted: true // Already deducted on catalog purchase below
     });
     
     let docRef = doc(db, 'sales', saleData.code);
@@ -300,6 +346,20 @@ export const saveSale = async (data: any) => {
                 await updateDoc(insumoRef, { 
                     quantity: Math.max(0, currentQty - reduction) 
                 });
+                try {
+                  await addDoc(collection(db, 'insumo_movements'), sanitize({
+                    insumoId: requiredInsumo.insumoId,
+                    insumoName: insumoSnap.data()?.name || 'Material',
+                    orderId: docRef.id,
+                    orderCode: saleData.code || docRef.id,
+                    productName: item.product_name || 'Produto',
+                    quantityDeducted: reduction,
+                    timestamp: new Date().toISOString(),
+                    type: 'out'
+                  }));
+                } catch (logErr) {
+                  console.warn('Logging movement error:', logErr);
+                }
               }
             } catch (err) {
               console.warn(`Could not update stock for insumo ${requiredInsumo.insumoId}:`, err);
@@ -341,8 +401,8 @@ function generateOrderCode(companyId: CompanyId): string {
     'guennita': 'CG',
     'mimada': 'MS'
   };
-  const prefix = prefixMap[companyId] || 'LP'; // Default to LP instead of AT
-  const random = crypto.randomUUID().slice(0, 4).toUpperCase();
+  const prefix = prefixMap[companyId] || 'LP';
+  const random = Math.floor(10000 + Math.random() * 90000).toString(); // 5 random numbers
   return `${prefix}${random}`;
 }
 

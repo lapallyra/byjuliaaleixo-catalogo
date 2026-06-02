@@ -92,6 +92,7 @@ export interface Order {
   signalValue?: number;
   source?: 'catalog' | 'admin';
   giftInfo?: string;
+  insumosDeducted?: boolean;
   history?: {
     status: Order['status'];
     timestamp: any;
@@ -201,6 +202,7 @@ export interface SiteSettings {
   taxes_list?: { id: string; name: string; value: number; type?: string }[];
   labor_list?: { id: string; name: string; value: number }[];
   test_mode?: boolean;
+  sound_notifications_active?: boolean;
 }
 
 export interface CartItem extends Product {

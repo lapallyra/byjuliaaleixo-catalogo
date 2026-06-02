@@ -1,11 +1,12 @@
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export const safeFormat = (date: any, formatStr: string, options?: any) => {
   try {
     if (!date) return '---';
     const d = new Date(date);
     if (isNaN(d.getTime())) return '---';
-    return format(d, formatStr, options);
+    return format(d, formatStr, { locale: ptBR, ...options });
   } catch (error) {
     console.error('Date formatting error:', error, date);
     return '---';
@@ -27,7 +28,7 @@ export const safeFormatISO = (dateStr: string, formatStr: string, options?: any)
     }
 
     if (isNaN(d.getTime())) return '---';
-    return format(d, formatStr, options);
+    return format(d, formatStr, { locale: ptBR, ...options });
   } catch (error) {
     console.error('ISO Date formatting error:', error, dateStr);
     return '---';

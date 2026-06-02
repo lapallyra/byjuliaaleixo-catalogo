@@ -17,6 +17,8 @@ import {
   Box,
   FileDown,
   MoreVertical,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Order, CompanyId, Product, Insumo } from "../../types";
@@ -41,55 +43,73 @@ const STATUS_GROUPS = [
     id: "novo",
     label: "Novo",
     dbStatuses: ["novo pedido", "quote", "pending"],
-    color: "#a78bfa", // Purple
-    bgLight: "bg-purple-100/50 text-purple-600 border-purple-200",
-    shadow: "shadow-purple-100",
-    accentColor: "ring-purple-200",
-  },
-  {
-    id: "producao",
-    label: "Em Produção",
-    dbStatuses: ["production", "assembly"],
-    color: "#3b82f6", // Blue
-    bgLight: "bg-blue-100/50 text-blue-600 border-blue-200",
-    shadow: "shadow-blue-100",
-    accentColor: "ring-blue-200",
+    color: "#eab308", // Yellow
+    bgLight: "bg-yellow-100 text-yellow-700 border-yellow-200",
+    shadow: "shadow-yellow-100",
+    accentColor: "ring-yellow-200",
   },
   {
     id: "aprovacao",
     label: "Aguardando Aprovação",
-    dbStatuses: ["approval", "waiting_deposit", "waiting_remaining"],
-    color: "#f59e0b", // Amber
-    bgLight: "bg-amber-100/50 text-amber-750 border-amber-300",
-    shadow: "shadow-amber-100",
-    accentColor: "ring-amber-200",
+    dbStatuses: ["approval", "waiting_deposit", "waiting_payment", "planned_payment"],
+    color: "#3b82f6", // Blue
+    bgLight: "bg-blue-100/50 text-blue-700 border-blue-200",
+    shadow: "shadow-blue-100",
+    accentColor: "ring-blue-200",
+  },
+  {
+    id: "producao",
+    label: "Em Produção",
+    dbStatuses: ["production"],
+    color: "#f97316", // Orange
+    bgLight: "bg-orange-100/50 text-orange-700 border-orange-200",
+    shadow: "shadow-orange-100",
+    accentColor: "ring-orange-200",
+  },
+  {
+    id: "detalhes",
+    label: "Últimos detalhes",
+    dbStatuses: ["assembly"],
+    color: "#ec4899", // Pink
+    bgLight: "bg-pink-100/50 text-pink-700 border-pink-200",
+    shadow: "shadow-pink-100",
+    accentColor: "ring-pink-200",
   },
   {
     id: "pronto",
     label: "Pronto",
     dbStatuses: ["ready"],
-    color: "#10b981", // Emerald
-    bgLight: "bg-emerald-100/50 text-emerald-600 border-emerald-200",
-    shadow: "shadow-emerald-100",
-    accentColor: "ring-emerald-200",
+    color: "#15803d", // Dark Green
+    bgLight: "bg-green-100/50 text-green-800 border-green-300",
+    shadow: "shadow-green-100",
+    accentColor: "ring-green-300",
+  },
+  {
+    id: "aguardando_entrega",
+    label: "Aguardando Entrega",
+    dbStatuses: ["delivery", "waiting_remaining", "planned_active"],
+    color: "#22c55e", // Green
+    bgLight: "bg-green-100/50 text-green-700 border-green-200",
+    shadow: "shadow-green-100",
+    accentColor: "ring-green-200",
   },
   {
     id: "entregue",
     label: "Entregue",
     dbStatuses: ["delivered", "fully_paid"],
-    color: "#94a3b8", // Slate
-    bgLight: "bg-slate-100/60 text-slate-500 border-slate-200",
-    shadow: "shadow-slate-100",
-    accentColor: "ring-slate-100",
+    color: "#86efac", // Light Green
+    bgLight: "bg-green-50 text-green-600 border-green-100",
+    shadow: "shadow-green-50",
+    accentColor: "ring-green-100",
   },
   {
     id: "cancelado",
     label: "Cancelado",
     dbStatuses: ["cancelled"],
     color: "#ef4444", // Red
-    bgLight: "bg-rose-100/50 text-rose-600 border-rose-200",
-    shadow: "shadow-rose-100",
-    accentColor: "ring-rose-200",
+    bgLight: "bg-red-100/50 text-red-700 border-red-200",
+    shadow: "shadow-red-100",
+    accentColor: "ring-red-200",
   }
 ];
 
@@ -656,7 +676,6 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
               group.dbStatuses.includes(order.status.toLowerCase())
             );
             const brandTheme = getBrandTheme(order.companyId);
-            const attendantName = getAtendenteForOrder(order.code, order.companyId);
             const cardProduct = getProductInfoForCard(order);
 
             return (
@@ -665,22 +684,34 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: Math.min(idx * 0.04, 0.4) }}
-                className="bg-white rounded-[2rem] border border-[#F0E6D2] shadow-[0_6px_20px_rgba(240,230,210,0.08)] transition-all hover:shadow-[0_15px_40px_rgba(240,230,210,0.22)] hover:scale-[1.006] duration-300 overflow-hidden flex flex-col md:flex-row items-stretch cursor-pointer"
+                className="bg-white rounded-[1.5rem] border border-[#F0E6D2] shadow-sm transition-all hover:shadow-[0_8px_30px_rgba(240,230,210,0.25)] hover:scale-[1.002] duration-300 overflow-hidden flex items-stretch cursor-pointer"
                 onClick={() => setIsDetailOpen(order.id)}
               >
                 {/* 1. Barra Lateral Colorida do Status */}
                 <div 
-                  className="w-full h-2 md:w-3 md:h-auto shrink-0 transition-all duration-300"
+                  className="w-2 shrink-0 transition-all duration-300"
                   style={{ backgroundColor: statusGroup?.color || "#e2e8f0" }}
                 />
 
-                {/* Main Content Area */}
-                <div className="p-5 md:p-6 lg:p-7 flex-1 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  {/* Left Column: Number, Thumbnail, customer info */}
-                  <div className="flex items-center gap-5 min-w-0">
-                    {/* Thumbnail of product */}
-                    <div className="relative shrink-0">
-                      <div className="w-14 h-14 rounded-2xl bg-[#FAF9F6] border border-[#F0E6D2] overflow-hidden flex items-center justify-center shadow-inner relative group-hover:border-[#D48C8C] transition-colors">
+                {/* Main Content Area - Professional Stripe/Notion Grid */}
+                <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
+                  <div className="grid grid-cols-[130px_50px_minmax(180px,1fr)_100px_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[750px]">
+                    
+                    {/* [STATUS] */}
+                    <div className="flex items-center">
+                      <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-500 border-slate-150"} truncate w-full`}>
+                        {order.status === 'delivered' || order.status === 'fully_paid' ? (
+                          <CheckCircle2 size={12} className="text-green-600 shrink-0" />
+                        ) : order.status === 'cancelled' ? (
+                          <XCircle size={12} className="text-red-600 shrink-0" />
+                        ) : null}
+                        <span className="truncate">{statusGroup?.label || order.status}</span>
+                      </span>
+                    </div>
+
+                    {/* [FOTO] */}
+                    <div className="flex justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] overflow-hidden flex items-center justify-center shadow-inner relative">
                         {cardProduct.image ? (
                           <img 
                             src={cardProduct.image} 
@@ -689,27 +720,21 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                             referrerPolicy="no-referrer"
                           />
                         ) : (
-                          <Box size={22} className="text-[#D1CACA]" />
+                          <Box size={16} className="text-[#D1CACA]" />
                         )}
                         {cardProduct.count > 1 && (
-                          <span className="absolute -top-1.5 -right-1.5 bg-neutral-900 text-white text-[8px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+                          <span className="absolute -top-1 -right-1 bg-neutral-900 text-white text-[7px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
                             +{cardProduct.count - 1}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Customer & Code Details */}
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        {/* Order Number badge */}
-                        <span className="font-mono text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
-                          #{order.code}
-                        </span>
-                        
-                        {/* Brand badge */}
+                    {/* [NOME DO CLIENTE] */}
+                    <div className="flex flex-col justify-center min-w-0 pr-4">
+                      <div className="flex items-center gap-2 mb-0.5">
                         <span 
-                          className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border"
+                          className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm border"
                           style={{
                             borderColor: brandTheme.badgeColor,
                             color: brandTheme.badgeColor,
@@ -719,39 +744,23 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                           {brandTheme.name}
                         </span>
                       </div>
-
-                      <h4 className="text-[13px] font-extrabold text-gray-800 uppercase tracking-tight truncate max-w-[240px]" title={order.customerName}>
+                      <h4 className="text-[13px] font-extrabold text-gray-800 uppercase tracking-tight truncate w-full" title={order.customerName}>
                         {order.customerName}
                       </h4>
-                      <p className="text-[10px] text-gray-450 font-bold truncate max-w-[280px]">
-                        {cardProduct.name} {cardProduct.count > 1 ? `(${cardProduct.count} itens)` : ""}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Middle Column: Attendant, Forecast, Payment and Status Badges */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:flex md:items-center md:gap-10 lg:gap-14 border-t border-b border-gray-50 py-4 md:py-0 md:border-t-0 md:border-b-0">
-                    {/* Attendant */}
-                    <div className="flex flex-col gap-1.5 justify-center">
-                      <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider">Atendente</span>
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black text-white uppercase shadow-inner"
-                          style={{ backgroundColor: brandTheme.primary }}
-                        >
-                          {attendantName.charAt(0)}
-                        </div>
-                        <span className="text-[10.5px] font-semibold text-gray-700 uppercase tracking-tight">
-                          {attendantName}
-                        </span>
-                      </div>
                     </div>
 
-                    {/* Forecast */}
-                    <div className="flex flex-col gap-1 justify-center">
-                      <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider font-extrabold">Previsão</span>
-                      <div className="flex items-center gap-1.5 text-gray-700 font-semibold text-[10.5px]">
-                        <Calendar size={13} className="text-[#D48C8C]" />
+                    {/* [código do pedido] */}
+                    <div className="flex items-center">
+                      <span className="font-mono text-[11px] font-bold text-gray-600 bg-gray-50 px-2 py-1 rounded-md border border-gray-200 uppercase tracking-widest w-full text-center">
+                        {order.code}
+                      </span>
+                    </div>
+
+                    {/* [DATA DE ENTREGA] */}
+                    <div className="flex flex-col justify-center gap-1">
+                      <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider font-extrabold">Entrega</span>
+                      <div className="flex items-center gap-1.5 text-gray-700 font-semibold text-[11px]">
+                        <Calendar size={13} className="text-neutral-400" />
                         <span>
                           {order.deliveryDate
                             ? safeFormatISO(order.deliveryDate, "dd/MM")
@@ -760,55 +769,16 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                       </div>
                     </div>
 
-                    {/* Status Badge */}
-                    <div className="flex flex-col gap-1 justify-center col-span-2 sm:col-span-1">
-                      <span className="text-[7.5px] font-black text-gray-400 uppercase tracking-wider">Status</span>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-[8.5px] font-extrabold tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-500 border-slate-150"}`}>
-                          {statusGroup?.label || order.status}
-                        </span>
-
-                        {/* Payment indicator badge */}
-                        {order.paymentMode === 'planned' ? (
-                          <span className="px-2.5 py-1 rounded-full text-[8px] font-extrabold tracking-widest border uppercase bg-indigo-50 text-indigo-500 border-indigo-100">
-                            PLN {order.remainingInstallments ? `(${order.remainingInstallments}X)` : ''}
-                          </span>
-                        ) : order.paymentStatus === 'paid' || order.paymentMode === 'full' ? (
-                          <span className="px-2.5 py-1 rounded-full text-[8px] font-extrabold tracking-widest border uppercase bg-emerald-50 text-emerald-600 border-emerald-100 shadow-[0_0_10px_rgba(52,211,153,0.06)]">
-                            QUITADO
-                          </span>
-                        ) : (
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[8px] font-extrabold tracking-widest border uppercase ${
-                              order.paymentStatus === "cancelled"
-                                ? "bg-slate-50 text-rose-600 border-rose-100"
-                                : order.paymentStatus === "partial"
-                                  ? "bg-amber-50 text-amber-600 border-amber-100"
-                                  : "bg-orange-50 text-orange-600 border-orange-100 shadow-[0_0_10px_rgba(251,146,60,0.05)] animate-pulse"
-                            }`}
-                          >
-                            {order.paymentStatus === "cancelled"
-                              ? "CANC"
-                              : order.paymentStatus === "partial"
-                                ? "PARCIAL"
-                                : "PENDENTE"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Total Price and Action ⋮ Button */}
-                  <div className="flex items-center justify-between md:justify-end gap-8 border-t border-gray-50 pt-4 md:pt-0 md:border-t-0">
-                    <div className="text-left md:text-right">
-                      <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Valor Total</p>
-                      <p className="text-sm font-extrabold" style={{ color: brandTheme.badgeColor }}>
+                    {/* [VALOR TOTAL] */}
+                    <div className="flex flex-col justify-center gap-1 text-right">
+                      <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest text-right">Valor Total</span>
+                      <p className="text-[13px] font-extrabold text-gray-800">
                         {formatCurrency(Number(order.total) || 0)}
                       </p>
                     </div>
 
-                    {/* Actions Double-Dot / Triple-Dot Dropdown button */}
-                    <div onClick={(e) => e.stopPropagation()}>
+                    {/* [MENU ...] */}
+                    <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
                       <ActionsDropdown 
                         order={order}
                         onOpenDetail={() => setIsDetailOpen(order.id)}

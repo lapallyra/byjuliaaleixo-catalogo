@@ -45,6 +45,7 @@ import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGlobalSettings, getGiftList, updateOrderStatus } from '../services/firebaseService';
+import { playSuccessSound } from '../utils/audio';
 import { functions } from '../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { PRODUCTS, INITIAL_CONFIG } from '../constants';
@@ -331,6 +332,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       if (checkoutData?.isSimulated) {
         console.log('[MODO TESTE] Simulando pagamento aprovado...');
         await updateOrderStatus(savedOrderCode, 'paid');
+        playSuccessSound();
 
         localStorage.setItem('mp_pending_order', JSON.stringify({
             orderId: savedOrderCode,

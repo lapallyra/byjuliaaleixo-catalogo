@@ -283,7 +283,7 @@ export const AgendaTab: React.FC<AgendaTabProps> = ({
                         <span
                           className={`text-[8px] font-mono font-black text-${colorBase === "lilac" ? "lilac" : colorBase}`}
                         >
-                          #{order.code}
+                          {order.code}
                         </span>
                       </div>
                       <p className="text-[8px] text-[#A09898] font-bold uppercase tracking-widest">

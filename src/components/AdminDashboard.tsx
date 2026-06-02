@@ -44,7 +44,9 @@ import {
   Star,
   Heart,
   TrendingUp,
+  FileCheck,
 } from "lucide-react";
+import { playSuccessSound } from "../utils/audio";
 import { useAuth } from "./AuthProvider";
 
 // Modular Tabs
@@ -63,6 +65,7 @@ import { AddonsTab } from "./Admin/AddonsTab";
 import { PrizesTab } from "./Admin/PrizesTab";
 import { FeedbacksTab } from "./Admin/FeedbacksTab";
 import { FunnelLogsTab } from "./Admin/FunnelLogsTab";
+import { AuditoriaTab } from "./Admin/AuditoriaTab";
 
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
@@ -78,6 +81,7 @@ type TabType =
   | "products"
   | "clients"
   | "finance"
+  | "auditoria"
   | "gift-lists"
   | "commemorative-dates"
   | "reports"
@@ -206,13 +210,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   }
 
   const menuItems: { id: TabType; label: string; icon: any; category: string }[] = [
-    { id: "dashboard", label: "Dashboard", category: "PAINEL", icon: LayoutDashboard },
+    { id: "dashboard", label: "Painel", category: "PAINEL", icon: LayoutDashboard },
     { id: "orders", label: "Pedidos", category: "OPERAÇÃO", icon: ShoppingBag },
     { id: "clients", label: "Clientes", category: "OPERAÇÃO", icon: User },
     { id: "products", label: "Produtos", category: "OPERAÇÃO", icon: Box },
     { id: "inventory", label: "Estoque", category: "OPERAÇÃO", icon: Archive },
     { id: "agenda", label: "Agenda", category: "OPERAÇÃO", icon: Calendar },
     { id: "finance", label: "Financeiro", category: "FINANCEIRO", icon: DollarSign },
+    { id: "auditoria", label: "Auditoria", category: "FINANCEIRO", icon: FileCheck },
     { id: "reports", label: "Relatórios", category: "FINANCEIRO", icon: BarChart3 },
     { id: "settings", label: "Configurações", category: "SISTEMA", icon: Settings },
   ];
@@ -532,14 +537,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       products={products}
                       insumos={insumos}
                       companyId={selectedCompanyId}
-                      onUpdateStatus={async (id, status) =>
-                        await updateOrderStatus(id, status)
-                      }
+                      onUpdateStatus={async (id, status) => {
+                        await updateOrderStatus(id, status);
+                        if (["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(status)) {
+                          playSuccessSound();
+                        }
+                      }}
                       onSaveOrder={async (data) => {
                         if (data.id) {
                           await updateOrder(data.id, data);
+                          if (data.status && ["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(data.status)) {
+                            playSuccessSound();
+                          }
                         } else {
                           await saveSale(data);
+                          playSuccessSound();
                         }
                       }}
                       onDeleteOrder={async (id) => {
@@ -607,6 +619,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       orders={sales}
                       products={products}
                       customers={customers}
+                      insumos={insumos}
+                    />
+                  )}
+                  {activeTab === "auditoria" && (
+                    <AuditoriaTab
+                      companyId={selectedCompanyId}
+                      orders={sales}
+                      products={products}
                       insumos={insumos}
                     />
                   )}

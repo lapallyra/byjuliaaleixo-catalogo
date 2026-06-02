@@ -697,9 +697,19 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           <div className="flex items-center gap-2">
             <Package size={12} className="text-[#cca062]" /> <span className="font-bold tracking-widest uppercase text-[#6d5443]">Compra 100% Segura</span>
           </div>
-          <div className="flex items-center gap-2 font-bold tracking-widest text-[#6d5443]">
-             <img src="https://http2.mlstatic.com/storage/logos-api-admin/a5f647b0-f39b-11eb-98ac-71133ce844a1-m.svg" alt="Mercado Pago" className="h-6 md:h-8" />
-             <span className="text-[9px] uppercase">Pagamento Seguro </span>
+          <div className="flex items-center gap-3 bg-white/40 border border-[#e8dcc8] py-1 px-2.5 rounded-lg">
+             <img 
+               src="https://upload.wikimedia.org/wikipedia/commons/2/29/Mercado_Pago_logo_auxiliar.svg" 
+               alt="Mercado Pago" 
+               className="h-5 md:h-6 object-contain" 
+               onError={(e) => {
+                 e.currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Mercado_Pago.png";
+               }}
+             />
+             <div className="flex flex-col items-start leading-[1.1] border-l border-[#e8dcc8] pl-2">
+               <span className="text-[8px] tracking-wider text-[#A09898] font-bold uppercase">Pagamento Processado por</span>
+               <span className="text-[9px] font-black text-[#00a6e0] tracking-wider uppercase">Mercado Pago</span>
+             </div>
           </div>
         </div>
       </footer>

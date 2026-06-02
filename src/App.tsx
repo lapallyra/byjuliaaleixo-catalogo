@@ -26,6 +26,7 @@ import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseSe
 import { PrizeRouletteModal } from './components/PrizeRouletteModal';
 import { sendNotifications } from './services/notificationService';
 import { updateOrder } from './services/firebaseService';
+import { playSuccessSound } from './utils/audio';
 function SparklesContainer({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
@@ -91,6 +92,8 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
           
           setMpPendingOrderData(pendingOrder);
           setShowMPRoulette(true);
+          
+          playSuccessSound();
           
           localStorage.removeItem('mp_pending_order');
           // cleanup URL params

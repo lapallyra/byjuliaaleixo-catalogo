@@ -23,6 +23,7 @@ import {
   User,
   Truck,
   X,
+  Bell,
 } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
 import { DynamicPricingList } from "./DynamicPricingList";
@@ -59,6 +60,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
     | "receipt"
     | "roulette"
     | "shipping"
+    | "notifications"
   >("brand");
   const [settings, setSettings] = useState<Partial<SiteSettings>>({});
   const [loading, setLoading] = useState(true);
@@ -129,7 +131,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           global_labor_cost_per_hour: settings.global_labor_cost_per_hour,
           global_tax_rate: settings.global_tax_rate,
         });
-      } else if (['pix', 'marketing', 'receipt', 'roulette', 'shipping'].includes(activeSubTab)) {
+      } else if (['pix', 'marketing', 'receipt', 'roulette', 'shipping', 'notifications'].includes(activeSubTab)) {
         await saveGlobalSettings(settings);
       } else {
         await saveSiteSettings(companyId, settings);
@@ -199,6 +201,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           { id: "receipt", label: "Comprovantes", icon: FileText },
           { id: "shipping", label: "Cálculo de Frete", icon: Truck },
           { id: "roulette", label: "Roleta de Brindes", icon: Gift },
+          { id: "notifications", label: "Notificações", icon: Bell },
         ].map((item) => (
           <button
             key={item.id}
@@ -1149,6 +1152,72 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   <li>• Regras desativadas serão ignoradas.</li>
                   <li>• Se nenhum CEP coincidir, o sistema poderá exibir "Sob Consulta" ou um valor padrão (se implementado).</li>
                </ul>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === "notifications" && (
+          <div className="space-y-10">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-rose-100/50 text-[#D48C8C]">
+                <Bell size={24} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+                Gerenciador de Notificações
+              </h3>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 border border-lilac/10 space-y-8">
+              <div>
+                <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">Alertas e Efeitos Sonoros</h4>
+                <p className="text-[10px] text-[#A09898] uppercase font-bold tracking-widest mt-1">Configure o comportamento das notificações do sistema.</p>
+              </div>
+
+              <div className="p-6 bg-[#F8F5F2] rounded-2xl border border-lilac/5 flex items-center justify-between">
+                <div className="space-y-1 pr-4">
+                  <p className="text-xs font-black text-slate-900 uppercase tracking-wider">Feedback Sonoro de Sucesso</p>
+                  <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest max-w-md leading-relaxed normal-case">
+                    Reproduzir automaticamente um som de recebimento de dinheiro ("cash register cha-ching") ou confirmação quando novos pedidos forem criados ou marcados como pagos e concluídos.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentVal = settings.sound_notifications_active !== false;
+                    updateField("sound_notifications_active", !currentVal);
+                  }}
+                  className={`w-14 h-8 rounded-full transition-all duration-300 relative flex items-center px-1 shrink-0 ${
+                    settings.sound_notifications_active !== false ? "bg-[#D48C8C]" : "bg-slate-300"
+                  }`}
+                  style={{ minWidth: '56px' }}
+                >
+                  <div
+                    className={`w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                      settings.sound_notifications_active !== false ? "translate-x-6" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const { playSuccessSound } = await import("../../utils/audio");
+                    playSuccessSound();
+                  }}
+                  className="px-6 py-3 border border-[#F0E6D2] hover:bg-[#FAF9F6] text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm"
+                >
+                  🔊 Testar Som de Sucesso
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-lilac/5 rounded-3xl p-8 border border-lilac/10">
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2">Compatibilidade de Áudio</h4>
+              <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest leading-relaxed">
+                • Efeitos sonoros são gerados de forma limpa pelo navegador via Web Audio API, exigindo uma primeira interação na página para contornar restrições de autoplayer do navegador.
+              </p>
             </div>
           </div>
         )}

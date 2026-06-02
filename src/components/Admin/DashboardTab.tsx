@@ -30,10 +30,12 @@ import {
   Share2,
   ArrowRight,
   Target,
+  CheckCircle2,
+  MoreVertical,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Order, Product, CompanyId, CommemorativeDate } from "../../types";
-import { safeFormat } from "../../lib/dateUtils";
+import { safeFormat, safeFormatISO } from "../../lib/dateUtils";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { startOfDay, isToday } from "date-fns";
 import { getUpcomingDates } from "../../services/calendarService";
@@ -489,6 +491,42 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               {pendingOrders.map((order, idx) => {
                 const config =
                   brandConfig[order.companyId] || brandConfig.pallyra;
+                  
+                // Status mapping to match OrdersTab
+                const isDelivered = order.status === 'delivered' || order.status === 'fully_paid';
+                const isCancelled = order.status === 'cancelled';
+                let statusColor = "#eab308"; // Default Yellow
+                let statusLabel = statusLabels[order.status] || order.status;
+                let bgLight = "bg-yellow-100 text-yellow-700 border-yellow-200";
+
+                if (['approval', 'waiting_deposit', 'waiting_payment', 'planned_payment'].includes(order.status)) { statusColor = "#3b82f6"; bgLight = "bg-blue-100/50 text-blue-700 border-blue-200"; statusLabel = "Aguardando Aprovação"; }
+                else if (['production'].includes(order.status)) { statusColor = "#f97316"; bgLight = "bg-orange-100/50 text-orange-700 border-orange-200"; statusLabel = "Em Produção"; }
+                else if (['assembly'].includes(order.status)) { statusColor = "#ec4899"; bgLight = "bg-pink-100/50 text-pink-700 border-pink-200"; statusLabel = "Últimos detalhes"; }
+                else if (['ready'].includes(order.status)) { statusColor = "#15803d"; bgLight = "bg-green-100/50 text-green-800 border-green-300"; statusLabel = "Pronto"; }
+                else if (['delivery', 'waiting_remaining', 'planned_active'].includes(order.status)) { statusColor = "#22c55e"; bgLight = "bg-green-100/50 text-green-700 border-green-200"; statusLabel = "Aguardando Entrega"; }
+                else if (isDelivered) { statusColor = "#86efac"; bgLight = "bg-green-50 text-green-600 border-green-100"; statusLabel = "Entregue"; }
+                else if (isCancelled) { statusColor = "#ef4444"; bgLight = "bg-red-100/50 text-red-700 border-red-200"; statusLabel = "Cancelado"; }
+                else { statusLabel = "Novo"; }
+
+                const getProductInfoForCard = (o: Order) => {
+                  if (o.items && o.items.length > 0) {
+                    const firstItem = o.items[0];
+                    const matchedProduct = products.find(p => p.id === firstItem.productId || p.id === firstItem.id);
+                    const image = matchedProduct?.image || firstItem.image;
+                    const name = matchedProduct?.product_name || firstItem.product_name;
+                    const count = o.items.reduce((acc, i) => acc + i.quantity, 0);
+                    return { image, name, count };
+                  }
+                  return { image: null, name: "Produto Personalizado", count: 1 };
+                };
+                const cardProduct = getProductInfoForCard(order);
+
+                const brandNames: Record<string, string> = {
+                  pallyra: "La Pallyra",
+                  guennita: "com amor, Guennita",
+                  mimada: "Mimada Sim"
+                };
+
                 return (
                   <motion.div
                     key={order.id}
@@ -500,59 +538,111 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       boxShadow: "0 10px 20px rgba(240,230,210,0.2)",
                     }}
                     onClick={() => onOpenOrder(order)}
-                    className="p-5 rounded-[1.2rem] bg-white border border-[#F0E6D2] flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all group cursor-pointer hover:bg-[#FAF9F6]"
+                    className="bg-white rounded-[1.5rem] border border-[#F0E6D2] shadow-sm flex items-stretch cursor-pointer overflow-hidden transition-all group"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-white border border-[#F0E6D2] flex items-center justify-center text-[#D1CACA] group-hover:text-[#D48C8C] transition-colors overflow-hidden relative shadow-inner">
-                        {order.customerName.charAt(0)}
-                        <div
-                          className="absolute bottom-0 left-0 right-0 h-1"
-                          style={{ backgroundColor: config.color }}
-                        />
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-semibold text-[#4A4444] uppercase tracking-tight">
-                          {order.customerName}
-                        </h4>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[8px] font-medium text-[#D48C8C] uppercase tracking-wider">
-                            {order.companyId}
-                          </span>
-                          <span className="w-1 h-1 rounded-full bg-[#F0E6D2]"></span>
-                          <span className="text-[8px] font-semibold text-[#D48C8C] uppercase tracking-widest">
-                            {statusLabels[order.status] || order.status}
+                    {/* Barra Lateral Colorida do Status */}
+                    <div 
+                      className="w-2 shrink-0 transition-all duration-300"
+                      style={{ backgroundColor: statusColor }}
+                    />
+
+                    <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
+                      <div className="grid grid-cols-[130px_50px_minmax(180px,1fr)_100px_110px_100px_40px] items-center gap-4 px-5 py-4 min-w-[750px]">
+                        
+                        {/* [STATUS] */}
+                        <div className="flex items-center">
+                          <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase border ${bgLight} truncate w-full`}>
+                            {isDelivered ? (
+                              <CheckCircle2 size={12} className="text-green-600 shrink-0" />
+                            ) : isCancelled ? (
+                              <XCircle size={12} className="text-red-600 shrink-0" />
+                            ) : null}
+                            <span className="truncate">{statusLabel}</span>
                           </span>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center justify-between md:justify-end gap-4">
-                      <div className="text-right mr-4">
-                        <p className="text-[10px] font-bold text-[#4A4444]">
-                          {formatCurrency(Number(order.total) || 0)}
-                        </p>
-                        <p className="text-[7px] text-[#A09898] font-medium uppercase tracking-widest mt-0.5">
-                          {order.code}
-                        </p>
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); onOpenOrder(order); }}
-                          className="px-4 py-2 rounded-lg bg-[#FAF9F6] border border-[#F0E6D2] text-[8px] font-bold uppercase tracking-widest text-[#4A4444] hover:bg-[#F0E6D2] transition-colors"
-                        >
-                          Visualizar
-                        </button>
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            // Using a CustomEvent to prompt the app to open the order
-                            window.dispatchEvent(new CustomEvent('edit-order', { detail: order.id }));
-                          }}
-                          className="px-4 py-2 rounded-lg bg-black text-white border border-transparent text-[8px] font-bold uppercase tracking-widest hover:bg-neutral-800 transition-colors"
-                        >
-                          Editar
-                        </button>
+                        {/* [FOTO] */}
+                        <div className="flex justify-center">
+                          <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] overflow-hidden flex items-center justify-center shadow-inner relative text-[#D1CACA]">
+                            {cardProduct.image ? (
+                              <img 
+                                src={cardProduct.image} 
+                                alt={cardProduct.name} 
+                                className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-300"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <Box size={16} />
+                            )}
+                            {cardProduct.count > 1 && (
+                              <span className="absolute -top-1 -right-1 bg-neutral-900 text-white text-[7px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                                +{cardProduct.count - 1}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* [NOME DO CLIENTE] */}
+                        <div className="flex flex-col justify-center min-w-0 pr-4">
+                           <div className="flex items-center gap-2 mb-0.5">
+                            <span 
+                              className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm border"
+                              style={{
+                                borderColor: config.color,
+                                color: config.color,
+                                backgroundColor: `${config.color}10`
+                              }}
+                            >
+                              {brandNames[order.companyId] || order.companyId}
+                            </span>
+                          </div>
+                          <h4 className="text-[13px] font-extrabold text-[#4A4444] uppercase tracking-tight truncate w-full">
+                            {order.customerName}
+                          </h4>
+                        </div>
+
+                        {/* [código do pedido] */}
+                        <div className="flex items-center">
+                          <span className="font-mono text-[11px] font-bold text-gray-600 bg-gray-50 px-2 py-1 rounded-md border border-gray-200 uppercase tracking-widest w-full text-center">
+                            {order.code}
+                          </span>
+                        </div>
+
+                        {/* [DATA DE ENTREGA] */}
+                        <div className="flex flex-col justify-center gap-1">
+                          <span className="text-[7.5px] font-black text-[#A09898] uppercase tracking-wider font-extrabold">Entrega</span>
+                          <div className="flex items-center gap-1.5 text-[#4A4444] font-semibold text-[11px]">
+                            <Calendar size={13} className="text-[#D1CACA]" />
+                            <span>
+                              {order.deliveryDate
+                                ? safeFormatISO(order.deliveryDate, "dd/MM")
+                                : "--/--"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* [VALOR TOTAL] */}
+                        <div className="flex flex-col justify-center gap-1 text-right">
+                          <span className="text-[8px] font-black text-[#A09898] uppercase tracking-widest text-right">Valor Total</span>
+                          <p className="text-[13px] font-extrabold text-[#4A4444]">
+                            {formatCurrency(Number(order.total) || 0)}
+                          </p>
+                        </div>
+
+                        {/* [MENU ...] */}
+                        <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.dispatchEvent(new CustomEvent('edit-order', { detail: order.id }));
+                              }}
+                              className="w-10 h-10 rounded-full bg-[#FAF9F6] border border-[#F0E6D2] text-[#A09898] hover:text-[#4A4444] hover:bg-[#FAF9F6] transform active:scale-95 flex items-center justify-center transition-all cursor-pointer shadow-sm"
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
