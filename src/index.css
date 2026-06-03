@@ -318,41 +318,78 @@ html {
   .feminine-admin .text-slate-900, 
   .feminine-admin .text-slate-800,
   .feminine-admin .text-slate-700 {
-    color: #fdf2f8 !important; /* rose-50 far cleaner */
+    color: #374151 !important; /* gray-700 for better legibility */
   }
 
+  .feminine-admin label,
+  .feminine-admin .text-slate-900,
   .feminine-admin h1, .feminine-admin h2, .feminine-admin h3,
-  .feminine-admin h4, .feminine-admin .text-slate-800 {
-    font-family: var(--font-sans) !important;
-    letter-spacing: 0em !important;
-    color: #fdf2f8 !important;
+  .feminine-admin h4 {
+    color: #1f2937 !important; /* gray-800 or black soft */
+    font-weight: 600 !important;
   }
 
+  .feminine-admin input::placeholder,
+  .feminine-admin textarea::placeholder {
+    color: #9ca3af !important; /* gray-400 for better visibility */
+    opacity: 1;
+  }
+  
+  .feminine-admin input, 
+  .feminine-admin textarea,
+  .feminine-admin select {
+    color: #4b5563 !important; /* gray-600 */
+    border-color: #e5e7eb !important;
+  }
+
+  .feminine-admin .text-\[#A09898\],
+  .feminine-admin .text-\[#D1CACA\],
   .feminine-admin .text-slate-400,
   .feminine-admin .text-gray-400,
   .feminine-admin .text-gray-500 {
-    color: #fda4af !important; /* rose-400 - darker for readability */
+    color: #4b5563 !important; /* Force gray-600/700 for readability */
   }
 
   .feminine-admin .text-slate-500 {
-    color: #fb7185 !important; /* rose-500 - contrast */
+    color: #4b5563 !important; /* gray-600 */
   }
   
-  .feminine-admin .text-slate-300 {
-    color: #fecdd3 !important; /* rose-200 */
+  /* Pink revision: Rosa médio sofisticado */
+  .feminine-admin .text-lilac,
+  .feminine-admin .text-pink-500 {
+    color: #db2777 !important; /* pink-600 */
   }
   
-  .feminine-admin .border-slate-100 {
-    border-color: #4c1d95 !important; /* contrast */
-  }
-  
-  .feminine-admin .border-gray-100 {
-    border-color: #4c1d95 !important;
+  .feminine-admin .bg-lilac,
+  .feminine-admin .bg-pink-500,
+  .feminine-admin .accent-lilac {
+    background-color: #db2777 !important;
+    accent-color: #db2777 !important;
   }
 
+  .feminine-admin .bg-lilac\/10 {
+    background-color: rgba(219, 39, 119, 0.1) !important;
+  }
+
+  .feminine-admin .border-lilac {
+    border-color: #db2777 !important;
+  }
+  
+  .feminine-admin .border-slate-100,
+  .feminine-admin .border-gray-100,
+  .feminine-admin .border-lilac\/10,
+  .feminine-admin .border-lilac\/20 {
+    border-color: #f3f4f6 !important;
+  }
+  
   .feminine-admin .bg-slate-100,
-  .feminine-admin .bg-gray-50 {
-    background-color: #1e1b4b !important; /* darker background */
+  .feminine-admin .bg-gray-50,
+  .feminine-admin .bg-slate-50 {
+    background-color: #f9fafb !important;
+  }
+
+  .feminine-admin .bg-white {
+    background-color: #ffffff !important;
   }
 
   .feminine-admin .text-gold {

@@ -20,6 +20,7 @@ export interface Product {
   subcategory: string;
   isVisible: boolean;
   isFeatured: boolean;
+  stock?: number;
   insumos?: { insumoId: string; quantity: number }[];
   variations?: Variation[];
   estimatedCost?: number;
@@ -80,6 +81,7 @@ export interface Order {
   isEmergency: boolean;
   paymentStatus?: 'pending' | 'paid' | 'cancelled' | 'partial' | 'refunded';
   paymentMode?: 'full' | 'planned';
+  payment_method?: 'full' | 'planned';
   plannedMethod?: 'credit_card' | 'digital_booklet';
   remainingAmount?: number;
   remainingInstallments?: number;
@@ -92,6 +94,9 @@ export interface Order {
   signalValue?: number;
   source?: 'catalog' | 'admin';
   giftInfo?: string;
+  giftName?: string;
+  giftTheme?: string;
+  giftColors?: string;
   insumosDeducted?: boolean;
   history?: {
     status: Order['status'];
@@ -203,11 +208,14 @@ export interface SiteSettings {
   labor_list?: { id: string; name: string; value: number }[];
   test_mode?: boolean;
   sound_notifications_active?: boolean;
+  telegram_bot_token?: string;
+  telegram_chat_id?: string;
 }
 
 export interface CartItem extends Product {
   quantity: number;
   productId?: string;
+  observations?: string;
 }
 
 export interface AppConfig {

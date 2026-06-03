@@ -1,4 +1,58 @@
-import { AppConfig, CartItem, CheckoutData } from '../types';
+import { AppConfig, CartItem, CheckoutData, SiteSettings } from '../types';
+
+export const sendTelegramNotification = async (
+  cart: CartItem[],
+  checkoutData: CheckoutData,
+  total: number,
+  selectedCompany: string,
+  orderCode: string,
+  settings?: Partial<SiteSettings>
+) => {
+  const itemsList = cart
+    .map(item => {
+      let detail = `• ${item.product_name} (x${item.quantity}) - R$ ${(item.retail_price * item.quantity).toFixed(2)}`;
+      if ((item as any).selectedVariation) detail += ` [${(item as any).selectedVariation}]`;
+      return detail;
+    })
+    .join('\n');
+
+  const message = `📦 <b>NOVO PEDIDO RECEBIDO</b>\n\n` +
+    `🏷 <b>Pedido:</b> <code>${orderCode}</code>\n` +
+    `🏪 <b>Ateliê:</b> ${selectedCompany.toUpperCase()}\n` +
+    `👤 <b>Cliente:</b> ${checkoutData.name}\n` +
+    `📱 <b>Contato:</b> ${checkoutData.contact}\n\n` +
+    `🛍 <b>Produtos:</b>\n${itemsList}\n\n` +
+    `🚚 <b>Entrega:</b>\n${checkoutData.deliveryType === 'retirada' ? 'Retirada' : 'Entrega'}\n\n` +
+    `📅 <b>Data Entrega:</b>\n${new Date().toLocaleDateString('pt-BR')}\n\n` +
+    `💳 <b>Pagamento:</b>\n${checkoutData.paymentMethod?.toUpperCase()}\n\n` +
+    `💰 <b>Total:</b>\n<b>R$ ${total.toFixed(2)}</b>\n\n` +
+    `📝 <b>Observações:</b>\n${checkoutData.observations || 'Nenhuma'}\n\n` +
+    `⏰ ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`;
+
+  const inlineButtons = [
+    [
+      { text: "📂 Abrir Pedido", url: `${window.location.origin}/admin?order=${orderCode}` },
+      { text: "⚙️ Abrir Admin", url: `${window.location.origin}/admin` }
+    ]
+  ];
+
+  try {
+    const response = await fetch('/api/sendTelegram', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        botToken: settings?.telegram_bot_token,
+        chatId: settings?.telegram_chat_id,
+        message,
+        inlineButtons
+      })
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Error sending telegram notification:", error);
+    return { error };
+  }
+};
 
 export const sendNotifications = async (
   config: AppConfig,

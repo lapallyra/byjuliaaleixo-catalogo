@@ -208,12 +208,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
             onClick={() => setActiveSubTab(item.id as any)}
             className={`flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all whitespace-nowrap shrink-0 border ${
               activeSubTab === item.id
-                ? "bg-black text-white border-black font-extrabold shadow-sm scale-[1.01]"
-                : "bg-[#FCFBFA] text-[#A09898] border-lilac/15 hover:border-lilac hover:bg-white hover:text-slate-900"
+                ? "bg-black text-white border-black font-extrabold shadow-md scale-[1.01]"
+                : "bg-white text-slate-400 border-slate-100 hover:border-pink-300 hover:text-slate-900 shadow-sm"
             }`}
           >
-            <item.icon size={14} className={activeSubTab === item.id ? "text-white" : "text-[#A09898]"} />
-            <span className="text-[10px] uppercase font-bold tracking-wider">
+            <item.icon size={14} className={activeSubTab === item.id ? "text-white" : "text-slate-400"} />
+            <span className="text-[10px] uppercase font-black tracking-wider">
               {item.label}
             </span>
           </button>
@@ -221,200 +221,170 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
       </div>
 
       {/* Content Area */}
-      <div className="w-full p-6 md:p-10 rounded-[2.5rem] bg-white border border-lilac/20 shadow-sm min-h-0">
+      <div className="w-full p-8 rounded-[3rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/50 min-h-0">
         {activeSubTab === "brand" && (
-          <div className="space-y-12">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-lilac/10 text-lilac">
-                <Store size={24} />
+          <div className="space-y-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-pink-100/50 text-pink-700">
+                <Store size={22} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-widest">
                 Gestão de Marcas
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 gap-12">
+            <div className="grid grid-cols-1 gap-6">
               {(
                 [
                   { id: "pallyra", label: "La Pallyra", color: "text-sky-500" },
                   {
                     id: "guennita",
                     label: "com amor, Guennita",
-                    color: "text-[#D1CACA]",
+                    color: "text-slate-400",
                   },
-                  { id: "mimada", label: "Mimada Sim", color: "text-pink-500" },
+                  { id: "mimada", label: "Mimada Sim", color: "text-pink-600" },
                 ] as const
               ).map((atl) => {
                 const atlSettings = allAteliers[atl.id];
                 return (
                   <div
                     key={atl.id}
-                    className="bg-white/50 border border-lilac/10 rounded-[3rem] p-8 md:p-12 space-y-10 relative overflow-hidden group"
+                    className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm transition-all hover:border-pink-200/50"
                   >
-                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <Store size={120} />
+                    <div className="flex items-center justify-between border-b border-slate-50 pb-5 mb-8">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full bg-current ${atl.color} shadow-sm`} />
+                        <h4 className="text-base font-black uppercase tracking-tight text-slate-800">
+                          {atl.label}
+                        </h4>
+                      </div>
+                      <span className="px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-[0.2em]">
+                        ID: {atl.id}
+                      </span>
                     </div>
 
-                    <div className="flex items-center gap-4 relative z-10">
-                      <div
-                        className={`w-3 h-3 rounded-full bg-current ${atl.color}`}
-                      />
-                      <h4 className="text-lg font-black uppercase tracking-tight text-slate-900">
-                        {atl.label}
-                      </h4>
-                    </div>
-
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-10 relative z-10">
-                      {/* Logo & Banner Section */}
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+                      {/* COLUNA ESQUERDA: Logos & Visual Assets */}
                       <div className="space-y-6">
-                        <ImageUpload
-                          label="Logo Principal"
-                          path={`catalogos/${atl.id}`}
-                          currentUrl={atlSettings.store_logo}
-                          onUploadComplete={(url) =>
-                            updateMultiField(atl.id, "store_logo", url)
-                          }
-                          onRemove={() =>
-                            updateMultiField(atl.id, "store_logo", "")
-                          }
-                        />
-                        <ImageUpload
-                          label="Banner Checkout (1800x300)"
-                          path={`catalogos/${atl.id}/banner`}
-                          currentUrl={atlSettings.checkout_banner}
-                          onUploadComplete={(url) =>
-                            updateMultiField(atl.id, "checkout_banner", url)
-                          }
-                          onRemove={() =>
-                            updateMultiField(atl.id, "checkout_banner", "")
-                          }
-                        />
+                        <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                          <ImageUpload
+                            label="Logotipo Principal"
+                            path={`catalogos/${atl.id}`}
+                            currentUrl={atlSettings.store_logo}
+                            onUploadComplete={(url) =>
+                              updateMultiField(atl.id, "store_logo", url)
+                            }
+                            onRemove={() =>
+                              updateMultiField(atl.id, "store_logo", "")
+                            }
+                          />
+                        </div>
+                        <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                          <ImageUpload
+                            label="Banner Topo Checkout"
+                            path={`catalogos/${atl.id}/banner`}
+                            currentUrl={atlSettings.checkout_banner}
+                            onUploadComplete={(url) =>
+                              updateMultiField(atl.id, "checkout_banner", url)
+                            }
+                            onRemove={() =>
+                              updateMultiField(atl.id, "checkout_banner", "")
+                            }
+                          />
+                        </div>
                       </div>
 
-                      {/* Info Section */}
+                      {/* COLUNA DIREITA: Identidade & Configurações */}
                       <div className="space-y-6">
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                            Slogan / Descrição
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
+                              Nome da Marca
+                            </label>
+                            <input
+                              type="text"
+                              value={atlSettings.store_name || atl.label}
+                              onChange={(e) =>
+                                updateMultiField(atl.id, "store_name", e.target.value)
+                              }
+                              className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
+                              placeholder="Nome oficial..."
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
+                              Slogan Curto
+                            </label>
+                            <input
+                              type="text"
+                              value={atlSettings.store_slogan || ""}
+                              onChange={(e) =>
+                                updateMultiField(atl.id, "store_slogan", e.target.value)
+                              }
+                              className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
+                              placeholder="Foco da marca..."
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
+                            Descrição da Marca / Narrativa (About)
                           </label>
                           <textarea
-                            value={atlSettings.store_slogan || ""}
+                            value={atlSettings.about_me_bio || ""}
                             onChange={(e) =>
-                              updateMultiField(
-                                atl.id,
-                                "store_slogan",
-                                e.target.value,
-                              )
+                              updateMultiField(atl.id, "about_me_bio", e.target.value)
                             }
-                            className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-24 resize-none shadow-sm"
-                            placeholder="Ex: Transformando momentos em memórias..."
+                            className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-4 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all h-28 resize-none shadow-sm"
+                            placeholder="Conte a história deste ateliê específico..."
                           />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4 pt-4">
-                          <div className="space-y-2">
-                            <label className="text-[9px] uppercase font-black text-[#A09898]">
-                              Cor Principal
-                            </label>
-                            <div className="flex gap-2">
-                              <input
-                                type="color"
-                                value={
-                                  atlSettings.theme_primary_color || "#ffffff"
-                                }
-                                onChange={(e) =>
-                                  updateMultiField(
-                                    atl.id,
-                                    "theme_primary_color",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-10 h-10 rounded-lg cursor-pointer border-none"
-                              />
-                              <input
-                                type="text"
-                                value={
-                                  atlSettings.theme_primary_color || "#ffffff"
-                                }
-                                onChange={(e) =>
-                                  updateMultiField(
-                                    atl.id,
-                                    "theme_primary_color",
-                                    e.target.value,
-                                  )
-                                }
-                                className="min-w-0 flex-1 bg-white border border-lilac/20 rounded-lg px-2 text-[10px] font-mono outline-none"
-                              />
+                        <div className="pt-4 space-y-4">
+                          <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-800 border-b border-slate-50 pb-2">Identidade Visual (Cores)</h5>
+                          <div className="grid grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                              <label className="text-[8px] uppercase font-black text-slate-400 block text-center">Primária</label>
+                              <div className="flex items-center gap-3 bg-[#FAF9F6] p-2 rounded-xl border border-slate-100 shadow-inner">
+                                <input
+                                  type="color"
+                                  value={atlSettings.theme_primary_color || "#ffffff"}
+                                  onChange={(e) =>
+                                    updateMultiField(atl.id, "theme_primary_color", e.target.value)
+                                  }
+                                  className="w-8 h-8 rounded-lg cursor-pointer border-none bg-transparent"
+                                />
+                                <span className="text-[8px] font-mono font-bold text-slate-400 uppercase">{atlSettings.theme_primary_color || "#FFF"}</span>
+                              </div>
                             </div>
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[9px] uppercase font-black text-[#A09898]">
-                              Cor Detalhes
-                            </label>
-                            <div className="flex gap-2">
-                              <input
-                                type="color"
-                                value={
-                                  atlSettings.theme_accent_color || "#FF007F"
-                                }
-                                onChange={(e) =>
-                                  updateMultiField(
-                                    atl.id,
-                                    "theme_accent_color",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-10 h-10 rounded-lg cursor-pointer border-none"
-                              />
-                              <input
-                                type="text"
-                                value={
-                                  atlSettings.theme_accent_color || "#FF007F"
-                                }
-                                onChange={(e) =>
-                                  updateMultiField(
-                                    atl.id,
-                                    "theme_accent_color",
-                                    e.target.value,
-                                  )
-                                }
-                                className="min-w-0 flex-1 bg-white border border-lilac/20 rounded-lg px-2 text-[10px] font-mono outline-none"
-                              />
+                            <div className="space-y-2">
+                              <label className="text-[8px] uppercase font-black text-slate-400 block text-center">Destaque</label>
+                              <div className="flex items-center gap-3 bg-[#FAF9F6] p-2 rounded-xl border border-slate-100 shadow-inner">
+                                <input
+                                  type="color"
+                                  value={atlSettings.theme_accent_color || "#db2777"}
+                                  onChange={(e) =>
+                                    updateMultiField(atl.id, "theme_accent_color", e.target.value)
+                                  }
+                                  className="w-8 h-8 rounded-lg cursor-pointer border-none bg-transparent"
+                                />
+                                <span className="text-[8px] font-mono font-bold text-slate-400 uppercase">{atlSettings.theme_accent_color || "#DB2777"}</span>
+                              </div>
                             </div>
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[9px] uppercase font-black text-[#A09898]">
-                              Cor Info/Texto
-                            </label>
-                            <div className="flex gap-2">
-                              <input
-                                type="color"
-                                value={
-                                  atlSettings.theme_text_color || "#000000"
-                                }
-                                onChange={(e) =>
-                                  updateMultiField(
-                                    atl.id,
-                                    "theme_text_color",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-10 h-10 rounded-lg cursor-pointer border-none"
-                              />
-                              <input
-                                type="text"
-                                value={
-                                  atlSettings.theme_text_color || "#000000"
-                                }
-                                onChange={(e) =>
-                                  updateMultiField(
-                                    atl.id,
-                                    "theme_text_color",
-                                    e.target.value,
-                                  )
-                                }
-                                className="min-w-0 flex-1 bg-white border border-lilac/20 rounded-lg px-2 text-[10px] font-mono outline-none"
-                              />
+                            <div className="space-y-2">
+                              <label className="text-[8px] uppercase font-black text-slate-400 block text-center">Texto</label>
+                              <div className="flex items-center gap-3 bg-[#FAF9F6] p-2 rounded-xl border border-slate-100 shadow-inner">
+                                <input
+                                  type="color"
+                                  value={atlSettings.theme_text_color || "#1f2937"}
+                                  onChange={(e) =>
+                                    updateMultiField(atl.id, "theme_text_color", e.target.value)
+                                  }
+                                  className="w-8 h-8 rounded-lg cursor-pointer border-none bg-transparent"
+                                />
+                                <span className="text-[8px] font-mono font-bold text-slate-400 uppercase">{atlSettings.theme_text_color || "#1F2937"}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -426,41 +396,42 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
             </div>
           </div>
         )}
-
-        {activeSubTab === "about" && (
-          <div className="space-y-10">
+                {activeSubTab === "about" && (
+          <div className="space-y-8">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-[#D48C8C]/15 text-[#D48C8C]">
+              <div className="p-3 rounded-2xl bg-pink-100/50 text-pink-700">
                 <User size={24} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
                 Editar Página Sobre Nós
               </h3>
             </div>
 
-            <p className="text-[10px] uppercase font-black text-[#A09898] tracking-widest leading-relaxed">
+            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest leading-relaxed">
               Personalize a apresentação de Julia Aleixo, enviando uma foto profissional e editando os textos de biografia e propósito.
             </p>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
               {/* Photo Upload Card */}
               <div className="space-y-4">
-                <ImageUpload
-                  label="Minha Foto (Perfil / Ateliê)"
-                  path="sobrenos"
-                  currentUrl={settings.about_me_photo}
-                  onUploadComplete={(url) => updateField("about_me_photo", url)}
-                  onRemove={() => updateField("about_me_photo", "")}
-                />
+                <div className="p-6 bg-slate-50/50 rounded-[2.5rem] border border-dashed border-slate-200">
+                  <ImageUpload
+                    label="Minha Foto (Perfil / Ateliê)"
+                    path="sobrenos"
+                    currentUrl={settings.about_me_photo}
+                    onUploadComplete={(url) => updateField("about_me_photo", url)}
+                    onRemove={() => updateField("about_me_photo", "")}
+                  />
+                </div>
                 
                 <div className="space-y-1.5 max-w-full pl-1">
-                  <label className="text-[8px] font-black text-[#D1CACA] uppercase tracking-widest">
+                  <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
                     Link Manual da Imagem (Opcional)
                   </label>
                   <input
                     type="text"
                     placeholder="Link da sua foto..."
-                    className="w-full bg-slate-100/50 border border-lilac/5 rounded-xl px-4 py-2 text-[10px] outline-none font-bold focus:border-lilac transition-all"
+                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-2 text-[10px] outline-none font-bold focus:border-pink-500 transition-all shadow-sm"
                     value={settings.about_me_photo || ""}
                     onChange={(e) => updateField("about_me_photo", e.target.value)}
                   />
@@ -470,7 +441,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               {/* Text Fields Editorial */}
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
                     Título do Perfil / Saudação
                   </label>
                   <input
@@ -478,31 +449,31 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     value={settings.about_me_title || ""}
                     onChange={(e) => updateField("about_me_title", e.target.value)}
                     placeholder="Ex: Olá, sou a Julia Aleixo!"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all"
+                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
                     Texto Biográfico / Sua História
                   </label>
                   <textarea
                     value={settings.about_me_bio || ""}
                     onChange={(e) => updateField("about_me_bio", e.target.value)}
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-40 resize-none shadow-sm"
-                    placeholder="Conte sobre sua paixão pelo artesanato, suas origens e marcas de ateliê..."
+                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all h-32 resize-none shadow-sm"
+                    placeholder="Conte sobre sua paixão pelo artesanato..."
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
                     Nosso Propósito / Compromisso
                   </label>
                   <textarea
                     value={settings.about_me_purpose || ""}
                     onChange={(e) => updateField("about_me_purpose", e.target.value)}
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-36 resize-none"
-                    placeholder="Explique o diferencial de qualidade, ciclos de alteração e dedicação nos detalhes..."
+                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all h-32 resize-none shadow-sm"
+                    placeholder="Explique o diferencial de qualidade..."
                   />
                 </div>
               </div>
@@ -511,43 +482,30 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
         )}
 
         {activeSubTab === "pix" && (
-          <div className="space-y-10">
+          <div className="space-y-8">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600">
                 <CreditCard size={24} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
                 Configurações de Venda
               </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-4">
-                <ImageUpload
-                  label="QR Code PIX"
-                  path="pix"
-                  currentUrl={settings.store_qrcode}
-                  onUploadComplete={(url) => updateField("store_qrcode", url)}
-                  onRemove={() => updateField("store_qrcode", "")}
-                />
-                <div className="space-y-1.5 max-w-full pl-1">
-                  <label className="text-[8px] font-black text-[#D1CACA] uppercase tracking-widest">
-                    Ou insira o Link Manual
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Link da imagem..."
-                    className="w-full bg-slate-100/50 border border-lilac/5 rounded-xl px-4 py-2 text-[10px] outline-none font-bold focus:border-lilac transition-all"
-                    value={settings.store_qrcode || ""}
-                    onChange={(e) =>
-                      updateField("store_qrcode", e.target.value)
-                    }
+              <div className="space-y-6">
+                <div className="p-6 bg-slate-50/50 rounded-[2.5rem] border border-dashed border-slate-200">
+                  <ImageUpload
+                    label="QR Code PIX Principal"
+                    path="pix"
+                    currentUrl={settings.store_qrcode}
+                    onUploadComplete={(url) => updateField("store_qrcode", url)}
+                    onRemove={() => updateField("store_qrcode", "")}
                   />
                 </div>
-              </div>
-              <div className="space-y-6">
-                <div className="space-y-4 p-6 rounded-[2rem] bg-lilac/5 border border-lilac/10 mb-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                
+                <div className="space-y-4 p-6 rounded-[2.5rem] bg-slate-50/50 border border-slate-100">
+                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
                     Meta de Vendas Mensal (R$)
                   </label>
                   <input
@@ -556,45 +514,48 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     onChange={(e) =>
                       updateField("monthly_goal", Number(e.target.value))
                     }
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-black outline-none focus:border-lilac transition-all shadow-sm"
+                    className="w-full bg-white border border-slate-100 rounded-2xl px-6 py-4 text-xs font-black outline-none focus:border-pink-500 transition-all shadow-sm"
                     placeholder="Ex: 10000"
                   />
-                  <p className="text-[8px] text-[#A09898] font-bold uppercase tracking-widest ml-2 leading-relaxed">
+                  <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest ml-2 leading-relaxed">
                     Esta meta será usada no termômetro do dashboard.
                   </p>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Chave PIX
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.store_pix_key || ""}
-                    onChange={(e) =>
-                      updateField("store_pix_key", e.target.value)
-                    }
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-lilac transition-all"
-                    placeholder="Ex: 00.000.000/0001-00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Nome do Beneficiário
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.store_pix_name || ""}
-                    onChange={(e) =>
-                      updateField("store_pix_name", e.target.value)
-                    }
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all"
-                    placeholder="Ex: Ateliê Sob Medida LTDA"
-                  />
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                      Chave PIX
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.store_pix_key || ""}
+                      onChange={(e) =>
+                        updateField("store_pix_key", e.target.value)
+                      }
+                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
+                      placeholder="Ex: 00.000.000/0001-00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                      Nome do Beneficiário
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.store_pix_name || ""}
+                      onChange={(e) =>
+                        updateField("store_pix_name", e.target.value)
+                      }
+                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
+                      placeholder="Ex: Nome Completo ou Ateliê"
+                    />
+                  </div>
                 </div>
 
-                {/* Mercado Pago Integration */}
-                <div className="pt-6 border-t border-lilac/10">
+                <div className="pt-6 border-t border-slate-50">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 rounded-xl bg-sky-50 text-sky-600">
                       <CreditCard size={18} />
@@ -604,20 +565,20 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] uppercase font-bold text-[#A09898] ml-2">Access Token</label>
+                      <label className="text-[9px] uppercase font-bold text-slate-400 ml-2">Access Token</label>
                       <input
                         type="password"
                         value={settings.mercadopago_token || ""}
                         onChange={(e) => updateField("mercadopago_token", e.target.value)}
-                        className="w-full bg-white border border-lilac/20 rounded-2xl px-5 py-3 text-[11px] font-mono outline-none focus:border-lilac transition-all"
+                        className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-5 py-3 text-[11px] font-mono outline-none focus:border-pink-500 transition-all shadow-sm"
                         placeholder="APP_USR-..."
                       />
                     </div>
                     
-                    <div className="flex items-center justify-between bg-lilac/5 p-4 rounded-2xl border border-lilac/10">
+                    <div className="flex items-center justify-between bg-emerald-50/30 p-4 rounded-2xl border border-emerald-100/50">
                       <div>
-                        <p className="text-[10px] font-black uppercase text-slate-700 tracking-wider">Ativar Geração Dinâmica</p>
-                        <p className="text-[8px] font-bold text-[#A09898] uppercase tracking-widest">QR Code gerado automaticamente</p>
+                        <p className="text-[10px] font-black uppercase text-emerald-900 tracking-wider">Ativar Geração Dinâmica</p>
+                        <p className="text-[8px] font-bold text-emerald-600 uppercase tracking-widest">QR Code gerado automaticamente</p>
                       </div>
                       <button 
                         onClick={() => updateField("pix_automatico_active", !settings.pix_automatico_active)}
@@ -627,13 +588,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       </button>
                     </div>
 
-                    {/* Modo teste */}
-                    <div className="pt-4 border-t border-lilac/10">
-                      <div className="flex items-center justify-between bg-amber-50 p-4 rounded-2xl border border-amber-100">
+                    <div className="pt-4 border-t border-slate-50">
+                      <div className="flex items-center justify-between bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50">
                         <div>
-                          <p className="text-[10px] font-black uppercase text-amber-900 tracking-wider">Modo teste de Vendas & Checkout</p>
-                          <p className="text-[8px] font-bold text-amber-700 uppercase tracking-widest leading-relaxed">
-                            Simula pagamentos aprovados sem cobrança real ou Mercado Pago
+                          <p className="text-[10px] font-black uppercase text-amber-900 tracking-wider">Modo teste de Checkout</p>
+                          <p className="text-[8px] font-bold text-amber-600 uppercase tracking-widest leading-relaxed">
+                            Simula pagamentos aprovados sem Mercado Pago
                           </p>
                         </div>
                         <button 
@@ -651,78 +611,84 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           </div>
         )}
 
+
         {activeSubTab === "pricing" && (
-          <div className="space-y-10">
+          <div className="space-y-8">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-amber-100 text-amber-600">
+              <div className="p-3 rounded-2xl bg-amber-100/50 text-amber-700">
                 <Calculator size={24} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
                 Base de Precificação
               </h3>
             </div>
 
-            <p className="text-[10px] uppercase font-black text-[#A09898] tracking-widest leading-relaxed">
-              Estes valores globais serão usados pela Inteligência do Sistema na
-              hora de sugerir o Preço de Venda do seus produtos baseando-se no
-              tempo gasto e custo dos insumos.
+            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest leading-relaxed max-w-2xl">
+              Estes valores globais serão usados na hora de sugerir o Preço de Venda do seus produtos baseando-se no tempo gasto e custo dos insumos.
             </p>
 
-            <div className="space-y-12">
-              <DynamicPricingList
-                title="Custos Fixos (Mensal)"
-                subtitle="Água, luz, assinaturas, aluguel..."
-                items={settings.fixed_costs_list || []}
-                onChange={(items) => {
-                  const total = items.reduce(
-                    (acc, curr) => acc + (Number(curr.value) || 0),
-                    0,
-                  );
-                  setSettings((prev) => ({
-                    ...prev,
-                    fixed_costs_list: items,
-                    global_fixed_costs: total,
-                  }));
-                }}
-              />
+            <div className="grid grid-cols-1 gap-12 pt-4">
+              <div className="bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+                <DynamicPricingList
+                  title="Custos Fixos (Mensal)"
+                  subtitle="Água, luz, assinaturas, aluguel..."
+                  items={settings.fixed_costs_list || []}
+                  onChange={(items) => {
+                    const total = items.reduce(
+                      (acc, curr) => acc + (Number(curr.value) || 0),
+                      0,
+                    );
+                    setSettings((prev) => ({
+                      ...prev,
+                      fixed_costs_list: items,
+                      global_fixed_costs: total,
+                    }));
+                  }}
+                />
+              </div>
 
-              <DynamicPricingList
-                title="Mão de Obra"
-                subtitle="Dia / Hora = Valor Cobrado"
-                items={settings.labor_list || []}
-                onChange={(items) => {
-                  const total = items.reduce(
-                    (acc, curr) => acc + (Number(curr.value) || 0),
-                    0,
-                  );
-                  setSettings((prev) => ({
-                    ...prev,
-                    labor_list: items,
-                    global_labor_cost_per_hour: total,
-                  }));
-                }}
-              />
+              <div className="bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+                <DynamicPricingList
+                  title="Mão de Obra"
+                  subtitle="Dia / Hora = Valor Cobrado"
+                  items={settings.labor_list || []}
+                  onChange={(items) => {
+                    const total = items.reduce(
+                      (acc, curr) => acc + (Number(curr.value) || 0),
+                      0,
+                    );
+                    setSettings((prev) => ({
+                      ...prev,
+                      labor_list: items,
+                      global_labor_cost_per_hour: total,
+                    }));
+                  }}
+                />
+              </div>
 
-              <DynamicPricingList
-                title="Taxas e Impostos"
-                subtitle="Taxas de cartão, emissão de NF, etc"
-                isPercentage
-                items={settings.taxes_list || []}
-                onChange={(items) => {
-                  const total = items.reduce(
-                    (acc, curr) => acc + (Number(curr.value) || 0),
-                    0,
-                  );
-                  setSettings((prev) => ({
-                    ...prev,
-                    taxes_list: items,
-                    global_tax_rate: total,
-                  }));
-                }}
-              />
+              <div className="bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+                <DynamicPricingList
+                  title="Taxas e Impostos"
+                  subtitle="Taxas de cartão, emissão de NF, etc"
+                  isPercentage
+                  items={settings.taxes_list || []}
+                  onChange={(items) => {
+                    const total = items.reduce(
+                      (acc, curr) => acc + (Number(curr.value) || 0),
+                      0,
+                    );
+                    setSettings((prev) => ({
+                      ...prev,
+                      taxes_list: items,
+                      global_tax_rate: total,
+                    }));
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}
+
 
         {activeSubTab === "marketing" && (
           <div className="space-y-8">
@@ -758,81 +724,78 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
         )}
 
         {activeSubTab === "whatsapp" && (
-          <div className="space-y-10">
+          <div className="space-y-8">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600">
+              <div className="p-3 rounded-2xl bg-emerald-100/50 text-emerald-700">
                 <Phone size={24} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
-                WhatsApp & Mensagens
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
+                WhatsApp & Automação
               </h3>
             </div>
 
-            <div className="p-8 rounded-3xl bg-emerald-50 border border-emerald-100 space-y-8">
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                  Número do WhatsApp (Com DDD)
+            <div className="p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 shadow-inner">
+              <div className="max-w-md space-y-2">
+                <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                  Número Master (WhatsApp + DDD)
                 </label>
                 <input
                   type="text"
                   value={settings.store_contact || ""}
                   onChange={(e) => updateField("store_contact", e.target.value)}
-                  placeholder="(44) 9 9999-9999"
-                  className="w-full bg-white border border-emerald-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-emerald-500 transition-all shadow-sm"
+                  placeholder="(00) 0 0000-0000"
+                  className="w-full bg-white border border-slate-100 rounded-2xl px-6 py-4 text-sm font-mono font-bold outline-none focus:border-emerald-500 transition-all shadow-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Mensagem do Botão WhatsApp (Loja)
-                  </label>
-                  <textarea
-                    value={settings.whatsapp_main_message || ""}
-                    onChange={(e) =>
-                      updateField("whatsapp_main_message", e.target.value)
-                    }
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-40 resize-none"
-                    placeholder="Olá! Vi a sua loja e gostaria de tirar uma dúvida..."
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                  Mensagem Automática (Geral)
+                </label>
+                <textarea
+                  value={settings.whatsapp_main_message || ""}
+                  onChange={(e) =>
+                    updateField("whatsapp_main_message", e.target.value)
+                  }
+                  className="w-full bg-white border border-slate-100 rounded-[2rem] px-6 py-6 text-xs font-bold outline-none focus:border-emerald-500 transition-all h-44 resize-none shadow-sm"
+                  placeholder="Olá! Gostaria de conversar sobre as marcas..."
+                />
               </div>
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Mensagem de Interesse (Produto)
-                  </label>
-                  <textarea
-                    value={settings.whatsapp_product_message || ""}
-                    onChange={(e) =>
-                      updateField("whatsapp_product_message", e.target.value)
-                    }
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-40 resize-none"
-                    placeholder="Olá! Tenho interesse no {product}..."
-                  />
-                </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                  Lead de Produto (Automático)
+                </label>
+                <textarea
+                  value={settings.whatsapp_product_message || ""}
+                  onChange={(e) =>
+                    updateField("whatsapp_product_message", e.target.value)
+                  }
+                  className="w-full bg-white border border-slate-100 rounded-[2rem] px-6 py-6 text-xs font-bold outline-none focus:border-emerald-500 transition-all h-44 resize-none shadow-sm"
+                  placeholder="Olá! Tenho interesse no item {product}..."
+                />
               </div>
             </div>
           </div>
         )}
 
+
         {activeSubTab === "receipt" && (
-          <div className="space-y-10">
+          <div className="space-y-8">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-amber-100 text-amber-600">
+              <div className="p-3 rounded-2xl bg-amber-100/50 text-amber-700">
                 <FileText size={24} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
-                Textos dos Comprovantes
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
+                Modelo de Comprovantes
               </h3>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
-              <div className="space-y-8">
+              <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
+                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
                     Aviso Legal (Cupom)
                   </label>
                   <textarea
@@ -840,79 +803,56 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     onChange={(e) =>
                       updateField("receipt_footer", e.target.value)
                     }
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-32 resize-none"
+                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all h-32 resize-none shadow-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Aviso Legal (Orçamento)
+                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                    Cláusulas (Orçamento)
                   </label>
                   <textarea
                     value={settings.quote_footer || ""}
                     onChange={(e) =>
                       updateField("quote_footer", e.target.value)
                     }
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-32 resize-none"
+                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all h-32 resize-none shadow-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Mensagem do Comprovante (Para todos os ateliês)
+                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                    Agradecimento Geral
                   </label>
                   <textarea
                     value={settings.receipt_message || ""}
                     onChange={(e) =>
                       updateField("receipt_message", e.target.value)
                     }
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-24 resize-none"
-                    placeholder="Ex: Obrigado pela sua compra. Seu pedido foi registrado com sucesso."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Mensagem do Cupom (Para todos os ateliês)
-                  </label>
-                  <textarea
-                    value={settings.coupon_message || ""}
-                    onChange={(e) =>
-                      updateField("coupon_message", e.target.value)
-                    }
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-lilac transition-all h-24 resize-none"
-                    placeholder="Ex: Este não é um documento fiscal. Pedido realizado com carinho."
+                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all h-24 resize-none shadow-sm"
+                    placeholder="Ex: Obrigado pela sua compra..."
                   />
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <p className="text-[10px] uppercase font-black text-[#A09898] tracking-widest pl-2">
-                  Dica de Variáveis
-                </p>
-                <div className="p-6 rounded-[2rem] bg-white border border-lilac/10 space-y-4">
-                  <p className="text-[10px] text-[#A09898] leading-relaxed font-bold">
-                    Use as tags abaixo p/ preencher os dados automaticamente:
+              <div className="space-y-6">
+                <div className="p-8 rounded-[3rem] bg-slate-50 border border-slate-100 shadow-inner">
+                  <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-6">
+                    Tags Inteligentes
                   </p>
-                  <div className="grid grid-cols-2 gap-2 text-[8px] font-black uppercase tracking-wider">
-                    <span className="p-2 bg-white rounded-lg border border-lilac/5">
-                      {"{ateliê}"}
-                    </span>
-                    <span className="p-2 bg-white rounded-lg border border-lilac/5">
-                      {"{cliente}"}
-                    </span>
-                    <span className="p-2 bg-white rounded-lg border border-lilac/5">
-                      {"{pedido}"}
-                    </span>
-                    <span className="p-2 bg-white rounded-lg border border-lilac/5">
-                      {"{total}"}
-                    </span>
-                    <span className="p-2 bg-white rounded-lg border border-lilac/5">
-                      {"{data}"}
-                    </span>
+                  <div className="grid grid-cols-2 gap-3">
+                    {["{ateliê}", "{cliente}", "{pedido}", "{total}", "{data}"].map(tag => (
+                      <div key={tag} className="p-4 bg-white rounded-2xl border border-slate-100 flex items-center justify-between group cursor-help transition-all hover:border-pink-200">
+                        <span className="text-[10px] font-mono font-black text-pink-600">{tag}</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-pink-400 mt-0.5" />
+                      </div>
+                    ))}
                   </div>
+                  <p className="mt-8 text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">As tags de ateliê e cliente são detectadas e preenchidas automaticamente em cada geração.</p>
                 </div>
               </div>
             </div>
           </div>
         )}
+
 
         {activeSubTab === "roulette" && (
           <div className="space-y-10">
@@ -1209,6 +1149,67 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   className="px-6 py-3 border border-[#F0E6D2] hover:bg-[#FAF9F6] text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm"
                 >
                   🔊 Testar Som de Sucesso
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 border border-lilac/10 space-y-8">
+              <div>
+                <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">Integração com Telegram</h4>
+                <p className="text-[10px] text-[#A09898] uppercase font-bold tracking-widest mt-1">Receba notificações de vendas em tempo real no seu celular.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div className="space-y-1.5">
+                    <label className="text-[9px] uppercase font-black text-slate-500 ml-1">Bot Token</label>
+                    <input 
+                      type="password"
+                      value={settings.telegram_bot_token || ""}
+                      onChange={(e) => updateField("telegram_bot_token", e.target.value)}
+                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-mono outline-none focus:border-pink-500 transition-all shadow-sm"
+                      placeholder="Ex: 123456789:ABCDE..."
+                    />
+                 </div>
+                 <div className="space-y-1.5">
+                    <label className="text-[9px] uppercase font-black text-slate-500 ml-1">Chat ID</label>
+                    <input 
+                      type="text"
+                      value={settings.telegram_chat_id || ""}
+                      onChange={(e) => updateField("telegram_chat_id", e.target.value)}
+                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-mono outline-none focus:border-pink-500 transition-all shadow-sm"
+                      placeholder="Ex: 987654321"
+                    />
+                 </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!settings.telegram_bot_token || !settings.telegram_chat_id) {
+                      alert("Configure o Token e Chat ID antes de testar.");
+                      return;
+                    }
+                    try {
+                      const response = await fetch('/api/sendTelegram', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          botToken: settings.telegram_bot_token,
+                          chatId: settings.telegram_chat_id,
+                          message: "🔔 <b>TESTE DE INTEGRAÇÃO</b>\n\nSeu robô de notificações está configurado corretamente! 🎉"
+                        })
+                      });
+                      const data = await response.json();
+                      if (data.success) alert("Mensagem de teste enviada com sucesso!");
+                      else alert("Erro: " + data.error);
+                    } catch (e: any) {
+                      alert("Erro na requisição: " + e.message);
+                    }
+                  }}
+                  className="px-6 py-3 bg-sky-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg hover:bg-sky-700"
+                >
+                  🚀 Testar Conexão Telegram
                 </button>
               </div>
             </div>

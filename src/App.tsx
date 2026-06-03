@@ -24,7 +24,7 @@ import { AppConfig, CompanyId, CartItem, Product } from './types';
 import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
 
 import { PrizeRouletteModal } from './components/PrizeRouletteModal';
-import { sendNotifications } from './services/notificationService';
+import { sendNotifications, sendTelegramNotification } from './services/notificationService';
 import { updateOrder } from './services/firebaseService';
 import { playSuccessSound } from './utils/audio';
 function SparklesContainer({ children }: { children: React.ReactNode }) {
@@ -89,6 +89,21 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
         if (pendingOrder && pendingOrder.companyName) {
           console.log("Mercado Pago payment OK. Resuming flow...");
           handleClearCart();
+
+          // Notificar Telegram: Pagamento Aprovado
+          if (pendingOrder.config?.telegram_bot_token && pendingOrder.config?.telegram_chat_id) {
+             const approvalMsg = `💰 <b>PAGAMENTO APROVADO</b>\n\nPedido: <code>${pendingOrder.orderId}</code>\nCliente: ${pendingOrder.formData?.name}\nTotal: R$ ${pendingOrder.total?.toFixed(2)}`;
+             
+             fetch('/api/sendTelegram', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({
+                 botToken: pendingOrder.config.telegram_bot_token,
+                 chatId: pendingOrder.config.telegram_chat_id,
+                 message: approvalMsg
+               })
+             }).catch(telErr => console.warn("Telegram approved notification failed", telErr));
+          }
           
           setMpPendingOrderData(pendingOrder);
           setShowMPRoulette(true);

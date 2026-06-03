@@ -45,6 +45,7 @@ import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGlobalSettings, getGiftList, updateOrderStatus } from '../services/firebaseService';
+import { sendNotifications, sendTelegramNotification } from '../services/notificationService';
 import { playSuccessSound } from '../utils/audio';
 import { functions } from '../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
@@ -329,6 +330,30 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
       const savedOrderCode = docId || crypto.randomUUID();
       
+      // Enviar Notificação Telegram (Assíncrono)
+      if (siteSettings?.telegram_bot_token && siteSettings?.telegram_chat_id) {
+        sendTelegramNotification(
+          cart,
+          {
+            name: cli.clientName || 'Cliente',
+            birthDate: '',
+            cpfCnpj: cli.clientCpf || '',
+            contact: cli.clientContact || '',
+            deliveryType: checkoutData.deliveryType,
+            address: addr.rua ? `${addr.rua}, ${addr.numero}` : '',
+            city: addr.cidade || '',
+            state: addr.estado || '',
+            zipCode: addr.cep || '',
+            paymentMethod: checkoutData?.isSimulated ? 'pix' : 'mercadopago',
+            observations: combinedObs
+          },
+          total,
+          companyId,
+          savedOrderCode,
+          siteSettings
+        ).catch(err => console.warn("Telegram background notify error:", err));
+      }
+
       if (checkoutData?.isSimulated) {
         console.log('[MODO TESTE] Simulando pagamento aprovado...');
         await updateOrderStatus(savedOrderCode, 'paid');
