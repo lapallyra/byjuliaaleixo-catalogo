@@ -95,18 +95,18 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
       }, currentCompany);
     }
 
-    // Natural random intervals (3s, 8s, 10s, 40s)
+    // Natural random intervals (3s, 6s, 9s, 15s)
     const getNextDelay = () => {
       const randomTime = Math.random();
-      if (randomTime < 0.25) return 3000;
-      if (randomTime < 0.5) return 8000;
-      if (randomTime < 0.75) return 10000;
-      return 40000;
+      if (randomTime < 0.4) return 3000;
+      if (randomTime < 0.7) return 6000;
+      if (randomTime < 0.9) return 9000;
+      return 15000;
     };
 
-    const scheduleNext = () => {
+    const scheduleNext = (isFirst: boolean = false) => {
       if (!currentCompany) return;
-      const delay = getNextDelay();
+      const delay = isFirst ? 1000 : getNextDelay();
       
       timerRef.current = setTimeout(() => {
         const nextNotif = generateRandomNotification(currentCompany);
@@ -115,11 +115,11 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
           playFairyChime();
           setTimeout(() => setNotification(null), 5000);
         }
-        scheduleNext();
+        scheduleNext(false);
       }, delay);
     };
 
-    scheduleNext();
+    scheduleNext(true);
 
     return () => {
       window.removeEventListener('new-sale-notification', handleCustomNotification);

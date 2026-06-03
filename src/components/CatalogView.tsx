@@ -909,6 +909,21 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                       containerClassName="w-full h-full absolute inset-0"
                                     />
                                   )}
+                                  
+                                  {/* Floating Gift List Button */}
+                                  {onAddToGiftList && (
+                                    <button 
+                                      onClick={(e) => { 
+                                        e.stopPropagation();
+                                        onAddToGiftList(product);
+                                        setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
+                                      }}
+                                      className="absolute top-2 right-2 p-2 rounded-full bg-white/90 backdrop-blur-sm text-neutral-700 hover:text-[#D88D85] shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 z-10 hover:bg-white"
+                                      title="Adicionar à Lista de Presentes"
+                                    >
+                                      <Gift size={15} className="transition-colors" />
+                                    </button>
+                                  )}
                                 </div>
 
                                 {/* Info - Prices + Icons (Right) */}
@@ -929,28 +944,18 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                     )}
                                   </div>
 
-                                  <div className="flex items-center gap-2 mt-auto pt-3">
+                                  <div className="flex items-center mt-auto pt-3">
                                     <button 
                                       onClick={(e) => { 
                                         e.stopPropagation();
                                         onAddToCart(product, 1); 
                                         setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
                                       }}
-                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity flex-1 flex items-center justify-center shrink-0"
+                                      className="py-2 px-3 rounded-xl text-white hover:opacity-95 transition-all active:scale-[0.98] flex-1 flex items-center justify-center gap-1.5 font-sans font-bold text-xs shrink-0 shadow-sm"
                                       style={{ backgroundColor: theme.accentColor }}
                                     >
-                                      <ShoppingCart size={18} />
-                                    </button>
-                                    <button 
-                                      onClick={(e) => { 
-                                          e.stopPropagation();
-                                          onAddToGiftList?.(product);
-                                          setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
-                                      }}
-                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity shrink-0"
-                                      style={{ backgroundColor: theme.accentColor }}
-                                    >
-                                      <Gift size={18} />
+                                      <ShoppingCart size={14} />
+                                      <span>Adicionar</span>
                                     </button>
                                   </div>
                                 </div>
