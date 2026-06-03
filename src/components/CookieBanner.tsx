@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export const CookieBanner: React.FC = () => {
   const [show, setShow] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const accepted = localStorage.getItem('cookieAccepted');
@@ -15,7 +17,7 @@ export const CookieBanner: React.FC = () => {
     setShow(false);
   };
 
-  if (!show) return null;
+  if (!show || location.pathname.startsWith('/admin')) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-4 shadow-2xl z-[9999] flex flex-col md:flex-row items-center justify-between gap-4">
