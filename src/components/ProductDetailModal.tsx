@@ -246,42 +246,44 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </motion.div>
                 )}
 
-                <motion.button 
-                  whileHover={{ scale: 1.01, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                      onAddToCart(product, quantity);
-                      setShowToast(true);
-                      setTimeout(() => setShowToast(false), 2000);
-                  }}
-                  className={`w-full py-5 rounded-2xl text-[10px] uppercase tracking-normal font-black transition-all duration-700 flex items-center justify-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.15)] ${theme.btnPrimary} hover:shadow-[0_25px_60px_rgba(0,0,0,0.25)]`}
-                >
-                  <ShoppingCart size={18} strokeWidth={2} />
-                  Adicionar ao Carrinho
-                </motion.button>
-
-                {onAddToGiftList && (
+                <div className="flex gap-3 w-full">
                   <motion.button 
-                     whileHover={{ scale: 1.01, y: -2 }}
-                     whileTap={{ scale: 0.98 }}
-                     onClick={() => {
-                       onAddToGiftList(product);
-                       setShowGiftToast(true);
-                       setTimeout(() => setShowGiftToast(false), 2000);
-                     }}
-                     className={`w-full py-4 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 group ${theme.btnSecondary}`}
+                    whileHover={{ scale: 1.01, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                        onAddToCart(product, quantity);
+                        setShowToast(true);
+                        setTimeout(() => setShowToast(false), 2000);
+                    }}
+                    className={`flex-1 py-4.5 rounded-2xl text-[10px] uppercase tracking-normal font-black transition-all duration-75 flex items-center justify-center gap-2.5 shadow-[0_15px_35px_rgba(0,0,0,0.12)] ${theme.btnPrimary}`}
                   >
-                    <Gift size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
-                    Adicionar à Lista de Presentes
+                    <ShoppingCart size={16} strokeWidth={2} />
+                    <span>Colocar no Carrinho</span>
                   </motion.button>
-                )}
+
+                  {onAddToGiftList && (
+                    <motion.button 
+                       whileHover={{ scale: 1.01, y: -2 }}
+                       whileTap={{ scale: 0.98 }}
+                       onClick={() => {
+                         onAddToGiftList(product);
+                         setShowGiftToast(true);
+                         setTimeout(() => setShowGiftToast(false), 2000);
+                       }}
+                       className={`flex-1 py-4.5 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 group ${theme.btnSecondary}`}
+                    >
+                      <Gift size={15} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
+                      <span>Lista de Presentes</span>
+                    </motion.button>
+                  )}
+                </div>
 
                 <button 
                   onClick={handleShare}
-                  className={`w-full py-3.5 rounded-2xl border border-dashed font-bold text-[10px] uppercase tracking-widest opacity-70 hover:opacity-100 transition-all flex items-center justify-center gap-2 ${theme.textPrimary}`}
+                  className={`w-full py-3 rounded-2xl border border-dashed font-bold text-[10px] uppercase tracking-widest opacity-70 hover:opacity-100 transition-all flex items-center justify-center gap-2 ${theme.textPrimary}`}
                   style={{ borderColor: accentColor + '40' }}
                 >
-                  <Share2 size={14} strokeWidth={2} />
+                  <Share2 size={13} strokeWidth={2} />
                   Partilhar Link do Produto
                 </button>
               </div>

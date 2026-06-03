@@ -278,6 +278,19 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               updateMultiField(atl.id, "store_logo", "")
                             }
                           />
+                          {atlSettings.store_logo && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setTempLogo(atlSettings.store_logo || "");
+                                setEditingAtelierId(atl.id);
+                                setShowEditor(true);
+                              }}
+                              className="mt-3 w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                            >
+                              ⚙️ Ajustar Posição / Escala da Logo
+                            </button>
+                          )}
                         </div>
                         <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
                           <ImageUpload
@@ -1201,8 +1214,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                         })
                       });
                       const data = await response.json();
-                      if (data.success) alert("Mensagem de teste enviada com sucesso!");
-                      else alert("Erro: " + data.error);
+                      if (data.success) {
+                        alert(data.message || "Telegram conectado com sucesso!");
+                      } else {
+                        alert("Erro: " + (data.message || data.error || "Erro desconhecido"));
+                      }
                     } catch (e: any) {
                       alert("Erro na requisição: " + e.message);
                     }

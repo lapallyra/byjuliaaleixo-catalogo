@@ -392,7 +392,14 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               <div className="flex flex-col items-center w-full">
                 {company.logo ? (
                   <div className="w-16 h-16 rounded-full border border-[#e8dcc8]/60 flex items-center justify-center overflow-hidden mb-3 bg-white shadow-sm p-1 transition-all duration-300 group-hover:scale-105">
-                     <ImageWithFallback src={company.logo} alt={company.name} className="w-full h-full object-contain p-0.5" />
+                     <ImageWithFallback 
+                       src={company.logo} 
+                       alt={company.name} 
+                       className="w-full h-full object-contain p-0.5" 
+                       style={customSettings[company.id] ? {
+                         transform: `translate(${customSettings[company.id]?.store_logo_x || 0}px, ${customSettings[company.id]?.store_logo_y || 0}px) scale(${customSettings[company.id]?.store_logo_scale || 1}) rotate(${customSettings[company.id]?.store_logo_rotate || 0}deg)`
+                       } : undefined}
+                     />
                   </div>
                 ) : (
                   <div className="w-16 h-16 rounded-full border border-[#e8dcc8]/60 flex items-center justify-center mb-3 text-[#c96b71] bg-white shadow-sm transition-all duration-300 group-hover:scale-105">

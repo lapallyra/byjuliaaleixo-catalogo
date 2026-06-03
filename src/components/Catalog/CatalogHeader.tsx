@@ -19,7 +19,13 @@ export const CatalogHeader: React.FC<{
   onGoBack: () => void;
   onLogoClick?: () => void;
   companyId?: CompanyId;
-}> = ({ companyName, logoUrl, theme, onSearch, onGoBack, companyId, onGiftListClick, giftListCount, onLogoClick }) => {
+  logoStyle?: {
+    scale?: number;
+    rotate?: number;
+    x?: number;
+    y?: number;
+  };
+}> = ({ companyName, logoUrl, theme, onSearch, onGoBack, companyId, onGiftListClick, giftListCount, onLogoClick, logoStyle }) => {
   const isMimada = companyId === 'mimada' || companyName.toLowerCase().includes('mimada');
   const isPallyra = companyId === 'pallyra';
 
@@ -68,7 +74,10 @@ export const CatalogHeader: React.FC<{
                   <ImageWithFallback
                     src={logoUrl}
                     alt={companyName}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-full object-contain transition-transform duration-700"
+                    style={{
+                      transform: `translate(${logoStyle?.x || 0}px, ${logoStyle?.y || 0}px) scale(${logoStyle?.scale || 1}) rotate(${logoStyle?.rotate || 0}deg)`
+                    }}
                     referrerPolicy="no-referrer"
                     loading="eager"
                   />

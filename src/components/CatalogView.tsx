@@ -752,6 +752,12 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         onGoBack={onGoBack}
         onGiftListClick={() => setIsSearchingList(true)}
         giftListCount={giftList.length} 
+        logoStyle={siteSettings ? {
+          scale: siteSettings.store_logo_scale,
+          rotate: siteSettings.store_logo_rotate,
+          x: siteSettings.store_logo_x,
+          y: siteSettings.store_logo_y
+        } : undefined}
         companyId={companyId}
         onLogoClick={handleHiddenAdminClick}
       />

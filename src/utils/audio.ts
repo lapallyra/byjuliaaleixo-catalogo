@@ -24,83 +24,95 @@ export async function playSuccessSound() {
     const ctx = new AudioContextClass();
     const now = ctx.currentTime;
 
-    // Master volume set to 0.15 (moderate, elegant, eye/ear saver volume)
+    // Master volume set to 0.16 (pleasant and solid level)
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.12, now);
+    masterGain.gain.setValueAtTime(0.16, now);
     masterGain.connect(ctx.destination);
 
     // ==========================================
-    // HARMONIC BELL RING (Prismatic "Cha-Ching" sound starter)
+    // 1. THE CASH REGISTER BELL (High metal strike)
     // ==========================================
-    const bellOsc = ctx.createOscillator();
-    const bellGain = ctx.createGain();
-    bellOsc.type = "sine";
-    bellOsc.frequency.setValueAtTime(1400, now);
-    bellOsc.frequency.exponentialRampToValueAtTime(1800, now + 0.08);
-    bellGain.gain.setValueAtTime(0.4, now);
-    bellGain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+    // Primary bell tone
+    const bell1 = ctx.createOscillator();
+    const bell1Gain = ctx.createGain();
+    bell1.type = "sine";
+    bell1.frequency.setValueAtTime(1250, now); // Metallic chime frequency
+    bell1Gain.gain.setValueAtTime(0.45, now);
+    bell1Gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+    bell1.connect(bell1Gain);
+    bell1Gain.connect(masterGain);
+
+    // High octave harmonic bell tone for metallic sizzle
+    const bell2 = ctx.createOscillator();
+    const bell2Gain = ctx.createGain();
+    bell2.type = "triangle";
+    bell2.frequency.setValueAtTime(2500, now);
+    bell2Gain.gain.setValueAtTime(0.18, now);
+    bell2Gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    bell2.connect(bell2Gain);
+    bell2Gain.connect(masterGain);
+
+    // ==========================================
+    // 2. STAGGERED COIN CLATTER (Chinking money)
+    // ==========================================
+    const coinTimes = [0.06, 0.11, 0.15, 0.20, 0.24];
+    const coinFreqs = [1900, 2900, 4200, 3100, 5200];
     
-    bellOsc.connect(bellGain);
-    bellGain.connect(masterGain);
-
-    const metalOsc = ctx.createOscillator();
-    const metalGain = ctx.createGain();
-    metalOsc.type = "triangle";
-    metalOsc.frequency.setValueAtTime(2800, now);
-    metalGain.gain.setValueAtTime(0.15, now);
-    metalGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-
-    metalOsc.connect(metalGain);
-    metalGain.connect(masterGain);
+    coinTimes.forEach((timeOffset, idx) => {
+      const coinOsc = ctx.createOscillator();
+      const coinGain = ctx.createGain();
+      
+      coinOsc.type = "sine";
+      coinOsc.frequency.setValueAtTime(coinFreqs[idx], now + timeOffset);
+      
+      coinGain.gain.setValueAtTime(0, now + timeOffset);
+      coinGain.gain.linearRampToValueAtTime(0.3, now + timeOffset + 0.005);
+      coinGain.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + 0.07);
+      
+      coinOsc.connect(coinGain);
+      coinGain.connect(masterGain);
+      
+      coinOsc.start(now + timeOffset);
+      coinOsc.stop(now + timeOffset + 0.09);
+    });
 
     // ==========================================
-    // SMOOTH CELESTIAL ASCENDING ARPEGGIO CHORD 
+    // 3. WHITE NOISE RESONANCE FOR COIN FRICTION
     // ==========================================
-    // Note 1: C6 (1046.50 Hz) for a warm and firm foundation
-    const chord1Osc = ctx.createOscillator();
-    const chord1Gain = ctx.createGain();
-    chord1Osc.type = "sine";
-    chord1Osc.frequency.setValueAtTime(1046.50, now + 0.05);
-    chord1Gain.gain.setValueAtTime(0.35, now + 0.05);
-    chord1Gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
-    chord1Osc.connect(chord1Gain);
-    chord1Gain.connect(masterGain);
+    const bufferSize = ctx.sampleRate * 0.22; // ~220ms duration
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const channelData = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      channelData[i] = Math.random() * 2 - 1;
+    }
+    
+    const noiseSource = ctx.createBufferSource();
+    noiseSource.buffer = buffer;
 
-    // Note 2: E6 (1318.51 Hz) contributing sweet harmonic color
-    const chord2Osc = ctx.createOscillator();
-    const chord2Gain = ctx.createGain();
-    chord2Osc.type = "sine";
-    chord2Osc.frequency.setValueAtTime(1318.51, now + 0.11);
-    chord2Gain.gain.setValueAtTime(0.35, now + 0.11);
-    chord2Gain.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
-    chord2Osc.connect(chord2Gain);
-    chord2Gain.connect(masterGain);
+    // Filter to isolate the high-pitched "clink" frequencies (bandpass around 7500Hz)
+    const noiseFilter = ctx.createBiquadFilter();
+    noiseFilter.type = "bandpass";
+    noiseFilter.frequency.setValueAtTime(7500, now);
+    noiseFilter.Q.value = 4.0;
 
-    // Note 3: G6 (1567.98 Hz) giving the grand, bright resolution
-    const chord3Osc = ctx.createOscillator();
-    const chord3Gain = ctx.createGain();
-    chord3Osc.type = "sine";
-    chord3Osc.frequency.setValueAtTime(1567.98, now + 0.17);
-    chord3Gain.gain.setValueAtTime(0.45, now + 0.17);
-    chord3Gain.gain.exponentialRampToValueAtTime(0.01, now + 0.75);
-    chord3Osc.connect(chord3Gain);
-    chord3Gain.connect(masterGain);
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0, now);
+    noiseGain.gain.linearRampToValueAtTime(0.2, now + 0.05);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    noiseSource.connect(noiseFilter);
+    noiseFilter.connect(noiseGain);
+    noiseGain.connect(masterGain);
 
     // Starting audio nodes
-    bellOsc.start(now);
-    bellOsc.stop(now + 0.4);
+    bell1.start(now);
+    bell1.stop(now + 0.4);
 
-    metalOsc.start(now);
-    metalOsc.stop(now + 0.2);
+    bell2.start(now);
+    bell2.stop(now + 0.2);
 
-    chord1Osc.start(now + 0.05);
-    chord1Osc.stop(now + 0.5);
-
-    chord2Osc.start(now + 0.11);
-    chord2Osc.stop(now + 0.6);
-
-    chord3Osc.start(now + 0.17);
-    chord3Osc.stop(now + 0.8);
+    noiseSource.start(now + 0.02);
+    noiseSource.stop(now + 0.25);
 
   } catch (err) {
     console.error("Audio Synthesis error:", err);
