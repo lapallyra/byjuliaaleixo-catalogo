@@ -1206,21 +1206,39 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     try {
                       const response = await fetch('/api/sendTelegram', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
                         body: JSON.stringify({
                           botToken: settings.telegram_bot_token,
                           chatId: settings.telegram_chat_id,
                           message: "🔔 <b>TESTE DE INTEGRAÇÃO</b>\n\nSeu robô de notificações está configurado corretamente! 🎉"
                         })
                       });
-                      const data = await response.json();
-                      if (data.success) {
-                        alert(data.message || "Telegram conectado com sucesso!");
-                      } else {
-                        alert("Erro: " + (data.message || data.error || "Erro desconhecido"));
+
+                      const rawText = await response.text();
+
+                      console.log('Telegram response:', rawText);
+
+                      if (!rawText) {
+                        throw new Error('Resposta vazia do servidor.');
                       }
+
+                      let data;
+
+                      try {
+                        data = JSON.parse(rawText);
+                      } catch {
+                        throw new Error(`Servidor retornou conteúdo inválido: ${rawText}`);
+                      }
+
+                      if (!data.success) {
+                        throw new Error(data.message || 'Falha desconhecida.');
+                      }
+
+                      alert('Telegram conectado com sucesso.');
                     } catch (e: any) {
-                      alert("Erro na requisição: " + e.message);
+                      alert("Erro: " + e.message);
                     }
                   }}
                   className="px-6 py-3 bg-sky-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg hover:bg-sky-700"
