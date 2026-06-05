@@ -116,8 +116,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     };
 
     onAddToCart(packedProduct, quantity);
-    setShowToast('Adicionado ao carrinho!');
-    setTimeout(() => setShowToast(null), 3000);
+    // ANIMAÇÃO DE ADIÇÃO AO CARRINHO TEMPORARIAMENTE DESABILITADA. NOVA IMPLEMENTAÇÃO SERÁ CRIADA POSTERIORMENTE.
   };
 
   // Calculate relative lists
@@ -270,7 +269,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                  <button 
                   type="button"
                   onClick={handleAddToCart}
-                  className="flex-1 py-5 rounded-2xl text-[11px] uppercase tracking-[0.2em] font-black transition-all duration-300 relative overflow-hidden flex items-center justify-center gap-3 shadow-lg"
+                  className="flex-1 py-5 rounded-2xl text-[11px] uppercase tracking-[0.2em] font-black relative flex items-center justify-center gap-3 shadow-lg"
                   style={{
                     background: `linear-gradient(135deg, ${accentColor}dd, ${accentColor}ff)`,
                     color: '#fff',

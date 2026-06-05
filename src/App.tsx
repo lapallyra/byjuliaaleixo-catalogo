@@ -131,6 +131,8 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
       }
       return updatedCart;
     });
+    // Trigger global crystal toast animation
+    window.dispatchEvent(new CustomEvent('added-to-cart'));
   };
 
   const handleRemoveFromCart = (productId: string) => {
@@ -236,6 +238,8 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
   );
 }
 
+import { CrystalCartToast } from './components/ui/CrystalCartToast';
+
 function MainApp() {
   const [config, setConfig] = useState<AppConfig>(INITIAL_CONFIG);
   const [allProducts, setAllProducts] = useState<Product[]>(PRODUCTS); // Start with static, then sync
@@ -290,6 +294,7 @@ function MainApp() {
 
   return (
     <SparklesContainer>
+      <CrystalCartToast />
       <TopAnnouncementBar />
       <CookieBanner />
       <Routes>

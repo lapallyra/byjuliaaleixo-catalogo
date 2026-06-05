@@ -23,6 +23,7 @@ import {
   Calculator,
   Maximize2,
   DollarSign,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { ImageUpload } from "./ImageUpload";
@@ -550,8 +551,22 @@ const ProductFormModal: React.FC<
     setUploadsInProgress((prev) => Math.max(0, prev - 1));
 
   const [activeSubTab, setActiveSubTab] = useState<
-    "info" | "pricing" | "photos"
+    "info" | "pricing" | "photos" | "mockup"
   >(editingProduct?.id ? "info" : "info");
+
+  // Mockup Studio Settings
+  const [mockupTemplates, setMockupTemplates] = useState(
+    editingProduct?.mockupTemplates || []
+  );
+  const [artworkSize, setArtworkSize] = useState(
+    editingProduct?.artworkSize || { width: 0, height: 0 }
+  );
+  const [recommendedBackground, setRecommendedBackground] = useState<'backyard' | 'studio' | 'brick'>(
+    editingProduct?.recommendedBackground || 'studio'
+  );
+  const [applicationType, setApplicationType] = useState<'wrap360' | 'frontOnly'>(
+    editingProduct?.applicationType || 'frontOnly'
+  );
   const [selectedAtelier, setSelectedAtelier] = useState<CompanyId>(
     (editingProduct?.company as CompanyId) || companyId,
   );
@@ -770,6 +785,7 @@ const ProductFormModal: React.FC<
             { id: "info", label: "Dados Básicos", icon: Info },
             { id: "photos", label: "Galeria", icon: Camera },
             { id: "pricing", label: "Preços & Lucro", icon: Calculator },
+            { id: "mockup", label: "Mockup Studio", icon: Sparkles },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1242,6 +1258,10 @@ const ProductFormModal: React.FC<
                   activeInCatalog: activeInCatalog,
                   isVisible: activeInCatalog,
                   company: selectedAtelier,
+                  mockupTemplates: mockupTemplates,
+                  artworkSize: artworkSize,
+                  recommendedBackground: recommendedBackground,
+                  applicationType: applicationType,
                 });
                 onClose();
               } catch (err: any) {

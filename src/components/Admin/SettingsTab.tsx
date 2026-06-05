@@ -1204,6 +1204,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       return;
                     }
                     try {
+                      console.log('URL:', '/api/sendTelegram');
                       const response = await fetch('/api/sendTelegram', {
                         method: 'POST',
                         headers: {
@@ -1216,9 +1217,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                         })
                       });
 
-                      const rawText = await response.text();
+                      console.log('Status:', response.status);
+                      console.log('Headers:', [...response.headers.entries()]);
 
-                      console.log('Telegram response:', rawText);
+                      const rawText = await response.text();
+                      console.log('RAW RESPONSE:', rawText);
 
                       if (!rawText) {
                         throw new Error('Resposta vazia do servidor.');
