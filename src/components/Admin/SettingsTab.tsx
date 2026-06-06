@@ -24,6 +24,7 @@ import {
   Truck,
   X,
   Bell,
+  Sparkles,
 } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
 import { DynamicPricingList } from "./DynamicPricingList";
@@ -61,6 +62,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
     | "roulette"
     | "shipping"
     | "notifications"
+    | "mockup"
   >("brand");
   const [settings, setSettings] = useState<Partial<SiteSettings>>({});
   const [loading, setLoading] = useState(true);
@@ -202,6 +204,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           { id: "shipping", label: "Cálculo de Frete", icon: Truck },
           { id: "roulette", label: "Roleta de Brindes", icon: Gift },
           { id: "notifications", label: "Notificações", icon: Bell },
+          { id: "mockup", label: "Mockup Studio", icon: Sparkles },
         ].map((item) => (
           <button
             key={item.id}
@@ -1256,6 +1259,38 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest leading-relaxed">
                 • Efeitos sonoros são gerados de forma limpa pelo navegador via Web Audio API, exigindo uma primeira interação na página para contornar restrições de autoplayer do navegador.
               </p>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === "mockup" && (
+          <div className="space-y-10">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-indigo-100/50 text-indigo-600">
+                <Sparkles size={24} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+                Mockup Studio
+              </h3>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 border border-lilac/10 flex flex-col items-center justify-center text-center space-y-6 py-16">
+              <div className="w-20 h-20 bg-indigo-50 text-indigo-500 flex items-center justify-center rounded-3xl mb-4">
+                <Sparkles size={40} />
+              </div>
+              <h4 className="text-xl font-black text-slate-800 tracking-tight">Crie Mockups Profissionais</h4>
+              <p className="text-sm font-semibold text-slate-500 max-w-md uppercase tracking-wider leading-relaxed">
+                Acesse o Mockup Studio exclusivo para gerar apresentações visuais de alta qualidade de forma fácil.
+              </p>
+              
+              <a
+                href="https://byjuliaaleixo.online/mockupstudio"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 flex items-center gap-3 px-10 py-5 bg-indigo-600 text-white rounded-2xl font-black font-sans text-xs uppercase tracking-[0.2em] hover:scale-105 active:scale-95 hover:bg-indigo-700 transition-all shadow-[0_15px_30px_rgba(79,70,229,0.3)]"
+              >
+                Acessar Mockup Studio
+              </a>
             </div>
           </div>
         )}

@@ -9,12 +9,14 @@ import { ptBR } from 'date-fns/locale';
 export const AdminNotificationPortal: React.FC = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [siteSettings, setSiteSettings] = useState<Record<string, SiteSettings>>({});
+  const siteSettingsRef = useRef<Record<string, SiteSettings>>({});
   const lastSalesCount = useRef<number>(-1);
 
   useEffect(() => {
     // 1. Subscribe to settings for colors
     const unsubSettings = subscribeToAllSettings((data) => {
       setSiteSettings(data);
+      siteSettingsRef.current = data;
     });
 
     // 2. Subscribe to Sales
@@ -31,7 +33,7 @@ export const AdminNotificationPortal: React.FC = () => {
         const newSale = sorted[0];
         if (newSale) {
           const id = `sale-${Date.now()}`;
-          const settings = siteSettings[newSale.companyId];
+          const settings = siteSettingsRef.current[newSale.companyId];
           
           const newNotif = {
             id,
@@ -44,6 +46,12 @@ export const AdminNotificationPortal: React.FC = () => {
             time: 'Agora'
           };
 
+          const playAudio = async () => {
+            const { playSuccessSound } = await import('../utils/audio');
+            playSuccessSound();
+          };
+          playAudio().catch(console.error);
+
           setNotifications(prev => [newNotif, ...prev].slice(0, 2));
           setTimeout(() => removeNotification(id), 8000);
         }
@@ -55,7 +63,7 @@ export const AdminNotificationPortal: React.FC = () => {
       unsubSettings();
       unsubSales();
     };
-  }, [siteSettings]);
+  }, []);
 
   const removeNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));

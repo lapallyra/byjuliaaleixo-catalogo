@@ -221,10 +221,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
 
   const menuItems: { id: TabType; label: string; icon: any; category: string }[] = [
     { id: "dashboard", label: "Dashboard", category: "WORKSPACE", icon: LayoutDashboard },
-    { id: "products", label: "Produtos", category: "WORKSPACE", icon: Box },
-    { id: "mockup-studio", label: "Mockup Studio", category: "WORKSPACE", icon: Sparkles },
-    { id: "catalogo", label: "Catálogo", category: "WORKSPACE", icon: Sliders },
-    { id: "exportacoes", label: "Exportações", category: "WORKSPACE", icon: Database },
+    { id: "orders", label: "Pedidos", category: "WORKSPACE", icon: ShoppingBag },
+    { id: "agenda", label: "Agenda", category: "WORKSPACE", icon: Calendar },
+    { id: "inventory", label: "Estoque", category: "GESTÃO", icon: Archive },
+    { id: "products", label: "Produtos", category: "GESTÃO", icon: Box },
+    { id: "finance", label: "Financeiro", category: "GESTÃO", icon: DollarSign },
+    { id: "reports", label: "Relatórios", category: "GESTÃO", icon: FileCheck },
+    { id: "clients", label: "Clientes", category: "CRM", icon: User },
+    { id: "feedbacks", label: "Feedbacks", category: "CRM", icon: Star },
+    { id: "gift-lists", label: "Listas de Presentes", category: "MARKETING", icon: Gift },
+    { id: "commemorative-dates", label: "Datas Comemorativas", category: "MARKETING", icon: Heart },
+    { id: "addons", label: "Addons (Upsell)", category: "MARKETING", icon: TrendingUp },
+    { id: "prizes", label: "Roleta de Prêmios", category: "MARKETING", icon: Sparkles },
+    { id: "funnel", label: "Funil & Carrinhos", category: "ANÁLISES", icon: BarChart3 },
+    { id: "simulator", label: "Simulador de Preço", category: "SISTEMA", icon: Box },
+    { id: "auditoria", label: "Auditoria", category: "SISTEMA", icon: Search },
+    { id: "exportacoes", label: "Exportações", category: "SISTEMA", icon: Database },
+    { id: "catalogo", label: "Catálogo", category: "SISTEMA", icon: Sliders },
+    { id: "settings", label: "Configurações", category: "SISTEMA", icon: Settings },
   ];
 
   const groupedMenu = menuItems.reduce((acc, item) => {

@@ -23,6 +23,7 @@ import { INITIAL_CONFIG, PRODUCTS } from './constants';
 import { AppConfig, CompanyId, CartItem, Product } from './types';
 import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
 
+import { CrystalCartToast } from './components/ui/CrystalCartToast';
 import { PrizeRouletteModal } from './components/PrizeRouletteModal';
 import { sendNotifications, sendTelegramNotification } from './services/notificationService';
 import { updateOrder } from './services/firebaseService';
@@ -237,8 +238,6 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
     </>
   );
 }
-
-import { CrystalCartToast } from './components/ui/CrystalCartToast';
 
 function MainApp() {
   const [config, setConfig] = useState<AppConfig>(INITIAL_CONFIG);
