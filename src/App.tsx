@@ -1,3 +1,4 @@
+import { MockupStudio } from './components/MockupStudio';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -266,8 +267,15 @@ function MainApp() {
     <SparklesContainer>
       <CookieBanner />
       <Routes>
+        <Route
+  path="/mockup-studio"
+  element={
+    <ProtectedRoute>
+      <MockupStudio />
+    </ProtectedRoute>
+  }
+/>  
         <Route path="/" element={<EntryView config={config} />} />
-
         <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts.filter(p => p.company === 'pallyra')} companyId="pallyra" config={config} carts={carts} setCart={setCarts} giftLists={giftLists} setGiftLists={setGiftLists} />} />
         <Route path="/lapallyra/admin" element={<Navigate to="/admin" replace />} />
         

@@ -100,12 +100,12 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
       }, currentCompany);
     }
 
-    const intervals = [5000, 15000, 30000, 60000, 120000]; // 5s, 15s, 30s, 1min, 2min
+    const intervals = [5000, 10000, 8000, 6000, 5000]; // 5s, 15s, 30s, 1min, 2min
 
     // Fetch products once to use in random notifications
     const scheduleNext = async (index: number) => {
       if (!currentCompany) return;
-      const delay = intervals[index] || (60000 + Math.random() * 120000);
+      const delay = intervals[index] || (6000 + Math.random() * 5000);
       
       timerRef.current = setTimeout(() => {
         const nextNotif = generateRandomNotification(currentCompany);

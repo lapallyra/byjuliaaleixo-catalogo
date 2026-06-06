@@ -31,8 +31,8 @@ export const sendNotifications = async (
     ? `Pagamento via PIX Parcelado (${checkoutData.installments}x)`
     : `Pagamento em Dinheiro${checkoutData.needsChange === 'SIM' ? ` (Troco para R$ ${checkoutData.changeAmount})` : ''}`;
 
-  let phoneNumber = (config.whatsapp_number || "5544999999999").replace(/\D/g, "");
-  if (phoneNumber.length === 11 && phoneNumber.startsWith("44")) {
+  let phoneNumber = (config.whatsapp_number || "5500999999999").replace(/\D/g, "");
+  if (phoneNumber.length === 11 && phoneNumber.startsWith("00")) {
     phoneNumber = "55" + phoneNumber;
   }
 
