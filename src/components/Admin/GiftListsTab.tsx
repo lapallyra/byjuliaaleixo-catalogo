@@ -130,7 +130,7 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({
                   <button
                     onClick={() => handlePrint(list)}
                     className="p-2 text-[#A09898] hover:text-slate-900 transition-colors"
-                    title="Imprimir"
+                    title="Visualização em PDF"
                   >
                     <Printer size={16} />
                   </button>

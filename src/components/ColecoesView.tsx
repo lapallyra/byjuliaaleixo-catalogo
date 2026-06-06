@@ -263,7 +263,7 @@ export const ColecoesView: React.FC<ColecoesViewProps> = ({ allProducts = [] }) 
           <AtelierCarousel 
             title="Tutty Mimo" 
             accent="#d4bda1" 
-            products={productsByTuttymimo} 
+            products={allProducts.filter(p => p.company === 'tuttymimo')} 
             onNavigate={() => navigate('/tuttymimo')} 
           />
         </div>

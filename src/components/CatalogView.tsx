@@ -138,6 +138,28 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         categoryInactive: 'text-[#6B1D2F]/50 hover:text-[#6B1D2F]',
         cartBadge: 'bg-[#6B1D2F] text-white'
       };
+    } else if (companyId === 'tuttymimo') {
+      return {
+        ...rawTheme,
+        bg: 'bg-[#FCFAF7]',
+        primaryColor: '#FCFAF7',
+        accentColor: '#D4BDA1',
+        textPrimary: 'text-[#5C4A3D]',
+        textSecondary: 'text-[#5C4A3D]/75',
+        textMuted: 'text-[#D4BDA1]/70',
+        textVeryMuted: 'text-[#D4BDA1]/30',
+        borderLine: 'border-[#D4BDA1]/25',
+        cardBg: 'bg-white',
+        searchBg: 'bg-[#D4BDA1]/10 border-[#D4BDA1]/25',
+        inputPlaceholder: 'placeholder:text-[#D4BDA1]/60',
+        sidebarBg: 'bg-white',
+        btnPrimary: 'bg-[#D4BDA1] text-white hover:bg-[#C2AA8F] transition-colors',
+        btnSecondary: 'bg-[#F5EFE6] border-[#D4BDA1]/25 text-[#7A6251] hover:bg-[#EBE2D5]',
+        btnSecondaryText: 'text-[#7A6251]/80 hover:text-[#5C4A3D]',
+        categoryActive: 'text-[#7A6251] bg-[#F5EFE6] border-b-2 border-[#D4BDA1]',
+        categoryInactive: 'text-[#7A6251]/60 hover:text-[#7A6251]',
+        cartBadge: 'bg-[#D4BDA1] text-white'
+      };
     } else {
       return {
         ...rawTheme,
@@ -519,7 +541,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     if (!siteSettings) return;
     
     const root = document.documentElement;
-    const prefix = companyId === 'mimada' ? 'mimadasim' : companyId === 'pallyra' ? 'lapallyra' : 'guennita';
+    const prefix = companyId === 'mimada' ? 'mimadasim' : companyId === 'pallyra' ? 'lapallyra' : companyId === 'tuttymimo' ? 'tuttymimo' : 'guennita';
     
     if (siteSettings.theme_primary_color) root.style.setProperty(`--theme-primary-${prefix}`, siteSettings.theme_primary_color);
     if (siteSettings.theme_accent_color) root.style.setProperty(`--theme-accent-${prefix}`, siteSettings.theme_accent_color);
@@ -677,8 +699,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     }, 400);
   };
 
-  const companyName = companyId === 'pallyra' ? config.company_1_name : companyId === 'guennita' ? config.company_2_name : config.company_3_name;
-  const defaultLogo = companyId === 'pallyra' ? config.company_1_logo : companyId === 'guennita' ? config.company_2_logo : config.company_3_logo;
+  const companyName = companyId === 'pallyra' ? config.company_1_name : companyId === 'guennita' ? config.company_2_name : companyId === 'mimada' ? config.company_3_name : config.company_4_name;
+  const defaultLogo = companyId === 'pallyra' ? config.company_1_logo : companyId === 'guennita' ? config.company_2_logo : companyId === 'mimada' ? config.company_3_logo : config.company_4_logo;
   
   const categories = useMemo(() => {
     return Array.from(new Set(companyProducts.map(p => p.category))).sort();
@@ -715,7 +737,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
   return (
     <div 
-      className={`min-h-[100dvh] pt-0 ${theme.bg} flex flex-col relative theme-${companyId === 'mimada' ? 'mimadasim' : companyId === 'pallyra' ? 'lapallyra' : 'guennita'}`}
+      className={`min-h-[100dvh] pt-0 ${theme.bg} flex flex-col relative theme-${companyId === 'mimada' ? 'mimadasim' : companyId === 'pallyra' ? 'lapallyra' : companyId === 'tuttymimo' ? 'tuttymimo' : 'guennita'}`}
     >
        <CatalogHeader 
         companyName={companyName}

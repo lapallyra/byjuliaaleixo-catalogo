@@ -78,6 +78,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
     pallyra: {},
     guennita: {},
     mimada: {},
+    tuttymimo: {},
   });
 
   useEffect(() => {
@@ -91,7 +92,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
       }
 
       // Load others for branding overview
-      const ids: CompanyId[] = ["pallyra", "guennita", "mimada"];
+      const ids: CompanyId[] = ["pallyra", "guennita", "mimada", "tuttymimo"];
       const multi: Record<string, Partial<SiteSettings>> = {};
       for (const id of ids) {
         const d = await getSiteSettings(id);
@@ -120,6 +121,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
             configUpdate.company_2_logo = atelierData.store_logo;
           if (id === "mimada")
             configUpdate.company_3_logo = atelierData.store_logo;
+          if (id === "tuttymimo")
+            configUpdate.company_4_logo = atelierData.store_logo;
         }
         if (Object.keys(configUpdate).length > 0) {
           await saveAppConfig(configUpdate);
@@ -145,6 +148,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
             configUpdate.company_2_logo = settings.store_logo;
           if (companyId === "mimada")
             configUpdate.company_3_logo = settings.store_logo;
+          if (companyId === "tuttymimo")
+            configUpdate.company_4_logo = settings.store_logo;
         }
         if (settings.store_qrcode)
           configUpdate.store_qrcode = settings.store_qrcode;
@@ -243,9 +248,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     color: "text-slate-400",
                   },
                   { id: "mimada", label: "Mimada Sim", color: "text-pink-600" },
+                  { id: "tuttymimo", label: "Tutty Mimo", color: "text-orange-400" },
                 ] as const
               ).map((atl) => {
-                const atlSettings = allAteliers[atl.id];
+                const atlSettings = allAteliers[atl.id] || {};
                 return (
                   <div
                     key={atl.id}

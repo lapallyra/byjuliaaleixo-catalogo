@@ -6,6 +6,8 @@ import { themes } from '../lib/theme';
 import { logCheckoutEvent, getSiteSettings, getGlobalSettings, getCustomerByCpf } from '../services/firebaseService';
 import { SiteSettings } from '../types';
 import { useAuth } from './AuthProvider';
+import { ImageWithFallback } from './ImageWithFallback';
+
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -490,7 +492,7 @@ export function CheckoutModal({
             {cart.map((item, idx) => (
               <div key={idx} className="flex gap-4">
                 <div className="w-20 h-20 rounded-2xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100 shadow-sm relative group">
-                  <img src={item.image} alt={item.product_name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <ImageWithFallback src={item.image} alt={item.product_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="flex-1 flex flex-col justify-center">
                   <h4 className="text-sm font-semibold text-gray-800 pr-2 line-clamp-2 leading-tight">{item.product_name}</h4>

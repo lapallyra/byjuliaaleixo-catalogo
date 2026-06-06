@@ -127,7 +127,7 @@ const ActionsDropdown: React.FC<{
               }}
               className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-[10px] uppercase tracking-widest font-semibold text-[#4A4444] hover:bg-[#FAF9F6] hover:text-[#D48C8C] text-left transition-colors"
             >
-              <Printer size={12} className="text-[#D48C8C]" /> Comprovante
+              <Printer size={12} className="text-[#D48C8C]" /> Visualização em PDF
             </button>
             <button
               onClick={(e) => {
@@ -204,6 +204,18 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
           badgeColor: "#FF69B4",
           accentLight: "rgba(255, 105, 180, 0.15)",
         };
+      case "tuttymimo":
+        return {
+          name: "Tutty Mimo",
+          primary: "#D4BDA1", // Warm neutral
+          secondary: "#5C4A3D", // Wood/earthy
+          accent: "#D4BDA1",
+          bgBadge: "bg-[#F5EFE6] text-[#7A6251] border-[#D4BDA1]/25",
+          btnGradient: "from-[#D4BDA1] to-[#C2AA8F]",
+          textClass: "text-[#7A6251]",
+          badgeColor: "#D4BDA1",
+          accentLight: "rgba(212, 189, 161, 0.15)",
+        };
       case "pallyra":
       default:
         return {
@@ -225,7 +237,8 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
     const employeePool: Record<string, string[]> = {
       guennita: ["Guennita", "Ana C.", "Beatriz", "Carla M."],
       pallyra: ["Sílvia R.", "Mariana", "Patrícia", "Daniele"],
-      mimada: ["Gisele K.", "Renata S.", "Gaby", "Larissa"]
+      mimada: ["Gisele K.", "Renata S.", "Gaby", "Larissa"],
+      tuttymimo: ["Amanda", "Juliana", "Vanessa", "Bruna"]
     };
     const list = employeePool[compId] || employeePool.pallyra;
     return list[sum % list.length];
@@ -774,7 +787,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                           onClick={() => setPrintingA6Order(orders.find((o) => o.id === isDetailOpen)!)}
                           className="flex items-center gap-2 px-4 py-2 mt-2 bg-black text-white hover:bg-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
                         >
-                          <Printer size={14} /> Imprimir Pedido
+                          <Printer size={14} /> Visualização em PDF
                         </button>
                       </div>
                     </div>

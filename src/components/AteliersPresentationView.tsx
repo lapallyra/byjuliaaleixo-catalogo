@@ -20,6 +20,7 @@ export const AteliersPresentationView: React.FC = () => {
     if (customLogo) return customLogo;
     if (id === 'pallyra') return '📓';
     if (id === 'guennita') return '👑';
+    if (id === 'tuttymimo') return '🍼';
     return '💅';
   };
 
@@ -56,6 +57,17 @@ export const AteliersPresentationView: React.FC = () => {
       route: '/mimadasim',
       accentColor: '#c96b71',
       bgGradient: 'from-[#fff5f6] to-white',
+    },
+    {
+      id: 'tuttymimo',
+      name: 'Tutty Mimo',
+      title: 'Maternidade e Primeira Infância',
+      description: 'Para o nicho de bebês, maternidade e primeira infância. Estilo acolhedor, afetivo e premium.',
+      details: 'Produtos delicados, materiais confortáveis e acabamento impecável.',
+      tagline: 'O cuidado que seu bebê merece.',
+      route: '/tuttymimo',
+      accentColor: '#d4bda1',
+      bgGradient: 'from-[#fcfaf7] to-white',
     }
   ];
 

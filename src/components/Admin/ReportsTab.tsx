@@ -147,7 +147,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
           <button
             onClick={() => window.print()}
             className="p-2 hover:bg-slate-50 text-[#A09898] hover:text-lilac rounded-xl transition-all"
-            title="Imprimir Relatório"
+            title="Visualização em PDF"
           >
             <Printer size={14} />
           </button>

@@ -764,6 +764,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
             <option value="pallyra">LA PALLYRA</option>
             <option value="guennita">COM AMOR, GUENNITA</option>
             <option value="mimada">MIMADA SIM</option>
+            <option value="tuttymimo">TUTTY MIMO</option>
           </select>
 
           {/* Period selection */}

@@ -119,6 +119,8 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
         return "bg-[#801020]"; // Marsala
       case "mimada":
         return "bg-[#FF1493]"; // Pink
+      case "tuttymimo":
+        return "bg-[#D4BDA1]"; // Warm neutral
       default:
         return "bg-gray-400";
     }
@@ -132,6 +134,8 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
         return "CG";
       case "mimada":
         return "MS";
+      case "tuttymimo":
+        return "TM";
       default:
         return "LP";
     }
@@ -180,7 +184,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
           <button
             onClick={() => window.print()}
             className="flex items-center justify-center p-4 bg-slate-50 text-slate-400 border border-slate-100 rounded-xl hover:text-pink-600 hover:bg-white hover:border-pink-200 transition-all shadow-sm group"
-            title="Exportar Relatório PDF"
+            title="Visualização em PDF"
           >
             <Printer size={18} className="group-hover:scale-110 transition-transform" />
           </button>

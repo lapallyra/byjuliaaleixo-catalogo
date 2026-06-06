@@ -117,7 +117,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
         <button
           onClick={() => window.print()}
           className="flex items-center justify-center p-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group"
-          title="Exportar Relatório PDF"
+          title="Visualização em PDF"
         >
           <Printer size={18} className="group-hover:scale-110 transition-transform" />
         </button>

@@ -79,10 +79,10 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
             <button
               onClick={handlePrint}
               className="flex items-center gap-2 px-4 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all text-xs font-bold uppercase tracking-widest"
-              title="Imprimir"
+              title="Visualização em PDF"
             >
               <Printer size={18} />
-              Imprimir
+              Visualização em PDF
             </button>
             <button
               onClick={onClose}

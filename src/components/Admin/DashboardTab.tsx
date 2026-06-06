@@ -268,6 +268,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       guennita: { color: "#800000", badge: "tag-guennita", initial: "CG" },
       pallyra: { color: "#D4AF37", badge: "tag-pallyra", initial: "LP" },
       mimada: { color: "#D48C8C", badge: "tag-mimada", initial: "MS" },
+      tuttymimo: { color: "#D4BDA1", badge: "tag-tuttymimo", initial: "TM" },
     }),
     [],
   );

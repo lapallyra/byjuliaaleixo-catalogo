@@ -189,7 +189,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
           <button
             onClick={() => window.print()}
             className="flex items-center justify-center p-4 bg-white text-[#D1CACA] border border-lilac/10 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group"
-            title="Exportar Relatório PDF"
+            title="Visualização em PDF"
           >
             <Printer size={18} className="group-hover:scale-110 transition-transform" />
           </button>
