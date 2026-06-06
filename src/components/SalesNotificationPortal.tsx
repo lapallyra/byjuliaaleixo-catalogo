@@ -21,87 +21,25 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const now = audioCtx.currentTime;
-
-      // Master volume (0.12 - nice and pleasant level for popups)
-      const masterGain = audioCtx.createGain();
-      masterGain.gain.setValueAtTime(0.12, now);
-      masterGain.connect(audioCtx.destination);
-
-      // 1. THE CASH REGISTER BELL
-      const bell1 = audioCtx.createOscillator();
-      const bell1Gain = audioCtx.createGain();
-      bell1.type = "sine";
-      bell1.frequency.setValueAtTime(1250, now);
-      bell1Gain.gain.setValueAtTime(0.4, now);
-      bell1Gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-      bell1.connect(bell1Gain);
-      bell1Gain.connect(masterGain);
-
-      const bell2 = audioCtx.createOscillator();
-      const bell2Gain = audioCtx.createGain();
-      bell2.type = "triangle";
-      bell2.frequency.setValueAtTime(2500, now);
-      bell2Gain.gain.setValueAtTime(0.15, now);
-      bell2Gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-      bell2.connect(bell2Gain);
-      bell2Gain.connect(masterGain);
-
-      // 2. STAGGERED COIN CLATTER
-      const coinTimes = [0.06, 0.11, 0.15, 0.20];
-      const coinFreqs = [1900, 2900, 4200, 3100];
       
-      coinTimes.forEach((timeOffset, idx) => {
-        const coinOsc = audioCtx.createOscillator();
-        const coinGain = audioCtx.createGain();
+      const playPlim = (freq: number, start: number, volume: number) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, start);
         
-        coinOsc.type = "sine";
-        coinOsc.frequency.setValueAtTime(coinFreqs[idx], now + timeOffset);
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(volume, start + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
         
-        coinGain.gain.setValueAtTime(0, now + timeOffset);
-        coinGain.gain.linearRampToValueAtTime(0.25, now + timeOffset + 0.005);
-        coinGain.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + 0.07);
-        
-        coinOsc.connect(coinGain);
-        coinGain.connect(masterGain);
-        
-        coinOsc.start(now + timeOffset);
-        coinOsc.stop(now + timeOffset + 0.09);
-      });
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(start);
+        osc.stop(start + 0.4);
+      };
 
-      // 3. NOISE BURST FOR FRICTION Resonators
-      const bufferSize = audioCtx.sampleRate * 0.20; // 200ms
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const channelData = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        channelData[i] = Math.random() * 2 - 1;
-      }
-      
-      const noiseSource = audioCtx.createBufferSource();
-      noiseSource.buffer = buffer;
-
-      const noiseFilter = audioCtx.createBiquadFilter();
-      noiseFilter.type = "bandpass";
-      noiseFilter.frequency.setValueAtTime(7500, now);
-      noiseFilter.Q.value = 4.0;
-
-      const noiseGain = audioCtx.createGain();
-      noiseGain.gain.setValueAtTime(0, now);
-      noiseGain.gain.linearRampToValueAtTime(0.15, now + 0.04);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.20);
-
-      noiseSource.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-      noiseGain.connect(masterGain);
-
-      bell1.start(now);
-      bell1.stop(now + 0.4);
-
-      bell2.start(now);
-      bell2.stop(now + 0.2);
-
-      noiseSource.start(now + 0.02);
-      noiseSource.stop(now + 0.23);
-
+      // Simple elegant ping
+      playPlim(1567.98, now, 0.05); // G6
     } catch (e) {
       console.warn('Audio not supported', e);
     }
@@ -157,18 +95,18 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
       }, currentCompany);
     }
 
-    // Natural random intervals (3s, 6s, 9s, 15s)
+    // Natural random intervals (3s, 8s, 10s, 40s)
     const getNextDelay = () => {
       const randomTime = Math.random();
-      if (randomTime < 0.4) return 3000;
-      if (randomTime < 0.7) return 6000;
-      if (randomTime < 0.9) return 9000;
-      return 15000;
+      if (randomTime < 0.25) return 3000;
+      if (randomTime < 0.5) return 8000;
+      if (randomTime < 0.75) return 10000;
+      return 40000;
     };
 
-    const scheduleNext = (isFirst: boolean = false) => {
+    const scheduleNext = () => {
       if (!currentCompany) return;
-      const delay = isFirst ? 1000 : getNextDelay();
+      const delay = getNextDelay();
       
       timerRef.current = setTimeout(() => {
         const nextNotif = generateRandomNotification(currentCompany);
@@ -177,11 +115,11 @@ export const SalesNotificationPortal: React.FC<SalesNotificationPortalProps> = (
           playFairyChime();
           setTimeout(() => setNotification(null), 5000);
         }
-        scheduleNext(false);
+        scheduleNext();
       }, delay);
     };
 
-    scheduleNext(true);
+    scheduleNext();
 
     return () => {
       window.removeEventListener('new-sale-notification', handleCustomNotification);

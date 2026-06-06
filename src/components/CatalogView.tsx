@@ -45,7 +45,6 @@ import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGlobalSettings, getGiftList, updateOrderStatus } from '../services/firebaseService';
-import { sendNotifications, sendTelegramNotification } from '../services/notificationService';
 import { playSuccessSound } from '../utils/audio';
 import { functions } from '../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
@@ -330,30 +329,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
       const savedOrderCode = docId || crypto.randomUUID();
       
-      // Enviar Notificação Telegram (Assíncrono)
-      if (siteSettings?.telegram_bot_token && siteSettings?.telegram_chat_id) {
-        sendTelegramNotification(
-          cart,
-          {
-            name: cli.clientName || 'Cliente',
-            birthDate: '',
-            cpfCnpj: cli.clientCpf || '',
-            contact: cli.clientContact || '',
-            deliveryType: checkoutData.deliveryType,
-            address: addr.rua ? `${addr.rua}, ${addr.numero}` : '',
-            city: addr.cidade || '',
-            state: addr.estado || '',
-            zipCode: addr.cep || '',
-            paymentMethod: checkoutData?.isSimulated ? 'pix' : 'mercadopago',
-            observations: combinedObs
-          },
-          total,
-          companyId,
-          savedOrderCode,
-          siteSettings
-        ).catch(err => console.warn("Telegram background notify error:", err));
-      }
-
       if (checkoutData?.isSimulated) {
         console.log('[MODO TESTE] Simulando pagamento aprovado...');
         await updateOrderStatus(savedOrderCode, 'paid');
@@ -752,12 +727,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         onGoBack={onGoBack}
         onGiftListClick={() => setIsSearchingList(true)}
         giftListCount={giftList.length} 
-        logoStyle={siteSettings ? {
-          scale: siteSettings.store_logo_scale,
-          rotate: siteSettings.store_logo_rotate,
-          x: siteSettings.store_logo_x,
-          y: siteSettings.store_logo_y
-        } : undefined}
         companyId={companyId}
         onLogoClick={handleHiddenAdminClick}
       />
@@ -915,21 +884,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                       containerClassName="w-full h-full absolute inset-0"
                                     />
                                   )}
-                                  
-                                  {/* Floating Gift List Button */}
-                                  {onAddToGiftList && (
-                                    <button 
-                                      onClick={(e) => { 
-                                        e.stopPropagation();
-                                        onAddToGiftList(product);
-                                        setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
-                                      }}
-                                      className="absolute top-2 right-2 p-2 rounded-full bg-white/90 backdrop-blur-sm text-neutral-700 hover:text-[#D88D85] shadow-lg hover:scale-110 active:scale-95 transition-all duration-300 z-10 hover:bg-white"
-                                      title="Adicionar à Lista de Presentes"
-                                    >
-                                      <Gift size={15} className="transition-colors" />
-                                    </button>
-                                  )}
                                 </div>
 
                                 {/* Info - Prices + Icons (Right) */}
@@ -950,18 +904,28 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                     )}
                                   </div>
 
-                                  <div className="flex items-center mt-auto pt-3">
+                                  <div className="flex items-center gap-2 mt-auto pt-3">
                                     <button 
                                       onClick={(e) => { 
                                         e.stopPropagation();
                                         onAddToCart(product, 1); 
                                         setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
                                       }}
-                                      className="py-2 px-3 rounded-xl text-white hover:opacity-95 transition-all active:scale-[0.98] flex-1 flex items-center justify-center gap-1.5 font-sans font-bold text-xs shrink-0 shadow-sm"
+                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity flex-1 flex items-center justify-center shrink-0"
                                       style={{ backgroundColor: theme.accentColor }}
                                     >
-                                      <ShoppingCart size={14} />
-                                      <span>Adicionar</span>
+                                      <ShoppingCart size={18} />
+                                    </button>
+                                    <button 
+                                      onClick={(e) => { 
+                                          e.stopPropagation();
+                                          onAddToGiftList?.(product);
+                                          setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
+                                      }}
+                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity shrink-0"
+                                      style={{ backgroundColor: theme.accentColor }}
+                                    >
+                                      <Gift size={18} />
                                     </button>
                                   </div>
                                 </div>

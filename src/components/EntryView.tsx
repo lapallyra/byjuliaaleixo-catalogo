@@ -213,6 +213,18 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       buttonBg: '#c96b71',
       buttonText: 'VER CATÁLOGO',
       iconUrl: '' // gift icon will be used
+    },
+    { 
+      id: 'tuttymimo' as CompanyId, 
+      logo: customSettings['tuttymimo']?.store_logo || config.company_4_logo, 
+      name: 'Tutty Mimo', 
+      slogan: 'Para o nicho de bebês, maternidade e primeira infância. Estilo acolhedor, afetivo e premium.',
+      route: '/tuttymimo',
+      image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=800&auto=format&fit=crop',
+      accent: '#d4bda1',
+      buttonBg: '#d4bda1',
+      buttonText: 'VER CATÁLOGO',
+      iconUrl: '' // gift icon will be used
     }
   ];
 
@@ -392,14 +404,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               <div className="flex flex-col items-center w-full">
                 {company.logo ? (
                   <div className="w-16 h-16 rounded-full border border-[#e8dcc8]/60 flex items-center justify-center overflow-hidden mb-3 bg-white shadow-sm p-1 transition-all duration-300 group-hover:scale-105">
-                     <ImageWithFallback 
-                       src={company.logo} 
-                       alt={company.name} 
-                       className="w-full h-full object-contain p-0.5" 
-                       style={customSettings[company.id] ? {
-                         transform: `translate(${customSettings[company.id]?.store_logo_x || 0}px, ${customSettings[company.id]?.store_logo_y || 0}px) scale(${customSettings[company.id]?.store_logo_scale || 1}) rotate(${customSettings[company.id]?.store_logo_rotate || 0}deg)`
-                       } : undefined}
-                     />
+                     <ImageWithFallback src={company.logo} alt={company.name} className="w-full h-full object-contain p-0.5" />
                   </div>
                 ) : (
                   <div className="w-16 h-16 rounded-full border border-[#e8dcc8]/60 flex items-center justify-center mb-3 text-[#c96b71] bg-white shadow-sm transition-all duration-300 group-hover:scale-105">
@@ -500,17 +505,20 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 const companyColors: Record<CompanyId, string> = {
                   pallyra: '#cca062',
                   guennita: '#5b2122',
-                  mimada: '#c96b71'
+                  mimada: '#c96b71',
+                  tuttymimo: '#d4bda1'
                 };
                 const companyNames: Record<CompanyId, string> = {
                   pallyra: 'La Pallyra',
                   guennita: 'com amor, Guennita',
-                  mimada: 'Mimada Sim'
+                  mimada: 'Mimada Sim',
+                  tuttymimo: 'Tutty Mimo'
                 };
                 const companyRoutes: Record<CompanyId, string> = {
                   pallyra: '/lapallyra',
                   guennita: '/comamorguennita',
-                  mimada: '/mimadasim'
+                  mimada: '/mimadasim',
+                  tuttymimo: '/tuttymimo'
                 };
                 const accent = companyColors[prod.company] || '#cca062';
                 const name = companyNames[prod.company] || 'Ateliê';

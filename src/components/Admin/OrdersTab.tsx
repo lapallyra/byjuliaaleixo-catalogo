@@ -258,6 +258,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
     { id: "pallyra", name: "La Pallyra", prefix: "LP" },
     { id: "guennita", name: "com amor, Guennita", prefix: "CG" },
     { id: "mimada", name: "Mimada Sim", prefix: "MS" },
+    { id: "tuttymimo", name: "Tutty Mimo", prefix: "TM" },
   ];
 
   const statusOptions = [
@@ -1057,6 +1058,7 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({
     { id: "pallyra", name: "La Pallyra" },
     { id: "guennita", name: "com amor, Guennita" },
     { id: "mimada", name: "Mimada Sim" },
+    { id: "tuttymimo", name: "Tutty Mimo" },
   ];
 
   useEffect(() => {

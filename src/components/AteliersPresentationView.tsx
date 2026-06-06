@@ -114,7 +114,7 @@ export const AteliersPresentationView: React.FC = () => {
                     </div>
                   )}
                   <span className="font-serif text-[10px] font-black uppercase tracking-widest mt-3 text-[#cca062]/80">
-                    {atelier.id === 'guennita' ? 'Guennita' : atelier.id === 'pallyra' ? 'La Pallyra' : 'Mimada Sim'}
+                    {atelier.id === 'guennita' ? 'Guennita' : atelier.id === 'pallyra' ? 'La Pallyra' : atelier.id === 'mimada' ? 'Mimada Sim' : 'Tutty Mimo'}
                   </span>
                 </div>
 

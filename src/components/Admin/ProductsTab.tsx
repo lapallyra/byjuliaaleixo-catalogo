@@ -71,6 +71,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
     { id: "pallyra", name: "La Pallyra", prefix: "LP" },
     { id: "guennita", name: "com amor, Guennita", prefix: "CG" },
     { id: "mimada", name: "Mimada Sim", prefix: "MS" },
+    { id: "tuttymimo", name: "Tutty Mimo", prefix: "TM" },
   ];
 
   const generateProductCode = (prefix: string) => {

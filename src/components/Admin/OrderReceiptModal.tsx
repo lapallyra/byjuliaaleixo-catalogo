@@ -41,6 +41,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
     pallyra: "La Pallyra",
     guennita: "com amor, Guennita",
     mimada: "Mimada Sim",
+    tuttymimo: "Tutty Mimo",
   };
 
   const studioName =

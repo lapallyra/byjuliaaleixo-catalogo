@@ -89,7 +89,8 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
   const brandNames: Record<string, string> = {
     pallyra: "La Pallyra",
     guennita: "com amor, Guennita",
-    mimada: "Mimada Sim"
+    mimada: "Mimada Sim",
+    tuttymimo: "Tutty Mimo"
   };
 
   // Default fallback suppliers if Firestore is empty

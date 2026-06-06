@@ -18,6 +18,7 @@ export const exportOrderReceiptPDF = (order: Order, settings: Partial<SiteSettin
     pallyra: "La Pallyra",
     guennita: "com amor, Guennita",
     mimada: "Mimada Sim",
+    tuttymimo: "Tutty Mimo",
   };
   const studioName = settings.store_name || atelierNames[order.companyId] || "Ateliê";
 
@@ -553,7 +554,7 @@ export const exportFinanceReportPDF = (data: {
   doc.setFontSize(8);
   doc.setTextColor("#94a3b8");
   doc.text("Este balanço financeiro corporativo é gerido eletronicamente pela interface de Admin do Ateliê.", 15, y);
-  doc.text("La Pallyra • com amor, Guennita • Mimada Sim — Gestão Unificada Premium.", 15, y + 4);
+  doc.text("La Pallyra • com amor, Guennita • Mimada Sim • Tutty Mimo — Gestão Unificada Premium.", 15, y + 4);
 
   doc.save(`Performance_Financeira_${data.companyId}_${monthLabel.replace(/\s+/g, '_')}.pdf`);
 };

@@ -53,7 +53,7 @@ export const GiftListInfoView: React.FC = () => {
               </div>
               <h3 className="font-bold text-xs uppercase tracking-wider text-[#6d5443]">Monte sua Lista</h3>
               <p className="text-xs text-gray-500 leading-relaxed">
-                Navegue por qualquer um de nossos três catálogos (La Pallyra, Guennita ou Mimada Sim), clique no ícone de presente nos produtos desejados e adicione à sua lista.
+                Navegue por qualquer um de nossos quatro catálogos (La Pallyra, Guennita, Mimada Sim ou Tutty Mimo), clique no ícone de presente nos produtos desejados e adicione à sua lista.
               </p>
             </div>
 

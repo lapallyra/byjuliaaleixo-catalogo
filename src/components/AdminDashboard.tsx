@@ -66,7 +66,6 @@ import { PrizesTab } from "./Admin/PrizesTab";
 import { FeedbacksTab } from "./Admin/FeedbacksTab";
 import { FunnelLogsTab } from "./Admin/FunnelLogsTab";
 import { AuditoriaTab } from "./Admin/AuditoriaTab";
-import { SimulatorTab } from "./Admin/SimulatorTab";
 
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
@@ -90,7 +89,6 @@ type TabType =
   | "addons"
   | "prizes"
   | "feedbacks"
-  | "simulator"
   | "funnel";
 
 interface AdminDashboardProps {
@@ -221,7 +219,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     { id: "finance", label: "Financeiro", category: "FINANCEIRO", icon: DollarSign },
     { id: "auditoria", label: "Auditoria", category: "FINANCEIRO", icon: FileCheck },
     { id: "reports", label: "Relatórios", category: "FINANCEIRO", icon: BarChart3 },
-    { id: "simulator", label: "Simulador", category: "PLANEJADOR", icon: TrendingUp },
     { id: "settings", label: "Configurações", category: "SISTEMA", icon: Settings },
   ];
 
@@ -648,14 +645,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   )}
                   {activeTab === "funnel" && (
                     <FunnelLogsTab events={checkoutEvents} selectedCompanyId={selectedCompanyId} />
-                  )}
-                  {activeTab === "simulator" && (
-                    <SimulatorTab
-                      companyId={selectedCompanyId}
-                      products={products}
-                      insumos={insumos}
-                      orders={sales}
-                    />
                   )}
                 </ErrorBoundary>
               </React.Suspense>

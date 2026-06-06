@@ -519,7 +519,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 const brandNames: Record<string, string> = {
                   pallyra: "La Pallyra",
                   guennita: "com amor, Guennita",
-                  mimada: "Mimada Sim"
+                  mimada: "Mimada Sim",
+    tuttymimo: "Tutty Mimo"
                 };
 
                 return (

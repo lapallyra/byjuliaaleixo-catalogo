@@ -24,7 +24,7 @@ import { AppConfig, CompanyId, CartItem, Product } from './types';
 import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
 
 import { PrizeRouletteModal } from './components/PrizeRouletteModal';
-import { sendNotifications, sendTelegramNotification } from './services/notificationService';
+import { sendNotifications } from './services/notificationService';
 import { updateOrder } from './services/firebaseService';
 import { playSuccessSound } from './utils/audio';
 function SparklesContainer({ children }: { children: React.ReactNode }) {
@@ -89,21 +89,6 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
         if (pendingOrder && pendingOrder.companyName) {
           console.log("Mercado Pago payment OK. Resuming flow...");
           handleClearCart();
-
-          // Notificar Telegram: Pagamento Aprovado
-          if (pendingOrder.config?.telegram_bot_token && pendingOrder.config?.telegram_chat_id) {
-             const approvalMsg = `💰 <b>PAGAMENTO APROVADO</b>\n\nPedido: <code>${pendingOrder.orderId}</code>\nCliente: ${pendingOrder.formData?.name}\nTotal: R$ ${pendingOrder.total?.toFixed(2)}`;
-             
-             fetch('/api/sendTelegram', {
-               method: 'POST',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({
-                 botToken: pendingOrder.config.telegram_bot_token,
-                 chatId: pendingOrder.config.telegram_chat_id,
-                 message: approvalMsg
-               })
-             }).catch(telErr => console.warn("Telegram approved notification failed", telErr));
-          }
           
           setMpPendingOrderData(pendingOrder);
           setShowMPRoulette(true);
@@ -308,11 +293,15 @@ function MainApp() {
         
         <Route path="/mimadasim" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="mimada" config={config} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
         <Route path="/mimadasim/admin" element={<Navigate to="/admin" replace />} />
+        
+        <Route path="/tuttymimo" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="tuttymimo" config={config} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
+        <Route path="/tuttymimo/admin" element={<Navigate to="/admin" replace />} />
 
         {/* Short Aliases */}
         <Route path="/mimada" element={<Navigate to="/mimadasim" replace />} />
         <Route path="/guennita" element={<Navigate to="/comamorguennita" replace />} />
         <Route path="/pallyra" element={<Navigate to="/lapallyra" replace />} />
+        <Route path="/tutty" element={<Navigate to="/tuttymimo" replace />} />
 
         {/* Global Admin */}
         <Route path="/admin/login" element={<AdminLoginView />} />

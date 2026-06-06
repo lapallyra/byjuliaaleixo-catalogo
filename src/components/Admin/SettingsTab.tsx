@@ -278,19 +278,6 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               updateMultiField(atl.id, "store_logo", "")
                             }
                           />
-                          {atlSettings.store_logo && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setTempLogo(atlSettings.store_logo || "");
-                                setEditingAtelierId(atl.id);
-                                setShowEditor(true);
-                              }}
-                              className="mt-3 w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                            >
-                              ⚙️ Ajustar Posição / Escala da Logo
-                            </button>
-                          )}
                         </div>
                         <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
                           <ImageUpload
@@ -1162,70 +1149,6 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   className="px-6 py-3 border border-[#F0E6D2] hover:bg-[#FAF9F6] text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm"
                 >
                   🔊 Testar Som de Sucesso
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-3xl p-8 border border-lilac/10 space-y-8">
-              <div>
-                <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">Integração com Telegram</h4>
-                <p className="text-[10px] text-[#A09898] uppercase font-bold tracking-widest mt-1">Receba notificações de vendas em tempo real no seu celular.</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="space-y-1.5">
-                    <label className="text-[9px] uppercase font-black text-slate-500 ml-1">Bot Token</label>
-                    <input 
-                      type="password"
-                      value={settings.telegram_bot_token || ""}
-                      onChange={(e) => updateField("telegram_bot_token", e.target.value)}
-                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-mono outline-none focus:border-pink-500 transition-all shadow-sm"
-                      placeholder="Ex: 123456789:ABCDE..."
-                    />
-                 </div>
-                 <div className="space-y-1.5">
-                    <label className="text-[9px] uppercase font-black text-slate-500 ml-1">Chat ID</label>
-                    <input 
-                      type="text"
-                      value={settings.telegram_chat_id || ""}
-                      onChange={(e) => updateField("telegram_chat_id", e.target.value)}
-                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-mono outline-none focus:border-pink-500 transition-all shadow-sm"
-                      placeholder="Ex: 987654321"
-                    />
-                 </div>
-              </div>
-
-              <div className="flex justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!settings.telegram_bot_token || !settings.telegram_chat_id) {
-                      alert("Configure o Token e Chat ID antes de testar.");
-                      return;
-                    }
-                    try {
-                      const response = await fetch('/api/sendTelegram', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          botToken: settings.telegram_bot_token,
-                          chatId: settings.telegram_chat_id,
-                          message: "🔔 <b>TESTE DE INTEGRAÇÃO</b>\n\nSeu robô de notificações está configurado corretamente! 🎉"
-                        })
-                      });
-                      const data = await response.json();
-                      if (data.success) {
-                        alert(data.message || "Telegram conectado com sucesso!");
-                      } else {
-                        alert("Erro: " + (data.message || data.error || "Erro desconhecido"));
-                      }
-                    } catch (e: any) {
-                      alert("Erro na requisição: " + e.message);
-                    }
-                  }}
-                  className="px-6 py-3 bg-sky-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg hover:bg-sky-700"
-                >
-                  🚀 Testar Conexão Telegram
                 </button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-export type CompanyId = 'pallyra' | 'guennita' | 'mimada';
+export type CompanyId = 'pallyra' | 'guennita' | 'mimada' | 'tuttymimo';
 
 export interface Product {
   id: string;
@@ -208,8 +208,6 @@ export interface SiteSettings {
   labor_list?: { id: string; name: string; value: number }[];
   test_mode?: boolean;
   sound_notifications_active?: boolean;
-  telegram_bot_token?: string;
-  telegram_chat_id?: string;
 }
 
 export interface CartItem extends Product {
@@ -228,6 +226,9 @@ export interface AppConfig {
   company_3_name: string;
   company_3_slogan: string;
   company_3_logo?: string;
+  company_4_name: string;
+  company_4_slogan: string;
+  company_4_logo?: string;
   whatsapp_number: string;
   background_color: string;
   text_color: string;
