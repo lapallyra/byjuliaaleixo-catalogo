@@ -282,6 +282,12 @@ html {
     --theme-text: #ffffff;
   }
 
+  .theme-tuttymimo {
+    --theme-primary: #fdfbf7;
+    --theme-accent: #f4e1dc;
+    --theme-text: #333333;
+  }
+
   /* Admin Dashboard Premium Theme - Dark Edition */
   .admin-bg {
     background-color: #0b0507; /* dark wine/black */
@@ -459,6 +465,14 @@ html {
   }
   .tag-mimada {
     background-color: #FFC0CB;
+  }
+
+  .card-tuttymimo {
+    border: 2px solid #f4e1dc !important;
+  }
+  .tag-tuttymimo {
+    background-color: #f4e1dc;
+    color: #333333;
   }
 
   .brand-badge {
