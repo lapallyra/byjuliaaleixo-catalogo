@@ -576,7 +576,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
   const handleBuyNow = (product: Product, quantity: number) => {
     onAddToCart(product, quantity);
-    // ANIMAÇÃO DE ADIÇÃO AO CARRINHO TEMPORARIAMENTE DESABILITADA. NOVA IMPLEMENTAÇÃO SERÁ CRIADA POSTERIORMENTE.
     setIsCartOpen(true);
     setSelectedProduct(null);
   };
@@ -779,7 +778,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {
                   onAddToCart(prod, qty);
-                  // ANIMAÇÃO DE ADIÇÃO AO CARRINHO TEMPORARIAMENTE DESABILITADA. NOVA IMPLEMENTAÇÃO SERÁ CRIADA POSTERIORMENTE.
+                  setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
                 }
               }}
               onAddToGiftList={isReadOnlyProduct ? undefined : (prod) => {
@@ -956,9 +955,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                       onClick={(e) => { 
                                         e.stopPropagation();
                                         onAddToCart(product, 1); 
-                                        // ANIMAÇÃO DE ADIÇÃO AO CARRINHO TEMPORARIAMENTE DESABILITADA. NOVA IMPLEMENTAÇÃO SERÁ CRIADA POSTERIORMENTE.
+                                        setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
                                       }}
-                                      className="py-2 px-3 rounded-xl text-white flex-1 flex items-center justify-center gap-1.5 font-sans font-bold text-xs shrink-0 shadow-sm"
+                                      className="py-2 px-3 rounded-xl text-white hover:opacity-95 transition-all active:scale-[0.98] flex-1 flex items-center justify-center gap-1.5 font-sans font-bold text-xs shrink-0 shadow-sm"
                                       style={{ backgroundColor: theme.accentColor }}
                                     >
                                       <ShoppingCart size={14} />
@@ -968,6 +967,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                 </div>
                               </div>
                               
+                              {/* Bottom - Product Name */}
                               <div className="mt-3 px-1">
                                 <h3 className="font-tahoma text-sm md:text-base font-bold leading-tight text-neutral-900 line-clamp-2">
                                   {product.product_name}

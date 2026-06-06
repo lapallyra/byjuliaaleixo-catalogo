@@ -76,7 +76,6 @@ async function startServer() {
   });
 
   app.post("/api/sendTelegram", async (req, res) => {
-    console.log('HIT /api/sendTelegram');
     console.log("----------------------------------------");
     console.log("HIT /api/sendTelegram POST");
     try {

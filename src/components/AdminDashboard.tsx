@@ -45,8 +45,6 @@ import {
   Heart,
   TrendingUp,
   FileCheck,
-  Sliders,
-  Database,
 } from "lucide-react";
 import { playSuccessSound } from "../utils/audio";
 import { useAuth } from "./AuthProvider";
@@ -69,9 +67,6 @@ import { FeedbacksTab } from "./Admin/FeedbacksTab";
 import { FunnelLogsTab } from "./Admin/FunnelLogsTab";
 import { AuditoriaTab } from "./Admin/AuditoriaTab";
 import { SimulatorTab } from "./Admin/SimulatorTab";
-import { MockupStudioTab } from "./Admin/MockupStudioTab";
-import { CatalogoTab } from "./Admin/CatalogoTab";
-import { ExportacoesTab } from "./Admin/ExportacoesTab";
 
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
@@ -96,10 +91,7 @@ type TabType =
   | "prizes"
   | "feedbacks"
   | "simulator"
-  | "funnel"
-  | "mockup-studio"
-  | "catalogo"
-  | "exportacoes";
+  | "funnel";
 
 interface AdminDashboardProps {
   onGoBack: () => void;
@@ -220,24 +212,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   }
 
   const menuItems: { id: TabType; label: string; icon: any; category: string }[] = [
-    { id: "dashboard", label: "Dashboard", category: "WORKSPACE", icon: LayoutDashboard },
-    { id: "orders", label: "Pedidos", category: "WORKSPACE", icon: ShoppingBag },
-    { id: "agenda", label: "Agenda", category: "WORKSPACE", icon: Calendar },
-    { id: "inventory", label: "Estoque", category: "GESTÃO", icon: Archive },
-    { id: "products", label: "Produtos", category: "GESTÃO", icon: Box },
-    { id: "finance", label: "Financeiro", category: "GESTÃO", icon: DollarSign },
-    { id: "reports", label: "Relatórios", category: "GESTÃO", icon: FileCheck },
-    { id: "clients", label: "Clientes", category: "CRM", icon: User },
-    { id: "feedbacks", label: "Feedbacks", category: "CRM", icon: Star },
-    { id: "gift-lists", label: "Listas de Presentes", category: "MARKETING", icon: Gift },
-    { id: "commemorative-dates", label: "Datas Comemorativas", category: "MARKETING", icon: Heart },
-    { id: "addons", label: "Addons (Upsell)", category: "MARKETING", icon: TrendingUp },
-    { id: "prizes", label: "Roleta de Prêmios", category: "MARKETING", icon: Sparkles },
-    { id: "funnel", label: "Funil & Carrinhos", category: "ANÁLISES", icon: BarChart3 },
-    { id: "simulator", label: "Simulador de Preço", category: "SISTEMA", icon: Box },
-    { id: "auditoria", label: "Auditoria", category: "SISTEMA", icon: Search },
-    { id: "exportacoes", label: "Exportações", category: "SISTEMA", icon: Database },
-    { id: "catalogo", label: "Catálogo", category: "SISTEMA", icon: Sliders },
+    { id: "dashboard", label: "Painel", category: "PAINEL", icon: LayoutDashboard },
+    { id: "orders", label: "Pedidos", category: "OPERAÇÃO", icon: ShoppingBag },
+    { id: "clients", label: "Clientes", category: "OPERAÇÃO", icon: User },
+    { id: "products", label: "Produtos", category: "OPERAÇÃO", icon: Box },
+    { id: "inventory", label: "Estoque", category: "OPERAÇÃO", icon: Archive },
+    { id: "agenda", label: "Agenda", category: "OPERAÇÃO", icon: Calendar },
+    { id: "finance", label: "Financeiro", category: "FINANCEIRO", icon: DollarSign },
+    { id: "auditoria", label: "Auditoria", category: "FINANCEIRO", icon: FileCheck },
+    { id: "reports", label: "Relatórios", category: "FINANCEIRO", icon: BarChart3 },
+    { id: "simulator", label: "Simulador", category: "PLANEJADOR", icon: TrendingUp },
     { id: "settings", label: "Configurações", category: "SISTEMA", icon: Settings },
   ];
 
@@ -672,15 +656,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       insumos={insumos}
                       orders={sales}
                     />
-                  )}
-                  {activeTab === "mockup-studio" && (
-                    <MockupStudioTab companyId={selectedCompanyId} />
-                  )}
-                  {activeTab === "catalogo" && (
-                    <CatalogoTab companyId={selectedCompanyId} />
-                  )}
-                  {activeTab === "exportacoes" && (
-                    <ExportacoesTab companyId={selectedCompanyId} />
                   )}
                 </ErrorBoundary>
               </React.Suspense>

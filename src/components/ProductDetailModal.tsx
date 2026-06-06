@@ -247,16 +247,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 )}
 
                 <div className="flex gap-3 w-full">
-                  <button 
+                  <motion.button 
+                    whileHover={{ scale: 1.01, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => {
                         onAddToCart(product, quantity);
-                        // ANIMAÇÃO DE ADIÇÃO AO CARRINHO TEMPORARIAMENTE DESABILITADA. NOVA IMPLEMENTAÇÃO SERÁ CRIADA POSTERIORMENTE.
+                        setShowToast(true);
+                        setTimeout(() => setShowToast(false), 2000);
                     }}
-                    className={`flex-1 py-4.5 rounded-2xl text-[10px] uppercase tracking-normal font-black flex items-center justify-center gap-2.5 shadow-[0_15px_35px_rgba(0,0,0,0.12)] ${theme.btnPrimary}`}
+                    className={`flex-1 py-4.5 rounded-2xl text-[10px] uppercase tracking-normal font-black transition-all duration-75 flex items-center justify-center gap-2.5 shadow-[0_15px_35px_rgba(0,0,0,0.12)] ${theme.btnPrimary}`}
                   >
                     <ShoppingCart size={16} strokeWidth={2} />
                     <span>Colocar no Carrinho</span>
-                  </button>
+                  </motion.button>
 
                   {onAddToGiftList && (
                     <motion.button 
@@ -289,6 +292,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         </div>
         
         <AnimatePresence>
+          {showToast && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 bg-black text-white text-[10px] uppercase tracking-[0.2em] font-black rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[100] border border-white/10"
+            >
+              Adicionado ao Carrinho
+            </motion.div>
+          )}
           {showGiftToast && (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}

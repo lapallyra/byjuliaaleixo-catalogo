@@ -30,14 +30,6 @@ export interface Product {
   isLastUnits?: boolean;
   createdAt?: any;
   giftInfo?: string;
-  mockupTemplates?: {
-    type: 'frontal' | 'lateral' | 'angle45' | 'verso';
-    imageUrl: string;
-    area: { x: number; y: number; width: number; height: number };
-  }[];
-  artworkSize?: { width: number; height: number };
-  recommendedBackground?: 'backyard' | 'studio' | 'brick';
-  applicationType?: 'wrap360' | 'frontOnly';
   imageSettings?: {
     scale?: number;
     translateX?: number;
