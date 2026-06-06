@@ -382,7 +382,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         </div>
 
         {/* ATELIERS SECTION */}
-        <section id="atelies" className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-12 md:mb-16">
+        <section id="atelies" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-12 md:mb-16">
           {companies.map((company, index) => (
             <motion.div 
               key={company.id}

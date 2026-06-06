@@ -15,6 +15,7 @@ import { AteliersPresentationView } from './components/AteliersPresentationView'
 import { AboutMeView } from './components/AboutMeView';
 import { GiftListInfoView } from './components/GiftListInfoView';
 import { ColecoesView } from './components/ColecoesView';
+import { StudioMockup } from './components/StudioMockup';
 import { CookieBanner } from './components/CookieBanner';
 import { SuggestionBox } from './components/SuggestionBox';
 import { TrackingView } from './components/TrackingView';
@@ -326,6 +327,12 @@ function MainApp() {
             }>
               <AdminDashboard onGoBack={() => window.history.back()} />
             </ErrorBoundary>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/studiomockup" element={
+          <ProtectedRoute>
+            <StudioMockup />
           </ProtectedRoute>
         } />
         
