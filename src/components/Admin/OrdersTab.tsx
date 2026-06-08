@@ -21,12 +21,16 @@ import {
   XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Order, CompanyId, Product, Insumo } from "../../types";
+import { Order, CompanyId, Product, Insumo, SiteSettings } from "../../types";
+import { generatePremiumThermalReceipt, generateA4ProductionOrder, generatePremiumA4Receipt } from "../../lib/pdfGenerator";
+import { PDFPreviewModal } from "./PDFPreviewModal";
 import { safeFormat, safeFormatISO } from "../../lib/dateUtils";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { OrderReceiptModal } from "./OrderReceiptModal";
 import { OrderPrintA6Modal } from "./OrderPrintA6Modal";
 import { exportOrdersReportPDF } from "../../utils/pdfGenerator";
+import { getSiteSettings } from "../../services/firebaseService";
+
 
 interface OrdersTabProps {
   orders: Order[];
@@ -368,6 +372,13 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
   }, [initialOrderId]);
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
   const [printingA6Order, setPrintingA6Order] = useState<Order | null>(null);
+  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [pdfData, setPdfData] = useState<{ doc: any; fileName: string } | null>(null);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    getSiteSettings(companyId).then(setSettings);
+  }, [companyId]);
 
   const filteredOrders = orders
     .filter((o) => {
@@ -622,7 +633,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                     <div className="flex flex-col justify-center min-w-0 pr-4">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-mono text-[14px] font-bold text-slate-800 tracking-wider">
-                          #{order.code}
+                          {order.code}
                         </span>
                         <span 
                           className="text-[10px] font-medium uppercase tracking-widest px-1.5 py-0.5 rounded text-gray-500 bg-gray-50 border border-gray-100"
@@ -783,12 +794,45 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                             )}
                           </p>
                         </div>
-                        <button
-                          onClick={() => setPrintingA6Order(orders.find((o) => o.id === isDetailOpen)!)}
-                          className="flex items-center gap-2 px-4 py-2 mt-2 bg-black text-white hover:bg-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors"
-                        >
-                          <Printer size={14} /> Visualização em PDF
-                        </button>
+                        <div className="flex flex-col gap-2 w-full">
+                          <button
+                            onClick={async () => {
+                                const order = orders.find((o) => o.id === isDetailOpen)!;
+                                const doc = await generatePremiumA4Receipt(order, settings);
+                                setPdfData({ doc, fileName: 'Comprovante_' + order.code });
+                                setIsPdfPreviewOpen(true);
+                            }}
+                            className="flex items-center gap-2 px-4 py-3 bg-black text-white hover:bg-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors w-full justify-center"
+                          >
+                            📄 Gerar PDF
+                          </button>
+                           <button
+                            onClick={async () => {
+                                const order = orders.find((o) => o.id === isDetailOpen)!;
+                                const doc = await generatePremiumA4Receipt(order, settings); 
+                                try {
+                                  const pdfBlob = doc.output('blob');
+                                  const file = new File([pdfBlob], `Comprovante_${order.code}.pdf`, { type: 'application/pdf' });
+                                  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                                    await navigator.share({
+                                      files: [file],
+                                      title: `Comprovante de Compra - ${order.code}`,
+                                      text: `Olá ${order.customerName}, aqui está o comprovante do pedido ${order.code}.`
+                                    });
+                                  } else {
+                                     // fallback download and open link
+                                     doc.save(`Comprovante_${order.code}.pdf`);
+                                     window.open(`https://wa.me/${order.contact.replace(/\D/g, '')}?text=Olá ${order.customerName}, aqui está o comprovante do pedido ${order.code}: https://www.byjuliaaleixo.online/rastreamento?code=${order.code}`, '_blank');
+                                  }
+                                } catch (e) {
+                                   window.open(`https://wa.me/${order.contact.replace(/\D/g, '')}?text=Olá ${order.customerName}, aqui está o comprovante do pedido ${order.code}: https://www.byjuliaaleixo.online/rastreamento?code=${order.code}`, '_blank');
+                                }
+                            }}
+                            className="flex items-center gap-2 px-4 py-3 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors w-full justify-center"
+                          >
+                           📤 Compartilhar WhatsApp
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -968,6 +1012,15 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
             await onSaveOrder(fullData);
             setIsModalOpen(false);
           }}
+        />
+      )}
+
+      {isPdfPreviewOpen && pdfData && (
+        <PDFPreviewModal 
+          order={orders.find(o => o.id === isDetailOpen)}
+          onClose={() => setIsPdfPreviewOpen(false)}
+          pdfDoc={pdfData.doc}
+          fileName={pdfData.fileName}
         />
       )}
 

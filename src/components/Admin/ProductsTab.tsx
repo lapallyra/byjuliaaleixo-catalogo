@@ -25,6 +25,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { CSVHandler } from "./CSVHandler";
 import { ImageUpload } from "./ImageUpload";
 import {
   uploadImage,
@@ -180,7 +181,26 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
           </select>
         </div>
 
-        <div className="flex gap-4 w-full lg:w-auto">
+        <div className="flex gap-4 w-full lg:w-auto items-center justify-end">
+          <CSVHandler 
+            moduleName="Produtos" 
+            data={filtered} 
+            fields={['product_name', 'code', 'category', 'subcategory', 'retail_price', 'original_price', 'wholesale_price', 'stock', 'description']}
+            onImport={async (newData) => {
+              for (const item of newData) {
+                await onSaveProduct({
+                    ...item,
+                    retail_price: parseFloat(item.retail_price) || 0,
+                    original_price: parseFloat(item.original_price) || 0,
+                    wholesale_price: parseFloat(item.wholesale_price) || 0,
+                    stock: parseInt(item.stock) || 0,
+                    company: showAllInList ? companyId : selectedAtelier,
+                    isVisible: true,
+                    isFeatured: false,
+                });
+              }
+            }}
+          />
           <button
             onClick={() => window.print()}
             className="flex items-center justify-center p-4 bg-slate-50 text-slate-400 border border-slate-100 rounded-xl hover:text-pink-600 hover:bg-white hover:border-pink-200 transition-all shadow-sm group"

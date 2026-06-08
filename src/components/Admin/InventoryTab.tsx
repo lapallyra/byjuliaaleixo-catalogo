@@ -15,6 +15,7 @@ import {
   X,
   Printer,
 } from "lucide-react";
+import { CSVHandler } from "./CSVHandler";
 import { Insumo } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 
@@ -114,22 +115,38 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center justify-center p-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group"
-          title="Visualização em PDF"
-        >
-          <Printer size={18} className="group-hover:scale-110 transition-transform" />
-        </button>
-        <button
-          onClick={() => {
-            setEditingInsumo({});
-            setIsModalOpen(true);
-          }}
-          className="w-full md:w-auto flex items-center justify-center gap-3 bg-black text-white font-black py-4 px-10 rounded-[1.25rem] hover:scale-105 transition-all shadow-xl text-[9px] uppercase tracking-[0.3em] border border-black/10"
-        >
-          <Plus size={18} /> Novo Insumo
-        </button>
+        <div className="flex items-center gap-4 justify-end">
+          <CSVHandler 
+            moduleName="Insumos" 
+            data={filtered} 
+            fields={['name', 'code', 'unit', 'quantity', 'costPrice', 'description']}
+            onImport={(newData) => {
+                for (const item of newData) {
+                    onSaveInsumo({
+                        ...item,
+                        quantity: Number(item.quantity) || 0,
+                        costPrice: Number(item.costPrice) || 0,
+                    });
+                }
+            }}
+          />
+          <button
+            onClick={() => window.print()}
+            className="flex items-center justify-center p-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group"
+            title="Visualização em PDF"
+          >
+            <Printer size={18} className="group-hover:scale-110 transition-transform" />
+          </button>
+          <button
+            onClick={() => {
+              setEditingInsumo({});
+              setIsModalOpen(true);
+            }}
+            className="w-full md:w-auto flex items-center justify-center gap-3 bg-black text-white font-black py-4 px-10 rounded-[1.25rem] hover:scale-105 transition-all shadow-xl text-[9px] uppercase tracking-[0.3em] border border-black/10"
+          >
+            <Plus size={18} /> Novo Insumo
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-[2.5rem] border border-lilac/10 shadow-sm overflow-hidden overflow-x-auto">

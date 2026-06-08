@@ -16,6 +16,7 @@ import {
   Mail,
   Printer,
 } from "lucide-react";
+import { CSVHandler } from "./CSVHandler";
 import { Customer, CompanyId } from "../../types";
 import {
   deleteCustomer,
@@ -185,7 +186,22 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex gap-4 w-full md:w-auto">
+        <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+          <CSVHandler 
+            moduleName="Clientes" 
+            data={filteredCustomers} 
+            fields={['name', 'code', 'contact', 'cpfCnpj', 'birthDate', 'address', 'city', 'state', 'zipCode']}
+            onImport={(newData) => {
+                for (const item of newData) {
+                    addCustomer({
+                        ...item,
+                        companyId: companyId,
+                        totalSpent: 0,
+                        ordersCount: 0,
+                    });
+                }
+            }}
+          />
           <button
             onClick={() => window.print()}
             className="flex items-center justify-center p-4 bg-white text-[#D1CACA] border border-lilac/10 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group"
