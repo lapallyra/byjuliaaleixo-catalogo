@@ -266,22 +266,31 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
           {/* BUTTONS: Crystal/Glassmorphism */}
           <div className="space-y-4 pt-4">
-            <div className="flex items-center gap-4">
-                 <button 
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                type="button"
+                onClick={handleAddToCart}
+                className="py-5 rounded-2xl text-[11px] uppercase tracking-[0.2em] font-black transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
+                style={{
+                  background: `linear-gradient(135deg, ${accentColor}dd, ${accentColor}ff)`,
+                  color: '#fff',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                }}
+              >
+                <ShoppingCart size={16} />
+                <span>Carrinho</span>
+              </button>
+
+              {onAddToGiftList && (
+                <button 
                   type="button"
-                  onClick={handleAddToCart}
-                  className="flex-1 py-5 rounded-2xl text-[11px] uppercase tracking-[0.2em] font-black transition-all duration-300 relative overflow-hidden flex items-center justify-center gap-3 shadow-lg"
-                  style={{
-                    background: `linear-gradient(135deg, ${accentColor}dd, ${accentColor}ff)`,
-                    color: '#fff',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                  }}
+                  onClick={() => onAddToGiftList(product)}
+                  className="py-5 rounded-2xl text-[11px] uppercase tracking-[0.2em] font-black transition-all duration-300 flex items-center justify-center gap-2 shadow-sm border border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
                 >
-                  <ShoppingCart size={16} />
-                  <span>Carrinho</span>
-                  <div className="ml-2 w-px h-4 bg-white/30" />
                   <Gift size={16} />
+                  <span>Lista</span>
                 </button>
+              )}
             </div>
             
             <p className="text-[9px] text-center text-slate-400 uppercase tracking-widest font-bold">
