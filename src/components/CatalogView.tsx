@@ -887,7 +887,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                               viewport={{ once: true, margin: "-50px" }}
                               transition={{ duration: 0.6, delay: (idx % 3) * 0.05 }}
                               onClick={() => setSelectedProduct(product)}
-                              className="group relative flex flex-col p-3 cursor-pointer bg-white rounded-2xl border border-neutral-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
+                              className="group relative flex flex-col p-3 cursor-pointer bg-white rounded-2xl border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
+                              style={{ borderColor: theme.accentColor }}
                             >
                               <div className="flex flex-row gap-4 items-stretch">
                                 {/* Thumbnail Image with Hover Change (Left) */}
@@ -933,8 +934,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                         onAddToCart(product, 1); 
                                         setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
                                       }}
-                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity flex-1 flex items-center justify-center shrink-0"
-                                      style={{ backgroundColor: theme.accentColor }}
+                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity flex-1 flex items-center justify-center shrink-0 border"
+                                      style={{ backgroundColor: theme.accentColor, borderColor: theme.accentColor }}
                                     >
                                       <ShoppingCart size={18} />
                                     </button>
@@ -944,8 +945,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                           onAddToGiftList?.(product);
                                           setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
                                       }}
-                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity shrink-0"
-                                      style={{ backgroundColor: theme.accentColor }}
+                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity shrink-0 border"
+                                      style={{ backgroundColor: theme.accentColor, borderColor: theme.accentColor }}
                                     >
                                       <Gift size={18} />
                                     </button>
@@ -1205,6 +1206,12 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               <MessageCircle size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
             </a>
         </motion.div>
+        {toast && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] px-6 py-3 rounded-full bg-black text-white shadow-xl flex items-center gap-3">
+            {toast.type === 'success' ? <ShoppingCart size={16} /> : <Gift size={16} />}
+            <span className="text-[10px] uppercase font-bold tracking-widest">{toast.message}</span>
+          </div>
+        )}
     </div>
   );
 };
