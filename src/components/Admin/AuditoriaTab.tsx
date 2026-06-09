@@ -746,7 +746,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
   return (
     <div className="bg-[#FAF9F6] text-[#4A4444] space-y-8 ">
       {/* Dynamic Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/70 backdrop-blur-md border border-[#F0E6D2] p-6 rounded-[2rem] shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/70 backdrop-blur-md border border-[#F0E6D2] p-6 rounded-3xl shadow-sm">
         <div>
           <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
             📂 Auditoria e Engenharia
@@ -861,7 +861,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                   { title: "Produto Mais Vendido", value: dashboardStats.topSelling, desc: "Maior saída de estoque", icon: Box, color: "text-amber-700 bg-amber-50 border-amber-100" },
                   { title: "Insumo Mais Consumido", value: dashboardStats.topMaterial, desc: "Maior desgaste operacional", icon: Layers, color: "text-fuchsia-700 bg-fuchsia-50 border-fuchsia-100" }
                 ].map((s, idx) => (
-                  <div key={idx} className={`p-6 rounded-[2rem] border bg-white ${s.color} hover:scale-[1.02] hover:shadow-md transition-all shadow-sm`}>
+                  <div key={idx} className={`p-6 rounded-3xl border bg-white ${s.color} hover:scale-[1.02] hover:shadow-md transition-all shadow-sm`}>
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
                         <span className="text-[10px] font-black uppercase text-[#A09898] tracking-widest">{s.title}</span>
@@ -877,7 +877,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
               </div>
 
               {/* Conversion Flow Diagram (Estoque Comprado -> Lucro) */}
-              <div className="bg-white border border-[#F0E6D2] rounded-[2.5rem] p-8 space-y-8 shadow-sm">
+              <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-8 shadow-sm">
                 <div>
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">🔄 Conversão e Fluxo de Produção</h3>
                   <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Transformação física do valor focado na jornada de material a lucro</p>
@@ -891,7 +891,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                     { step: "3. Faturamento de Vendas", title: "Atari de Ativos Vendidos", val: formatCurrency(dashboardStats.revenue), dsc: "Recursos adquiridos de pedidos entregues.", color: "border-sky-200 bg-sky-50/50" },
                     { step: "4. Lucro Gerado", title: "Valor Líquido Realizado", val: formatCurrency(dashboardStats.netProfit), dsc: "Sobras absolutas e saudáveis de atelier.", color: "border-emerald-200 bg-emerald-50/50" }
                   ].map((fl, fidx) => (
-                    <div key={fidx} className={`p-6 rounded-[2.5rem] border ${fl.color} relative space-y-3`}>
+                    <div key={fidx} className={`p-6 rounded-3xl border ${fl.color} relative space-y-3`}>
                       <span className="text-[9px] font-black uppercase text-[#A09898] tracking-wider block">{fl.step}</span>
                       <div className="text-xs font-black text-slate-900 leading-tight">{fl.title}</div>
                       <div className="text-lg font-black text-slate-900">{fl.val}</div>
@@ -911,7 +911,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 
                 {/* Potential indicators */}
-                <div className="xl:col-span-2 bg-white border border-[#F0E6D2] rounded-[2.5rem] p-8 space-y-6 shadow-sm">
+                <div className="xl:col-span-2 bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm">
                   <div>
                     <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">💰 Potencial de Faturamento Imediato</h3>
                     <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Estimado baseado estritamente na matéria-prima e insumos hoje disponíveis no inventário físico</p>
@@ -959,7 +959,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                 </div>
 
                 {/* Total Strategic Summary Box */}
-                <div className="bg-slate-900 text-[#FAF9F6] rounded-[2.5rem] p-8 flex flex-col justify-between shadow-xl">
+                <div className="bg-slate-900 text-[#FAF9F6] rounded-3xl p-8 flex flex-col justify-between shadow-xl">
                   <div className="space-y-4">
                     <div className="inline-block bg-[#C6A664] text-slate-900 text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
                       Resumo Tático de Giro
@@ -996,7 +996,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           )}
 
           {activeSubmenu === 'materials' && (
-            <div className="bg-white border border-[#F0E6D2] rounded-[2.5rem] p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest font-extrabold">📌 Auditoria de Insumos & Cadastro de Custos</h3>
@@ -1073,7 +1073,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           )}
 
           {activeSubmenu === 'suppliers' && (
-            <div className="bg-white border border-[#F0E6D2] rounded-[2.5rem] p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest font-extrabold">🤝 Diretório de Fornecedores de Papelaria</h3>
@@ -1095,7 +1095,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {suppliers.map((sup) => (
-                    <div key={sup.id} className="p-6 bg-[#FAF9F6] border border-[#F0E6D2] rounded-[2rem] hover:shadow-md transition-shadow relative space-y-4">
+                    <div key={sup.id} className="p-6 bg-[#FAF9F6] border border-[#F0E6D2] rounded-3xl hover:shadow-md transition-shadow relative space-y-4">
                       
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
@@ -1144,7 +1144,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-in fade-in duration-300">
               
               {/* Left Selector List */}
-              <div className="bg-white border border-[#F0E6D2] rounded-[2.5rem] p-6 space-y-4 shadow-sm h-fit">
+              <div className="bg-white border border-[#F0E6D2] rounded-3xl p-6 space-y-4 shadow-sm h-fit">
                 <div>
                   <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">📋 Engenharia de Produtos</h3>
                   <p className="text-[9px] font-bold text-[#A09898] uppercase tracking-widest mt-0.5">Selecione o produto de catálogo para avaliar ou reformular sua Ficha Técnica</p>
@@ -1165,7 +1165,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
               </div>
 
               {/* Right Formula View & Formulate */}
-              <div className="xl:col-span-2 bg-white border border-[#F0E6D2] rounded-[2.5rem] p-8 space-y-8 shadow-sm">
+              <div className="xl:col-span-2 bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-8 shadow-sm">
                 {selectedProduct ? (
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-5 border-b border-dashed border-[#F0E6D2]">
@@ -1222,7 +1222,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                     </div>
 
                     {/* Operational Variables simulation adjusters */}
-                    <div className="bg-[#FAF9F6] border border-[#F0E6D2] rounded-[1.75rem] p-6 space-y-4">
+                    <div className="bg-[#FAF9F6] border border-[#F0E6D2] rounded-3xl p-6 space-y-4">
                       <h4 className="text-[10px] font-black uppercase text-slate-800 tracking-widest">⚙️ Custos Operacionais e Margem do Produto</h4>
                       <p className="text-[10px] uppercase font-semibold text-slate-500 leading-normal mb-1">Ajuste os valores operacionais para as simulações estratégicas e viabilidades deste modelo comercial:</p>
                       
@@ -1300,7 +1300,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           )}
 
           {activeSubmenu === 'simulator' && (
-            <div className="bg-white border border-[#F0E6D2] rounded-[2.5rem] p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
               
               {/* Simulation Header controls */}
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-[#F0E6D2]">
@@ -1426,7 +1426,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           )}
 
           {activeSubmenu === 'viability' && (
-            <div className="bg-white border border-[#F0E6D2] rounded-[2.5rem] p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
               <div>
                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest font-extrabold">🟢 Viabilidade Comercial e Ranking Automático</h3>
                 <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Classificação de rentabilidade por margem líquida com base em insumos vivos e cadastros operacionais</p>
@@ -1472,13 +1472,13 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           )}
 
           {activeSubmenu === 'reports' && (
-            <div className="bg-white border border-[#F0E6D2] rounded-[2.5rem] p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
               <div>
                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">📝 Emissão do Relatório Administrativo Integral (PDF)</h3>
                 <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Gere relatórios gerenciais estruturados em PDF para apresentar aos ateliês e controlar os custos operacionais</p>
               </div>
 
-              <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-[#FAF9F6] border border-[#F0E6D2] rounded-[2rem] w-full max-w-2xl">
+              <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-[#FAF9F6] border border-[#F0E6D2] rounded-3xl w-full max-w-2xl">
                 <div className="space-y-1 flex-1">
                   <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block">Escolha o Modelo de Produto</label>
                   <select
@@ -1512,7 +1512,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-lg bg-white rounded-[2.5rem] border border-[#F0E6D2] shadow-2xl relative p-8 z-50 max-h-[90vh] overflow-y-auto scrollbar-hide"
+            className="w-full max-w-lg bg-white rounded-3xl border border-[#F0E6D2] shadow-2xl relative p-8 z-50 max-h-[90vh] overflow-y-auto scrollbar-hide"
           >
             <h4 className="text-sm font-black uppercase text-slate-900 tracking-widest mb-6">
               {editingMaterial?.id ? '✏️ Editar Material' : '✨ Novo Material'}
@@ -1630,7 +1630,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-lg bg-white rounded-[2.5rem] border border-[#F0E6D2] shadow-2xl relative p-8 z-50 max-h-[90vh] overflow-y-auto scrollbar-hide"
+            className="w-full max-w-lg bg-white rounded-3xl border border-[#F0E6D2] shadow-2xl relative p-8 z-50 max-h-[90vh] overflow-y-auto scrollbar-hide"
           >
             <h4 className="text-sm font-black uppercase text-slate-900 tracking-widest mb-6">
               {editingSupplier?.id ? '✏️ Editar Fornecedor' : '✨ Novo Fornecedor'}

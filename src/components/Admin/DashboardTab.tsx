@@ -61,7 +61,7 @@ const ChartCard: React.FC<{ title: string; subtitle: string; children: React.Rea
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-white p-8 rounded-[2rem] border border-[#F0E6D2] shadow-[0_15px_40px_rgba(240,230,210,0.2)] flex flex-col h-[460px]"
+    className="bg-white p-8 rounded-2xl border border-[#F0E6D2] shadow-[0_15px_40px_rgba(240,230,210,0.2)] flex flex-col h-[460px]"
   >
     <div className="flex items-center justify-between mb-8">
       <div className="flex items-center gap-3">
@@ -363,7 +363,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-8 rounded-[2.5rem] border border-[#F0E6D2] shadow-[0_20px_60px_rgba(240,230,210,0.2)] relative overflow-hidden"
+        className="bg-white p-8 rounded-3xl border border-[#F0E6D2] shadow-[0_20px_60px_rgba(240,230,210,0.2)] relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] rotate-12">
           <Target size={240} className="text-[#D88D85]" />
@@ -480,7 +480,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.05 }}
-            className="bg-[#FFFFFF] p-6 rounded-[1.5rem] border border-[#F0E6D2] flex items-center justify-between shadow-[0_8px_24px_rgba(240,230,210,0.5)] hover:shadow-[0_12px_32px_rgba(240,230,210,0.6)] transition-all group"
+            className="bg-[#FFFFFF] p-6 rounded-2xl border border-[#F0E6D2] flex items-center justify-between shadow-[0_8px_24px_rgba(240,230,210,0.5)] hover:shadow-[0_12px_32px_rgba(240,230,210,0.6)] transition-all group"
           >
             <div>
               <p className="text-[8px] font-bold uppercase text-[#7A6A62] tracking-[0.2em] mb-1">
@@ -491,7 +491,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               </p>
             </div>
             <div
-              className={`p-3.5 rounded-[1.2rem] ${stat.bg} ${stat.color} border ${stat.border} transition-transform group-hover:scale-110 opacity-100 mix-blend-multiply`}
+              className={`p-3.5 rounded-xl ${stat.bg} ${stat.color} border ${stat.border} transition-transform group-hover:scale-110 opacity-100 mix-blend-multiply`}
             >
               <stat.icon size={20} />
             </div>
@@ -499,92 +499,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         ))}
       </header>
 
-      {/* 1.5. Analytics Section - Charts Group */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <ChartCard 
-          title="Faturamento Diário" 
-          subtitle="Desempenho de vendas (últimos 30 dias)"
-          icon={TrendingUp}
-        >
-          <AreaChart data={dailySalesData}>
-            <defs>
-              <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#D88D85" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#D88D85" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F0E6D2" opacity={0.5} />
-            <XAxis 
-              dataKey="date" 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{ fontSize: 9, fill: '#A09088', fontWeight: 'bold' }}
-              dy={10}
-            />
-            <YAxis 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{ fontSize: 9, fill: '#A09088', fontWeight: 'bold' }}
-              tickFormatter={(val) => `R$ ${val}`}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                borderRadius: '16px', 
-                border: '1px solid #F0E6D2', 
-                boxShadow: '0 10px 30px rgba(240,230,210,0.3)',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                textTransform: 'uppercase'
-              }}
-              formatter={(value: number) => [formatCurrency(value), 'Vendas']}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="total" 
-              stroke="#D88D85" 
-              strokeWidth={3}
-              fillOpacity={1} 
-              fill="url(#colorTotal)" 
-            />
-          </AreaChart>
-        </ChartCard>
-
-        <ChartCard 
-          title="Produtos Populares" 
-          subtitle="Itens mais vendidos (últimos 30 dias)"
-          icon={BarChartIcon}
-        >
-          <BarChart data={topProductsData} layout="vertical" margin={{ left: 30 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F0E6D2" opacity={0.5} />
-            <XAxis type="number" hide />
-            <YAxis 
-              dataKey="name" 
-              type="category" 
-              axisLine={false} 
-              tickLine={false} 
-              width={100}
-              tick={{ fontSize: 8, fill: '#4A3A34', fontWeight: '800' }}
-            />
-            <Tooltip 
-               cursor={{ fill: '#FAF9F6' }}
-               contentStyle={{ 
-                borderRadius: '16px', 
-                border: '1px solid #F0E6D2', 
-                fontSize: '10px',
-                fontWeight: 'bold'
-              }}
-            />
-            <Bar dataKey="sales" radius={[0, 8, 8, 0]} barSize={20}>
-              {topProductsData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={['#D88D85', '#E6B3AC', '#F3D4D1', '#D48C8C', '#C07B7B'][index % 5]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ChartCard>
-      </section>
-
       {/* Caixa */}
-      <div className="bg-white p-6 rounded-[1.5rem] border border-[#F0E6D2] flex items-center justify-between shadow-sm">
+      <div className="bg-white p-6 rounded-2xl border border-[#F0E6D2] flex items-center justify-between shadow-sm">
          <div className="flex items-center gap-4">
            <div className="w-12 h-12 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] flex items-center justify-center text-[#D88D85]">
              <DollarSign size={20} />
@@ -607,8 +523,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       {/* 2. Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         {/* Left Column (Main - Pedidos Recentes Sobe) */}
-        <div className="lg:col-span-8">
-          <section className="bg-[#FFFFFF] p-8 rounded-[2rem] border border-[#F0E6D2] shadow-[0_24px_55px_rgba(240,230,210,0.3)] relative overflow-hidden min-h-[400px]">
+        <div className="lg:col-span-8 space-y-10">
+          <section className="bg-[#FFFFFF] p-8 rounded-3xl border border-[#F0E6D2] shadow-[0_24px_55px_rgba(240,230,210,0.3)] relative overflow-hidden min-h-[400px]">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
               <Package size={200} />
             </div>
@@ -630,7 +546,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             <div className="w-full overflow-x-auto pb-8 pt-4 px-4 -mx-4 scrollbar-hide relative z-10">
               <div className="min-w-[820px] space-y-4">
               {pendingOrders.length === 0 && (
-                <div className="py-20 text-center rounded-[1.5rem] bg-[#FAF9F6] border border-dashed border-[#F0E6D2]">
+                <div className="py-20 text-center rounded-2xl bg-[#FAF9F6] border border-dashed border-[#F0E6D2]">
                   <ShoppingCart
                     size={40}
                     className="mx-auto text-[#D1CACA] mb-4 opacity-30"
@@ -674,7 +590,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   pallyra: "La Pallyra",
                   guennita: "com amor, Guennita",
                   mimada: "Mimada Sim",
-    tuttymimo: "Tutty Mimo"
+                  tuttymimo: "Tutty Mimo"
                 };
 
                 return (
@@ -688,7 +604,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       boxShadow: "0 10px 20px rgba(240,230,210,0.2)",
                     }}
                     onClick={() => onOpenOrder(order)}
-                    className="bg-white rounded-[1.5rem] border border-[#F0E6D2] shadow-sm flex items-stretch cursor-pointer overflow-hidden transition-all group"
+                    className="bg-white rounded-2xl border border-[#F0E6D2] shadow-sm flex items-stretch cursor-pointer overflow-hidden transition-all group"
                   >
                     {/* Barra Lateral Colorida do Status */}
                     <div 
@@ -798,6 +714,90 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               })}
               </div>
             </div>
+          </section>
+
+          {/* 1.5. Analytics Section - Charts Group (Moved here per request) */}
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
+            <ChartCard 
+              title="Faturamento Diário" 
+              subtitle="Desempenho de vendas (últimos 30 dias)"
+              icon={TrendingUp}
+            >
+              <AreaChart data={dailySalesData}>
+                <defs>
+                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#D88D85" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#D88D85" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F0E6D2" opacity={0.5} />
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 9, fill: '#A09088', fontWeight: 'bold' }}
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 9, fill: '#A09088', fontWeight: 'bold' }}
+                  tickFormatter={(val) => `R$ ${val}`}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    borderRadius: '16px', 
+                    border: '1px solid #F0E6D2', 
+                    boxShadow: '0 10px 30px rgba(240,230,210,0.3)',
+                    fontSize: '10px',
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase'
+                  }}
+                  formatter={(value: number) => [formatCurrency(value), 'Vendas']}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="total" 
+                  stroke="#D88D85" 
+                  strokeWidth={3}
+                  fillOpacity={1} 
+                  fill="url(#colorTotal)" 
+                />
+              </AreaChart>
+            </ChartCard>
+
+            <ChartCard 
+              title="Produtos Populares" 
+              subtitle="Itens mais vendidos (últimos 30 dias)"
+              icon={BarChartIcon}
+            >
+              <BarChart data={topProductsData} layout="vertical" margin={{ left: 30 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F0E6D2" opacity={0.5} />
+                <XAxis type="number" hide />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  width={100}
+                  tick={{ fontSize: 8, fill: '#4A3A34', fontWeight: '800' }}
+                />
+                <Tooltip 
+                  cursor={{ fill: '#FAF9F6' }}
+                  contentStyle={{ 
+                    borderRadius: '16px', 
+                    border: '1px solid #F0E6D2', 
+                    fontSize: '10px',
+                    fontWeight: 'bold'
+                  }}
+                />
+                <Bar dataKey="sales" radius={[0, 8, 8, 0]} barSize={20}>
+                  {topProductsData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={['#D88D85', '#E6B3AC', '#F3D4D1', '#D48C8C', '#C07B7B'][index % 5]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ChartCard>
           </section>
         </div>
 

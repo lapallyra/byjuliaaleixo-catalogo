@@ -123,7 +123,7 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({
           <motion.div
             layout
             key={prize.id}
-            className="bg-white border border-rose-50 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl transition-all relative group overflow-hidden"
+            className="bg-white border border-rose-50 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all relative group overflow-hidden"
           >
             <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity">
               <div className="flex gap-2">
@@ -193,7 +193,7 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({
         ))}
 
         {prizes.length === 0 && (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center text-[#D1CACA] border-2 border-dashed border-rose-50 rounded-[3rem]">
+          <div className="col-span-full py-20 flex flex-col items-center justify-center text-[#D1CACA] border-2 border-dashed border-rose-50 rounded-3xl">
             <Gift size={48} className="mb-4 opacity-50" />
             <p className="text-[10px] font-black uppercase tracking-[0.3em]">
               Nenhum brinde cadastrado

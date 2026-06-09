@@ -100,7 +100,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
       {/* Critical Alert */}
       {criticalItems.length > 0 && (
-        <div className="bg-slate-50 border-1 border-rose-200 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in zoom-in-95 duration-500">
+        <div className="bg-slate-50 border-1 border-rose-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in zoom-in-95 duration-500">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-200 animate-pulse">
               <AlertTriangle size={24} />
@@ -136,7 +136,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
       )}
 
       {/* Top Bar */}
-      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-[2rem] border border-lilac/10 shadow-sm">
+      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-3xl border border-lilac/10 shadow-sm">
         <div className="relative w-full lg:w-96">
           <Search
             className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D1CACA]"
@@ -198,7 +198,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(max(300px,20%),1fr))] gap-6 pb-20">
         {filtered.length === 0 && (
-          <div className="col-span-full py-32 text-center bg-white rounded-[3rem] border border-dashed border-lilac/20">
+          <div className="col-span-full py-32 text-center bg-white rounded-3xl border border-dashed border-lilac/20">
             <p className="text-[#A09898] italic text-[11px] font-black tracking-widest opacity-50 uppercase">
               Nenhum insumo encontrado no catálogo.
             </p>
@@ -209,7 +209,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
           return (
             <div
               key={`ins-card-${insumo.id}-${idx}`}
-              className={`bg-white rounded-[2rem] border transition-all duration-300 p-8 flex flex-col gap-6 hover:shadow-xl group relative min-h-[360px] ${
+              className={`bg-white rounded-2xl border transition-all duration-300 p-8 flex flex-col gap-6 hover:shadow-xl group relative min-h-[360px] ${
                 selectedIds.includes(insumo.id) ? "border-lilac ring-1 ring-lilac/20" : "border-lilac/10 hover:border-lilac/30"
               }`}
             >
@@ -469,7 +469,7 @@ const InsumoFormModal: React.FC<
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-      <div className="bg-white  w-full  max-w-xl  rounded-[2rem] border border-lilac/30 p-8 md:p-10 shadow-2xl  relative max-h-[90vh] overflow-y-auto max-h-[90vh] overflow-y-auto">
+      <div className="bg-white  w-full  max-w-xl  rounded-3xl border border-lilac/30 p-8 md:p-10 shadow-2xl  relative max-h-[90vh] overflow-y-auto max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           disabled={loading}

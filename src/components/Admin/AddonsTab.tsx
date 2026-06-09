@@ -216,7 +216,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
             </motion.div>
           ))}
           {filteredAddons.length === 0 && (
-            <div className="py-20 text-center rounded-[2rem] bg-white border-2 border-dashed border-[#F0E6D2] flex flex-col items-center justify-center opacity-40">
+            <div className="py-20 text-center rounded-3xl bg-white border-2 border-dashed border-[#F0E6D2] flex flex-col items-center justify-center opacity-40">
               <Sparkles size={40} className="mb-4 text-lilac" />
               <p className="text-[10px] font-black uppercase tracking-widest">
                 Nenhum adicional encontrado

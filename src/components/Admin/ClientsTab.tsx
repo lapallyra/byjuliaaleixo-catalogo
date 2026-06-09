@@ -210,7 +210,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
-      <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center bg-white p-6 rounded-[2rem] border border-lilac/10 shadow-sm">
+      <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center bg-white p-6 rounded-3xl border border-lilac/10 shadow-sm">
         <div className="relative w-full lg:max-w-md">
           <Search
             className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D1CACA]"
@@ -273,7 +273,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
       </div>
 
       {birthdayCustomers.length > 0 && (
-        <div className="p-8 rounded-[2.5rem] bg-lilac/5 border border-lilac/10 backdrop-blur-xl flex items-center justify-between shadow-sm">
+        <div className="p-8 rounded-3xl bg-lilac/5 border border-lilac/10 backdrop-blur-xl flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-5">
             <div className="p-4 rounded-2xl bg-white text-lilac shadow-sm border border-lilac/10">
               <Cake size={24} />
@@ -295,7 +295,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(max(300px,20%),1fr))] gap-6 pb-20">
         {filteredCustomers.length === 0 && (
-          <div className="col-span-full py-32 text-center bg-white rounded-[3rem] border border-dashed border-lilac/20">
+          <div className="col-span-full py-32 text-center bg-white rounded-3xl border border-dashed border-lilac/20">
             <p className="text-[#A09898] italic font-black text-[10px] tracking-widest opacity-50 uppercase">
               Nenhum cliente encontrado no sistema
             </p>
@@ -304,7 +304,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
         {filteredCustomers.map((c, idx) => (
           <div
             key={c.id}
-            className={`bg-white rounded-[2rem] border transition-all duration-300 p-8 flex flex-col gap-6 hover:shadow-xl group relative min-h-[360px] ${
+            className={`bg-white rounded-2xl border transition-all duration-300 p-8 flex flex-col gap-6 hover:shadow-xl group relative min-h-[360px] ${
               selectedIds.includes(c.id) ? "border-lilac ring-1 ring-lilac/20" : "border-lilac/10 hover:border-lilac/30"
             }`}
           >
@@ -392,9 +392,9 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
 
       {isDetailModalOpen && selectedCustomer && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-white  w-full  max-w-2xl  rounded-[3rem] border border-lilac/30 overflow-hidden shadow-2xl  relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+          <div className="bg-white  w-full  max-w-2xl  rounded-3xl border border-lilac/30 overflow-hidden shadow-2xl  relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
             <div className="h-32 bg-gradient-to-r from-lilac to-lilac/80 p-8 flex items-end">
-              <div className="w-20 h-20 rounded-[2rem] bg-white text-lilac flex items-center justify-center shadow-xl translate-y-12">
+              <div className="w-20 h-20 rounded-2xl bg-white text-lilac flex items-center justify-center shadow-xl translate-y-12">
                 <Users size={32} />
               </div>
             </div>

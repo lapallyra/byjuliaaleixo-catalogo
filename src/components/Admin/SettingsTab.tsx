@@ -296,7 +296,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-top-4 duration-500 pb-6 w-full">
       {/* Horizontal Nav */}
-      <div className="w-full bg-white p-3 rounded-[2rem] border border-lilac/10 shadow-sm flex flex-wrap gap-2.5 items-center justify-start">
+      <div className="w-full bg-white p-3 rounded-2xl border border-lilac/10 shadow-sm flex flex-wrap gap-2.5 items-center justify-start">
         {[
           { id: "brand", label: "Empresa", icon: Building2 },
           { id: "about", label: "Sobre Nós", icon: User },
@@ -326,7 +326,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
       </div>
 
       {/* Content Area */}
-      <div className="w-full p-8 rounded-[3rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/50 min-h-0">
+      <div className="w-full p-8 rounded-3xl bg-white border border-slate-100 shadow-xl shadow-slate-200/50 min-h-0">
         {activeSubTab === "brand" && (
           <div className="space-y-8">
             <div className="flex items-center gap-3">
@@ -355,7 +355,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 return (
                   <div
                     key={atl.id}
-                    className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm transition-all hover:border-pink-200/50"
+                    className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm transition-all hover:border-pink-200/50"
                   >
                     <div className="flex items-center justify-between border-b border-slate-50 pb-5 mb-8">
                       <div className="flex items-center gap-3">
@@ -502,7 +502,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
             </div>
 
             {/* WhatsApp & Pixel Configuration */}
-            <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm space-y-8 mt-10">
+            <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm space-y-8 mt-10">
               <div className="flex items-center gap-3 border-b border-slate-50 pb-5">
                 <div className="p-2 bg-pink-100 rounded-lg text-pink-700">
                   <Phone size={18} />
@@ -608,7 +608,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
               {/* Photo Upload Card */}
               <div className="space-y-4">
-                <div className="p-6 bg-slate-50/50 rounded-[2.5rem] border border-dashed border-slate-200">
+                <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
                   <ImageUpload
                     label="Minha Foto (Perfil / Ateliê)"
                     path="sobrenos"
@@ -688,7 +688,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-6">
-                <div className="p-6 bg-slate-50/50 rounded-[2.5rem] border border-dashed border-slate-200">
+                <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
                   <ImageUpload
                     label="QR Code PIX Principal"
                     path="pix"
@@ -698,7 +698,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   />
                 </div>
                 
-                <div className="space-y-4 p-6 rounded-[2.5rem] bg-slate-50/50 border border-slate-100">
+                <div className="space-y-4 p-6 rounded-3xl bg-slate-50/50 border border-slate-100">
                   <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
                     Meta de Vendas Mensal (R$)
                   </label>
@@ -822,7 +822,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
             </p>
 
             <div className="grid grid-cols-1 gap-12 pt-4">
-              <div className="bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+              <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100 shadow-sm">
                 <DynamicPricingList
                   title="Custos Fixos (Mensal)"
                   subtitle="Água, luz, assinaturas, aluguel..."
@@ -841,7 +841,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 />
               </div>
 
-              <div className="bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+              <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100 shadow-sm">
                 <DynamicPricingList
                   title="Mão de Obra"
                   subtitle="Dia / Hora = Valor Cobrado"
@@ -860,7 +860,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 />
               </div>
 
-              <div className="bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+              <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100 shadow-sm">
                 <DynamicPricingList
                   title="Taxas e Impostos"
                   subtitle="Taxas de cartão, emissão de NF, etc"

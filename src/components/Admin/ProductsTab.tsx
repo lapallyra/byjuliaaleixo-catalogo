@@ -179,7 +179,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       {/* Search and Ateliers Bar Refined */}
-      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)]">
+      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)]">
         <div className="flex items-center gap-4 w-full lg:w-auto">
           <div className="relative flex-1 lg:w-80">
             <Search
@@ -290,7 +290,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
           </div>
         )}
         {filtered.length === 0 && (
-          <div className="col-span-full py-32 text-center bg-white/40 border border-dashed border-slate-200 rounded-[3rem] text-slate-400 uppercase tracking-[0.3em] font-black text-[9px]">
+          <div className="col-span-full py-32 text-center bg-white/40 border border-dashed border-slate-200 rounded-3xl text-slate-400 uppercase tracking-[0.3em] font-black text-[9px]">
             Nenhum produto encontrado neste ateliê.
           </div>
         )}
@@ -306,7 +306,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.02 }}
               onClick={() => setViewingProduct(p)}
-              className="group bg-white rounded-[1.5rem] overflow-hidden border border-slate-100 flex flex-col p-5 gap-4 hover:border-pink-300 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1 cursor-pointer relative min-h-[340px] h-full"
+              className="group bg-white rounded-2xl overflow-hidden border border-slate-100 flex flex-col p-5 gap-4 hover:border-pink-300 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1 cursor-pointer relative min-h-[340px] h-full"
             >
               <div className="absolute top-4 left-4 z-10" onClick={(e) => e.stopPropagation()}>
                 <input
@@ -363,9 +363,14 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                         {formatCurrency(p.retail_price || 0)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
-                       <Box size={10} className="text-slate-400" />
-                       <span className="text-[9px] font-black text-slate-500">{p.stock || 0}</span>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-1">
+                        <Box size={10} className="text-slate-400" />
+                        <span className="text-[9px] font-black text-slate-500">{p.stock || 0}</span>
+                      </div>
+                      <span className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${p.isVisible !== false ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                        {p.isVisible !== false ? 'Ativo' : 'Inativo'}
+                      </span>
                     </div>
                   </div>
 
@@ -435,7 +440,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
           <motion.div 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white w-full max-w-3xl rounded-[3rem] border border-slate-200 overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] overflow-y-auto max-h-[95vh]"
+            className="bg-white w-full max-w-3xl rounded-3xl border border-slate-200 overflow-hidden shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] overflow-y-auto max-h-[95vh]"
           >
             {/* Header */}
             <div className="px-10 py-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
@@ -456,7 +461,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
             <div className="p-10 space-y-10">
               <div className="flex flex-col md:flex-row gap-12">
                 {/* Product Image */}
-                <div className="w-full md:w-64 h-64 rounded-[2.5rem] overflow-hidden bg-slate-50 border border-slate-100 shrink-0 shadow-inner group relative">
+                <div className="w-full md:w-64 h-64 rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 shrink-0 shadow-inner group relative">
                   <ImageWithFallback 
                     src={viewingProduct.image || ""} 
                     alt={viewingProduct.product_name}
@@ -485,17 +490,17 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
+                    <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
                       <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">Varejo</p>
                       <p className="text-xl font-black text-slate-900">{formatCurrency(viewingProduct.retail_price || 0)}</p>
                     </div>
-                    <div className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
+                    <div className="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
                       <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">Atacado</p>
                       <p className="text-xl font-black text-slate-900">{formatCurrency(viewingProduct.wholesale_price || 0)}</p>
                     </div>
                   </div>
 
-                  <div className="p-6 bg-emerald-50 rounded-[2rem] border border-emerald-100 flex items-center justify-between">
+                  <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between">
                     <div>
                       <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Lucro Estimado</p>
                       <p className="text-2xl font-black text-emerald-700">
@@ -534,7 +539,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                <div className="p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-xl relative overflow-hidden group">
+                <div className="p-8 bg-slate-900 text-white rounded-3xl shadow-xl relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
                     <DollarSign size={80} />
                   </div>
@@ -543,7 +548,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                   <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-4">Cálculo baseado no Valor Varejo Atual</p>
                 </div>
                 
-                <div className="p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm flex flex-col justify-between">
+                <div className="p-8 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col justify-between">
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Audiência</p>
@@ -590,7 +595,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white max-w-md w-full p-10 text-center rounded-[3rem] border border-slate-100 shadow-[0_32px_64px_rgba(0,0,0,0.2)] relative overflow-hidden"
+            className="bg-white max-w-md w-full p-10 text-center rounded-3xl border border-slate-100 shadow-[0_32px_64px_rgba(0,0,0,0.2)] relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-full h-1.5 bg-pink-700" />
             <div className="w-24 h-24 bg-pink-50 text-pink-700 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-pink-100 shadow-inner">
@@ -625,7 +630,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white max-w-md w-full p-10 text-center rounded-[3rem] border border-slate-100 shadow-[0_32px_64px_rgba(0,0,0,0.2)] relative overflow-hidden"
+            className="bg-white max-w-md w-full p-10 text-center rounded-3xl border border-slate-100 shadow-[0_32px_64px_rgba(0,0,0,0.2)] relative overflow-hidden"
           >
             <div className="absolute top-0 left-0 w-full h-1.5 bg-rose-600" />
             <div className="w-24 h-24 bg-rose-50 text-rose-600 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-rose-100 shadow-inner">
@@ -904,7 +909,7 @@ const ProductFormModal: React.FC<
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-[#FAF9F6] w-full max-w-5xl h-[90vh] flex flex-col rounded-[2.5rem] border border-[#F0E6D2] overflow-hidden shadow-2xl relative"
+        className="bg-[#FAF9F6] w-full max-w-5xl h-[90vh] flex flex-col rounded-3xl border border-[#F0E6D2] overflow-hidden shadow-2xl relative"
       >
         {/* Modal Header */}
         <div className="p-8 md:p-10 border-b border-[#F0E6D2] flex items-center justify-between bg-white">

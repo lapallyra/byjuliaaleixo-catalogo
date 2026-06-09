@@ -246,7 +246,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
               ].map((card, idx) => (
                 <div
                   key={card.label}
-                  className={`p-8 rounded-[2rem] bg-white border ${card.border} shadow-sm relative overflow-hidden group hover:scale-[1.02] transition-transform`}
+                  className={`p-8 rounded-3xl bg-white border ${card.border} shadow-sm relative overflow-hidden group hover:scale-[1.02] transition-transform`}
                 >
                   <div
                     className={`absolute -right-4 -top-4 w-24 h-24 rounded-full ${card.bg} opacity-50 group-hover:scale-150 transition-transform duration-500`}
@@ -267,7 +267,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
             </div>
 
             {/* Funil de Vendas Simples */}
-            <div className="p-8 rounded-[2.5rem] bg-white border border-[#F0E6D2] shadow-sm">
+            <div className="p-8 rounded-3xl bg-white border border-[#F0E6D2] shadow-sm">
                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A09898] mb-6">
                  Funil de Vendas (Neste Mês)
                </h3>
@@ -298,7 +298,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
 
             {/* Goal Progress Tracker */}
             {settings?.monthly_goal && settings.monthly_goal > 0 && (
-              <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-slate-900 to-black text-white shadow-2xl relative overflow-hidden">
+              <div className="p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-black text-white shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-lilac/20 rounded-full blur-[80px]" />
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex items-center gap-4">
@@ -340,7 +340,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
             {/* Inflows & Outflows List */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
               {/* Entradas */}
-              <div className="bg-white rounded-[2rem] border border-emerald-100 shadow-xl shadow-emerald-50/50 p-8">
+              <div className="bg-white rounded-3xl border border-emerald-100 shadow-xl shadow-emerald-50/50 p-8">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-sm font-black uppercase text-slate-800 flex items-center gap-2">
                     <TrendingUp size={16} className="text-emerald-500" /> Fluxo
@@ -384,7 +384,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
               </div>
 
               {/* Saídas e Custos Base */}
-              <div className="bg-white rounded-[2rem] border border-rose-100 shadow-xl shadow-rose-50/50 p-8">
+              <div className="bg-white rounded-3xl border border-rose-100 shadow-xl shadow-rose-50/50 p-8">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-sm font-black uppercase text-slate-800 flex items-center gap-2">
                     <TrendingDown size={16} className="text-slate-9000" />{" "}
@@ -454,7 +454,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
             </div>
 
             {/* History Section */}
-            <div className="bg-white rounded-[2rem] border border-[#F0E6D2] shadow-xl p-8 mt-8">
+            <div className="bg-white rounded-3xl border border-[#F0E6D2] shadow-xl p-8 mt-8">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-xs font-black uppercase tracking-tighter text-slate-800">
                   Histórico de Lucro Registrado
@@ -559,7 +559,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
         return (
           <section className="space-y-10 animate-in fade-in duration-300">
             {/* Goal card */}
-            <div className="p-10 rounded-[3rem] bg-slate-950 text-white border border-slate-900 shadow-2xl relative overflow-hidden">
+            <div className="p-10 rounded-3xl bg-slate-950 text-white border border-slate-900 shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-80 h-80 bg-lilac/10 rounded-full blur-[100px] pointer-events-none" />
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
                 <div className="space-y-3">
@@ -606,7 +606,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {displaySuggestions.map((item, idx) => (
-                  <div key={idx} className="bg-white border border-[#F0E6D2] rounded-[2rem] p-6 shadow-sm overflow-hidden flex flex-col justify-between">
+                  <div key={idx} className="bg-white border border-[#F0E6D2] rounded-3xl p-6 shadow-sm overflow-hidden flex flex-col justify-between">
                     <div>
                       <div className="h-40 rounded-2xl overflow-hidden bg-slate-50 mb-4 border border-[#F0E6D2]/50 relative">
                         <img 
@@ -650,7 +650,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
                 </div>
                 <div className="space-y-4">
                   {customProductIdeas.map((idea, idx) => (
-                    <div key={idx} className="p-6 bg-white border border-[#F0E6D2] rounded-[2rem] shadow-sm relative overflow-hidden group hover:border-lilac/30 transition-all">
+                    <div key={idx} className="p-6 bg-white border border-[#F0E6D2] rounded-3xl shadow-sm relative overflow-hidden group hover:border-lilac/30 transition-all">
                       <div className="flex justify-between items-start gap-4">
                         <div>
                           <span className="inline-block bg-slate-100 text-[#4A4444] px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest mb-2">
@@ -677,7 +677,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
                 </div>
                 <div className="space-y-4 animate-in fade-in">
                   {externalTrends.map((trend, idx) => (
-                    <div key={idx} className="p-6 bg-white border border-[#F0E6D2] rounded-[2rem] shadow-sm relative">
+                    <div key={idx} className="p-6 bg-white border border-[#F0E6D2] rounded-3xl shadow-sm relative">
                       <div className="flex items-center gap-2 text-rose-500 mb-1.5">
                         <ArrowUpRight size={14} />
                         <span className="text-[9px] font-black uppercase tracking-wider">{trend.trend}</span>
@@ -691,7 +691,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
             </div>
 
             {/* Catalog Renewal strategies */}
-            <div className="p-8 rounded-[2rem] bg-[#FAF9F6] border border-[#F0E6D2] space-y-6">
+            <div className="p-8 rounded-3xl bg-[#FAF9F6] border border-[#F0E6D2] space-y-6">
               <div className="flex items-center gap-2">
                 <Layers size={16} className="text-[#A09898]" />
                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-800">Diretrizes de Renovação & Estruturação do Catálogo</h3>
@@ -807,7 +807,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
               {/* Left Column (3/5) - BASE PRICING SIMULATOR */}
               <div className="lg:col-span-3 space-y-6">
-                <div className="p-8 rounded-[2.5rem] bg-white border border-[#F0E6D2] shadow-md space-y-6">
+                <div className="p-8 rounded-3xl bg-white border border-[#F0E6D2] shadow-md space-y-6">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div className="flex items-center gap-2">
                       <Calculator className="text-lilac" size={18} />
@@ -954,7 +954,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
 
               {/* Right Column (2/5) - INSUMO ANALYSIS BY CATEGORY */}
               <div className="lg:col-span-2 space-y-6">
-                <div className="p-8 rounded-[2.5rem] bg-white border border-[#F0E6D2] shadow-sm space-y-6 flex flex-col h-full justify-between">
+                <div className="p-8 rounded-3xl bg-white border border-[#F0E6D2] shadow-sm space-y-6 flex flex-col h-full justify-between">
                   <div>
                     <h3 className="font-sans font-black uppercase tracking-wider text-slate-800 text-xs border-b border-slate-100 pb-4 flex items-center gap-2">
                       <Layers size={14} className="text-sky-500" /> Análise de Insumos por Categoria

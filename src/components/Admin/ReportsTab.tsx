@@ -187,7 +187,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
       </div>
 
       {/* Sales Volume Chart */}
-      <div className="p-8 rounded-[2.5rem] bg-white border border-lilac/10 shadow-sm">
+      <div className="p-8 rounded-3xl bg-white border border-lilac/10 shadow-sm">
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">
             Volume de Vendas (Últimos 6 Meses)
@@ -241,7 +241,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
       {/* Main Rankings Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Leading Customers */}
-        <div className="p-8 rounded-[2.5rem] bg-white border border-lilac/10 shadow-sm">
+        <div className="p-8 rounded-3xl bg-white border border-lilac/10 shadow-sm">
           <div className="flex items-center gap-4 mb-8">
             <div className="p-3 rounded-2xl bg-lilac/5 text-lilac">
               <Trophy size={20} />
@@ -276,7 +276,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         </div>
 
         {/* Leading Products */}
-        <div className="p-8 rounded-[2.5rem] bg-white border border-lilac/10 shadow-sm">
+        <div className="p-8 rounded-3xl bg-white border border-lilac/10 shadow-sm">
           <div className="flex items-center gap-4 mb-8">
             <div className="p-3 rounded-2xl bg-blue-50 text-blue-500">
               <TrendingUp size={20} />
@@ -358,7 +358,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
               onClick={() =>
                 setActiveCard(activeCard === insight.id ? null : insight.id)
               }
-              className={`w-full p-8 rounded-[2.5rem] border transition-all text-left group flex flex-col shadow-sm ${activeCard === insight.id ? "bg-lilac/5 border-lilac" : "bg-white border-lilac/10 hover:border-lilac"}`}
+              className={`w-full p-8 rounded-3xl border transition-all text-left group flex flex-col shadow-sm ${activeCard === insight.id ? "bg-lilac/5 border-lilac" : "bg-white border-lilac/10 hover:border-lilac"}`}
             >
               <div
                 className={`p-3 rounded-2xl bg-white w-fit mb-6 ${insight.color}`}
@@ -386,7 +386,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
 
             {/* Expandable Detail Area */}
             {activeCard === insight.id && (
-              <div className="p-6 rounded-[2rem] bg-white border border-lilac/10 animate-in slide-in-from-top-2 duration-300 shadow-inner">
+              <div className="p-6 rounded-2xl bg-white border border-lilac/10 animate-in slide-in-from-top-2 duration-300 shadow-inner">
                 {insight.id === "vendas" && (
                   <div className="space-y-3">
                     {productRank.slice(0, 5).map((p, pIdx) => (

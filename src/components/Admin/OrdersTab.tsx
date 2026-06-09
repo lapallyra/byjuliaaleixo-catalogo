@@ -441,7 +441,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       {/* Top Bar - Improved Responsiveness for Laptop Screens */}
-      <div className="flex flex-col xl:flex-row gap-6 justify-between items-center bg-white p-6 rounded-[2rem] border border-[#F0E6D2] shadow-sm">
+      <div className="flex flex-col xl:flex-row gap-6 justify-between items-center bg-white p-6 rounded-3xl border border-[#F0E6D2] shadow-sm">
         <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
           <div className="relative w-full md:w-72 lg:w-80">
             <Search
@@ -521,7 +521,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
       </div>
 
       {/* Production Pipeline - Optimized for Flow and Balance */}
-      <div className="bg-[#FAF9F6] p-6 lg:p-8 rounded-[2.5rem] border border-[#F0E6D2] shadow-xs">
+      <div className="bg-[#FAF9F6] p-6 lg:p-8 rounded-3xl border border-[#F0E6D2] shadow-xs">
         <span className="block text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] mb-6">Fluxo de Produção Personalizada</span>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
           <button
@@ -582,7 +582,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
           if (!group) return true;
           return group.dbStatuses.includes(order.status.toLowerCase());
         }).length === 0 ? (
-          <div className="col-span-full py-24 text-center bg-white rounded-[2.5rem] border border-[#F0E6D2] text-[#A09898] font-bold uppercase tracking-widest text-[9px] shadow-[0_10px_30px_rgba(240,230,210,0.1)]">
+          <div className="col-span-full py-24 text-center bg-white rounded-3xl border border-[#F0E6D2] text-[#A09898] font-bold uppercase tracking-widest text-[9px] shadow-[0_10px_30px_rgba(240,230,210,0.1)]">
             Nenhum pedido encontrado nesta etapa.
           </div>
         ) : (
@@ -604,7 +604,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.25, delay: Math.min(idx * 0.015, 0.3) }}
-                className="group relative bg-[#FFFFFF] rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden cursor-pointer min-h-[200px] flex flex-col"
+                className="group relative bg-[#FFFFFF] rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden cursor-pointer min-h-[200px] flex flex-col"
                 onClick={() => setIsDetailOpen(order.id)}
               >
                 {/* Status Accent Strip */}
@@ -697,6 +697,17 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                         >
                           <Edit size={12} />
                         </button>
+                        <button 
+                          onClick={async () => {
+                            const doc = await generatePremiumA4Receipt(order, settings);
+                            setPdfData({ doc, fileName: "Comprovante_" + order.code });
+                            setIsPdfPreviewOpen(true);
+                          }}
+                          className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-blue-50 border border-transparent hover:border-blue-100 transition-all"
+                          title="Imprimir PDF"
+                        >
+                          <Printer size={12} />
+                        </button>
                       </div>
                       <button 
                         onClick={() => setOrderToDelete(order.id)}
@@ -753,7 +764,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[#FFFFFC] w-full max-w-4xl max-h-[92vh] flex flex-col rounded-[2rem] border border-pink-100 shadow-2xl overflow-hidden relative"
+                className="bg-[#FFFFFC] w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-pink-100 shadow-2xl overflow-hidden relative"
               >
                 {/* Botão Fechar (Fixo no topo direito e com z-index alto) */}
                 <button
