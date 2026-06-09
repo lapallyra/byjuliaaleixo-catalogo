@@ -1059,3 +1059,33 @@ export const subscribeToCheckoutEvents = (callback: (events: any[]) => void, com
     handleFirestoreError(error, OperationType.LIST, path);
   });
 };
+
+export const performSystemReset = async (): Promise<void> => {
+  const collectionsToClear = [
+    'customers',
+    'products',
+    'insumos',
+    'insumo_movements',
+    'sales',
+    'finance',
+    'monthly_profit_history',
+    'checkout_funnel_logs',
+    'giftLists'
+  ];
+
+  for (const colName of collectionsToClear) {
+    try {
+      const colRef = collection(db, colName);
+      const snapshot = await getDocs(colRef);
+      const deletePromises = snapshot.docs.map((docSnap) => 
+        deleteDoc(doc(db, colName, docSnap.id))
+      );
+      await Promise.all(deletePromises);
+      console.log(`Cleared collection: ${colName}`);
+    } catch (e) {
+      console.error(`Error resetting collection ${colName}:`, e);
+      throw e;
+    }
+  }
+};
+

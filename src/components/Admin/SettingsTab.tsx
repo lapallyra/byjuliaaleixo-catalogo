@@ -36,7 +36,8 @@ import {
   saveAppConfig,
   getSystemNotificationsConfig,
   saveSystemNotificationsConfig,
-  subscribeToTelegramLogs
+  subscribeToTelegramLogs,
+  performSystemReset
 } from "../../services/firebaseService";
 import { format } from "date-fns";
 import { ImageWithFallback } from "../ImageWithFallback";
@@ -62,6 +63,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
     | "receipt"
     | "roulette"
     | "notifications"
+    | "reset"
   >("brand");
   const [settings, setSettings] = useState<Partial<SiteSettings>>({});
   const [loading, setLoading] = useState(true);
@@ -79,6 +81,32 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
   const [editingAtelierId, setEditingAtelierId] = useState<CompanyId | null>(
     null,
   );
+
+  const [confirmInput, setConfirmInput] = useState("");
+  const [resetProgress, setResetProgress] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  const handleResetAction = async () => {
+    if (confirmInput.trim().toUpperCase() !== "RESETAR SISTEMA") return;
+
+    if (!window.confirm("ATENÇÃO: Você confirma que deseja RESETAR COMPLETAMENTE OS DADOS operacionais? Essa ação apagará todos os Clientes, Produtos, Insumos e Pedidos em definitivo!")) {
+      return;
+    }
+
+    setResetProgress("loading");
+    try {
+      await performSystemReset();
+      setResetProgress("success");
+      setConfirmInput("");
+      alert("O sistema foi redefinido aos padrões iniciais de uso com sucesso!");
+      setActiveSubTab("brand");
+    } catch (e) {
+      console.error(e);
+      setResetProgress("error");
+      alert("Erro ao redefinir o sistema. Consulte os logs no console.");
+    } finally {
+      setResetProgress("idle");
+    }
+  };
 
   // New state for multi-atelier branding
   const [allAteliers, setAllAteliers] = useState<
@@ -277,6 +305,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           { id: "receipt", label: "Comprovantes", icon: FileText },
           { id: "roulette", label: "Roleta de Brindes", icon: Gift },
           { id: "notifications", label: "Notificações", icon: Bell },
+          { id: "reset", label: "Reset de Dados", icon: RotateCw },
         ].map((item) => (
           <button
             key={item.id}
@@ -1380,6 +1409,85 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === "reset" && (
+          <div className="space-y-10 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-rose-100/50 text-[#D48C8C]">
+                <RotateCw size={24} className="animate-spin" style={{ animationDuration: '6s' }} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+                Reset Geral de Dados
+              </h3>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 border border-red-100 space-y-8 shadow-[0_10px_40px_rgba(239,68,68,0.03)]">
+              <div>
+                <h4 className="text-sm font-black text-rose-900 uppercase tracking-wider flex items-center gap-2">
+                  <span>⚠️</span> Cuidado! Zona de Perigo Extremo
+                </h4>
+                <p className="text-[10px] text-[#A09898] uppercase font-bold tracking-widest mt-1">
+                  Esta ação executará um reset completo dos dados cadastrados para que o sistema volte ao estado inicial de uso.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <div className="p-6 rounded-2xl bg-red-50/50 border border-red-100/70 space-y-3">
+                  <h5 className="text-[11px] font-black text-rose-800 uppercase tracking-wider flex items-center gap-2">
+                    🔴 APAGAR COMPLETAMENTE
+                  </h5>
+                  <ul className="text-[10px] space-y-2 text-slate-600 font-medium tracking-wide leading-relaxed">
+                    <li>❌ <strong>Clientes</strong>: todos os cadastros, histórico e relacionamentos vinculados.</li>
+                    <li>❌ <strong>Produtos</strong>: catálogo completo, variações, links de imagens e estoques.</li>
+                    <li>❌ <strong>Insumos</strong>: inventário de materiais, movimentos e históricos de insumos.</li>
+                    <li>❌ <strong>Pedidos</strong>: todas as vendas, histórico de produção e status de entrega.</li>
+                    <li>❌ <strong>Histórico Financeiro</strong>: fluxo de caixa e lucros mensais originados dos pedidos.</li>
+                  </ul>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-emerald-50/50 border border-emerald-100/70 space-y-3">
+                  <h5 className="text-[11px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-2">
+                    🟢 MANTER INTACTO (NÃO SERÁ ALTERADO)
+                  </h5>
+                  <ul className="text-[10px] space-y-2 text-slate-600 font-medium tracking-wide leading-relaxed">
+                    <li>✅ <strong>Empresas</strong>: definições de marca, WhatsApp, pixel do Facebook, contatos.</li>
+                    <li>✅ <strong>Estrutura de Frete</strong>: faixas de frete estabelecidas e taxas gerais.</li>
+                    <li>✅ <strong>Precificação</strong>: fórmulas, tarifas de transações, custos de mão de obra.</li>
+                    <li>✅ <strong>Aparência & Layout</strong>: cores de background, slogans e layouts de páginas.</li>
+                    <li>✅ <strong>Integrações</strong>: configurações gerais de bots, notificações e webhooks.</li>
+                    <li>✅ <strong>Metas Financeiras</strong>: metas mensais cadastradas no painel.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 space-y-4">
+                <div className="flex flex-col gap-2 bg-[#FAF9F6] p-4 rounded-xl border border-[#F0E6D2]">
+                  <p className="text-[10px] font-black text-[#8C8273] uppercase tracking-widest leading-relaxed">
+                    Para confirmar o reset operacional, digite <span className="text-red-600 font-extrabold select-all">RESETAR SISTEMA</span> no campo abaixo e logo após clique no botão de redefinição.
+                  </p>
+                  <input
+                    type="text"
+                    placeholder="Digite RESETAR SISTEMA aqui..."
+                    value={confirmInput}
+                    onChange={(e) => setConfirmInput(e.target.value)}
+                    className="w-full mt-2 px-4 py-3 rounded-lg bg-white border border-slate-200 text-xs font-bold outline-none uppercase focus:border-red-400 focus:ring-1 focus:ring-red-400"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleResetAction}
+                    disabled={confirmInput.trim().toUpperCase() !== "RESETAR SISTEMA" || resetProgress === "loading"}
+                    className="flex items-center justify-center gap-2 px-8 py-4 bg-red-600 hover:bg-red-700 text-white hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-900/15 cursor-pointer"
+                  >
+                    {resetProgress === "loading" ? "⏳ Redefinindo o Banco de Dados..." : "🚨 Executar Reset Geral do Sistema"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
