@@ -208,7 +208,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   }
 
   const menuItems: { id: TabType; label: string; icon: any; category: string }[] = [
-    { id: "dashboard", label: "Painel", category: "PAINEL", icon: LayoutDashboard },
+    { id: "dashboard", label: "Dashboard", category: "PAINEL", icon: LayoutDashboard },
     { id: "orders", label: "Pedidos", category: "OPERAÇÃO", icon: ShoppingBag },
     { id: "clients", label: "Clientes", category: "OPERAÇÃO", icon: User },
     { id: "products", label: "Produtos", category: "OPERAÇÃO", icon: Box },
@@ -506,7 +506,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                         <X size={32} />
                       </div>
                       <h3 className="text-sm font-black uppercase text-slate-900 tracking-widest mb-2">
-                        Ops! Algo deu errado nesta aba
+                        Ops! Algo deu errado no Dashboard
                       </h3>
                       <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest max-w-xs">
                         Encontramos um erro ao carregar as informações. Tente
@@ -516,7 +516,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                         onClick={() => window.location.reload()}
                         className="mt-8 px-8 py-3 bg-black text-white rounded-xl text-[9px] font-black uppercase tracking-widest"
                       >
-                        Recarregar Painel
+                        Recarregar Dashboard
                       </button>
                     </div>
                   }

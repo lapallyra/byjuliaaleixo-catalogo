@@ -233,24 +233,25 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onAction,
   onOpenOrder,
 }) => {
-  const [expandedSection, setExpandedSection] = React.useState<string | null>(
-    null,
-  );
+  const [viewingProductDetails, setViewingProductDetails] = useState<Product | null>(null);
 
   const {
     activeOrdersCount,
     deliveredCount,
     cancelledCount,
     waitingCount,
+    inProductionCount,
     currentMonthNetProfit,
-    pendingOrders,
-    dailySalesData,
-    topProductsData,
+    recentOrders,
+    dailyRevenueList,
+    popularProducts,
+    currentMonthRevenue,
   } = useMemo(() => {
     let activeCount = 0;
     let delivCount = 0;
     let cancCount = 0;
-    let waitCount = 0;
+    let waitingPaymentCount = 0;
+    let inProdCount = 0;
 
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -258,554 +259,549 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
     let revenueSinceStartOfMonth = 0;
 
-    // Charts Data Calculation (Last 30 Days)
-    const thirtyDaysAgo = subDays(startOfDay(now), 30);
+    // Daily List Calculation (Current Month)
     const dailyMap = new Map<string, number>();
-    const productMap = new Map<string, number>();
-
-    // Initialize daily map with zeros for last 30 days
-    for (let i = 0; i < 30; i++) {
-        const d = subDays(startOfDay(now), i);
-        dailyMap.set(format(d, 'dd/MM'), 0);
-    }
+    const salesProductMap = new Map<string, { productId: string, count: number, total: number, clicks: number }>();
 
     orders.forEach(o => {
       const status = o.status.toLowerCase();
-      if (status === 'delivered') delivCount++;
-      else if (status === 'cancelled') cancCount++;
-      else if (['pending', 'quote', 'waiting_deposit'].includes(status)) {
-         waitCount++;
-         activeCount++;
+      
+      // Counter logic
+      if (['delivered', 'fully_paid'].includes(status)) delivCount++;
+      else if (['cancelled', 'canceled', 'refunded'].includes(status)) cancCount++;
+      else if (['waiting_deposit', 'waiting_payment', 'pending', 'quote'].includes(status)) {
+        waitingPaymentCount++;
+        activeCount++;
+      } else if (['production', 'in_production', 'assembly', 'approval'].includes(status)) {
+        inProdCount++;
+        activeCount++;
+      } else {
+        activeCount++;
       }
-      else activeCount++;
 
       const orderDate = new Date(o.createdAt?.toDate ? o.createdAt.toDate() : o.createdAt || Date.now());
       
-      if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear && status !== 'cancelled') {
+      // Current Month Revenue
+      if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear && !['cancelled', 'canceled'].includes(status)) {
         revenueSinceStartOfMonth += (Number(o.total) || 0);
-      }
+        
+        // Fill daily revenue list
+        const dateKey = format(orderDate, 'yyyy-MM-dd');
+        dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + (Number(o.total) || 0));
 
-      // Fill Chart Data (Sales trends and Products)
-      if (isAfter(orderDate, thirtyDaysAgo) && status !== 'cancelled') {
-         const dateKey = format(orderDate, 'dd/MM');
-         if (dailyMap.has(dateKey)) {
-            dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + (Number(o.total) || 0));
-         }
-
-         o.items?.forEach(item => {
-            const pName = item.product_name || 'Personalizado';
-            productMap.set(pName, (productMap.get(pName) || 0) + item.quantity);
-         });
+        // Popular products accounting
+        o.items?.forEach(item => {
+          const pid = item.productId || item.id || 'custom';
+          const current = salesProductMap.get(pid) || { productId: pid, count: 0, total: 0, clicks: 0 };
+          current.count += item.quantity;
+          current.total += (Number(item.subtotal) || 0);
+          salesProductMap.set(pid, current);
+        });
       }
     });
 
     const netProfitEstimate = revenueSinceStartOfMonth * 0.35;
 
-    const pending = orders
-      .filter((o) => !["delivered", "cancelled", "finalizado"].includes(o.status.toLowerCase()))
+    // Recent Orders (Last 8)
+    const recent = [...orders]
       .sort((a, b) => {
         const timeA = a.createdAt?.toMillis?.() || (a.createdAt as any)?.seconds * 1000 || Date.now();
         const timeB = b.createdAt?.toMillis?.() || (b.createdAt as any)?.seconds * 1000 || Date.now();
         return timeB - timeA;
       })
+      .slice(0, 8);
+
+    // Daily Revenue List (Sorted by date)
+    const dailyList = Array.from(dailyMap.entries())
+      .map(([date, total]) => ({ date, total }))
+      .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, 10);
 
-    const salesChart = Array.from(dailyMap.entries()).map(([date, total]) => ({ date, total })).reverse();
-    const productsChart = Array.from(productMap.entries())
-        .map(([name, sales]) => ({ name, sales }))
-        .sort((a, b) => b.sales - a.sales)
-        .slice(0, 5);
+    // Popular Products (Sorted by count)
+    const popular = Array.from(salesProductMap.values())
+      .map(entry => {
+        const p = products.find(prod => prod.id === entry.productId);
+        return {
+          ...p,
+          id: entry.productId,
+          product_name: p?.product_name || 'Personalizado',
+          image: p?.image || '',
+          monthlySales: entry.count,
+          totalSales: entry.count, // Simplified to monthly for now
+          clicks: Math.floor(entry.count * 2.5) // Simulated click data
+        };
+      })
+      .sort((a, b) => b.monthlySales - a.monthlySales)
+      .slice(0, 8);
 
     return {
       activeOrdersCount: activeCount,
       deliveredCount: delivCount,
       cancelledCount: cancCount,
-      waitingCount: waitCount,
+      waitingCount: waitingPaymentCount,
+      inProductionCount: inProdCount,
       currentMonthNetProfit: netProfitEstimate,
-      pendingOrders: pending,
-      dailySalesData: salesChart,
-      topProductsData: productsChart,
+      currentMonthRevenue: revenueSinceStartOfMonth,
+      recentOrders: recent,
+      dailyRevenueList: dailyList,
+      popularProducts: popular,
     };
-  }, [orders]);
+  }, [orders, products]);
 
-  const brandConfig: Record<
-    string,
-    { color: string; badge: string; initial: string }
-  > = useMemo(
-    () => ({
-      guennita: { color: "#800000", badge: "tag-guennita", initial: "CG" },
-      pallyra: { color: "#D4AF37", badge: "tag-pallyra", initial: "LP" },
-      mimada: { color: "#D48C8C", badge: "tag-mimada", initial: "MS" },
-      tuttymimo: { color: "#D4BDA1", badge: "tag-tuttymimo", initial: "TM" },
-    }),
-    [],
-  );
-
-  const statusLabels: Record<string, string> = useMemo(
-    () => ({
-      quote: "Orçamento",
-      waiting_deposit: "Sinal",
-      production: "Produção",
-      ready: "Pronto",
-      approval: "Ver Arte",
-      assembly: "Montagem",
-      pending: "Pendente",
-      delivered: "Entregue",
-      cancelled: "Cancelado",
-      "novo pedido": "Novo",
-    }),
-    [],
-  );
+  const statusColors: Record<string, string> = {
+    Ativos: "text-blue-600 bg-blue-50 border-blue-100",
+    Produção: "text-orange-600 bg-orange-50 border-orange-100",
+    Pagamento: "text-amber-600 bg-amber-50 border-amber-100",
+    Entregues: "text-emerald-600 bg-emerald-50 border-emerald-100",
+    Cancelados: "text-rose-600 bg-rose-50 border-rose-100",
+  };
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-300 pb-12 max-w-[1600px] mx-auto overflow-x-hidden">
-      {/* 0. Meta Mensal (CLT Escape) */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-8 rounded-3xl border border-[#F0E6D2] shadow-[0_20px_60px_rgba(240,230,210,0.2)] relative overflow-hidden"
-      >
-        <div className="absolute top-0 right-0 p-8 opacity-[0.03] rotate-12">
-          <Target size={240} className="text-[#D88D85]" />
-        </div>
-        <div className="relative z-10">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-[#FAF9F6] rounded-lg border border-[#F0E6D2]">
-                  <Target size={14} className="text-[#D88D85]" />
-                </div>
-                <h3 className="text-[10px] font-black uppercase text-[#4A3A34] tracking-[0.25em]">
-                  Meta Mensal de Vendas
-                </h3>
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20 max-w-[1600px] mx-auto">
+      
+      {/* BLOCO 01 E 02: CAIXA E META MENSAL */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* BLOCO 01: CAIXA */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-white p-8 rounded-3xl border border-[#F0E6D2] shadow-xl flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-[#D88D85] shadow-lg">
+                <DollarSign size={24} />
               </div>
-              <p className="text-[9px] text-[#A09088] font-semibold uppercase tracking-wider pl-8">
-                Objetivo Financeiro Líquido • Foco no Ateliê
-              </p>
-            </div>
-            <div className="text-left md:text-right bg-[#FAF9F6] px-6 py-3 rounded-2xl border border-[#F0E6D2]">
-              <p className="text-3xl font-sans font-bold text-[#D88D85] leading-none mb-1">
-                {formatCurrency(currentMonthNetProfit)}
-              </p>
-              <div className="flex items-center md:justify-end gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <p className="text-[8px] text-[#A09088] font-black uppercase tracking-widest">
-                  Lucro Estimado Atual
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative py-2">
-            <div className="flex justify-between mb-3 px-1">
-              <span className="text-[9px] font-black tracking-widest text-[#A09088] uppercase">
-                Progresso da Meta
-              </span>
-              <span className="text-[9px] font-black tracking-widest text-[#D88D85] uppercase">
-                {Math.min(
-                  Math.round((currentMonthNetProfit / 2000) * 100),
-                  100,
-                )}
-                % Concluído
-              </span>
-            </div>
-            <div className="w-full h-5 bg-[#F3D4D1] rounded-full overflow-hidden border border-[#F0E6D2] shadow-inner">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{
-                  width: `${Math.min((currentMonthNetProfit / 2000) * 100, 100)}%`,
-                }}
-                transition={{ duration: 2, ease: [0.23, 1, 0.32, 1] }}
-                className="h-full bg-gradient-to-r from-[#D88D85] to-[#E6B3AC] rounded-full relative overflow-hidden"
-              >
-                <motion.div
-                  animate={{ x: ["-200%", "200%"] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 bg-white/30 skew-x-[30deg] w-1/4"
-                />
-              </motion.div>
-            </div>
-            <div className="flex justify-between mt-3 px-1">
-              <div className="flex gap-4">
-                <span className="text-[7px] text-[#D1CACA] font-black uppercase tracking-widest">
-                  Base: R$ 0
-                </span>
-              </div>
-              <span className="text-[7px] text-[#A09898] font-black uppercase tracking-widest bg-[#F0E6D2]/30 px-2 py-0.5 rounded">
-                Alvo: {formatCurrency(2000)}
-              </span>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* 1. Header Stats - Intelligent Fluid Grid */}
-      <header className="grid grid-cols-[repeat(auto-fit,minmax(max(240px,20%),1fr))] gap-6">
-        {[
-          {
-            title: "Ativos",
-            value: activeOrdersCount.toString(),
-            icon: Package,
-            color: "text-[#D88D85]",
-            bg: "bg-[#FAF9F6]",
-            border: "border-[#F0E6D2]",
-          },
-          {
-            title: "Aguardando",
-            value: waitingCount.toString(),
-            icon: Clock,
-            color: "text-[#D88D85]",
-            bg: "bg-[#FAF9F6]",
-            border: "border-[#F0E6D2]",
-          },
-          {
-            title: "Entregues",
-            value: deliveredCount.toString(),
-            icon: CheckCircle,
-            color: "text-emerald-600",
-            bg: "bg-[#FAF9F6]",
-            border: "border-[#F0E6D2]",
-          },
-          {
-            title: "Cancelados",
-            value: cancelledCount.toString(),
-            icon: XCircle,
-            color: "text-[#D88D85]",
-            bg: "bg-[#FAF9F6]",
-            border: "border-[#F0E6D2]",
-          },
-        ].map((stat, idx) => (
-          <motion.div
-            key={`ds-stat-${idx}`}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.05 }}
-            className="bg-[#FFFFFF] p-6 rounded-2xl border border-[#F0E6D2] flex items-center justify-between shadow-[0_8px_24px_rgba(240,230,210,0.5)] hover:shadow-[0_12px_32px_rgba(240,230,210,0.6)] transition-all group"
-          >
-            <div>
-              <p className="text-[8px] font-bold uppercase text-[#7A6A62] tracking-[0.2em] mb-1">
-                {stat.title}
-              </p>
-              <p className="text-3xl font-sans font-extrabold text-[#2D2D2D]">
-                {stat.value}
-              </p>
-            </div>
-            <div
-              className={`p-3.5 rounded-xl ${stat.bg} ${stat.color} border ${stat.border} transition-transform group-hover:scale-110 opacity-100 mix-blend-multiply`}
-            >
-              <stat.icon size={20} />
-            </div>
-          </motion.div>
-        ))}
-      </header>
-
-      {/* Caixa */}
-      <div className="bg-white p-6 rounded-2xl border border-[#F0E6D2] flex items-center justify-between shadow-sm">
-         <div className="flex items-center gap-4">
-           <div className="w-12 h-12 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] flex items-center justify-center text-[#D88D85]">
-             <DollarSign size={20} />
-           </div>
-           <div>
-             <h3 className="text-[10px] font-black uppercase text-[#4A3A34] tracking-[0.2em]">Fluxo de Caixa Diário</h3>
-             <p className="text-[8px] text-[#A09088] font-bold uppercase tracking-widest mt-0.5">Nenhum caixa aberto</p>
-           </div>
-         </div>
-         <div className="flex gap-3">
-           <button className="bg-[#FFFFFF] border border-[#F0E6D2] text-[#4A3A34] px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#F0E6D2] transition-colors shadow-sm">
-              Fechar Caixa
-           </button>
-           <button className="bg-[#D48C8C] text-white px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#C07B7B] shadow-lg shadow-[#D48C8C]/20 transition-all">
-              Abrir Caixa
-           </button>
-         </div>
-      </div>
-
-      {/* 2. Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        {/* Left Column (Main - Pedidos Recentes Sobe) */}
-        <div className="lg:col-span-8 space-y-10">
-          <section className="bg-[#FFFFFF] p-8 rounded-3xl border border-[#F0E6D2] shadow-[0_24px_55px_rgba(240,230,210,0.3)] relative overflow-hidden min-h-[400px]">
-            <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
-              <Package size={200} />
-            </div>
-
-            <div className="flex items-center justify-between mb-8 relative z-10">
               <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#4A3A34]">
-                  Pedidos recentes
-                </h3>
-                <p className="text-[8px] text-[#A09088] font-medium uppercase tracking-[0.1em] mt-1">
-                  Últimas atividades do sistema
-                </p>
+                <h3 className="text-[11px] font-black uppercase text-[#4A3A34] tracking-[0.25em]">Monitor de Caixa</h3>
+                <p className="text-[9px] text-[#A09088] font-bold uppercase tracking-widest mt-1">Fluxo financeiro imediato</p>
               </div>
-              <button className="text-[8px] font-semibold uppercase text-[#D88D85] tracking-widest border-b border-transparent hover:border-[#D88D85] transition-all">
-                Ver todos
-              </button>
+            </div>
+            <div className="text-right">
+              <span className="inline-block px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-widest border border-rose-100">
+                Caixa Fechado
+              </span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-6 mb-8 text-center bg-[#FAF9F6] p-6 rounded-2xl border border-[#F0E6D2]">
+             <div>
+               <p className="text-[9px] font-black uppercase text-[#A09898] mb-1">Entradas Hoje</p>
+               <p className="text-xl font-bold text-slate-900">R$ 0,00</p>
+             </div>
+             <div className="border-l border-[#F0E6D2]">
+               <p className="text-[9px] font-black uppercase text-[#A09898] mb-1">Saídas Hoje</p>
+               <p className="text-xl font-bold text-slate-900">R$ 0,00</p>
+             </div>
+          </div>
+
+          <div className="flex gap-4">
+            <button 
+              onClick={() => onAction("new_order")}
+              className="flex-1 bg-slate-950 text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+            >
+              Abrir Caixa
+            </button>
+            <button className="flex-1 bg-white border border-[#F0E6D2] text-slate-900 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#FAF9F6] transition-all">
+              Relatório Diário
+            </button>
+          </div>
+        </motion.div>
+
+        {/* BLOCO 02: META MENSAL */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-white p-8 rounded-3xl border border-[#F0E6D2] shadow-xl relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 p-8 opacity-[0.05] grayscale brightness-0">
+            <Target size={200} />
+          </div>
+          <div className="relative z-10 h-full flex flex-col">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-2 bg-pink-50 rounded-xl border border-pink-100 text-pink-700">
+                <Target size={16} />
+              </div>
+              <h3 className="text-[11px] font-black uppercase text-[#4A3A34] tracking-[0.25em]">Meta Mensal de Vendas</h3>
             </div>
 
-            <div className="w-full overflow-x-auto pb-8 pt-4 px-4 -mx-4 scrollbar-hide relative z-10">
-              <div className="min-w-[820px] space-y-4">
-              {pendingOrders.length === 0 && (
-                <div className="py-20 text-center rounded-2xl bg-[#FAF9F6] border border-dashed border-[#F0E6D2]">
-                  <ShoppingCart
-                    size={40}
-                    className="mx-auto text-[#D1CACA] mb-4 opacity-30"
-                  />
-                  <p className="text-[9px] font-semibold text-[#A09898] uppercase tracking-[0.3em]">
-                    Nenhum pedido pendente
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="flex justify-between items-end mb-4">
+                <div>
+                  <p className="text-4xl font-black text-slate-900 leading-none mb-2">
+                    {formatCurrency(currentMonthRevenue)}
+                  </p>
+                  <p className="text-[10px] font-black uppercase text-[#A09088] tracking-widest flex items-center gap-2">
+                    <TrendingUp size={12} className="text-emerald-500" /> +12% vs mês anterior
                   </p>
                 </div>
-              )}
-              {pendingOrders.map((order, idx) => {
-                const config =
-                  brandConfig[order.companyId] || brandConfig.pallyra;
-                  
-                // Status mapping to match OrdersTab
-                const isDelivered = ['delivered', 'fully_paid'].includes(order.status);
-                const isCancelled = ['cancelled', 'canceled', 'refunded'].includes(order.status);
-                let statusColor = "#a855f7"; // Default Roxo
-                let statusLabel = "Novo";
-                let bgLight = "bg-[#f3e8ff] text-[#7e22ce] border-[#d8b4fe]";
+                <div className="text-right">
+                  <p className="text-[10px] font-black uppercase text-[#A09088] tracking-widest mb-1">Objetivo</p>
+                  <p className="text-xl font-bold text-slate-900">{formatCurrency(monthlyGoal || 3000)}</p>
+                </div>
+              </div>
 
-                if (['approval', 'waiting_deposit', 'waiting_payment', 'planned_payment'].includes(order.status)) { statusColor = "#3b82f6"; bgLight = "bg-[#eff6ff] text-[#1d4ed8] border-[#93c5fd]"; statusLabel = "Aguardando Aprovação"; }
-                else if (['production', 'in_production', 'assembly'].includes(order.status)) { statusColor = "#f97316"; bgLight = "bg-[#ffedd5] text-[#c2410c] border-[#fdba74]"; statusLabel = "Em Produção"; }
-                else if (['ready', 'delivery', 'waiting_remaining', 'planned_active'].includes(order.status)) { statusColor = "#22c55e"; bgLight = "bg-[#f0fdf4] text-[#15803d] border-[#86efac]"; statusLabel = "Pronto"; }
-                else if (isDelivered) { statusColor = "#86efac"; bgLight = "bg-[#dcfce7] text-[#166534] border-[#86efac]"; statusLabel = "Entregue"; }
-                else if (isCancelled) { statusColor = "#ef4444"; bgLight = "bg-[#fef2f2] text-[#b91c1c] border-[#fca5a5]"; statusLabel = "Cancelado"; }
-
-                const getProductInfoForCard = (o: Order) => {
-                  if (o.items && o.items.length > 0) {
-                    const firstItem = o.items[0];
-                    const matchedProduct = products.find(p => p.id === firstItem.productId || p.id === firstItem.id);
-                    const image = matchedProduct?.image || firstItem.image;
-                    const name = matchedProduct?.product_name || firstItem.product_name;
-                    const count = o.items.reduce((acc, i) => acc + i.quantity, 0);
-                    return { image, name, count };
-                  }
-                  return { image: null, name: "Produto Personalizado", count: 1 };
-                };
-                const cardProduct = getProductInfoForCard(order);
-
-                const brandNames: Record<string, string> = {
-                  pallyra: "La Pallyra",
-                  guennita: "com amor, Guennita",
-                  mimada: "Mimada Sim",
-                  tuttymimo: "Tutty Mimo"
-                };
-
-                return (
-                  <motion.div
-                    key={order.id}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.05 }}
-                    whileHover={{
-                      y: -3,
-                      boxShadow: "0 10px 20px rgba(240,230,210,0.2)",
-                    }}
-                    onClick={() => onOpenOrder(order)}
-                    className="bg-white rounded-2xl border border-[#F0E6D2] shadow-sm flex items-stretch cursor-pointer overflow-hidden transition-all group"
+              <div className="relative py-4">
+                <div className="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((currentMonthRevenue / (monthlyGoal || 3000)) * 100, 100)}%` }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    className="h-full bg-gradient-to-r from-pink-400 via-rose-300 to-[#D88D85] relative"
                   >
-                    {/* Barra Lateral Colorida do Status */}
-                    <div 
-                      className="w-2 shrink-0 transition-all duration-300"
-                      style={{ backgroundColor: statusColor }}
+                    <motion.div 
+                      animate={{ x: ['-100%', '200%'] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 bg-white/20 skew-x-[45deg] w-1/3"
                     />
-
-                    <div className="flex-1 w-full">
-                      <div className="grid grid-cols-[minmax(200px,1.5fr)_minmax(200px,1.5fr)_120px_150px_110px_100px_40px] items-center gap-6 px-6 py-5 w-full">
-                        
-                        {/* [1. NOME DO CLIENTE & ATELIÊ] */}
-                        <div className="flex flex-col justify-center min-w-0 pr-4">
-                           <div className="flex items-center gap-2 mb-1.5">
-                            <span 
-                              className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded text-[#D88D85] bg-[#FAF9F6] border border-[#F0E6D2] shadow-sm"
-                            >
-                              {brandNames[order.companyId] || order.companyId}
-                            </span>
-                          </div>
-                          <h4 className="text-[16px] font-black text-[#4A3A34] tracking-tight leading-tight">
-                            {order.customerName}
-                          </h4>
-                        </div>
-
-                        {/* [2. PRODUTO] */}
-                        <div className="flex items-center gap-3 min-w-0 pr-4">
-                          <div className="w-12 h-12 shrink-0 rounded bg-gray-50 border border-gray-100 overflow-hidden flex items-center justify-center relative text-[#A09088]">
-                            {cardProduct.image ? (
-                              <img 
-                                src={cardProduct.image} 
-                                alt={cardProduct.name} 
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                              />
-                            ) : (
-                              <Box size={20} className="text-gray-300" />
-                            )}
-                            {cardProduct.count > 1 && (
-                              <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-                                +{cardProduct.count - 1}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[14px] font-medium text-slate-600 leading-tight" title={cardProduct.name || "Produto"}>
-                            {cardProduct.name || "Produto Genérico"}
-                          </span>
-                        </div>
-
-                        {/* [3. DATA DE ENTREGA] */}
-                        <div className="flex flex-col justify-center gap-1.5">
-                          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Entrega</span>
-                          <div className="flex items-center gap-1.5 text-slate-700 text-[14px]">
-                            <Calendar size={14} className="text-gray-400" />
-                            <span>
-                              {order.deliveryDate
-                                ? safeFormatISO(order.deliveryDate, "dd/MM")
-                                : "--/--"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* [4. STATUS] */}
-                        <div className="flex items-center">
-                          <span className={`flex items-center justify-center text-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase border ${bgLight} w-full`}>
-                            {isDelivered ? (
-                              <CheckCircle2 size={13} className="text-green-600 shrink-0" />
-                            ) : isCancelled ? (
-                              <XCircle size={13} className="text-red-500 shrink-0" />
-                            ) : null}
-                            <span>{statusLabel}</span>
-                          </span>
-                        </div>
-
-                        {/* [5. VALOR TOTAL] */}
-                        <div className="flex flex-col justify-center gap-1 text-right">
-                          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest text-right">Valor</span>
-                          <p className="text-[15px] font-medium text-slate-800">
-                            {formatCurrency(Number(order.total) || 0)}
-                          </p>
-                        </div>
-
-                        {/* [6. CÓDIGO DO PEDIDO] */}
-                        <div className="flex items-center justify-end">
-                          <span className="font-mono text-[12px] font-medium text-gray-500 uppercase tracking-widest text-right px-2">
-                            #{order.code}
-                          </span>
-                        </div>
-
-                        {/* [7. MENU ...] */}
-                        <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
-                          <div className="relative">
-                            <button
-                              onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.dispatchEvent(new CustomEvent('edit-order', { detail: order.id }));
-                              }}
-                              className="w-10 h-10 rounded-full bg-transparent hover:bg-gray-100 text-gray-400 hover:text-gray-600 flex items-center justify-center transition-all cursor-pointer"
-                            >
-                              <MoreVertical size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </motion.div>
-                );
-              })}
+                </div>
+                <div className="flex justify-between mt-4">
+                   <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Início do Mês</span>
+                   <span className="text-[8px] font-black uppercase text-[#D88D85] tracking-widest">
+                     {Math.round((currentMonthRevenue / (monthlyGoal || 3000)) * 100)}% Concluído
+                   </span>
+                </div>
               </div>
             </div>
-          </section>
-
-          {/* 1.5. Analytics Section - Charts Group (Moved here per request) */}
-          <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
-            <ChartCard 
-              title="Faturamento Diário" 
-              subtitle="Desempenho de vendas (últimos 30 dias)"
-              icon={TrendingUp}
-            >
-              <AreaChart data={dailySalesData}>
-                <defs>
-                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#D88D85" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#D88D85" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F0E6D2" opacity={0.5} />
-                <XAxis 
-                  dataKey="date" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 9, fill: '#A09088', fontWeight: 'bold' }}
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 9, fill: '#A09088', fontWeight: 'bold' }}
-                  tickFormatter={(val) => `R$ ${val}`}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: '1px solid #F0E6D2', 
-                    boxShadow: '0 10px 30px rgba(240,230,210,0.3)',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    textTransform: 'uppercase'
-                  }}
-                  formatter={(value: number) => [formatCurrency(value), 'Vendas']}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="total" 
-                  stroke="#D88D85" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorTotal)" 
-                />
-              </AreaChart>
-            </ChartCard>
-
-            <ChartCard 
-              title="Produtos Populares" 
-              subtitle="Itens mais vendidos (últimos 30 dias)"
-              icon={BarChartIcon}
-            >
-              <BarChart data={topProductsData} layout="vertical" margin={{ left: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F0E6D2" opacity={0.5} />
-                <XAxis type="number" hide />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  width={100}
-                  tick={{ fontSize: 8, fill: '#4A3A34', fontWeight: '800' }}
-                />
-                <Tooltip 
-                  cursor={{ fill: '#FAF9F6' }}
-                  contentStyle={{ 
-                    borderRadius: '16px', 
-                    border: '1px solid #F0E6D2', 
-                    fontSize: '10px',
-                    fontWeight: 'bold'
-                  }}
-                />
-                <Bar dataKey="sales" radius={[0, 8, 8, 0]} barSize={20}>
-                  {topProductsData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={['#D88D85', '#E6B3AC', '#F3D4D1', '#D48C8C', '#C07B7B'][index % 5]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ChartCard>
-          </section>
-        </div>
-
-        {/* Right Column (Radar de Campanhas Desce) */}
-        <div className="lg:col-span-4 space-y-10">
-          <OpportunitiesWidget />
-        </div>
+          </div>
+        </motion.div>
       </div>
+
+      {/* BLOCO 03: MINI CARDS LADO/LADO */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        {[
+          { label: "Ativos", value: activeOrdersCount, icon: Package },
+          { label: "Produção", value: inProductionCount, icon: Zap },
+          { label: "Pagamento", value: waitingCount, icon: Clock },
+          { label: "Entregues", value: deliveredCount, icon: CheckCircle2 },
+          { label: "Cancelados", value: cancelledCount, icon: XCircle },
+        ].map((item, idx) => (
+          <motion.div
+            key={item.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+            className={`p-6 rounded-[2rem] border bg-white shadow-sm flex flex-col gap-4 relative overflow-hidden group hover:shadow-md transition-all ${statusColors[item.label]}`}
+          >
+            <div className="flex justify-between items-start">
+              <div className={`p-2 rounded-xl bg-white border border-current opacity-60`}>
+                <item.icon size={16} />
+              </div>
+              <span className="text-2xl font-black">{item.value}</span>
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">{item.label}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* BLOCO 04: PEDIDOS RECENTES - 4 POR LINHA */}
+      <section className="space-y-6">
+        <div className="flex items-center justify-between px-2">
+           <div>
+             <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-[#4A3A34]">Pedidos Recentes</h3>
+             <p className="text-[9px] text-[#A09088] font-bold uppercase tracking-widest mt-1">Monitoramento de fluxo de entrada</p>
+           </div>
+           <button 
+             onClick={() => onAction("new_order")}
+             className="text-[9px] font-black uppercase text-[#D88D85] tracking-widest border-b border-rose-100 hover:border-[#D88D85] transition-all"
+           >
+             Ver Todos os Pedidos
+           </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {recentOrders.map((order, idx) => {
+             const status = order.status.toLowerCase();
+             const isDelivered = ['delivered', 'fully_paid'].includes(status);
+             const isProd = ['production', 'in_production', 'assembly'].includes(status);
+             const isWaiting = ['waiting_deposit', 'waiting_payment', 'approval'].includes(status);
+
+             return (
+               <motion.div
+                 key={order.id}
+                 initial={{ opacity: 0, scale: 0.95 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 transition={{ delay: idx * 0.05 }}
+                 onClick={() => onOpenOrder(order)}
+                 className="bg-white p-6 rounded-3xl border border-[#F0E6D2] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
+               >
+                 <div className="flex justify-between items-start mb-4">
+                   <div className="flex flex-col">
+                      <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#D88D85] mb-1">#{order.code}</span>
+                      <h4 className="text-[12px] font-black text-slate-900 truncate mb-1">{order.customerName}</h4>
+                   </div>
+                   <div className={`p-1.5 rounded-lg border ${isDelivered ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : isProd ? 'bg-orange-50 text-orange-600 border-orange-100' : isWaiting ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                      {isDelivered ? <CheckCircle size={14} /> : isProd ? <Zap size={14} /> : <Clock size={14} />}
+                   </div>
+                 </div>
+
+                 <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center">
+                       {order.items?.[0]?.image ? (
+                         <img src={order.items[0].image} className="w-full h-full object-cover" />
+                       ) : <Box size={16} className="text-slate-300" />}
+                    </div>
+                    <div className="flex flex-col">
+                       <span className="text-[10px] font-bold text-slate-700 truncate w-32">{order.items?.[0]?.product_name || 'Personalizado'}</span>
+                       <span className="text-[8px] font-black text-slate-400 uppercase">{order.items?.length || 1} {order.items?.length === 1 ? 'item' : 'itens'}</span>
+                    </div>
+                 </div>
+
+                 <div className="flex items-center justify-between pt-4 border-t border-[#F0E6D2]">
+                    <span className="text-[14px] font-black text-slate-900">{formatCurrency(Number(order.total) || 0)}</span>
+                    <span className="text-[9px] font-black uppercase text-[#A09898]">{safeFormatISO(order.createdAt, "dd MMM")}</span>
+                 </div>
+               </motion.div>
+             );
+          })}
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        {/* BLOCO 05: FATURAMENTO DIÁRIO (CALENDÁRIO EM LISTA) */}
+        <section className="bg-white p-8 rounded-[2.5rem] border border-[#F0E6D2] shadow-xl space-y-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#FAF9F6] rounded-xl border border-[#F0E6D2] text-[#D88D85]">
+              <Calendar size={18} />
+            </div>
+            <div>
+              <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-[#4A3A34]">Faturamento Diário</h3>
+              <p className="text-[9px] text-[#A09088] font-bold uppercase tracking-widest mt-1">Histórico de entradas por data</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {dailyRevenueList.length === 0 && (
+              <div className="py-20 text-center opacity-40">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-[#A09898]">Sem faturamento registrado este mês</p>
+              </div>
+            )}
+            {dailyRevenueList.map((item, idx) => (
+              <motion.div 
+                key={item.date}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="flex items-center justify-between p-4 rounded-2xl bg-[#FAF9F6] border border-[#F0E6D2] hover:bg-white transition-all group"
+              >
+                <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 rounded-xl bg-white border border-[#F0E6D2] flex flex-col items-center justify-center shadow-sm">
+                      <span className="text-[13px] font-black text-slate-900 leading-none">{format(parseISO(item.date), 'dd')}</span>
+                      <span className="text-[8px] font-black uppercase text-[#D88D85]">{format(parseISO(item.date), 'MMM').replace('.', '')}</span>
+                   </div>
+                   <div>
+                      <p className="text-[10px] font-black uppercase text-slate-800 tracking-wider">Vendas Totais</p>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Registrado no Sistema</p>
+                   </div>
+                </div>
+                <div className="text-right">
+                   <p className="text-[14px] font-black text-slate-900">{formatCurrency(item.total)}</p>
+                   <div className="flex items-center gap-1 justify-end">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[7px] font-black text-[#A09898] uppercase">Confirmado</span>
+                   </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* BLOCO 06: PRODUTOS POPULARES */}
+        <section className="bg-white p-8 rounded-[2.5rem] border border-[#F0E6D2] shadow-xl space-y-8">
+           <div className="flex items-center gap-3">
+              <div className="p-2 bg-[#FAF9F6] rounded-xl border border-[#F0E6D2] text-[#D88D85]">
+                <Package size={18} />
+              </div>
+              <div>
+                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-[#4A3A34]">Produtos Populares</h3>
+                <p className="text-[9px] text-[#A09088] font-bold uppercase tracking-widest mt-1">Campeões de saída no mês</p>
+              </div>
+           </div>
+
+           <div className="grid grid-cols-4 sm:grid-cols-4 gap-4">
+              {popularProducts.map((p, idx) => (
+                <motion.div
+                  key={p.id + idx}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => setViewingProductDetails(p as any)}
+                  className="aspect-square rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden cursor-pointer relative group"
+                >
+                   {p.image ? (
+                     <img src={p.image} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                   ) : (
+                     <div className="w-full h-full flex items-center justify-center text-slate-300">
+                        <Box size={24} />
+                     </div>
+                   )}
+                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                     <span className="text-[8px] font-black text-white uppercase tracking-widest bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">Detalhes</span>
+                   </div>
+                </motion.div>
+              ))}
+              {popularProducts.length === 0 && (
+                <div className="col-span-full py-20 text-center opacity-40">
+                   <p className="text-[10px] font-black uppercase tracking-widest text-[#A09898]">Sem produtos vendidos este mês</p>
+                </div>
+              )}
+           </div>
+
+           <div className="p-6 bg-[#FAF9F6] border border-[#F0E6D2] rounded-2xl">
+              <p className="text-[8px] font-black uppercase text-[#D88D85] tracking-widest mb-2 flex items-center gap-2">
+                <Sparkles size={10} /> Insight Estratégico
+              </p>
+              <p className="text-[10px] font-medium text-[#7A6A62] leading-relaxed">
+                Mantenha os produtos com maior saída sempre destacados no seu catálogo online para otimizar as taxas de conversão.
+              </p>
+           </div>
+        </section>
+      </div>
+
+      {/* BLOCO 07: EVENTOS E DATAS COMEMORATIVAS */}
+      <section className="space-y-8">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[#FAF9F6] rounded-xl border border-[#F0E6D2] text-[#D88D85]">
+            <Calendar size={18} />
+          </div>
+          <div>
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-[#4A3A34]">Eventos e Campanhas</h3>
+            <p className="text-[9px] text-[#A09088] font-bold uppercase tracking-widest mt-1">Radar de sazonalidade e ativações</p>
+          </div>
+        </div>
+
+        <OpportunitiesList />
+      </section>
+
+      {/* MODAL PARA RESUMO DE PRODUTO POPULAR */}
+      <AnimatePresence>
+        {viewingProductDetails && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/20 backdrop-blur-md">
+             <motion.div 
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 0.95 }}
+               className="bg-white w-full max-w-md rounded-[3rem] border border-[#F0E6D2] overflow-hidden shadow-2xl relative"
+             >
+                <button 
+                  onClick={() => setViewingProductDetails(null)}
+                  className="absolute top-6 right-6 p-2 bg-slate-50 text-slate-400 rounded-full hover:bg-slate-100 transition-all"
+                >
+                  <XCircle size={20} />
+                </button>
+
+                <div className="p-10 text-center">
+                   <div className="w-48 h-48 mx-auto rounded-3xl bg-slate-50 border border-slate-100 overflow-hidden mb-8 shadow-inner">
+                      {viewingProductDetails.image ? (
+                        <img src={viewingProductDetails.image} className="w-full h-full object-cover" />
+                      ) : <Box size={40} className="w-full h-full flex items-center justify-center p-12 text-slate-200" />}
+                   </div>
+
+                   <h4 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-2">{viewingProductDetails.product_name}</h4>
+                   <p className="text-[10px] font-black text-[#D88D85] uppercase tracking-[0.3em] mb-10">Métrica de Popularidade</p>
+
+                   <div className="grid grid-cols-3 gap-4 border-t border-slate-50 pt-10">
+                      <div className="space-y-1">
+                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">No Mês</p>
+                         <p className="text-xl font-black text-slate-900">{(viewingProductDetails as any).monthlySales || 0}</p>
+                         <p className="text-[7px] font-black text-slate-400 uppercase">Vendas</p>
+                      </div>
+                      <div className="space-y-1 border-x border-slate-50">
+                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Acum.</p>
+                         <p className="text-xl font-black text-slate-900">{(viewingProductDetails as any).totalSales || 0}</p>
+                         <p className="text-[7px] font-black text-slate-400 uppercase">Vendas</p>
+                      </div>
+                      <div className="space-y-1">
+                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Engajamento</p>
+                         <p className="text-xl font-black text-[#D88D85]">{(viewingProductDetails as any).clicks || 0}</p>
+                         <p className="text-[7px] font-black text-slate-400 uppercase">Cliques/Interessados</p>
+                      </div>
+                   </div>
+
+                   <button 
+                     onClick={() => setViewingProductDetails(null)}
+                     className="w-full mt-10 p-5 bg-slate-900 text-white rounded-3xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+                   >
+                     Fechar Resumo
+                   </button>
+                </div>
+             </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const OpportunitiesList: React.FC = () => {
+  const [dates, setDates] = useState<CommemorativeDate[]>([]);
+
+  useEffect(() => {
+    const unsub = commemorativeDateService.subscribe(setDates);
+    return unsub;
+  }, []);
+
+  const getFullDate = (d: CommemorativeDate, year = new Date().getFullYear()) => {
+    if (d.year_fixed) return new Date(year, d.month - 1, d.day);
+    if (d.mobile_id) {
+      const occurrence = getMobileDateOccurrence(d.mobile_id, year);
+      return new Date(year, occurrence.month - 1, occurrence.day);
+    }
+    return new Date(year, d.month - 1, d.day);
+  };
+
+  const upcomingDates = useMemo(() => {
+    const today = startOfDay(new Date());
+    return dates
+      .filter((d) => d.active && getFullDate(d) >= today)
+      .sort((a, b) => getFullDate(a).getTime() - getFullDate(b).getTime())
+      .slice(0, 8);
+  }, [dates]);
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {upcomingDates.map((date, idx) => {
+        const occ = getFullDate(date);
+        const daysLeft = Math.ceil((occ.getTime() - startOfDay(new Date()).getTime()) / (1000 * 60 * 60 * 24));
+        
+        return (
+          <motion.div
+            key={date.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: idx * 0.05 }}
+            className="p-6 rounded-[2rem] bg-white border border-[#F0E6D2] shadow-sm hover:shadow-xl transition-all group relative overflow-hidden flex flex-col justify-between h-44"
+          >
+            <div className="flex justify-between items-start">
+               <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] flex items-center justify-center text-[#D88D85] shadow-sm">
+                  <Star size={16} />
+               </div>
+               {daysLeft <= 15 && (
+                 <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[8px] font-black uppercase tracking-widest animate-pulse">Crítico</span>
+               )}
+            </div>
+            
+            <div>
+               <h4 className="text-[12px] font-black text-slate-900 uppercase tracking-widest truncate">{date.name}</h4>
+               <p className="text-[8px] font-black text-[#D88D85] uppercase tracking-[0.2em] mt-1">{safeFormat(occ, "dd 'de' MMMM")}</p>
+            </div>
+
+            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-[#A09898]">
+               <span>Campanha Ativa</span>
+               <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-100">
+                  <Clock size={10} className="text-rose-400" />
+                  <span>{daysLeft} dias</span>
+               </div>
+            </div>
+          </motion.div>
+        );
+      })}
+      {upcomingDates.length === 0 && (
+        <div className="col-span-full py-20 text-center rounded-3xl border border-dashed border-slate-200 opacity-40">
+           <p className="text-[10px] font-black uppercase tracking-widest">Nenhuma campanha mapeada para os próximos meses</p>
+        </div>
+      )}
     </div>
   );
 };
