@@ -615,7 +615,7 @@ export function CheckoutModal({
 
       {/* Two Columns Layout for Steps 1 & 2 */}
       {step < 3 && (
-        <div className="w-full max-w-5xl mx-auto px-4 lg:px-8 py-6 md:py-8 flex flex-col lg:flex-row gap-8 items-start relative">
+        <div className="w-full max-w-7xl mx-auto px-4 lg:px-8 py-6 md:py-12 flex flex-col lg:flex-row gap-10 items-start relative lg:pb-32">
           
           {/* Left Column (Dynamic Forms) */}
           <div className="flex-grow w-full bg-white p-6 md:p-8 lg:p-12 rounded-3xl border border-gray-100/80 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)]">

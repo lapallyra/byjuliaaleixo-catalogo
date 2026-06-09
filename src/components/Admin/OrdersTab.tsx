@@ -586,8 +586,8 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
       </div>
 
       {/* Main Orders Render: Breathtaking Horizontal Cards instead of Tables */}
-      <div className="w-full overflow-x-auto pb-8 pt-4 px-4 -mx-4 scrollbar-hide">
-        <div className="min-w-[820px] space-y-6">
+      <div className="w-full pb-8 pt-4">
+        <div className="space-y-6">
         {orders.filter((order) => {
           if (selectedStatusFilter === "all") return true;
           const group = STATUS_GROUPS.find((g) => g.id === selectedStatusFilter);
@@ -625,32 +625,63 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                   style={{ backgroundColor: statusGroup?.color || "#e2e8f0" }}
                 />
 
-                {/* Main Content Area - Professional Stripe/Notion Grid */}
+                {/* Main Content Area - Professional Fluid Grid */}
                 <div className="flex-1 w-full">
-                  <div className="grid grid-cols-[minmax(250px,1.5fr)_130px_160px_120px_50px] items-center gap-4 px-5 py-4 w-full">
+                  <div className="flex flex-col md:flex-row md:items-center gap-8 px-6 py-5 w-full">
                     
-                    {/* [1. NOME DO CLIENTE & CÓDIGO] */}
-                    <div className="flex flex-col justify-center min-w-0 pr-4">
-                      <div className="flex items-center gap-2 mb-1">
+                    {/* [1. CLIENTE & ATELIÊ] */}
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="font-mono text-[14px] font-bold text-slate-800 tracking-wider">
                           {order.code}
                         </span>
                         <span 
-                          className="text-[10px] font-medium uppercase tracking-widest px-1.5 py-0.5 rounded text-gray-500 bg-gray-50 border border-gray-100"
+                          className="text-[9px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-lg text-slate-500 bg-slate-50 border border-slate-100"
                         >
                           {brandTheme.name}
                         </span>
                       </div>
-                      <h4 className="text-[15px] font-medium text-slate-700 tracking-tight truncate w-full" title={order.customerName}>
+                      <h4 className="text-[17px] font-bold text-slate-700 tracking-tight leading-tight">
                         {order.customerName}
                       </h4>
                     </div>
 
-                    {/* [2. DATA DE ENTREGA] */}
-                    <div className="flex flex-col justify-center gap-1.5">
-                      <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Entrega</span>
-                      <div className="flex items-center gap-1.5 text-slate-700 text-[14px]">
-                        <Calendar size={14} className="text-gray-400" />
+                    {/* [2. PRODUTO] */}
+                    <div className="flex items-center gap-4 min-w-[240px] flex-[1.5]">
+                      <div className="w-14 h-14 shrink-0 rounded-2xl bg-white border border-slate-100 overflow-hidden flex items-center justify-center relative shadow-sm">
+                        {cardProduct.image ? (
+                          <img 
+                            src={cardProduct.image} 
+                            alt={cardProduct.name} 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <Box size={24} className="text-slate-200" />
+                        )}
+                        {cardProduct.count > 1 && (
+                          <span className="absolute -top-1 -right-1 bg-pink-600 text-white text-[8px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                            {cardProduct.count}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                         <span className="text-[14px] font-bold text-slate-600 leading-tight">
+                            {cardProduct.name || "Produto Personalizado"}
+                         </span>
+                         {order.items && order.items.length > 1 && (
+                           <span className="text-[9px] font-black text-pink-400 uppercase tracking-widest mt-1">
+                             + {order.items.length - 1} outros itens
+                           </span>
+                         )}
+                      </div>
+                    </div>
+
+                    {/* [3. DATA DE ENTREGA] */}
+                    <div className="flex flex-col justify-center gap-1.5 min-w-[100px]">
+                      <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Entrega</span>
+                      <div className="flex items-center gap-2 text-slate-700 text-[13px] font-bold">
+                        <Calendar size={14} className="text-pink-300" />
                         <span>
                           {order.deliveryDate
                             ? safeFormatISO(order.deliveryDate, "dd/MM")
@@ -660,27 +691,27 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                     </div>
 
                     {/* [3. STATUS] */}
-                    <div className="flex items-center">
-                      <span className={`flex items-center justify-center text-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-600 border-slate-200"} w-full`}>
+                    <div className="min-w-[150px]">
+                      <span className={`flex items-center justify-center text-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-600 border-slate-200"} w-full shadow-sm`}>
                         {order.status === 'delivered' || order.status === 'fully_paid' ? (
-                          <CheckCircle2 size={13} className="text-green-600 shrink-0" />
+                          <CheckCircle2 size={13} className="shrink-0" />
                         ) : order.status === 'cancelled' ? (
-                          <XCircle size={13} className="text-red-500 shrink-0" />
+                          <XCircle size={13} className="shrink-0" />
                         ) : null}
                         <span>{statusGroup?.label || order.status}</span>
                       </span>
                     </div>
 
                     {/* [4. VALOR TOTAL] */}
-                    <div className="flex flex-col justify-center gap-1 text-right">
-                      <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest text-right">Valor</span>
-                      <p className="text-[15px] font-medium text-slate-800">
+                    <div className="flex flex-col justify-center gap-1 md:text-right min-w-[110px]">
+                      <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Total</span>
+                      <p className="text-[16px] font-black text-slate-900 tracking-tight">
                         {formatCurrency(Number(order.total) || 0)}
                       </p>
                     </div>
 
                     {/* [5. MENU ...] */}
-                    <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex justify-end pr-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <ActionsDropdown 
                         order={order}
                         onOpenDetail={() => setIsDetailOpen(order.id)}

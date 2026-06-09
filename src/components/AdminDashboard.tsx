@@ -155,30 +155,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     const unsubFeedbacks = subscribeToFeedbacks(setFeedbacks);
     const unsubFunnel = subscribeToCheckoutEvents(setCheckoutEvents);
 
-    // LOGS SOLICITADOS NA TAREFA
-    const logInterval = setInterval(() => {
-      console.log("--- AUDITORIA DE LAYOUT DEV ---");
-      
-      const sections = document.querySelectorAll('div, section, main, aside');
-      sections.forEach(el => {
-        const bounds = el.getBoundingClientRect();
-        
-        // Containers supostamente vazios mas com muita altura
-        if (bounds.height > 100 && el.children.length === 0) {
-          console.log("[VAZIO > 100px]", el.tagName, el.className, bounds.height);
-        }
-        
-        // Seções principais e altura
-        if (el.id || el.tagName.toLowerCase() === 'main' || el.classList.contains('flex-1')) {
-          console.log("[SEÇÃO]", el.tagName, el.id || el.className, "Altura Renderizada:", bounds.height);
-        }
-      });
-      
-      // Checar componentes de estado
-      if (tabError) console.log("[FALHA]", "Componente/Aba", activeTab, "Falha:", tabError);
-      
-    }, 5000);
-
     return () => {
       window.removeEventListener('edit-order', handleEditOrder);
       unsubProducts();
@@ -189,7 +165,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       unsubSuggestions();
       unsubFeedbacks();
       unsubFunnel();
-      clearInterval(logInterval);
     };
   }, [isAdmin, user]);
 
@@ -251,7 +226,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   }, {} as Record<string, typeof menuItems>);
 
   return (
-    <div className="feminine-admin min-h-screen bg-[#FAF9F6] text-[#4A4444] flex font-sans overflow-hidden relative scroll-smooth">
+    <div className="feminine-admin h-screen bg-[#FAF9F6] text-[#4A4444] flex font-sans overflow-hidden relative">
       <AdminNotificationPortal />
 
       {/* Sidebar navigation - Desktop */}
@@ -442,7 +417,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
         {/* Top Header Bar */}
         <header className="h-20 bg-white/70 backdrop-blur-md border-b border-[#F0E6D2] px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0">
           <div className="flex items-center gap-6 flex-1">
@@ -510,7 +485,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         </header>
 
         {/* Content Tabs Container */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-10 scrollbar-hide scroll-smooth scroll-pb-20">
+        <div className="flex-1 overflow-y-auto w-full max-w-screen-2xl mx-auto p-4 md:p-8 lg:p-10 xl:p-12 scrollbar-hide scroll-smooth scroll-pb-20">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}

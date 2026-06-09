@@ -50,7 +50,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm print:p-0 print:bg-transparent overflow-y-auto">
       {/* Printable Area */}
-      <div className="bg-white w-full max-w-4xl max-h-[90vh] md:max-h-[95vh] rounded-[2rem] shadow-2xl overflow-y-auto scrollbar-hide flex flex-col relative print:shadow-none print:max-h-none print:w-full print:rounded-none my-auto">
+      <div className="bg-white w-full max-w-screen-lg max-h-[90vh] md:max-h-[95vh] rounded-[2rem] shadow-2xl overflow-y-auto scrollbar-hide flex flex-col relative print:shadow-none print:max-h-none print:w-full print:rounded-none my-auto">
         {/* Header - Not Printed */}
         <div className="p-6 border-b border-[#F0E6D2] flex justify-between items-center print:hidden bg-white sticky top-0 z-10">
           <div className="flex gap-2">

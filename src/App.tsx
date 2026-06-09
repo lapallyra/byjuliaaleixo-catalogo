@@ -15,11 +15,9 @@ import { AteliersPresentationView } from './components/AteliersPresentationView'
 import { AboutMeView } from './components/AboutMeView';
 import { GiftListInfoView } from './components/GiftListInfoView';
 import { ColecoesView } from './components/ColecoesView';
-import { StudioMockup } from './components/StudioMockup';
-import { CookieBanner } from './components/CookieBanner';
-import { SuggestionBox } from './components/SuggestionBox';
 import { TrackingView } from './components/TrackingView';
 import { TopAnnouncementBar } from './components/TopAnnouncementBar';
+import { CookieBanner } from './components/CookieBanner';
 import { INITIAL_CONFIG, PRODUCTS } from './constants';
 import { AppConfig, CompanyId, CartItem, Product } from './types';
 import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
@@ -28,38 +26,6 @@ import { PrizeRouletteModal } from './components/PrizeRouletteModal';
 import { sendNotifications } from './services/notificationService';
 import { updateOrder } from './services/firebaseService';
 import { playSuccessSound } from './utils/audio';
-
-function GlobalLayoutAuditor() {
-  const location = useLocation();
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      console.log(`\n=== AUDITORIA DE LAYOUT DEV: ${location.pathname} ===`);
-      const elements = Array.from(document.querySelectorAll('*'));
-      
-      let emptyContainersCount = 0;
-      
-      elements.forEach((el) => {
-        if (['IMG', 'BR', 'HR', 'INPUT', 'TEXTAREA', 'SVG', 'PATH', 'IFRAME', 'SCRIPT'].includes(el.tagName.toUpperCase())) return;
-        
-        const bounds = el.getBoundingClientRect();
-        const hasContent = el.innerHTML.trim().length > 0;
-        
-        if (bounds.height > 100 && !hasContent && (el as HTMLElement).offsetHeight > 0) {
-          console.warn(`[GHOST SPACE] Encontrado container vazio > 100px.`);
-          console.warn(`Altura: ${bounds.height}px | Tag: ${el.tagName} | Classes: ${el.className}`);
-          emptyContainersCount++;
-        }
-      });
-      
-      console.log(`[AUDIT COMPLETED] ${emptyContainersCount} ghost containers reportados.`);
-    }, 2000); 
-    
-    return () => clearTimeout(timeout);
-  }, [location.pathname]);
-
-  return null;
-}
 
 function SparklesContainer({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -95,8 +61,7 @@ function SparklesContainer({ children }: { children: React.ReactNode }) {
     }
   };
 
-  return <div className="app-wrapper w-full flex flex-col items-stretch min-h-[100dvh]" onMouseMove={createSparkles}>
-    <GlobalLayoutAuditor />
+  return <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen" onMouseMove={createSparkles}>
     {children}
   </div>;
 }
@@ -313,7 +278,6 @@ function MainApp() {
   return (
     <SparklesContainer>
       <TopAnnouncementBar />
-      <CookieBanner />
       <Routes>
         <Route path="/" element={<EntryView config={config} allProducts={allProducts} />} />
         
@@ -366,12 +330,6 @@ function MainApp() {
           </ProtectedRoute>
         } />
 
-        <Route path="/studiomockup" element={
-          <ProtectedRoute>
-            <StudioMockup />
-          </ProtectedRoute>
-        } />
-        
         {/* Document Search */}
         <Route path="/document" element={<DocumentSearch onGoBack={() => window.history.back()} />} />
         

@@ -371,7 +371,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       </motion.div>
 
       {/* 1. Header Stats */}
-      <header className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <header className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-6">
         {[
           {
             title: "Ativos",
@@ -452,9 +452,9 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       </div>
 
       {/* 2. Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
         {/* Left Column (Main - Pedidos Recentes Sobe) */}
-        <div className="lg:col-span-8">
+        <div className="xl:col-span-8">
           <section className="bg-[#FFFFFF] p-8 rounded-[2rem] border border-[#F0E6D2] shadow-[0_24px_55px_rgba(240,230,210,0.3)] relative overflow-hidden min-h-[400px]">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
               <Package size={200} />
@@ -555,7 +555,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                               {brandNames[order.companyId] || order.companyId}
                             </span>
                           </div>
-                          <h4 className="text-[15px] font-medium text-slate-800 tracking-tight truncate w-full">
+                          <h4 className="text-[15px] font-bold text-slate-800 tracking-tight leading-tight">
                             {order.customerName}
                           </h4>
                         </div>
@@ -579,7 +579,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                               </span>
                             )}
                           </div>
-                          <span className="text-[14px] font-medium text-slate-600 truncate w-full" title={cardProduct.name || "Produto"}>
+                          <span className="text-[14px] font-medium text-slate-600 leading-tight" title={cardProduct.name || "Produto"}>
                             {cardProduct.name || "Produto Genérico"}
                           </span>
                         </div>
@@ -649,7 +649,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
 
         {/* Right Column (Radar de Campanhas Desce) */}
-        <div className="lg:col-span-4 space-y-10">
+        <div className="xl:col-span-4 space-y-10">
           <OpportunitiesWidget />
         </div>
       </div>

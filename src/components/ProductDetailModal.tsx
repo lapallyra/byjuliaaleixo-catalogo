@@ -81,7 +81,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.98, y: 10 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className={`w-full max-w-[1240px] h-[100dvh] md:h-[85vh] overflow-hidden relative flex flex-col md:flex-row shadow-[0_40px_100px_rgba(0,0,0,0.6)] md:rounded-[2.5rem] z-10 ${theme.bg}`}
+        className={`w-full max-w-screen-xl h-[100dvh] md:h-[85vh] overflow-hidden relative flex flex-col md:flex-row shadow-[0_40px_100px_rgba(0,0,0,0.6)] md:rounded-[2.5rem] z-10 ${theme.bg}`}
       >
         <button 
           onClick={onClose}

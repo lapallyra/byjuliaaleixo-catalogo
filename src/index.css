@@ -71,14 +71,13 @@ html {
 @layer base {
   html, body {
     width: 100%;
-    height: 100%;
+    min-height: 100dvh;
     margin: 0;
     padding: 0;
     background-color: #ffffff;
     color: #050505;
-    font-family: "Tahoma", sans-serif;
+    font-family: inherit;
     line-height: 1.25;
-    scroll-behavior: smooth;
   }
 
   #root {
@@ -86,19 +85,28 @@ html {
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    background-color: #ffffff;
-    color: #050505;
-    font-family: "Tahoma", sans-serif;
-    line-height: 1.25;
+    background-color: inherit;
+  }
+
+  /* Fluid Typography Scale */
+  :root {
+    --text-fluid-xs: clamp(0.7rem, 0.65rem + 0.25vw, 0.85rem);
+    --text-fluid-sm: clamp(0.8rem, 0.75rem + 0.3vw, 1rem);
+    --text-fluid-base: clamp(0.95rem, 0.9rem + 0.4vw, 1.25rem);
+    --text-fluid-lg: clamp(1.1rem, 1rem + 0.6vw, 1.5rem);
+    --text-fluid-xl: clamp(1.3rem, 1.2rem + 0.8vw, 2rem);
+    --text-fluid-2xl: clamp(1.5rem, 1.35rem + 1.2vw, 2.75rem);
   }
   
-  /* Redefine classical screen heights to use modern, dynamic viewport height */
+  /* Modern Dynamic Viewport Utilities */
   .min-h-screen {
-    min-height: 100dvh !important;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .h-screen {
-    height: 100dvh !important;
+    height: 100vh;
+    height: 100dvh;
   }
   
   p {
@@ -319,12 +327,13 @@ html {
       radial-gradient(at 100% 0%, rgba(131, 24, 67, 0.15) 0px, transparent 50%);
   }
 
-  body:has(.feminine-admin), html:has(.feminine-admin), #root:has(.feminine-admin) {
+  body:has(.feminine-admin) {
     background-color: #0b0507 !important;
   }
 
   .feminine-admin {
     background-color: #0b0507;
+    min-height: 100dvh;
   }
 
   .feminine-admin svg.lucide {
