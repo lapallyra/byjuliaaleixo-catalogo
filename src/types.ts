@@ -113,6 +113,7 @@ export interface Customer {
   code: string; // 5 digits
   name: string;
   contact: string;
+  email?: string;
   cpfCnpj: string;
   birthDate: string;
   address: string;
@@ -180,6 +181,7 @@ export interface SiteSettings {
   store_logo_x?: number;
   store_logo_y?: number;
   store_name?: string;
+  store_legal_name?: string;
   store_slogan?: string;
   store_cnpj?: string;
   store_contact?: string;
@@ -201,6 +203,7 @@ export interface SiteSettings {
   theme_accent_color?: string;
   theme_text_color?: string;
   checkout_banner?: string;
+  instagram?: string;
   about_me_photo?: string;
   about_me_title?: string;
   about_me_bio?: string;

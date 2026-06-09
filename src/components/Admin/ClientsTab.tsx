@@ -293,101 +293,61 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(max(300px,20%),1fr))] gap-6 pb-20">
-        {filteredCustomers.length === 0 && (
-          <div className="col-span-full py-32 text-center bg-white rounded-3xl border border-dashed border-lilac/20">
-            <p className="text-[#A09898] italic font-black text-[10px] tracking-widest opacity-50 uppercase">
-              Nenhum cliente encontrado no sistema
-            </p>
-          </div>
-        )}
-        {filteredCustomers.map((c, idx) => (
-          <div
-            key={c.id}
-            className={`bg-white rounded-2xl border transition-all duration-300 p-8 flex flex-col gap-6 hover:shadow-xl group relative min-h-[360px] ${
-              selectedIds.includes(c.id) ? "border-lilac ring-1 ring-lilac/20" : "border-lilac/10 hover:border-lilac/30"
-            }`}
-          >
-            {/* Checkbox Overlay */}
-            <div className="absolute top-6 left-6 z-10" onClick={(e) => e.stopPropagation()}>
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(c.id)}
-                onChange={(e) => handleSelectOne(c.id, e.target.checked)}
-                className="rounded border-gray-300 text-lilac focus:ring-lilac cursor-pointer scale-110"
-              />
-            </div>
-
-            <div className="flex items-center gap-4 pl-8">
-              <div className="w-14 h-14 rounded-2xl bg-lilac/5 text-lilac flex items-center justify-center shrink-0 shadow-sm border border-lilac/10 group-hover:bg-lilac group-hover:text-white transition-colors">
-                <Users size={24} />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight truncate">
-                  {c.name}
-                </h4>
-                <span className="text-[9px] font-black text-lilac tracking-widest uppercase">
-                  #{c.code}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 py-4 border-t border-b border-gray-50">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-slate-50 text-lilac">
-                  <Phone size={14} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">Contato</span>
-                  <span className="text-[10px] font-black text-slate-700">
-                    {formatPhone(c.contact)}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-slate-50 text-emerald-500">
-                  <TrendingUp size={14} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">Investimento</span>
-                  <span className="text-[11px] font-mono font-black text-slate-900">
-                    R$ {(c.totalSpent || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 pt-2">
-              <div className="flex gap-2">
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleOpenEdit(c); }}
-                  className="p-3 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-slate-900 hover:bg-white transition-all border border-transparent hover:border-slate-200"
-                  title="Editar"
-                >
-                  <Edit size={14} />
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }}
-                  className="p-3 rounded-xl bg-slate-50 text-rose-300 hover:text-white hover:bg-rose-500 transition-all border border-transparent"
-                  title="Excluir"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedCustomer(c);
-                  setIsDetailModalOpen(true);
-                }}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-9000 text-white text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md active:scale-95"
-              >
-                Perfil Completo
-              </button>
-            </div>
-          </div>
-        ))}
+      <div className="overflow-x-auto bg-white rounded-3xl border border-lilac/10 shadow-sm">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-slate-50/50 border-b border-lilac/5">
+              <th className="px-6 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Código</th>
+              <th className="px-6 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Nome do Cliente</th>
+              <th className="px-6 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Contato / WhatsApp</th>
+              <th className="px-6 py-5 text-right text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Ações</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-lilac/5">
+            {filteredCustomers.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-32 text-center text-[#A09898] italic font-black text-[10px] tracking-widest opacity-50 uppercase">
+                  Nenhum cliente encontrado no sistema
+                </td>
+              </tr>
+            ) : (
+              filteredCustomers.map((c) => (
+                <tr key={c.id} className="hover:bg-lilac/[0.02] transition-colors group">
+                  <td className="px-6 py-5">
+                    <span className="text-[10px] font-black text-lilac uppercase tracking-widest">#{c.code}</span>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="text-sm font-black text-slate-900 uppercase tracking-tight">{c.name}</span>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2">
+                      <Phone size={12} className="text-lilac/40" />
+                      <span className="text-sm font-bold text-slate-700">{formatPhone(c.contact)}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleOpenEdit(c)}
+                        className="p-2.5 rounded-xl bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-white transition-all border border-transparent hover:border-slate-200"
+                        title="Editar"
+                      >
+                        <Edit size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="p-2.5 rounded-xl bg-slate-50 text-rose-300 hover:text-white hover:bg-rose-500 transition-all border border-transparent"
+                        title="Excluir"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {isDetailModalOpen && selectedCustomer && (
@@ -535,11 +495,12 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Nome Completo
+                    Nome Completo <span className="text-lilac">*</span>
                   </label>
                   <input
                     required
                     type="text"
+                    placeholder="Ex: Maria Silva"
                     className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.name}
                     onChange={(e) =>
@@ -549,7 +510,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    WhatsApp / Contato
+                    Contato / WhatsApp <span className="text-lilac">*</span>
                   </label>
                   <input
                     required
@@ -564,160 +525,134 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    CPF / CNPJ
-                  </label>
-                  <input
-                    required
-                    type="text"
-                    placeholder="000.000.000-00"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.cpfCnpj}
-                    onChange={(e) => {
-                      setFormData({ ...formData, cpfCnpj: formatCPFOrCNPJ(e.target.value) });
-                    }}
-                  />
+              <div className="bg-slate-50/50 p-6 rounded-3xl space-y-6 border border-lilac/5">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Informações Opcionais</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      CPF / CNPJ
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="000.000.000-00"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.cpfCnpj}
+                      onChange={(e) => {
+                        setFormData({ ...formData, cpfCnpj: formatCPFOrCNPJ(e.target.value) });
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      Data de Nascimento
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="DD/MM/AAAA"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.birthDate}
+                      onChange={(e) => {
+                        let v = e.target.value.replace(/\D/g, "");
+                        v = v.replace(/(\d{2})(\d{2})(\d{4})/, "$1/$2/$3");
+                        setFormData({ ...formData, birthDate: v });
+                      }}
+                    />
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2 col-span-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      Endereço
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.address}
+                      onChange={(e) =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      Nº
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.number}
+                      onChange={(e) =>
+                        setFormData({ ...formData, number: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      Bairro
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.neighborhood}
+                      onChange={(e) =>
+                        setFormData({ ...formData, neighborhood: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      Cidade
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.city}
+                      onChange={(e) =>
+                        setFormData({ ...formData, city: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      UF
+                    </label>
+                    <select
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-lilac outline-none text-slate-900"
+                      value={formData.state}
+                      onChange={(e) =>
+                        setFormData({ ...formData, state: e.target.value })
+                      }
+                    >
+                      <option value="">SELECIONE</option>
+                      {/* ... truncated for breviety, using same UF list ... */}
+                      {["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"].map((uf) => (
+                        <option key={uf} value={uf}>{uf}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Data de Nascimento
+                  <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                    CEP
                   </label>
                   <input
                     type="text"
-                    placeholder="DD/MM/AAAA"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.birthDate}
+                    placeholder="00.000-000"
+                    className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                    value={formData.zipCode}
                     onChange={(e) => {
                       let v = e.target.value.replace(/\D/g, "");
-                      v = v.replace(/(\d{2})(\d{2})(\d{4})/, "$1/$2/$3");
-                      setFormData({ ...formData, birthDate: v });
+                      v = v.replace(/(\d{2})(\d{3})(\d{3})/, "$1.$2-$3");
+                      setFormData({ ...formData, zipCode: v });
                     }}
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2 col-span-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Endereço
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Nº
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.number}
-                    onChange={(e) =>
-                      setFormData({ ...formData, number: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Bairro
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.neighborhood}
-                    onChange={(e) =>
-                      setFormData({ ...formData, neighborhood: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Cidade
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    UF
-                  </label>
-                  <select
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-lilac outline-none text-slate-900"
-                    value={formData.state}
-                    onChange={(e) =>
-                      setFormData({ ...formData, state: e.target.value })
-                    }
-                  >
-                    <option value="">SELECIONE</option>
-                    {[
-                      "AC",
-                      "AL",
-                      "AP",
-                      "AM",
-                      "BA",
-                      "CE",
-                      "DF",
-                      "ES",
-                      "GO",
-                      "MA",
-                      "MT",
-                      "MS",
-                      "MG",
-                      "PA",
-                      "PB",
-                      "PR",
-                      "PE",
-                      "PI",
-                      "RJ",
-                      "RN",
-                      "RS",
-                      "RO",
-                      "RR",
-                      "SC",
-                      "SP",
-                      "SE",
-                      "TO",
-                    ].map((uf) => (
-                      <option key={uf} value={uf}>
-                        {uf}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                  CEP
-                </label>
-                <input
-                  type="text"
-                  placeholder="00.000-000"
-                  className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                  value={formData.zipCode}
-                  onChange={(e) => {
-                    let v = e.target.value.replace(/\D/g, "");
-                    v = v.replace(/(\d{2})(\d{3})(\d{3})/, "$1.$2-$3");
-                    setFormData({ ...formData, zipCode: v });
-                  }}
-                />
               </div>
 
               <div className="flex gap-4 pt-6">

@@ -16,6 +16,7 @@ import { AboutMeView } from './components/AboutMeView';
 import { GiftListInfoView } from './components/GiftListInfoView';
 import { ColecoesView } from './components/ColecoesView';
 import { TrackingView } from './components/TrackingView';
+import { CheckoutPage } from './components/CheckoutPage';
 import { TopAnnouncementBar } from './components/TopAnnouncementBar';
 import { CookieBanner } from './components/CookieBanner';
 import { INITIAL_CONFIG, PRODUCTS } from './constants';
@@ -303,6 +304,10 @@ function MainApp() {
         <Route path="/guennita" element={<Navigate to="/comamorguennita" replace />} />
         <Route path="/pallyra" element={<Navigate to="/lapallyra" replace />} />
         <Route path="/tutty" element={<Navigate to="/tuttymimo" replace />} />
+
+        {/* Checkout Flow */}
+        <Route path="/checkout/:id" element={<CheckoutPage config={config} />} />
+        <Route path="/ped-:code" element={<CheckoutPage config={config} />} />
 
         {/* Global Admin */}
         <Route path="/admin/login" element={<AdminLoginView />} />

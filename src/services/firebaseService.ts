@@ -493,6 +493,61 @@ const handleCustomerOrder = async (orderData: Order) => {
   }
 };
 
+export const syncCustomerFromCheckout = async (companyId: CompanyId, data: Partial<Customer>) => {
+  const path = 'customers';
+  try {
+    if (!data.contact) return;
+
+    // Search by contact first
+    const q = query(
+      collection(db, path),
+      where('contact', '==', data.contact),
+      where('companyId', '==', companyId)
+    );
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const customerDoc = snapshot.docs[0];
+      const existingData = customerDoc.data();
+      
+      // Update only if values are provided and more complete than existing
+      const updateData: any = {};
+      if (data.name && !existingData.name) updateData.name = data.name;
+      if (data.cpfCnpj && !existingData.cpfCnpj) updateData.cpfCnpj = data.cpfCnpj;
+      if (data.email && !existingData.email) updateData.email = data.email;
+      if (data.address && !existingData.address) updateData.address = data.address;
+      if (data.city && !existingData.city) updateData.city = data.city;
+      if (data.state && !existingData.state) updateData.state = data.state;
+      if (data.zipCode && !existingData.zipCode) updateData.zipCode = data.zipCode;
+      if (data.number && !existingData.number) updateData.number = data.number;
+      if (data.neighborhood && !existingData.neighborhood) updateData.neighborhood = data.neighborhood;
+
+      if (Object.keys(updateData).length > 0) {
+        await updateDoc(customerDoc.ref, updateData);
+      }
+    } else if (data.name) {
+      // Create new if not found
+      await addCustomer({
+        name: data.name,
+        contact: data.contact,
+        companyId: companyId,
+        cpfCnpj: data.cpfCnpj || '',
+        email: data.email || '',
+        address: data.address || '',
+        city: data.city || '',
+        state: data.state || '',
+        zipCode: data.zipCode || '',
+        number: data.number || '',
+        neighborhood: data.neighborhood || '',
+        totalSpent: 0,
+        ordersCount: 0,
+        birthDate: ''
+      });
+    }
+  } catch (error) {
+    console.error('Failed to sync customer from checkout:', error);
+  }
+};
 export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdAt'>) => {
   const path = 'customers';
   try {

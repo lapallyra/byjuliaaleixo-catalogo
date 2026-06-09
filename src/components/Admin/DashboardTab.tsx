@@ -294,7 +294,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           const pid = item.productId || item.id || 'custom';
           const current = salesProductMap.get(pid) || { productId: pid, count: 0, total: 0, clicks: 0 };
           current.count += item.quantity;
-          current.total += (Number(item.subtotal) || 0);
+          const itemPrice = (item as any).price || item.current_price || item.retail_price || 0;
+          current.total += (itemPrice * item.quantity);
           salesProductMap.set(pid, current);
         });
       }

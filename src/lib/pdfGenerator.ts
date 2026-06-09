@@ -61,9 +61,31 @@ export const generateA4ProductionOrder = async (order: any, settings: any) => {
     return doc;
 };
 
+// HELPER: Load image as base64
+const loadImage = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } else {
+        reject(new Error('Could not get canvas context'));
+      }
+    };
+    img.onerror = () => reject(new Error('Could not load image'));
+    img.src = url;
+  });
+};
+
 export const generatePremiumA4Receipt = async (order: any, settings: any) => {
   const doc = new jsPDF();
-  const themeColor = settings?.theme_primary_color || '#000000';
+  const themeColor = settings?.theme_primary_color || '#D48C8C';
 
   // HELPER: Convert hex to rgb
   const hexToRgb = (hex: string) => {
@@ -72,103 +94,108 @@ export const generatePremiumA4Receipt = async (order: any, settings: any) => {
       r: parseInt(result[1], 16),
       g: parseInt(result[2], 16),
       b: parseInt(result[3], 16)
-    } : { r: 0, g: 0, b: 0 };
+    } : { r: 212, g: 140, b: 140 };
   };
   const rgb = hexToRgb(themeColor);
 
-  // TOPO
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text("COMPROVANTE DE COMPRA", 105, 20, { align: "center" });
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(100);
-  doc.text("DOCUMENTO NÃO FISCAL", 105, 26, { align: "center" });
+  // TOPO - Logo & Marca
+  let y = 15;
+  try {
+    if (settings?.store_logo) {
+      const logoBase64 = await loadImage(settings.store_logo);
+      doc.addImage(logoBase64, 'PNG', 15, y, 30, 30);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(rgb.r, rgb.g, rgb.b);
+      doc.text(settings?.store_name?.toUpperCase() || "ATELIÊ", 50, y + 20);
+      y += 35;
+    } else {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(rgb.r, rgb.g, rgb.b);
+      doc.text(settings?.store_name?.toUpperCase() || "ATELIÊ", 105, y + 10, { align: "center" });
+      y += 25;
+    }
+  } catch (e) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(rgb.r, rgb.g, rgb.b);
+    doc.text(settings?.store_name?.toUpperCase() || "ATELIÊ", 105, y + 10, { align: "center" });
+    y += 25;
+  }
 
-  doc.setDrawColor(200, 200, 200);
-  doc.line(15, 32, 195, 32);
-
-  // HEADER (Logo + Marca)
-  let y = 42;
-  // If logo loading is required, it can be added here if available as base64 string
-  
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.setTextColor(rgb.r, rgb.g, rgb.b);
-  doc.text(settings?.store_name || "ATELIÊ", 105, y, { align: "center" });
-  
-  y += 10;
-  doc.setDrawColor(200, 200, 200);
+  doc.setDrawColor(rgb.r, rgb.g, rgb.b);
+  doc.setLineWidth(0.5);
   doc.line(15, y, 195, y);
   y += 10;
 
-  // BLOCO 01 - DADOS DA EMPRESA vs IDENTIFICAÇÃO
+  // BLOCO 01 - LADO ESQUERDO (DADOS DA EMPRESA) e DIREITO (DADOS DO PEDIDO)
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(0);
   doc.text("DADOS DA EMPRESA", 15, y);
-  doc.text("IDENTIFICAÇÃO", 110, y);
-  
-  y += 6;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(`Razão Social: ${settings?.store_name || "63.348.579 JULIA GABRIELA SILVA ALEIXO"}`, 15, y);
-  doc.text(`Nº DE SÉRIE: ${order.code}`, 110, y);
-  
-  y += 5;
-  doc.text(`CNPJ: ${settings?.store_cnpj || "63.348.579/0001-06"}`, 15, y);
-  const dateStr = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : new Date(order.createdAt).toLocaleString();
-  doc.text(`Data de Emissão: ${dateStr}`, 110, y);
-  
-  y += 5;
-  doc.text(`Telefone: ${settings?.store_contact || "(44) 97400-2857"}`, 15, y);
-  
-  y += 10;
-  doc.setDrawColor(200, 200, 200);
-  doc.line(15, y, 195, y);
-  y += 10;
-
-  // BLOCO 02 - DADOS DO CLIENTE vs DADOS DO PEDIDO
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text("DADOS DO CLIENTE", 15, y);
   doc.text("DADOS DO PEDIDO", 110, y);
   
   y += 6;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`Nome: ${order.customerName}`, 15, y);
+  doc.setTextColor(80);
+  doc.text(`Razão Social: ${settings?.store_legal_name || "63.348.579 JULIA GABRIELA SILVA ALEIXO"}`, 15, y);
   doc.text(`Código do Pedido: ${order.code}`, 110, y);
   
   y += 5;
-  doc.text(`Contato: ${order.contact}`, 15, y);
-  doc.text(`Pedido feito em: ${dateStr}`, 110, y);
+  doc.text(`CNPJ: ${settings?.store_cnpj || "63.348.579/0001-06"}`, 15, y);
+  const orderDate = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : new Date(order.createdAt).toLocaleString();
+  doc.text(`Data do Pedido: ${orderDate}`, 110, y);
   
   y += 5;
-  doc.text(`Entrega em: ${order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : 'A combinar'}`, 110, y);
+  doc.text(`Telefone: ${settings?.store_contact || "(44) 97400-2857"}`, 15, y);
+  const deliveryDateStr = order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : 'A combinar';
+  doc.text(`Data de Entrega: ${deliveryDateStr}`, 110, y);
+  
+  y += 5;
+  doc.text(`Instagram: ${settings?.instagram || "@byjuliaaleixo.online"}`, 15, y);
+  const emissionDate = new Date().toLocaleString();
+  doc.text(`Data de Emissão: ${emissionDate}`, 110, y);
   
   y += 10;
+  doc.setDrawColor(230);
+  doc.setLineWidth(0.1);
+  doc.line(15, y, 195, y);
+  y += 10;
 
-  // BLOCO 03 - FAIXA ÚNICA DADOS DE ENTREGA
-  doc.setFillColor(245, 245, 245);
-  doc.rect(15, y, 180, 25, 'F');
-  
+  // BLOCO 02 - DADOS DO CLIENTE
   doc.setFont("helvetica", "bold");
-  doc.text("DADOS DE ENTREGA", 20, y + 6);
-  doc.setFont("helvetica", "normal");
-  const deliveryTypeStr = order.deliveryType === 'retirada' ? 'Retirada' : order.deliveryType === 'shipping' ? 'Envio / Correios' : 'Delivery';
-  doc.text(`Método de entrega: ${deliveryTypeStr}`, 20, y + 12);
-  doc.text(`Taxa: R$ ${(order.shippingCost || 0).toFixed(2).replace('.', ',')}`, 80, y + 12);
-  doc.text(`Endereço: ${order.address || 'N/A'}`, 20, y + 18);
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text("DADOS DO CLIENTE", 15, y);
   
-  y += 35;
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(80);
+  doc.text(`${order.customerName}`, 15, y);
+  if (order.customerCpfCnpj) {
+    y += 5;
+    doc.text(`CPF/CNPJ: ${order.customerCpfCnpj}`, 15, y);
+  }
+  y += 5;
+  doc.text(`Contato: ${order.contact || "N/A"}`, 15, y);
+  if (order.address) {
+    y += 5;
+    const splitAddr = doc.splitTextToSize(`Endereço: ${order.address}`, 180);
+    doc.text(splitAddr, 15, y);
+    y += (splitAddr.length - 1) * 5;
+  }
+  
+  y += 12;
 
-  // BLOCO 04 - TABELA DE PRODUTOS
+  // BLOCO 03 - TABELA DE PRODUTOS
   const tableData = order.items.map((item: any) => [
     item.product_name || item.name,
     order.isWholesale ? 'Atacado' : 'Varejo',
     item.quantity.toString(),
-    'un',
+    item.unit || 'un',
     `R$ ${item.price.toFixed(2).replace('.', ',')}`,
     `R$ ${(item.price * item.quantity).toFixed(2).replace('.', ',')}`
   ]);
@@ -178,79 +205,85 @@ export const generatePremiumA4Receipt = async (order: any, settings: any) => {
     head: [['Descrição Produto / Serviço', 'Tipo', 'Quantidade', 'Unidade', 'Valor Unitário', 'Valor Total']],
     body: tableData,
     theme: 'grid',
-    headStyles: { fillColor: [rgb.r, rgb.g, rgb.b], textColor: 255 },
+    headStyles: { fillColor: [rgb.r, rgb.g, rgb.b], textColor: 255, fontStyle: 'bold' },
     margin: { left: 15, right: 15 },
-    styles: { font: 'helvetica', fontSize: 9 }
+    styles: { font: 'helvetica', fontSize: 9, cellPadding: 3 }
   });
 
-  y = (doc as any).lastAutoTable.finalY + 10;
+  y = (doc as any).lastAutoTable.finalY + 12;
 
-  // BLOCO 05 - RESUMO FINANCEIRO
+  // BLOCO 04 - RESUMO FINANCEIRO
   const subtotal = order.items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
   const discount = (subtotal + (order.shippingCost || 0)) - order.total;
   
   doc.setFont("helvetica", "normal");
+  doc.setTextColor(60);
   doc.text("Subtotal", 130, y);
-  doc.text(`R$ ${subtotal.toFixed(2).replace('.', ',')}`, 170, y, { align: "right" });
-  y += 6;
+  doc.text(`R$ ${subtotal.toFixed(2).replace('.', ',')}`, 185, y, { align: "right" });
+  y += 7;
   doc.text("Desconto", 130, y);
-  doc.text(`- R$ ${discount > 0 ? discount.toFixed(2).replace('.', ',') : '0,00'}`, 170, y, { align: "right" });
-  y += 6;
+  doc.text(`- R$ ${discount > 0 ? discount.toFixed(2).replace('.', ',') : '0,00'}`, 185, y, { align: "right" });
+  y += 7;
   doc.text("Taxa de Entrega", 130, y);
-  doc.text(`R$ ${(order.shippingCost || 0).toFixed(2).replace('.', ',')}`, 170, y, { align: "right" });
-  y += 8;
+  doc.text(`R$ ${(order.shippingCost || 0).toFixed(2).replace('.', ',')}`, 185, y, { align: "right" });
+  y += 10;
   
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(rgb.r, rgb.g, rgb.b);
-  doc.text("TOTAL", 130, y);
-  doc.text(`R$ ${order.total.toFixed(2).replace('.', ',')}`, 170, y, { align: "right" });
-  
-  y += 15;
-
-  // BLOCO 06 - Mensagem da Marca
-  doc.setFont("helvetica", "italic");
-  doc.setFontSize(10);
-  doc.setTextColor(100);
-  const msg = settings?.receipt_message || "Obrigada por confiar em nosso trabalho.\nCada detalhe foi produzido com carinho especialmente para você.";
-  const splitMsg = doc.splitTextToSize(msg, 180);
-  doc.text(splitMsg, 105, y, { align: "center" });
-
-  // RODAPÉ FIXO
-  const pageHeight = doc.internal.pageSize.height;
-  doc.setDrawColor(200, 200, 200);
-  doc.line(15, pageHeight - 45, 195, pageHeight - 45);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(100);
-  
-  // Left
-  doc.text("Documento não fiscal, emitido por MEI.", 15, pageHeight - 35);
-  doc.text("Não gera direito a crédito fiscal de IPI.", 15, pageHeight - 30);
-  
-  // Center
-  doc.setFont("helvetica", "bold");
-  doc.text("Este comprovante é apenas", 105, pageHeight - 35, { align: "center" });
-  doc.text("para conferência do pedido", 105, pageHeight - 30, { align: "center" });
-  doc.text("e NÃO substitui nota fiscal.", 105, pageHeight - 25, { align: "center" });
-  
-  // Right QR
-  try {
-    const qrDataUrl = await QRCode.toDataURL(`https://www.byjuliaaleixo.online/rastreamento?code=${order.code}`);
-    doc.addImage(qrDataUrl, 'PNG', 170, pageHeight - 40, 20, 20);
-  } catch(e) {}
-  
-  // Abaixo do Rodapé
   doc.setFillColor(rgb.r, rgb.g, rgb.b);
-  doc.rect(0, pageHeight - 15, 210, 15, 'F');
+  doc.rect(130, y - 6, 65, 12, 'F');
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor(255);
+  doc.text("TOTAL", 135, y + 2);
+  doc.text(`R$ ${order.total.toFixed(2).replace('.', ',')}`, 190, y + 2, { align: "right" });
   
+  // RODAPÉ
+  const pageHeight = doc.internal.pageSize.height;
+  y = pageHeight - 35;
+
+  doc.setDrawColor(rgb.r, rgb.g, rgb.b);
+  doc.setLineWidth(0.5);
+  doc.line(15, y, 195, y);
+  y += 8;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(rgb.r, rgb.g, rgb.b);
+  doc.text("Presentes Personalizados para todos os seus momentos ❤", 105, y, { align: "center" });
+  
+  y += 6;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(255, 255, 255);
-  doc.text("Presentes Personalizados para todos os seus momentos ❤", 105, pageHeight - 9, { align: "center" });
-  doc.text((settings?.store_contact || "(44) 97400-2857"), 15, pageHeight - 9);
-  doc.text("www.byjuliaaleixo.online", 195, pageHeight - 9, { align: "right" });
+  doc.setFontSize(9);
+  doc.setTextColor(80);
+  doc.text((settings?.store_contact || "(44) 97400-2857"), 50, y, { align: "center" });
+  doc.text("www.byjuliaaleixo.online", 150, y, { align: "center" });
 
   return doc;
 };
+
+export const sharePDF = async (doc: jsPDF, fileName: string, whatsappNumber?: string) => {
+  const blob = doc.output('blob');
+  const file = new File([blob], `${fileName}.pdf`, { type: 'application/pdf' });
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: fileName,
+        text: 'Olá! Segue o resumo do seu pedido elegante e profissional.',
+      });
+    } catch (error) {
+      console.error('Error sharing', error);
+      doc.save(`${fileName}.pdf`);
+    }
+  } else {
+    // Download first
+    doc.save(`${fileName}.pdf`);
+    // Then open WhatsApp if number provided
+    if (whatsappNumber) {
+      const cleanPhone = whatsappNumber.replace(/\D/g, '');
+      const text = encodeURIComponent(`Olá! Acabei de gerar o resumo elegante do seu pedido. O arquivo foi baixado e você pode enviá-lo agora.`);
+      window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
+    }
+  }
+};
+

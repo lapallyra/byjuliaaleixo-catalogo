@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -23,7 +24,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Order, CompanyId, Product, Insumo, SiteSettings } from "../../types";
-import { generatePremiumThermalReceipt, generateA4ProductionOrder, generatePremiumA4Receipt } from "../../lib/pdfGenerator";
+import { generatePremiumThermalReceipt, generateA4ProductionOrder, generatePremiumA4Receipt, sharePDF } from "../../lib/pdfGenerator";
 import { PDFPreviewModal } from "./PDFPreviewModal";
 import { safeFormat, safeFormatISO } from "../../lib/dateUtils";
 import { formatCurrency } from "../../lib/currencyUtils";
@@ -438,6 +439,8 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
 
   const [viewMode, setViewMode] = useState<"kanban" | "list">("list");
 
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       {/* Top Bar - Improved Responsiveness for Laptop Screens */}
@@ -502,13 +505,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
           {/* Novo Pedido Button */}
           <button
             onClick={() => {
-              setEditingOrder({
-                companyId:
-                  selectedAteliers.length === 1
-                    ? (selectedAteliers[0] as CompanyId)
-                    : companyId,
-              });
-              setIsModalOpen(true);
+              navigate('/checkout/new');
             }}
             className="flex-1 md:flex-none flex items-center justify-center gap-3 text-white font-black py-4 px-10 rounded-2xl transition-all text-[10px] uppercase tracking-[0.2em] shadow-lg border border-transparent hover:scale-[1.02] active:scale-[0.98]"
             style={{
@@ -708,6 +705,16 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                         >
                           <Printer size={12} />
                         </button>
+                        <button 
+                          onClick={async () => {
+                            const doc = await generatePremiumA4Receipt(order, settings);
+                            await sharePDF(doc, "Pedido_" + order.code, order.contact);
+                          }}
+                          className="p-2 rounded-lg bg-emerald-50 text-emerald-400 hover:text-emerald-600 hover:bg-emerald-100 border border-transparent hover:border-emerald-200 transition-all"
+                          title="Compartilhar WhatsApp"
+                        >
+                          <Phone size={12} />
+                        </button>
                       </div>
                       <button 
                         onClick={() => setOrderToDelete(order.id)}
@@ -784,6 +791,31 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                     <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-mono">
                       Gerenciador de Atendimento e Entrega
                     </p>
+                  </div>
+
+                  {/* PDF & WHATSAPP ACTIONS */}
+                  <div className="flex flex-wrap gap-4">
+                    <button
+                      onClick={async () => {
+                        const doc = await generatePremiumA4Receipt(order, settings);
+                        setPdfData({ doc, fileName: "Pedido_" + order.code });
+                        setIsPdfPreviewOpen(true);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all text-[11px] font-black uppercase tracking-widest text-slate-700 shadow-sm group"
+                    >
+                      <FileDown size={18} className="text-pink-600 transition-transform group-hover:scale-110" />
+                      📄 Gerar PDF
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const doc = await generatePremiumA4Receipt(order, settings);
+                        await sharePDF(doc, "Pedido_" + order.code, order.contact);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-emerald-600 rounded-2xl hover:bg-emerald-700 transition-all text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-emerald-200/50 group"
+                    >
+                      <Phone size={18} className="transition-transform group-hover:rotate-12" />
+                      📤 Compartilhar WhatsApp
+                    </button>
                   </div>
 
                   {/* 6. FLUXO DO PEDIDO (TIMELINE HORIZONTAL MINIMALISTA COMPACTA) */}

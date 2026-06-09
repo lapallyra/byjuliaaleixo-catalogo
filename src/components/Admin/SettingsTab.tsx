@@ -419,6 +419,20 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
+                              Razão Social (Legal)
+                            </label>
+                            <input
+                              type="text"
+                              value={atlSettings.store_legal_name || ""}
+                              onChange={(e) =>
+                                updateMultiField(atl.id, "store_legal_name", e.target.value)
+                              }
+                              className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
+                              placeholder="63.348.579 JULIA GABRIELA..."
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
                               Slogan Curto
                             </label>
                             <input
@@ -429,6 +443,20 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               }
                               className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
                               placeholder="Foco da marca..."
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
+                              Instagram (@perfil)
+                            </label>
+                            <input
+                              type="text"
+                              value={atlSettings.instagram || ""}
+                              onChange={(e) =>
+                                updateMultiField(atl.id, "instagram", e.target.value)
+                              }
+                              className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
+                              placeholder="@seuinstagram"
                             />
                           </div>
                         </div>
