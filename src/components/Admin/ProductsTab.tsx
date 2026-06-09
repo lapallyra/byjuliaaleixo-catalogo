@@ -271,8 +271,8 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
         </div>
       </div>
 
-      {/* Luxury Catalog View - Fluid Grid */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-6">
+      {/* Luxury Catalog View - Intelligent Fluid Grid */}
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(max(280px,20%),1fr))] gap-8">
         {filtered.length > 0 && (
           <div className="col-span-full mb-2">
             <div className="flex items-center gap-3 px-5 py-3 bg-slate-50/50 hover:bg-slate-50 rounded-2xl border border-slate-100 max-w-sm cursor-pointer select-none transition-colors" onClick={() => handleSelectAll(!(selectedIds.length > 0 && selectedIds.length === filtered.length))}>

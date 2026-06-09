@@ -439,11 +439,11 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
   const [viewMode, setViewMode] = useState<"kanban" | "list">("list");
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Top Bar Refined with 3D Glassmorphic Controls */}
-      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-[1.5rem] border border-[#F0E6D2] shadow-[0_10px_30px_rgba(240,230,210,0.1)]">
-        <div className="flex items-center gap-4 w-full lg:w-auto">
-          <div className="relative flex-1 lg:w-72">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+      {/* Top Bar - Improved Responsiveness for Laptop Screens */}
+      <div className="flex flex-col xl:flex-row gap-6 justify-between items-center bg-white p-6 rounded-[2rem] border border-[#F0E6D2] shadow-sm">
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
+          <div className="relative w-full md:w-72 lg:w-80">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D1CACA]"
               size={14}
@@ -451,15 +451,13 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
             <input
               type="text"
               placeholder="Pesquisar pedido..."
-              className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] text-[10px] uppercase font-semibold tracking-widest outline-none focus:border-[#D48C8C] transition-all text-[#4A4444]"
+              className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#FAF9F6] border border-[#F0E6D2] text-[10px] uppercase font-bold tracking-widest outline-none focus:border-[#D48C8C] transition-all text-[#4A4444]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-4 items-center justify-center lg:justify-end">
-          <div className="flex gap-2">
+          
+          <div className="flex flex-wrap items-center gap-2 justify-center md:justify-start">
             {atelieres
               .filter((a) => a.id !== "all")
               .map((atl) => {
@@ -475,15 +473,14 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                           : [...prev, atl.id],
                       );
                     }}
-                    className={`px-3 py-2 rounded-xl text-[8.5px] font-bold uppercase tracking-widest border transition-all ${
+                    className={`px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all whitespace-nowrap shadow-sm ${
                       isSelected 
-                        ? "bg-[#FAF9F6] text-white shadow-inner" 
+                        ? "text-white shadow-md scale-105" 
                         : "bg-white border-[#F0E6D2] text-[#A09898] hover:bg-[#FAF9F6]"
                     }`}
                     style={isSelected ? {
                       backgroundColor: theme.primary,
                       borderColor: theme.secondary,
-                      textShadow: "0 1px 2px rgba(0,0,0,0.4)"
                     } : undefined}
                   >
                     {atl.prefix}
@@ -491,26 +488,18 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                 );
               })}
           </div>
+        </div>
 
-          <div className="h-6 w-px bg-[#F0E6D2] hidden sm:block" />
-
-          {/* Export PDF Button: 3D Crystal / Glassmorphism Premium */}
+        <div className="flex flex-wrap gap-4 items-center justify-center xl:justify-end w-full xl:w-auto">
+          {/* Export PDF Button */}
           <button
             onClick={() => exportOrdersReportPDF(filteredOrders, selectedAteliers.length === 1 ? selectedAteliers[0] : "all")}
-            className="flex items-center gap-2 font-black py-3.5 px-6 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all text-[9.5px] uppercase tracking-widest text-[#4A4444] cursor-pointer"
-            style={{
-              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.45))",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              border: "1px solid rgba(255, 255, 255, 0.6)",
-              boxShadow: "0 8px 32px 0 rgba(240, 230, 210, 0.25), inset 0 -4px 8px rgba(0, 0, 0, 0.04), inset 0 4px 8px rgba(255, 255, 255, 0.6)",
-              textShadow: "0 1px 1px rgba(255, 255, 255, 0.5)",
-            }}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 font-black py-4 px-8 rounded-2xl bg-white border border-[#F0E6D2] hover:bg-slate-50 transition-all text-[9.5px] uppercase tracking-widest text-[#4A4444] shadow-sm"
           >
-            <FileDown size={14} className="text-[#D4AF37]" /> Exportar PDF
+            <Printer size={16} className="text-[#D4AF37]" /> Exportar PDF
           </button>
 
-          {/* Novo Pedido Button: 3D Crystal / Brand Colored */}
+          {/* Novo Pedido Button */}
           <button
             onClick={() => {
               setEditingOrder({
@@ -521,36 +510,35 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
               });
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 text-white font-black py-3.5 px-6 rounded-2xl hover:scale-[1.03] active:scale-[0.97] transition-all text-[9.5px] uppercase tracking-widest relative overflow-hidden group shadow-lg cursor-pointer"
+            className="flex-1 md:flex-none flex items-center justify-center gap-3 text-white font-black py-4 px-10 rounded-2xl transition-all text-[10px] uppercase tracking-[0.2em] shadow-lg border border-transparent hover:scale-[1.02] active:scale-[0.98]"
             style={{
-              background: `linear-gradient(135deg, ${getBrandTheme(selectedAteliers.length === 1 ? selectedAteliers[0] : companyId).primary}, ${getBrandTheme(selectedAteliers.length === 1 ? selectedAteliers[0] : companyId).primary}dd)`,
-              boxShadow: `0 10px 25px ${getBrandTheme(selectedAteliers.length === 1 ? selectedAteliers[0] : companyId).primary}30, inset 0 -4px 8px rgba(0,0,0,0.18), inset 0 4px 8px rgba(255,255,255,0.3)`
+              backgroundColor: getBrandTheme(selectedAteliers.length === 1 ? selectedAteliers[0] : companyId).primary,
             }}
           >
-            <Plus size={16} /> Novo Pedido
+            <Plus size={18} /> Novo Pedido
           </button>
         </div>
       </div>
 
-      {/* Production pipeline controls (Status no topo) - Breathtaking 3D design */}
-      <div className="bg-[#FAF9F6] p-6 rounded-[2.5rem] border border-[#F0E6D2] shadow-xs">
-        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-[0.25em] mb-4">Fluxo de Produção Personalizada</span>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
+      {/* Production Pipeline - Optimized for Flow and Balance */}
+      <div className="bg-[#FAF9F6] p-6 lg:p-8 rounded-[2.5rem] border border-[#F0E6D2] shadow-xs">
+        <span className="block text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] mb-6">Fluxo de Produção Personalizada</span>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
           <button
             onClick={() => setSelectedStatusFilter("all")}
-            className={`px-4 py-3 rounded-2xl border text-left transition-all relative overflow-hidden group hover:scale-[1.03] active:scale-[0.98] duration-300 ${
+            className={`px-5 py-4 rounded-2xl border text-left transition-all relative group hover:shadow-md duration-300 ${
               selectedStatusFilter === "all"
-                ? "bg-white border-neutral-300"
-                : "bg-white/40 hover:bg-white/80 border-neutral-100"
+                ? "bg-white border-neutral-300 ring-2 ring-neutral-100"
+                : "bg-white/60 hover:bg-white/80 border-neutral-100"
             }`}
           >
-            <div className="flex justify-between items-center mb-1.5">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Todos</span>
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[11px] font-black text-gray-600 uppercase tracking-[0.1em]">Todos</span>
+              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">
                 {filteredOrders.length}
               </span>
             </div>
-            <p className="text-[8px] font-medium text-gray-400 uppercase tracking-widest">Painel Geral</p>
+            <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Geral</p>
           </button>
 
           {STATUS_GROUPS.map((group) => {
@@ -561,21 +549,21 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
               <button
                 key={group.id}
                 onClick={() => setSelectedStatusFilter(group.id)}
-                className={`px-4 py-3 rounded-2xl border text-left transition-all relative overflow-hidden group hover:scale-[1.03] active:scale-[0.98] duration-300 ${
+                className={`px-5 py-4 rounded-2xl border text-left transition-all relative group hover:shadow-md duration-300 ${
                   isSelected
-                    ? "bg-white"
+                    ? "bg-white ring-2 ring-opacity-50"
                     : "bg-white/40 hover:bg-white/80 border-neutral-100"
                 }`}
                 style={{
                   borderColor: isSelected ? group.color : "rgba(240, 230, 210, 0.4)",
-                  backgroundColor: isSelected ? `${group.color}08` : undefined
+                  boxShadow: isSelected ? `0 4px 12px ${group.color}15` : undefined
                 }}
               >
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: group.color }}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[11px] font-black uppercase tracking-tight truncate" style={{ color: group.color }}>
                     {group.label}
                   </span>
-                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${group.bgLight}`}>
+                  <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${group.bgLight}`}>
                     {count}
                   </span>
                 </div>
@@ -585,9 +573,9 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
         </div>
       </div>
 
-      {/* Main Orders Render: Breathtaking Horizontal Cards instead of Tables */}
-      <div className="w-full pb-8 pt-4">
-        <div className="space-y-6">
+      {/* Orders List - Grid for Balanced Layout on Larger Wide Screens */}
+      <div className="w-full pb-20">
+        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6">
         {orders.filter((order) => {
           if (selectedStatusFilter === "all") return true;
           const group = STATUS_GROUPS.find((g) => g.id === selectedStatusFilter);
@@ -703,15 +691,15 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                     </div>
 
                     {/* [4. VALOR TOTAL] */}
-                    <div className="flex flex-col justify-center gap-1 md:text-right min-w-[110px]">
+                    <div className="flex flex-col justify-center gap-1 md:text-right min-w-[120px]">
                       <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Total</span>
-                      <p className="text-[16px] font-black text-slate-900 tracking-tight">
+                      <p className="text-[15px] font-black text-slate-900 tracking-tight whitespace-nowrap">
                         {formatCurrency(Number(order.total) || 0)}
                       </p>
                     </div>
 
                     {/* [5. MENU ...] */}
-                    <div className="flex justify-end pr-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex justify-end pl-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                       <ActionsDropdown 
                         order={order}
                         onOpenDetail={() => setIsDetailOpen(order.id)}

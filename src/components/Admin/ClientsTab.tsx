@@ -210,8 +210,8 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
-      <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
-        <div className="relative w-full max-w-md">
+      <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center bg-white p-6 rounded-[2rem] border border-lilac/10 shadow-sm">
+        <div className="relative w-full lg:max-w-md">
           <Search
             className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D1CACA]"
             size={18}
@@ -224,7 +224,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-4 w-full md:w-auto justify-end">
+        <div className="flex items-center gap-4 w-full lg:w-auto justify-center lg:justify-end">
           <CSVHandler 
             moduleName="Clientes" 
             data={filteredCustomers} 
@@ -293,129 +293,101 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
         </div>
       )}
 
-      <div className="bg-white rounded-[2.5rem] border border-lilac/10 shadow-sm overflow-hidden overflow-x-auto">
-        <table className="w-full text-left uppercase">
-          <thead>
-            <tr className="bg-white/50 border-b border-gray-50">
-              <th className="py-6 px-8 w-12 text-center">
-                <input
-                  type="checkbox"
-                  checked={filteredCustomers.length > 0 && selectedIds.length === filteredCustomers.length}
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="rounded border-gray-300 text-lilac focus:ring-lilac transition duration-150 ease-in-out cursor-pointer scale-110"
-                />
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
-                Cód
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
-                Cliente
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
-                Contato
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em] text-right">
-                Investido
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em] text-right pr-8">
-                Ações
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {filteredCustomers.length === 0 && (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="py-24 text-center text-[#A09898] italic font-black text-[10px] tracking-widest opacity-50 uppercase"
-                >
-                  Nenhum cliente encontrado no sistema
-                </td>
-              </tr>
-            )}
-            {filteredCustomers.map((c, idx) => (
-              <tr
-                key={c.id}
-                className="group hover:bg-lilac-baby/30 transition-all cursor-pointer"
-              >
-                <td className="py-6 px-8 w-12 text-center" onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(c.id)}
-                    onChange={(e) => handleSelectOne(c.id, e.target.checked)}
-                    className="rounded border-gray-300 text-lilac focus:ring-lilac transition duration-150 ease-in-out cursor-pointer scale-110"
-                  />
-                </td>
-                <td className="py-6">
-                  <span className="font-mono text-[10px] text-lilac font-black tracking-tight">
-                    {c.code}
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(max(300px,20%),1fr))] gap-6 pb-20">
+        {filteredCustomers.length === 0 && (
+          <div className="col-span-full py-32 text-center bg-white rounded-[3rem] border border-dashed border-lilac/20">
+            <p className="text-[#A09898] italic font-black text-[10px] tracking-widest opacity-50 uppercase">
+              Nenhum cliente encontrado no sistema
+            </p>
+          </div>
+        )}
+        {filteredCustomers.map((c, idx) => (
+          <div
+            key={c.id}
+            className={`bg-white rounded-[2rem] border transition-all duration-300 p-6 flex flex-col gap-5 hover:shadow-xl group relative ${
+              selectedIds.includes(c.id) ? "border-lilac ring-1 ring-lilac/20" : "border-lilac/10 hover:border-lilac/30"
+            }`}
+          >
+            {/* Checkbox Overlay */}
+            <div className="absolute top-6 left-6 z-10" onClick={(e) => e.stopPropagation()}>
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(c.id)}
+                onChange={(e) => handleSelectOne(c.id, e.target.checked)}
+                className="rounded border-gray-300 text-lilac focus:ring-lilac cursor-pointer scale-110"
+              />
+            </div>
+
+            <div className="flex items-center gap-4 pl-8">
+              <div className="w-14 h-14 rounded-2xl bg-lilac/5 text-lilac flex items-center justify-center shrink-0 shadow-sm border border-lilac/10 group-hover:bg-lilac group-hover:text-white transition-colors">
+                <Users size={24} />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight truncate">
+                  {c.name}
+                </h4>
+                <span className="text-[9px] font-black text-lilac tracking-widest uppercase">
+                  #{c.code}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 py-4 border-t border-b border-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-slate-50 text-lilac">
+                  <Phone size={14} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">Contato</span>
+                  <span className="text-[10px] font-black text-slate-700">
+                    {formatPhone(c.contact)}
                   </span>
-                </td>
-                <td className="py-6">
-                  <div className="flex flex-col">
-                    <span className="font-black text-xs text-slate-900 tracking-tight group-hover:text-lilac transition-colors">
-                      {c.name}
-                    </span>
-                    <span className="text-[9px] text-[#A09898] font-black tracking-widest mt-1 opacity-70">
-                      {formatCPFOrCNPJ(c.cpfCnpj)}
-                    </span>
-                  </div>
-                </td>
-                <td className="py-6">
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <div className="p-2 rounded-lg bg-white group-hover:bg-white transition-colors">
-                      <Phone size={14} className="text-lilac" />
-                    </div>
-                    <span className="text-[10px] font-black tracking-widest">
-                      {formatPhone(c.contact)}
-                    </span>
-                  </div>
-                </td>
-                <td className="py-6 text-right font-mono text-xs text-slate-900 font-black">
-                  R${" "}
-                  {(c.totalSpent || 0).toLocaleString("pt-BR", {
-                    minimumFractionDigits: 2,
-                  })}
-                </td>
-                <td className="py-6 text-right pr-8">
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCustomer(c);
-                        setIsDetailModalOpen(true);
-                      }}
-                      className="p-2.5 rounded-xl bg-white text-[#D1CACA] hover:text-lilac transition-all border border-slate-100 hover:border-lilac/20 hover:shadow-sm"
-                      title="Ver Detalhes"
-                    >
-                      <Users size={14} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenEdit(c);
-                      }}
-                      className="p-2.5 rounded-xl bg-white text-[#D1CACA] hover:text-slate-900 transition-all border border-slate-100 hover:border-slate-200 hover:shadow-sm"
-                      title="Editar"
-                    >
-                      <Edit size={14} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(c.id);
-                      }}
-                      className="p-2.5 rounded-xl bg-slate-50 text-rose-300 hover:text-white hover:bg-rose-500 transition-all border border-slate-100 hover:border-rose-100"
-                      title="Excluir"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-slate-50 text-emerald-500">
+                  <TrendingUp size={14} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">Investimento</span>
+                  <span className="text-[11px] font-mono font-black text-slate-900">
+                    R$ {(c.totalSpent || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleOpenEdit(c); }}
+                  className="p-3 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-slate-900 hover:bg-white transition-all border border-transparent hover:border-slate-200"
+                  title="Editar"
+                >
+                  <Edit size={14} />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDelete(c.id); }}
+                  className="p-3 rounded-xl bg-slate-50 text-rose-300 hover:text-white hover:bg-rose-500 transition-all border border-transparent"
+                  title="Excluir"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedCustomer(c);
+                  setIsDetailModalOpen(true);
+                }}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-9000 text-white text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md active:scale-95"
+              >
+                Perfil Completo
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {isDetailModalOpen && selectedCustomer && (

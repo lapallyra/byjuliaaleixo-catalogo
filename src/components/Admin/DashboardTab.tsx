@@ -289,7 +289,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   );
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-300 pb-6 max-w-7xl mx-auto overflow-x-hidden">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-300 pb-6 max-w-7xl mx-auto overflow-x-hidden">
       {/* 0. Meta Mensal (CLT Escape) */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -370,8 +370,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
       </motion.div>
 
-      {/* 1. Header Stats */}
-      <header className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-6">
+      {/* 1. Header Stats - Intelligent Fluid Grid */}
+      <header className="grid grid-cols-[repeat(auto-fit,minmax(max(240px,20%),1fr))] gap-6">
         {[
           {
             title: "Ativos",
@@ -452,9 +452,9 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       </div>
 
       {/* 2. Main Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         {/* Left Column (Main - Pedidos Recentes Sobe) */}
-        <div className="xl:col-span-8">
+        <div className="lg:col-span-8">
           <section className="bg-[#FFFFFF] p-8 rounded-[2rem] border border-[#F0E6D2] shadow-[0_24px_55px_rgba(240,230,210,0.3)] relative overflow-hidden min-h-[400px]">
             <div className="absolute top-0 right-0 p-8 opacity-[0.03]">
               <Package size={200} />
@@ -649,7 +649,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
 
         {/* Right Column (Radar de Campanhas Desce) */}
-        <div className="xl:col-span-4 space-y-10">
+        <div className="lg:col-span-4 space-y-10">
           <OpportunitiesWidget />
         </div>
       </div>
