@@ -604,7 +604,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.25, delay: Math.min(idx * 0.015, 0.3) }}
-                className="group relative bg-[#FFFFFF] rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden cursor-pointer h-full flex flex-col"
+                className="group relative bg-[#FFFFFF] rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden cursor-pointer min-h-[200px] flex flex-col"
                 onClick={() => setIsDetailOpen(order.id)}
               >
                 {/* Status Accent Strip */}
@@ -613,27 +613,27 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                   style={{ backgroundColor: statusGroup?.color || "#e2e8f0" }}
                 />
 
-                <div className="p-4 flex flex-col flex-1 gap-3">
+                <div className="p-5 flex flex-col flex-1 gap-3.5">
                   {/* Header */}
                   <div className="flex justify-between items-start">
                     <div className="flex flex-col">
                       <span className="font-mono text-[11px] font-black text-slate-800 tracking-widest">
                         {order.code}
                       </span>
-                      <span className="text-[7px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
+                      <span className="text-[7px] font-black uppercase tracking-widest text-[#D88D85] mt-1 shadow-sm">
                         {brandTheme.name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 bg-slate-50 px-1.5 py-1 rounded-lg border border-slate-100">
-                      <Calendar size={10} className="text-pink-300" />
-                      <span className="text-[9px] font-bold text-slate-600">
+                    <div className="flex items-center gap-1.5 bg-[#FAF9F6] px-2 py-1 rounded-lg border border-[#F0E6D2]">
+                      <Calendar size={11} className="text-[#D88D85]" />
+                      <span className="text-[10px] font-bold text-[#4A3A34]">
                         {order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM") : "--/--"}
                       </span>
                     </div>
                   </div>
 
                   {/* Customer Name */}
-                  <h4 className="text-[14px] font-black text-slate-700 tracking-tight leading-tight line-clamp-1">
+                  <h4 className="text-[15px] font-black text-[#4A3A34] tracking-tight leading-tight line-clamp-1 mt-1">
                     {order.customerName}
                   </h4>
 

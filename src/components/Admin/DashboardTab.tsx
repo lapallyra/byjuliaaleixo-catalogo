@@ -61,7 +61,7 @@ const ChartCard: React.FC<{ title: string; subtitle: string; children: React.Rea
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-white p-6 rounded-[2rem] border border-[#F0E6D2] shadow-[0_15px_40px_rgba(240,230,210,0.2)] flex flex-col h-[400px]"
+    className="bg-white p-8 rounded-[2rem] border border-[#F0E6D2] shadow-[0_15px_40px_rgba(240,230,210,0.2)] flex flex-col h-[460px]"
   >
     <div className="flex items-center justify-between mb-8">
       <div className="flex items-center gap-3">
@@ -358,7 +358,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-300 pb-6 max-w-7xl mx-auto overflow-x-hidden">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-300 pb-12 max-w-[1600px] mx-auto overflow-x-hidden">
       {/* 0. Meta Mensal (CLT Escape) */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -697,18 +697,18 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     />
 
                     <div className="flex-1 w-full">
-                      <div className="grid grid-cols-[minmax(180px,1.5fr)_minmax(180px,1.5fr)_110px_130px_100px_90px_40px] items-center gap-4 px-5 py-4 w-full">
+                      <div className="grid grid-cols-[minmax(200px,1.5fr)_minmax(200px,1.5fr)_120px_150px_110px_100px_40px] items-center gap-6 px-6 py-5 w-full">
                         
                         {/* [1. NOME DO CLIENTE & ATELIÊ] */}
                         <div className="flex flex-col justify-center min-w-0 pr-4">
-                           <div className="flex items-center gap-2 mb-1">
+                           <div className="flex items-center gap-2 mb-1.5">
                             <span 
-                              className="text-[10px] font-medium uppercase tracking-widest px-1.5 py-0.5 rounded text-gray-500 bg-gray-50 border border-gray-100"
+                              className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded text-[#D88D85] bg-[#FAF9F6] border border-[#F0E6D2] shadow-sm"
                             >
                               {brandNames[order.companyId] || order.companyId}
                             </span>
                           </div>
-                          <h4 className="text-[15px] font-bold text-slate-800 tracking-tight leading-tight">
+                          <h4 className="text-[16px] font-black text-[#4A3A34] tracking-tight leading-tight">
                             {order.customerName}
                           </h4>
                         </div>

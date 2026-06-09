@@ -306,7 +306,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.02 }}
               onClick={() => setViewingProduct(p)}
-              className="group bg-white rounded-[1.5rem] overflow-hidden border border-slate-100 flex flex-col p-4 gap-4 hover:border-pink-300 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1 cursor-pointer relative h-full"
+              className="group bg-white rounded-[1.5rem] overflow-hidden border border-slate-100 flex flex-col p-5 gap-4 hover:border-pink-300 transition-all shadow-sm hover:shadow-xl hover:-translate-y-1 cursor-pointer relative min-h-[340px] h-full"
             >
               <div className="absolute top-4 left-4 z-10" onClick={(e) => e.stopPropagation()}>
                 <input

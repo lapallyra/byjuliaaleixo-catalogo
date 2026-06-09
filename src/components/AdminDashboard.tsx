@@ -417,9 +417,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-[#FAF9F6]">
         {/* Top Header Bar */}
-        <header className="h-20 bg-white/70 backdrop-blur-md border-b border-[#F0E6D2] px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0">
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-[#F0E6D2] px-6 lg:px-8 flex items-center justify-between z-50 flex-shrink-0 shadow-sm">
           <div className="flex items-center gap-6 flex-1">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
@@ -427,15 +427,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
             >
               <LayoutDashboard size={20} />
             </button>
-            <div className="relative w-full max-w-md md:block hidden">
+            <div className="relative w-full max-w-sm md:block hidden">
               <Search
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D1CACA]"
-                size={16}
+                size={14}
               />
               <input
                 type="text"
                 placeholder="Pesquisar..."
-                className="w-full bg-[#FAF9F6] border border-[#F0E6D2] focus:border-[#D48C8C] focus:ring-2 focus:ring-[#D48C8C]/5 rounded-xl pl-11 pr-4 py-2.5 text-[10px] uppercase font-medium tracking-[0.1em] outline-none transition-all text-[#4A4444] placeholder:text-[#D1CACA]"
+                className="w-full bg-[#FAF9F6] border border-[#F0E6D2] focus:border-[#D48C8C] focus:ring-1 focus:ring-[#D48C8C]/10 rounded-xl pl-10 pr-4 py-2 text-[9px] uppercase font-bold tracking-[0.1em] outline-none transition-all text-[#4A4444] placeholder:text-[#D1CACA]"
                 value={globalSearch}
                 onChange={(e) => setGlobalSearch(e.target.value)}
               />
@@ -446,27 +446,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
             <div className="relative">
               <button
                 onClick={() => setIsSuggestionsModalOpen(true)}
-                className={`p-2.5 rounded-xl transition-all relative border border-transparent ${suggestions.some((s) => !s.read) ? "text-[#D48C8C] bg-[#FAF9F6]" : "text-[#A09898] hover:bg-[#FAF9F6]"}`}
+                className={`p-2 rounded-xl transition-all relative border border-transparent ${suggestions.some((s) => !s.read) ? "text-[#D48C8C] bg-[#FAF9F6]" : "text-[#A09898] hover:bg-[#FAF9F6]"}`}
               >
                 <Bell size={18} />
                 {suggestions.filter((s) => !s.read).length > 0 && (
-                  <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#D48C8C] rounded-full ring-2 ring-white" />
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#D48C8C] rounded-full ring-2 ring-white" />
                 )}
               </button>
             </div>
 
-            <div className="h-6 w-px bg-[#F0E6D2] mx-2" />
+            <div className="h-5 w-px bg-[#F0E6D2] mx-2" />
 
-            <div className="flex items-center gap-3 bg-[#FAF9F6] border border-[#F0E6D2] px-3 py-1.5 rounded-xl">
+            <div className="flex items-center gap-3 bg-[#FAF9F6] border border-[#F0E6D2] px-3 py-1 rounded-xl">
               <div className="flex flex-col items-end mr-1 hidden sm:flex">
-                <span className="text-[9px] font-bold uppercase text-[#4A4444] tracking-wider">
+                <span className="text-[8px] font-black uppercase text-[#4A3A34] tracking-widest">
                   JULIA ALEIXO
                 </span>
-                <span className="text-[7px] font-black uppercase text-[#D48C8C] tracking-widest">
+                <span className="text-[6px] font-black uppercase text-[#D88D85] tracking-[0.2em]">
                   CEO PRINCIPAL
                 </span>
               </div>
-              <div className="w-8 h-8 rounded-lg bg-white border border-[#F0E6D2] p-0.5 shadow-sm overflow-hidden">
+              <div className="w-7 h-7 rounded-lg bg-white border border-[#F0E6D2] p-0.5 shadow-sm overflow-hidden">
                 {user?.photoURL ? (
                   <ImageWithFallback
                     src={user.photoURL}
@@ -476,7 +476,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[#D1CACA]">
-                    <User size={14} />
+                    <User size={12} />
                   </div>
                 )}
               </div>
@@ -485,15 +485,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         </header>
 
         {/* Content Tabs Container */}
-        <div className="flex-1 overflow-y-auto w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 scrollbar-hide scroll-smooth scroll-pb-20">
+        <div className="flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto px-6 py-6 lg:px-10 lg:py-8 scrollbar-hide scroll-smooth h-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, scale: 0.99, y: 5 }}
+              initial={{ opacity: 0, scale: 0.995, y: 5 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 1.01, y: -5 }}
-              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-              className="min-h-full"
+              exit={{ opacity: 0, scale: 1.005, y: -5 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="pb-24 lg:pb-12"
             >
               <React.Suspense fallback={<TabLoader />}>
                 <ErrorBoundary

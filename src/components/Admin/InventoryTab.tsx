@@ -209,7 +209,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
           return (
             <div
               key={`ins-card-${insumo.id}-${idx}`}
-              className={`bg-white rounded-[2rem] border transition-all duration-300 p-6 flex flex-col gap-5 hover:shadow-xl group relative ${
+              className={`bg-white rounded-[2rem] border transition-all duration-300 p-8 flex flex-col gap-6 hover:shadow-xl group relative min-h-[360px] ${
                 selectedIds.includes(insumo.id) ? "border-lilac ring-1 ring-lilac/20" : "border-lilac/10 hover:border-lilac/30"
               }`}
             >
