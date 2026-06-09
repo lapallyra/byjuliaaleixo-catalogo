@@ -293,9 +293,9 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
         if (data.status === 'production' || data.status === 'paid' || data.status === 'fully_paid') {
           // Could be considered payment confirmed depending on previous state
           if (orderSnap.data().status === 'waiting_payment' || orderSnap.data().status === 'novo pedido') {
-            sendTelegramNotification('payment_confirmed', `💰 PAGAMENTO CONFIRMADO\n\nPedido: #${orderData.code || orderId}\n\nCliente:\n${orderData.customerName || 'N/D'}\n\nValor:\nR$ ${(orderData.total || 0).toFixed(2).replace('.', ',')}\n\nForma:\n${orderData.paymentMethod || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${orderId}`);
+            sendTelegramNotification('payment_confirmed', `💰 PAGAMENTO CONFIRMADO\n\nPedido: #${orderData.code || orderId}\n\nCliente:\n${orderData.customerName || 'N/D'}\n\nValor:\nR$ ${(orderData.total || 0).toFixed(2).replace('.', ',')}\n\nForma:\n${(orderData as any).paymentMethod || (orderData as any).payment_method || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${orderId}`);
           }
-        } else if (data.status === 'cancelled' || data.status === 'cancelado') {
+        } else if (data.status === 'cancelled' || (data.status as any) === 'cancelado') {
           sendTelegramNotification('order_canceled', `❌ PEDIDO CANCELADO\n\nPedido: #${orderData.code || orderId}\n\nCliente:\n${orderData.customerName || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${orderId}`);
         } else if (data.status === 'delivered') {
           sendTelegramNotification('order_completed', `📦 PEDIDO FINALIZADO\n\nPedido: #${orderData.code || orderId}\n\nCliente:\n${orderData.customerName || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${orderId}`);
@@ -356,6 +356,8 @@ export const saveSale = async (data: any) => {
         status: 'paid',
         companyId: saleData.companyId,
         orderId: docRef.id,
+        marketplace: saleData.marketplace || '',
+        marketplaceTax: saleData.marketplaceTax || 0,
         createdAt: serverTimestamp()
       }));
     } catch (e) {
@@ -494,7 +496,7 @@ const handleCustomerOrder = async (orderData: Order) => {
 export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdAt'>) => {
   const path = 'customers';
   try {
-    const customerCode = crypto.randomUUID().slice(0, 8).toUpperCase();
+    const customerCode = Array.from({ length: 7 }, () => Math.floor(Math.random() * 10)).join('');
     const docRef = await addDoc(collection(db, path), sanitize({
       ...data,
       code: customerCode,

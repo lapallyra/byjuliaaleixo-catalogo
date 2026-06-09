@@ -59,11 +59,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
     | "about"
     | "pix"
     | "pricing"
-    | "marketing"
-    | "whatsapp"
     | "receipt"
     | "roulette"
-    | "shipping"
     | "notifications"
   >("brand");
   const [settings, setSettings] = useState<Partial<SiteSettings>>({});
@@ -155,17 +152,18 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           if (id === "tuttymimo")
             configUpdate.company_4_logo = atelierData.store_logo;
         }
+        if (settings.store_contact) {
+          configUpdate.whatsapp_number = settings.store_contact;
+        }
         if (Object.keys(configUpdate).length > 0) {
           await saveAppConfig(configUpdate);
         }
+        await saveGlobalSettings(settings);
+        await saveSiteSettings(companyId, settings);
       } else if (activeSubTab === "pricing") {
-        // Save pricing globally
-        await saveGlobalSettings({
-          global_fixed_costs: settings.global_fixed_costs,
-          global_labor_cost_per_hour: settings.global_labor_cost_per_hour,
-          global_tax_rate: settings.global_tax_rate,
-        });
-      } else if (['pix', 'marketing', 'receipt', 'roulette', 'shipping', 'notifications'].includes(activeSubTab)) {
+        // Save pricing and shipping globally
+        await saveGlobalSettings(settings);
+      } else if (['pix', 'receipt', 'roulette', 'notifications'].includes(activeSubTab)) {
         await saveGlobalSettings(settings);
       } else {
         await saveSiteSettings(companyId, settings);
@@ -270,23 +268,21 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-top-4 duration-500 pb-6 w-full">
       {/* Horizontal Nav */}
-      <div className="w-full bg-white p-2 rounded-2xl border border-lilac/10 shadow-sm overflow-x-auto hide-scrollbar scroll-smooth flex items-center gap-1.5">
+      <div className="w-full bg-white p-3 rounded-[2rem] border border-lilac/10 shadow-sm flex flex-wrap gap-2.5 items-center justify-start">
         {[
-          { id: "brand", label: "Marca & Dados", icon: Building2 },
-          { id: "about", label: "Página Sobre Nós", icon: User },
+          { id: "brand", label: "Empresa", icon: Building2 },
+          { id: "about", label: "Sobre Nós", icon: User },
           { id: "pix", label: "PIX & Checkout", icon: QrCode },
-          { id: "pricing", label: "Precificação", icon: Calculator },
-          { id: "marketing", label: "Pixel Facebook", icon: Facebook },
-          { id: "whatsapp", label: "WhatsApp", icon: Phone },
+          { id: "pricing", label: "Precificação & Frete", icon: Calculator },
           { id: "receipt", label: "Comprovantes", icon: FileText },
-          { id: "shipping", label: "Cálculo de Frete", icon: Truck },
           { id: "roulette", label: "Roleta de Brindes", icon: Gift },
           { id: "notifications", label: "Notificações", icon: Bell },
         ].map((item) => (
           <button
             key={item.id}
+            id={`subtab-${item.id}`}
             onClick={() => setActiveSubTab(item.id as any)}
-            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all whitespace-nowrap shrink-0 border ${
+            className={`flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all whitespace-nowrap border ${
               activeSubTab === item.id
                 ? "bg-black text-white border-black font-extrabold shadow-md scale-[1.01]"
                 : "bg-white text-slate-400 border-slate-100 hover:border-pink-300 hover:text-slate-900 shadow-sm"
@@ -474,6 +470,94 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   </div>
                 );
               })}
+            </div>
+
+            {/* WhatsApp & Pixel Configuration */}
+            <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm space-y-8 mt-10">
+              <div className="flex items-center gap-3 border-b border-slate-50 pb-5">
+                <div className="p-2 bg-pink-100 rounded-lg text-pink-700">
+                  <Phone size={18} />
+                </div>
+                <h4 className="text-base font-black uppercase tracking-tight text-slate-800">
+                  Integrações de Contato & Tráfego (WhatsApp e Pixel)
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+                {/* WhatsApp Section */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2">
+                    <Phone size={16} className="text-emerald-500" />
+                    <span className="text-[10px] uppercase font-black text-slate-600 tracking-wider">
+                      Configurações do WhatsApp
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] uppercase font-black text-slate-400">
+                      Número Master (WhatsApp + DDD)
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.store_contact || ""}
+                      onChange={(e) => updateField("store_contact", e.target.value)}
+                      placeholder="(00) 0 0000-0000"
+                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-mono font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] uppercase font-black text-slate-400">
+                      Mensagem Automática (Geral)
+                    </label>
+                    <textarea
+                      value={settings.whatsapp_main_message || ""}
+                      onChange={(e) => updateField("whatsapp_main_message", e.target.value)}
+                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 transition-all h-24 resize-none shadow-sm"
+                      placeholder="Olá! Gostaria de conversar sobre as marcas..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] uppercase font-black text-slate-400">
+                      Lead de Produto (Automático)
+                    </label>
+                    <textarea
+                      value={settings.whatsapp_product_message || ""}
+                      onChange={(e) => updateField("whatsapp_product_message", e.target.value)}
+                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 transition-all h-24 resize-none shadow-sm"
+                      placeholder="Olá! Tenho interesse no item {product}..."
+                    />
+                  </div>
+                </div>
+
+                {/* Facebook Pixel Section */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2">
+                    <Facebook size={16} className="text-blue-600" />
+                    <span className="text-[10px] uppercase font-black text-slate-600 tracking-wider">
+                      Pixel do Facebook
+                    </span>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed tracking-widest">
+                    Insira o ID do seu Pixel do Facebook para rastreamento de campanhas.
+                  </p>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] uppercase font-black text-slate-400">
+                      Pixel ID
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.facebook_pixel || ""}
+                      onChange={(e) => updateField("facebook_pixel", e.target.value)}
+                      placeholder="Ex: 1234567890"
+                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-mono font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -767,99 +851,146 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 />
               </div>
             </div>
+
+            {/* Configuração de Frete integrada */}
+            <div className="border-t border-slate-100 pt-12 mt-12 space-y-10">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-sky-100 text-sky-600">
+                  <Truck size={24} />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
+                  Cálculo de Frete (Regiões de Entrega)
+                </h3>
+              </div>
+
+              <div className="bg-white rounded-3xl p-8 border border-lilac/10 space-y-8">
+                 <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">Faixas de Preço por CEP</h4>
+                      <p className="text-[10px] text-[#A09898] uppercase font-bold tracking-widest mt-1">Defina valores de entrega baseados em intervalos de CEP.</p>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const newRules = [...(settings.shipping_rules || [])];
+                        newRules.push({
+                          id: crypto.randomUUID(),
+                          region: 'Nova Região',
+                          cep_start: '',
+                          cep_end: '',
+                          price: 0,
+                          active: true
+                        });
+                        updateField('shipping_rules', newRules);
+                      }}
+                      className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all"
+                    >
+                      + Adicionar Região
+                    </button>
+                 </div>
+
+                 <div className="space-y-4">
+                    {(settings.shipping_rules || []).map((rule, idx) => (
+                      <div key={rule.id} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-5 bg-[#F8F5F2] rounded-2xl border border-lilac/5 items-center">
+                        <div className="md:col-span-2 space-y-1">
+                          <label className="text-[8px] font-black text-[#A09898] uppercase">Nome da Região / Cidade</label>
+                          <input 
+                            value={rule.region}
+                            onChange={(e) => {
+                              const newRules = [...(settings.shipping_rules || [])];
+                              newRules[idx].region = e.target.value;
+                              updateField('shipping_rules', newRules);
+                            }}
+                            className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-bold outline-none"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-[#A09898] uppercase">CEP Inicial</label>
+                          <input 
+                            value={rule.cep_start}
+                            onChange={(e) => {
+                              const newRules = [...(settings.shipping_rules || [])];
+                              newRules[idx].cep_start = e.target.value.replace(/\D/g, '');
+                              updateField('shipping_rules', newRules);
+                            }}
+                            className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-mono outline-none"
+                            placeholder="00000000"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-[#A09898] uppercase">CEP Final</label>
+                          <input 
+                            value={rule.cep_end}
+                            onChange={(e) => {
+                              const newRules = [...(settings.shipping_rules || [])];
+                              newRules[idx].cep_end = e.target.value.replace(/\D/g, '');
+                              updateField('shipping_rules', newRules);
+                            }}
+                            className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-mono outline-none"
+                            placeholder="99999999"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[8px] font-black text-[#A09898] uppercase">Valor (R$)</label>
+                          <input 
+                            type="number"
+                            value={rule.price}
+                            onChange={(e) => {
+                              const newRules = [...(settings.shipping_rules || [])];
+                              newRules[idx].price = Number(e.target.value);
+                              updateField('shipping_rules', newRules);
+                            }}
+                            className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-bold outline-none"
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-2 justify-end pt-4 md:pt-0">
+                          <button 
+                            onClick={() => {
+                              const newRules = [...(settings.shipping_rules || [])];
+                              newRules[idx].active = !newRules[idx].active;
+                              updateField('shipping_rules', newRules);
+                            }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest ${rule.active ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}
+                            title={rule.active ? 'Desativar' : 'Ativar'}
+                          >
+                            {rule.active ? <CheckCircle size={14} /> : <X size={14} />} {rule.active ? 'Desativar' : 'Ativar'}
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const newRules = (settings.shipping_rules || []).filter(r => r.id !== rule.id);
+                              updateField('shipping_rules', newRules);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-400 hover:text-white hover:bg-rose-500 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest"
+                            title="Remover"
+                          >
+                            <Trash2 size={14} /> Excluir
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
+                    {(settings.shipping_rules || []).length === 0 && (
+                      <div className="p-12 text-center border-2 border-dashed border-lilac/10 rounded-[2rem] space-y-3">
+                        <Truck size={32} className="mx-auto text-lilac/20" />
+                        <p className="text-[10px] text-[#A09898] uppercase font-black tracking-widest">Nenhuma regra de frete cadastrada.</p>
+                      </div>
+                    )}
+                 </div>
+              </div>
+
+              <div className="bg-sky-50/50 rounded-3xl p-8 border border-sky-100">
+                 <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2">Instruções de Uso</h4>
+                 <ul className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest space-y-2 leading-relaxed">
+                    <li>• O sistema buscará o CEP do cliente no checkout e aplicará o valor da primeira regra que coincidir com o intervalo.</li>
+                    <li>• Insira apenas números nos campos de CEP.</li>
+                    <li>• Regras desativadas serão ignoradas.</li>
+                    <li>• Se nenhum CEP coincidir, o sistema poderá exibir "Sob Consulta".</li>
+                 </ul>
+              </div>
+            </div>
           </div>
         )}
 
 
-        {activeSubTab === "marketing" && (
-          <div className="space-y-8">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-blue-100 text-blue-600">
-                <Facebook size={24} />
-              </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
-                Marketing Digital
-              </h3>
-            </div>
-
-            <div className="p-8 rounded-3xl bg-blue-50 border border-blue-100 space-y-4">
-              <p className="text-[10px] text-blue-400 uppercase font-bold leading-relaxed tracking-widest">
-                Insira o ID do seu Pixel do Facebook para rastreamento.
-              </p>
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                  Pixel ID
-                </label>
-                <input
-                  type="text"
-                  value={settings.facebook_pixel || ""}
-                  onChange={(e) =>
-                    updateField("facebook_pixel", e.target.value)
-                  }
-                  placeholder="Ex: 1234567890"
-                  className="w-full bg-white border border-blue-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-blue-500 transition-all shadow-sm"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSubTab === "whatsapp" && (
-          <div className="space-y-8">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-emerald-100/50 text-emerald-700">
-                <Phone size={24} />
-              </div>
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
-                WhatsApp & Automação
-              </h3>
-            </div>
-
-            <div className="p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 shadow-inner">
-              <div className="max-w-md space-y-2">
-                <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
-                  Número Master (WhatsApp + DDD)
-                </label>
-                <input
-                  type="text"
-                  value={settings.store_contact || ""}
-                  onChange={(e) => updateField("store_contact", e.target.value)}
-                  placeholder="(00) 0 0000-0000"
-                  className="w-full bg-white border border-slate-100 rounded-2xl px-6 py-4 text-sm font-mono font-bold outline-none focus:border-emerald-500 transition-all shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
-                  Mensagem Automática (Geral)
-                </label>
-                <textarea
-                  value={settings.whatsapp_main_message || ""}
-                  onChange={(e) =>
-                    updateField("whatsapp_main_message", e.target.value)
-                  }
-                  className="w-full bg-white border border-slate-100 rounded-[2rem] px-6 py-6 text-xs font-bold outline-none focus:border-emerald-500 transition-all h-44 resize-none shadow-sm"
-                  placeholder="Olá! Gostaria de conversar sobre as marcas..."
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
-                  Lead de Produto (Automático)
-                </label>
-                <textarea
-                  value={settings.whatsapp_product_message || ""}
-                  onChange={(e) =>
-                    updateField("whatsapp_product_message", e.target.value)
-                  }
-                  className="w-full bg-white border border-slate-100 rounded-[2rem] px-6 py-6 text-xs font-bold outline-none focus:border-emerald-500 transition-all h-44 resize-none shadow-sm"
-                  placeholder="Olá! Tenho interesse no item {product}..."
-                />
-              </div>
-            </div>
-          </div>
-        )}
 
 
         {activeSubTab === "receipt" && (
@@ -948,234 +1079,80 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
 
             <div className="p-6 rounded-2xl bg-white border border-lilac/10">
               <p className="text-xs text-gray-500 mb-6 uppercase tracking-widest font-black">
-                Configure exatamente 10 opções para a roleta. Ela será exibida
+                Configure exatamente 5 opções para a roleta. Ela será exibida
                 no final de compras a partir de R$ 300,00.
               </p>
 
               <div className="space-y-4">
-                {(
-                  settings.roulette_prizes ||
-                  Array.from({ length: 10 }).map((_, i) => ({
-                    id: `prize-${i}`,
-                    name: `Brinde ${i + 1}`,
-                    active: true,
-                    weight: 10,
-                  }))
-                ).map((prize, idx) => (
-                  <div
-                    key={prize.id}
-                    className="flex items-center gap-4 p-4 bg-white rounded-xl border border-lilac/20 shadow-sm"
-                  >
-                    <span className="w-6 font-mono font-bold text-[#A09898]">
-                      {idx + 1}.
-                    </span>
-                    <input
-                      type="text"
-                      value={prize.name}
-                      onChange={(e) => {
-                        const newPrizes = [
-                          ...(settings.roulette_prizes ||
-                            Array.from({ length: 10 }).map((_, i) => ({
-                              id: `prize-${i}`,
-                              name: `Brinde ${i + 1}`,
-                              active: true,
-                              weight: 10,
-                            }))),
-                        ];
-                        newPrizes[idx].name = e.target.value;
-                        updateField("roulette_prizes", newPrizes);
-                      }}
-                      className="flex-1 bg-white border border-lilac/20 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-lilac"
-                      placeholder="Ex: 10% de Desconto, Brinde Surpresa..."
-                    />
+                {(() => {
+                  const prizesToRender = (settings.roulette_prizes && settings.roulette_prizes.length === 5)
+                    ? settings.roulette_prizes
+                    : Array.from({ length: 5 }).map((_, i) => {
+                        const existing = settings.roulette_prizes?.[i];
+                        return {
+                          id: existing?.id || `prize-${i}`,
+                          name: existing?.name || `Brinde ${i + 1}`,
+                          active: existing?.active !== undefined ? existing.active : true,
+                          weight: existing?.weight || 20,
+                        };
+                      });
 
-                    <div className="flex items-center gap-2">
-                      <label className="text-[10px] uppercase font-black text-[#A09898]">
-                        Peso (1 a 100):
-                      </label>
+                  return prizesToRender.map((prize, idx) => (
+                    <div
+                      key={prize.id}
+                      className="flex items-center gap-4 p-4 bg-white rounded-xl border border-lilac/20 shadow-sm"
+                    >
+                      <span className="w-6 font-mono font-bold text-[#A09898]">
+                        {idx + 1}.
+                      </span>
                       <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={prize.weight}
+                        type="text"
+                        value={prize.name}
                         onChange={(e) => {
-                          const newPrizes = [
-                            ...(settings.roulette_prizes ||
-                              Array.from({ length: 10 }).map((_, i) => ({
-                                id: `prize-${i}`,
-                                name: `Brinde ${i + 1}`,
-                                active: true,
-                                weight: 10,
-                              }))),
-                          ];
-                          newPrizes[idx].weight = Number(e.target.value);
+                          const newPrizes = [...prizesToRender];
+                          newPrizes[idx].name = e.target.value;
                           updateField("roulette_prizes", newPrizes);
                         }}
-                        className="w-16 bg-white border border-lilac/20 rounded-xl px-2 py-3 text-xs font-bold outline-none focus:border-lilac text-center"
+                        className="flex-1 bg-white border border-lilac/20 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-lilac"
+                        placeholder="Ex: 10% de Desconto, Brinde Surpresa..."
                       />
-                    </div>
 
-                    <button
-                      onClick={() => {
-                        const newPrizes = [
-                          ...(settings.roulette_prizes ||
-                            Array.from({ length: 10 }).map((_, i) => ({
-                              id: `prize-${i}`,
-                              name: `Brinde ${i + 1}`,
-                              active: true,
-                              weight: 10,
-                            }))),
-                        ];
-                        newPrizes[idx].active = !newPrizes[idx].active;
-                        updateField("roulette_prizes", newPrizes);
-                      }}
-                      className={`w-24 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${prize.active ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-rose-600"}`}
-                    >
-                      {prize.active ? "Ativo" : "Inativo"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSubTab === "shipping" && (
-          <div className="space-y-10">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-sky-100 text-sky-600">
-                <Truck size={24} />
-              </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
-                Configuração de Frete
-              </h3>
-            </div>
-
-            <div className="bg-white rounded-3xl p-8 border border-lilac/10 space-y-8">
-               <div className="flex justify-between items-center">
-                  <div>
-                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">Faixas de Preço por CEP</h4>
-                    <p className="text-[10px] text-[#A09898] uppercase font-bold tracking-widest mt-1">Defina valores de entrega baseados em intervalos de CEP.</p>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      const newRules = [...(settings.shipping_rules || [])];
-                      newRules.push({
-                        id: crypto.randomUUID(),
-                        region: 'Nova Região',
-                        cep_start: '',
-                        cep_end: '',
-                        price: 0,
-                        active: true
-                      });
-                      updateField('shipping_rules', newRules);
-                    }}
-                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all"
-                  >
-                    + Adicionar Região
-                  </button>
-               </div>
-
-               <div className="space-y-4">
-                  {(settings.shipping_rules || []).map((rule, idx) => (
-                    <div key={rule.id} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-5 bg-[#F8F5F2] rounded-2xl border border-lilac/5 items-center">
-                      <div className="md:col-span-2 space-y-1">
-                        <label className="text-[8px] font-black text-[#A09898] uppercase">Nome da Região / Cidade</label>
-                        <input 
-                          value={rule.region}
-                          onChange={(e) => {
-                            const newRules = [...(settings.shipping_rules || [])];
-                            newRules[idx].region = e.target.value;
-                            updateField('shipping_rules', newRules);
-                          }}
-                          className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-bold outline-none"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[#A09898] uppercase">CEP Inicial</label>
-                        <input 
-                          value={rule.cep_start}
-                          onChange={(e) => {
-                            const newRules = [...(settings.shipping_rules || [])];
-                            newRules[idx].cep_start = e.target.value.replace(/\D/g, '');
-                            updateField('shipping_rules', newRules);
-                          }}
-                          className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-mono outline-none"
-                          placeholder="00000000"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[#A09898] uppercase">CEP Final</label>
-                        <input 
-                          value={rule.cep_end}
-                          onChange={(e) => {
-                            const newRules = [...(settings.shipping_rules || [])];
-                            newRules[idx].cep_end = e.target.value.replace(/\D/g, '');
-                            updateField('shipping_rules', newRules);
-                          }}
-                          className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-mono outline-none"
-                          placeholder="99999999"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[#A09898] uppercase">Valor (R$)</label>
-                        <input 
+                      <div className="flex items-center gap-2">
+                        <label className="text-[10px] uppercase font-black text-[#A09898]">
+                          Peso (1 a 100):
+                        </label>
+                        <input
                           type="number"
-                          value={rule.price}
+                          min="1"
+                          max="100"
+                          value={prize.weight}
                           onChange={(e) => {
-                            const newRules = [...(settings.shipping_rules || [])];
-                            newRules[idx].price = Number(e.target.value);
-                            updateField('shipping_rules', newRules);
+                            const newPrizes = [...prizesToRender];
+                            newPrizes[idx].weight = Number(e.target.value);
+                            updateField("roulette_prizes", newPrizes);
                           }}
-                          className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-bold outline-none"
+                          className="w-16 bg-white border border-lilac/20 rounded-xl px-2 py-3 text-xs font-bold outline-none focus:border-lilac text-center"
                         />
                       </div>
-                      <div className="flex flex-wrap gap-2 justify-end pt-4 md:pt-0">
-                        <button 
-                          onClick={() => {
-                            const newRules = [...(settings.shipping_rules || [])];
-                            newRules[idx].active = !newRules[idx].active;
-                            updateField('shipping_rules', newRules);
-                          }}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest ${rule.active ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}
-                          title={rule.active ? 'Desativar' : 'Ativar'}
-                        >
-                          {rule.active ? <CheckCircle size={14} /> : <X size={14} />} {rule.active ? 'Desativar' : 'Ativar'}
-                        </button>
-                        <button 
-                          onClick={() => {
-                            const newRules = (settings.shipping_rules || []).filter(r => r.id !== rule.id);
-                            updateField('shipping_rules', newRules);
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-400 hover:text-white hover:bg-rose-500 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest"
-                          title="Remover"
-                        >
-                          <Trash2 size={14} /> Excluir
-                        </button>
-                      </div>
-                    </div>
-                  ))}
 
-                  {(settings.shipping_rules || []).length === 0 && (
-                    <div className="p-12 text-center border-2 border-dashed border-lilac/10 rounded-[2rem] space-y-3">
-                      <Truck size={32} className="mx-auto text-lilac/20" />
-                      <p className="text-[10px] text-[#A09898] uppercase font-black tracking-widest">Nenhuma regra de frete cadastrada.</p>
+                      <button
+                        onClick={() => {
+                          const newPrizes = [...prizesToRender];
+                          newPrizes[idx].active = !newPrizes[idx].active;
+                          updateField("roulette_prizes", newPrizes);
+                        }}
+                        className={`w-24 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${prize.active ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-rose-600"}`}
+                      >
+                        {prize.active ? "Ativo" : "Inativo"}
+                      </button>
                     </div>
-                  )}
-               </div>
-            </div>
-
-            <div className="bg-lilac/5 rounded-3xl p-8 border border-lilac/10">
-               <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2">Instruções de Uso</h4>
-               <ul className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest space-y-2 leading-relaxed">
-                  <li>• O sistema buscará o CEP do cliente no checkout e aplicará o valor da primeira regra que coincidir com o intervalo.</li>
-                  <li>• Insira apenas números nos campos de CEP.</li>
-                  <li>• Regras desativadas serão ignoradas.</li>
-                  <li>• Se nenhum CEP coincidir, o sistema poderá exibir "Sob Consulta" ou um valor padrão (se implementado).</li>
-               </ul>
+                  ));
+                })()}
+              </div>
             </div>
           </div>
         )}
+
 
         {activeSubTab === "notifications" && (
           <div className="space-y-10">

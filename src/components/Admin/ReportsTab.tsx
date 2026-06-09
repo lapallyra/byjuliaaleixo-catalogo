@@ -147,9 +147,9 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         <div className="flex items-center gap-3 bg-white border border-lilac/20 p-2 px-4 rounded-2xl shadow-sm">
           <button
             onClick={() => {
-              const rows = lists.productRank.map((p, idx) => [
+              const rows = productRank.map((p, idx) => [
                 `${idx + 1}º`,
-                p.name,
+                p.product_name,
                 p.category || "---",
                 `${p.sold} un.`
               ]);

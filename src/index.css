@@ -69,13 +69,36 @@ html {
 }
 
 @layer base {
-  html, body, #root {
+  html, body {
     width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
     background-color: #ffffff;
     color: #050505;
     font-family: "Tahoma", sans-serif;
     line-height: 1.25;
     scroll-behavior: smooth;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    color: #050505;
+    font-family: "Tahoma", sans-serif;
+    line-height: 1.25;
+  }
+  
+  /* Redefine classical screen heights to use modern, dynamic viewport height */
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
+
+  .h-screen {
+    height: 100dvh !important;
   }
   
   p {
@@ -296,7 +319,7 @@ html {
       radial-gradient(at 100% 0%, rgba(131, 24, 67, 0.15) 0px, transparent 50%);
   }
 
-  body:has(.feminine-admin), html:has(.feminine-admin) {
+  body:has(.feminine-admin), html:has(.feminine-admin), #root:has(.feminine-admin) {
     background-color: #0b0507 !important;
   }
 

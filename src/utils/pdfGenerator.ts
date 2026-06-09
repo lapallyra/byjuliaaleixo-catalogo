@@ -89,7 +89,7 @@ export const exportGenericReportPDF = (config: GenericReportConfig, settings?: P
     margin: { left: 15, right: 15 },
     didDrawPage: function (data: any) {
       // Rodapé institucional e paginação
-      const str = 'Página ' + doc.internal.getNumberOfPages();
+      const str = 'Página ' + (doc as any).getNumberOfPages();
       doc.setFontSize(8);
       
       const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();

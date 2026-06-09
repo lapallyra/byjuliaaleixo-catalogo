@@ -38,6 +38,39 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
   );
   const [insumoToDelete, setInsumoToDelete] = useState<string | null>(null);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filtered.map(i => i.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      for (const id of selectedIds) {
+        await onDeleteInsumo(id);
+      }
+      setSelectedIds([]);
+      setIsBulkDeleteModalOpen(false);
+      alert("Insumos excluídos com sucesso!");
+    } catch (e) {
+      console.error("Erro na exclusão em massa:", e);
+      alert("Houve um erro ao excluir um ou mais insumos.");
+    }
+  };
+
   const confirmDelete = () => {
     if (insumoToDelete) {
       onDeleteInsumo(insumoToDelete);
@@ -143,7 +176,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                 title: "Relatório de Estoque (Insumos)",
                 columns: ["Material", "Categoria", "Estoque Físico", "Custo Unit."],
                 rows,
-                filters: `Busca: ${searchTerm || 'Nenhuma'} | Categoria: ${categoryFilter}`
+                filters: `Busca: ${searchTerm || 'Nenhuma'}`
               });
             }}
             className="flex items-center justify-center px-6 py-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group text-[9px] font-black uppercase tracking-widest gap-2"
@@ -166,6 +199,14 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-slate-50/50 border-b border-gray-50">
+              <th className="py-6 px-8 w-12 text-center">
+                <input
+                  type="checkbox"
+                  checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="rounded border-gray-300 text-lilac focus:ring-lilac cursor-pointer scale-110"
+                />
+              </th>
               <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-[#A09898]">
                 Cod. Insumo
               </th>
@@ -190,7 +231,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="py-24 text-center text-[#A09898] italic text-[11px] font-black tracking-widest opacity-50"
                 >
                   Nenhum insumo encontrado no catálogo.
@@ -207,6 +248,14 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                     )
                   }
                 >
+                  <td className="py-6 px-8 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(insumo.id)}
+                      onChange={(e) => handleSelectOne(insumo.id, e.target.checked)}
+                      className="rounded border-gray-300 text-lilac focus:ring-lilac cursor-pointer scale-110"
+                    />
+                  </td>
                   <td className="py-6 px-8">
                     <span className="font-mono text-[10px] font-black text-lilac">
                       #{insumo.code || "---"}
@@ -248,27 +297,27 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                             isDetailOpen === insumo.id ? null : insumo.id,
                           )
                         }
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-lilac hover:bg-white transition-all text-[9px] font-black uppercase tracking-widest border border-transparent hover:border-lilac/20"
+                        className="p-2.5 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-lilac hover:bg-white transition-all border border-transparent hover:border-lilac/20"
                         title="Ver Detalhes"
                       >
-                        <Info size={14} /> Detalhes
+                        <Info size={14} />
                       </button>
                       <button
                         onClick={() => {
                           setEditingInsumo(insumo);
                           setIsModalOpen(true);
                         }}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-slate-900 hover:bg-white transition-all text-[9px] font-black uppercase tracking-widest border border-transparent hover:border-slate-200"
+                        className="p-2.5 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-slate-900 hover:bg-white transition-all border border-transparent hover:border-slate-200"
                         title="Editar"
                       >
-                        <Edit size={14} /> Editar
+                        <Edit size={14} />
                       </button>
                       <button
                         onClick={() => setInsumoToDelete(insumo.id || null)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 text-rose-300 hover:bg-rose-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest"
+                        className="p-2.5 rounded-xl bg-slate-50 text-rose-300 hover:bg-rose-500 hover:text-white transition-all"
                         title="Excluir"
                       >
-                        <Trash2 size={14} /> Excluir
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -276,7 +325,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                 {isDetailOpen === insumo.id && (
                   <tr className="bg-slate-50/50">
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-12 py-8 border-b border-[#F0E6D2]"
                     >
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
@@ -358,6 +407,54 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
           </div>
         </div>
       )}
+
+      {isBulkDeleteModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center animate-in zoom-in-95">
+            <Trash2 size={48} className="mx-auto text-rose-500 mb-6" />
+            <h3 className="text-xl font-black mb-2 uppercase">
+              Excluir Insumos Selecionados?
+            </h3>
+            <p className="text-sm text-gray-500 mb-8">
+              Essa ação não pode ser desfeita e excluirá {selectedIds.length} insumos selecionados de forma segura e permanente.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsBulkDeleteModalOpen(false)}
+                className="flex-1 py-4 bg-slate-100 rounded-2xl font-black text-gray-500 uppercase text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-rose-600/30"
+              >
+                Sim, Excluir Todos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-lilac/20 shadow-2xl rounded-2xl p-4 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-2 duration-300">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">
+            {selectedIds.length} {selectedIds.length === 1 ? 'insumo selecionado' : 'insumos selecionados'}
+          </span>
+          <button
+            onClick={() => setIsBulkDeleteModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-rose-600 text-white font-black text-[9px] uppercase tracking-widest hover:bg-rose-700 transition-all hover:scale-105 active:scale-95 shadow-md shadow-rose-200"
+          >
+            <Trash2 size={14} /> Excluir Selecionados
+          </button>
+          <button
+            onClick={() => setSelectedIds([])}
+            className="text-[9px] font-black uppercase tracking-widest text-[#A09898] hover:text-slate-900 transition-colors"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -385,8 +482,22 @@ const InsumoFormModal: React.FC<
   const unitValRaw = qty > 0 ? cost / qty : 0;
   const unitVal = Math.ceil(unitValRaw * 100) / 100;
 
+  const defaultInsumoCategories = [
+    "Acessórios",
+    "Espirais e Wire-o",
+    "Papéis",
+    "Papelão Cinza",
+    "Plásticos e Bolsos",
+    "Fitas e Elásticos",
+    "Ferramentas",
+    "Embalagens",
+    "Tintas e Colas"
+  ];
   const categories = Array.from(
-    new Set(existingInsumos?.map((i) => i.category).filter(Boolean) || []),
+    new Set([
+      ...defaultInsumoCategories,
+      ...(existingInsumos?.map((i) => i.category).filter(Boolean) || [])
+    ]),
   );
   const subcategories = Array.from(
     new Set(

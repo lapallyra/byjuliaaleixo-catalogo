@@ -7,6 +7,7 @@ import { logCheckoutEvent, getSiteSettings, getGlobalSettings, getCustomerByCpf 
 import { SiteSettings } from '../types';
 import { useAuth } from './AuthProvider';
 import { ImageWithFallback } from './ImageWithFallback';
+import { formatPhone, formatCPFOrCNPJ } from '../utils/masks';
 
 
 interface CheckoutModalProps {
@@ -743,11 +744,11 @@ export function CheckoutModal({
                          {errors.clientName && <p className="text-red-500 text-xs px-2">{errors.clientName}</p>}
                        </div>
                        <div className="space-y-1">
-                         <input value={clientContact} onChange={e => { setClientContact(e.target.value); setErrors(p => ({...p, clientContact: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.clientContact ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="WhatsApp (DDD + Número)" />
+                         <input value={clientContact} onChange={e => { setClientContact(formatPhone(e.target.value)); setErrors(p => ({...p, clientContact: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.clientContact ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="WhatsApp (DDD + Número)" />
                          {errors.clientContact && <p className="text-red-500 text-xs px-2">{errors.clientContact}</p>}
                        </div>
                        <div className="space-y-1 relative">
-                         <input value={clientCpf} onChange={e => { setClientCpf(e.target.value); setErrors(p => ({...p, clientCpf: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.clientCpf ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="CPF / CNPJ" />
+                         <input value={clientCpf} onChange={e => { setClientCpf(formatCPFOrCNPJ(e.target.value)); setErrors(p => ({...p, clientCpf: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium ${errors.clientCpf ? 'ring-2 ring-red-400' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="CPF / CNPJ" />
                          {errors.clientCpf && <p className="text-red-500 text-xs px-2">{errors.clientCpf}</p>}
                        </div>
                        <div className="space-y-1 md:col-span-2">
@@ -906,7 +907,7 @@ export function CheckoutModal({
                         <div>
                           <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Contato</span>
                           <span className="font-medium text-gray-800">{clientName || "Não informado"}</span>
-                          <span className="block text-xs mt-0.5">{clientContact} | {clientEmail}</span>
+                          <span className="block text-xs mt-0.5">{formatPhone(clientContact)} | {clientEmail}</span>
                         </div>
                         <div>
                           <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Endereço</span>

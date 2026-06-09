@@ -25,6 +25,7 @@ import {
 } from "../../services/firebaseService";
 import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 import { isWithinInterval, addDays, startOfDay, endOfDay } from "date-fns";
+import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
 
 interface ClientsTabProps {
   companyId: CompanyId;
@@ -42,6 +43,42 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
     null,
   );
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredCustomers.map(c => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setLoading(true);
+    try {
+      for (const id of selectedIds) {
+        await deleteCustomer(id);
+      }
+      setSelectedIds([]);
+      setIsBulkDeleteModalOpen(false);
+      alert("Clientes excluídos com sucesso!");
+    } catch (e) {
+      console.error("Erro na exclusão em massa:", e);
+      alert("Houve um erro ao excluir um ou mais clientes.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCustomers = useMemo(
     () =>
@@ -207,8 +244,8 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
             onClick={() => {
               const rows = filteredCustomers.map(c => [
                 c.name,
-                c.phone || "---",
-                c.instagram || "---",
+                c.contact || (c as any).phone || "---",
+                (c as any).instagram || "---",
                 `${c.ordersCount || 0}`,
                 `R$ ${(c.totalSpent || 0).toFixed(2)}`
               ]);
@@ -260,7 +297,15 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
         <table className="w-full text-left uppercase">
           <thead>
             <tr className="bg-white/50 border-b border-gray-50">
-              <th className="py-6 px-8 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
+              <th className="py-6 px-8 w-12 text-center">
+                <input
+                  type="checkbox"
+                  checked={filteredCustomers.length > 0 && selectedIds.length === filteredCustomers.length}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="rounded border-gray-300 text-lilac focus:ring-lilac transition duration-150 ease-in-out cursor-pointer scale-110"
+                />
+              </th>
+              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
                 Cód
               </th>
               <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
@@ -268,9 +313,6 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
               </th>
               <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
                 Contato
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em] text-center">
-                Compras
               </th>
               <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em] text-right">
                 Investido
@@ -296,9 +338,17 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                 key={c.id}
                 className="group hover:bg-lilac-baby/30 transition-all cursor-pointer"
               >
-                <td className="py-6 px-8">
+                <td className="py-6 px-8 w-12 text-center" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(c.id)}
+                    onChange={(e) => handleSelectOne(c.id, e.target.checked)}
+                    className="rounded border-gray-300 text-lilac focus:ring-lilac transition duration-150 ease-in-out cursor-pointer scale-110"
+                  />
+                </td>
+                <td className="py-6">
                   <span className="font-mono text-[10px] text-lilac font-black tracking-tight">
-                    #{c.code}
+                    {c.code}
                   </span>
                 </td>
                 <td className="py-6">
@@ -307,7 +357,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                       {c.name}
                     </span>
                     <span className="text-[9px] text-[#A09898] font-black tracking-widest mt-1 opacity-70">
-                      {c.cpfCnpj}
+                      {formatCPFOrCNPJ(c.cpfCnpj)}
                     </span>
                   </div>
                 </td>
@@ -317,13 +367,8 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                       <Phone size={14} className="text-lilac" />
                     </div>
                     <span className="text-[10px] font-black tracking-widest">
-                      {c.contact}
+                      {formatPhone(c.contact)}
                     </span>
-                  </div>
-                </td>
-                <td className="py-6 text-center">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-lilac/5 text-lilac text-[9px] font-black border border-lilac/10">
-                    <Hash size={10} /> {c.ordersCount || 0}
                   </div>
                 </td>
                 <td className="py-6 text-right font-mono text-xs text-slate-900 font-black">
@@ -340,30 +385,30 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                         setSelectedCustomer(c);
                         setIsDetailModalOpen(true);
                       }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[#D1CACA] hover:text-lilac transition-all border border-slate-50 hover:border-lilac/20 text-[9px] font-bold uppercase tracking-widest"
+                      className="p-2.5 rounded-xl bg-white text-[#D1CACA] hover:text-lilac transition-all border border-slate-100 hover:border-lilac/20 hover:shadow-sm"
                       title="Ver Detalhes"
                     >
-                      <Users size={14} /> Detalhes
+                      <Users size={14} />
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleOpenEdit(c);
                       }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[#D1CACA] hover:text-slate-900 transition-all border border-slate-50 hover:border-slate-200 text-[9px] font-bold uppercase tracking-widest"
+                      className="p-2.5 rounded-xl bg-white text-[#D1CACA] hover:text-slate-900 transition-all border border-slate-100 hover:border-slate-200 hover:shadow-sm"
                       title="Editar"
                     >
-                      <Edit size={14} /> Editar
+                      <Edit size={14} />
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(c.id);
                       }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 text-rose-300 hover:text-white hover:bg-rose-500 transition-all text-[9px] font-bold uppercase tracking-widest"
+                      className="p-2.5 rounded-xl bg-slate-50 text-rose-300 hover:text-white hover:bg-rose-500 transition-all border border-slate-100 hover:border-rose-100"
                       title="Excluir"
                     >
-                      <Trash2 size={14} /> Excluir
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </td>
@@ -398,7 +443,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                     {selectedCustomer.name}
                   </h2>
                   <p className="text-[10px] font-black text-lilac uppercase tracking-[0.3em] mt-2">
-                    Código do Cliente: #{selectedCustomer.code}
+                    Código do Cliente: {selectedCustomer.code}
                   </p>
                 </div>
                 <div className="text-right">
@@ -422,7 +467,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                         Contato / WhatsApp
                       </p>
                       <p className="text-sm font-bold text-slate-900">
-                        {selectedCustomer.contact}
+                        {formatPhone(selectedCustomer.contact)}
                       </p>
                     </div>
                   </div>
@@ -435,7 +480,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                         Documento
                       </p>
                       <p className="text-sm font-bold text-slate-900">
-                        {selectedCustomer.cpfCnpj || "NÃO INFORMADO"}
+                        {selectedCustomer.cpfCnpj ? formatCPFOrCNPJ(selectedCustomer.cpfCnpj) : "NÃO INFORMADO"}
                       </p>
                     </div>
                   </div>
@@ -469,19 +514,6 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                           {selectedCustomer.city} {selectedCustomer.state}{" "}
                           {selectedCustomer.zipCode}
                         </span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-white text-lilac">
-                      <TrendingUp size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
-                        Frequência
-                      </p>
-                      <p className="text-sm font-bold text-slate-900 uppercase">
-                        {selectedCustomer.ordersCount || 0} PEDIDOS REALIZADOS
                       </p>
                     </div>
                   </div>
@@ -554,10 +586,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                     className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.contact}
                     onChange={(e) => {
-                      let v = e.target.value.replace(/\D/g, "");
-                      v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
-                      v = v.replace(/(\d)(\d{4})$/, "$1-$2");
-                      setFormData({ ...formData, contact: v });
+                      setFormData({ ...formData, contact: formatPhone(e.target.value) });
                     }}
                   />
                 </div>
@@ -575,18 +604,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                     className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.cpfCnpj}
                     onChange={(e) => {
-                      let v = e.target.value.replace(/\D/g, "");
-                      if (v.length <= 11)
-                        v = v.replace(
-                          /(\d{3})(\d{3})(\d{3})(\d{2})/,
-                          "$1.$2.$3-$4",
-                        );
-                      else
-                        v = v.replace(
-                          /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-                          "$1.$2.$3/$4-$5",
-                        );
-                      setFormData({ ...formData, cpfCnpj: v });
+                      setFormData({ ...formData, cpfCnpj: formatCPFOrCNPJ(e.target.value) });
                     }}
                   />
                 </div>
@@ -781,6 +799,54 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {isBulkDeleteModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center animate-in zoom-in-95">
+            <Trash2 size={48} className="mx-auto text-rose-500 mb-6" />
+            <h3 className="text-xl font-black mb-2 uppercase">
+              Excluir Clientes Selecionados?
+            </h3>
+            <p className="text-sm text-gray-500 mb-8">
+              Essa ação não pode ser desfeita e excluirá {selectedIds.length} clientes selecionados de forma segura e permanente.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsBulkDeleteModalOpen(false)}
+                className="flex-1 py-4 bg-slate-100 rounded-2xl font-black text-gray-500 uppercase text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-rose-600/30"
+              >
+                Sim, Excluir Todos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-lilac/20 shadow-2xl rounded-2xl p-4 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-2 duration-300">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">
+            {selectedIds.length} {selectedIds.length === 1 ? 'cliente selecionado' : 'clientes selecionados'}
+          </span>
+          <button
+            onClick={() => setIsBulkDeleteModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-rose-600 text-white font-black text-[9px] uppercase tracking-widest hover:bg-rose-700 transition-all hover:scale-105 active:scale-95 shadow-md shadow-rose-200"
+          >
+            <Trash2 size={14} /> Excluir Selecionados
+          </button>
+          <button
+            onClick={() => setSelectedIds([])}
+            className="text-[9px] font-black uppercase tracking-widest text-[#A09898] hover:text-slate-900 transition-colors"
+          >
+            Cancelar
+          </button>
         </div>
       )}
     </div>

@@ -98,6 +98,8 @@ export interface Order {
   giftTheme?: string;
   giftColors?: string;
   insumosDeducted?: boolean;
+  marketplace?: string;
+  marketplaceTax?: number;
   history?: {
     status: Order['status'];
     timestamp: any;
@@ -137,6 +139,8 @@ export interface FinanceEntry {
   companyId: CompanyId;
   orderId?: string;
   paymentMethod?: string;
+  marketplace?: string;
+  marketplaceTax?: number;
 }
 
 export interface SystemNotificationConfig {

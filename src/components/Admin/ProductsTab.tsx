@@ -56,6 +56,39 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filtered.map(p => p.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      for (const id of selectedIds) {
+        await onDeleteProduct(id);
+      }
+      setSelectedIds([]);
+      setIsBulkDeleteModalOpen(false);
+      alert("Produtos excluídos com sucesso!");
+    } catch (e) {
+      console.error("Erro na exclusão em massa:", e);
+      alert("Houve um erro ao excluir um ou mais produtos.");
+    }
+  };
+
   const confirmDelete = async () => {
     if (productToDelete) {
       await onDeleteProduct(productToDelete);
@@ -215,7 +248,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                 title: "Relatório de Produtos",
                 columns: ["Produto", "Categoria", "Subcat.", "Preço (Varejo)", "Est."],
                 rows,
-                filters: `Ateliê: ${selectedAtelier} | Cat: ${selectedTab}`
+                filters: `Ateliê: ${showAllInList ? "Todos" : selectedAtelier} | Busca: ${searchTerm || "Nenhuma"}`
               });
             }}
             className="flex items-center justify-center px-6 py-4 bg-slate-50 text-slate-400 border border-slate-100 rounded-xl hover:text-pink-600 hover:bg-white hover:border-pink-200 transition-all shadow-sm group text-[9px] font-black uppercase tracking-widest gap-2"
@@ -240,6 +273,20 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
 
       {/* Luxury Catalog List View */}
       <div className="space-y-4">
+        {filtered.length > 0 && (
+          <div className="flex items-center gap-3 px-5 py-3 bg-slate-50/50 hover:bg-slate-50 rounded-2xl border border-slate-100 max-w-sm cursor-pointer select-none transition-colors" onClick={() => handleSelectAll(!(selectedIds.length > 0 && selectedIds.length === filtered.length))}>
+            <input
+              type="checkbox"
+              checked={selectedIds.length > 0 && selectedIds.length === filtered.length}
+              onChange={(e) => {}} // Controlled via parent elements
+              className="rounded border-slate-200 text-pink-700 focus:ring-pink-500 cursor-pointer scale-110"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 select-none">
+              Selecionar todos ({filtered.length} itens)
+            </span>
+          </div>
+        )}
         {filtered.length === 0 && (
           <div className="py-32 text-center bg-white/40 border border-dashed border-slate-200 rounded-[3rem] text-slate-400 uppercase tracking-[0.3em] font-black text-[9px]">
             Nenhum produto encontrado neste ateliê.
@@ -259,6 +306,14 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
               onClick={() => setViewingProduct(p)}
               className="group bg-white rounded-2xl overflow-hidden border border-slate-100 flex flex-col md:flex-row md:items-center p-4 gap-6 hover:border-pink-300 transition-all shadow-sm hover:shadow-md cursor-pointer"
             >
+              <div className="flex items-center justify-center pl-2" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(p.id)}
+                  onChange={(e) => handleSelectOne(p.id, e.target.checked)}
+                  className="rounded border-slate-200 text-pink-700 focus:ring-pink-500 cursor-pointer scale-110"
+                />
+              </div>
               {/* Small Image (not enormous anymore) */}
               <div className="w-full md:w-24 h-24 rounded-xl overflow-hidden bg-slate-50 shrink-0 border border-slate-100">
                 <ImageWithFallback
@@ -316,27 +371,27 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                   <div className="flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => setViewingProduct(p)}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-400 hover:bg-pink-700 hover:text-white transition-all border border-slate-100 text-[10px] font-bold uppercase tracking-widest"
+                      className="p-2.5 rounded-xl bg-white text-slate-400 hover:bg-pink-700 hover:text-white transition-all border border-slate-100"
                       title="Ver Detalhes"
                     >
-                      <Eye size={14} /> Ver
+                      <Eye size={14} />
                     </button>
                     <button
                       onClick={() => {
                         setEditingProduct(p);
                         setIsModalOpen(true);
                       }}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-500 hover:text-white hover:bg-pink-700 transition-all border border-slate-100 text-[10px] font-bold uppercase tracking-widest"
+                      className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:text-white hover:bg-pink-700 transition-all border border-slate-100"
                       title="Editar"
                     >
-                      <Edit size={14} /> Editar
+                      <Edit size={14} />
                     </button>
                     <button
                       onClick={() => setProductToDelete(p.id)}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-red-400 hover:bg-red-500 hover:text-white transition-all border border-slate-100 text-[10px] font-bold uppercase tracking-widest"
+                      className="p-2.5 rounded-xl bg-white text-red-400 hover:bg-red-500 hover:text-white transition-all border border-slate-100"
                       title="Excluir"
                     >
-                      <Trash2 size={14} /> Excluir
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -557,6 +612,61 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
           </motion.div>
         </div>
       )}
+
+      {isBulkDeleteModalOpen && (
+        <div className="fixed inset-0 z-[165] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white max-w-md w-full p-10 text-center rounded-[3rem] border border-slate-100 shadow-[0_32px_64px_rgba(0,0,0,0.2)] relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-rose-600" />
+            <div className="w-24 h-24 bg-rose-50 text-rose-600 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-rose-100 shadow-inner">
+              <Trash2 size={40} />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 mb-3 uppercase tracking-tighter">
+              Excluir {selectedIds.length} Produtos?
+            </h3>
+            <p className="text-[10px] text-slate-400 mb-10 font-black uppercase tracking-[0.2em] leading-relaxed">
+              Esta operação removerá os {selectedIds.length} produtos selecionados permanentemente de todos os seus catálogos de forma segura.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsBulkDeleteModalOpen(false)}
+                className="flex-1 py-5 bg-slate-50 rounded-2xl font-black text-slate-400 uppercase text-[9px] tracking-widest hover:bg-slate-100 transition-all border border-slate-100"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="flex-1 py-5 bg-rose-600 text-white rounded-2xl font-black uppercase text-[9px] tracking-widest shadow-xl shadow-rose-950/10 hover:scale-[1.02] active:scale-[0.98] transition-all border border-rose-600"
+              >
+                Sim, Excluir Todos
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-slate-200/60 shadow-2xl rounded-2xl p-4 flex items-center gap-6 z-[150] animate-in slide-in-from-bottom-2 duration-300">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">
+            {selectedIds.length} {selectedIds.length === 1 ? 'produto selecionado' : 'produtos selecionados'}
+          </span>
+          <button
+            onClick={() => setIsBulkDeleteModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-rose-600 text-white font-black text-[9px] uppercase tracking-widest hover:bg-rose-700 transition-all hover:scale-105 active:scale-95 shadow-md shadow-rose-200"
+          >
+            <Trash2 size={14} /> Excluir Selecionados
+          </button>
+          <button
+            onClick={() => setSelectedIds([])}
+            className="text-[9px] font-black uppercase tracking-widest text-[#A09898] hover:text-slate-900 transition-colors"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -704,8 +814,22 @@ const ProductFormModal: React.FC<
     return suggested * 1.5; // Adding 50% profit margin logic as suggestion
   }, [costPrice, laborHours, globalCosts]);
 
+  const defaultProductCategories = [
+    "Agendas",
+    "Cadernos",
+    "Bloquinhos",
+    "Planner",
+    "Álbum de Fotos",
+    "Papelaria Criativa",
+    "Buquês",
+    "Caixas e Embalagens",
+    "Brindes e Mimos"
+  ];
   const categories = Array.from(
-    new Set(existingProducts.map((p) => p.category).filter(Boolean)),
+    new Set([
+      ...defaultProductCategories,
+      ...existingProducts.map((p) => p.category).filter(Boolean)
+    ]),
   );
   const subcategories = Array.from(
     new Set(

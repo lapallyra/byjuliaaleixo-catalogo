@@ -30,6 +30,7 @@ import { formatCurrency } from "../../lib/currencyUtils";
 import { OrderReceiptModal } from "./OrderReceiptModal";
 import { exportOrdersReportPDF, exportOrderReceiptPDF } from "../../utils/pdfGenerator";
 import { getSiteSettings } from "../../services/firebaseService";
+import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
 
 
 interface OrdersTabProps {
@@ -578,7 +579,6 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                     {count}
                   </span>
                 </div>
-                <p className="text-[8px] font-medium text-gray-400 uppercase tracking-widest">Ateliê Ativo</p>
               </button>
             );
           })}
@@ -739,288 +739,291 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-[#FFFFFC] w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-[2rem] border border-pink-100 shadow-2xl p-8 md:p-10 relative scrollbar-hide space-y-8"
+                className="bg-[#FFFFFC] w-full max-w-4xl max-h-[92vh] flex flex-col rounded-[2rem] border border-pink-100 shadow-2xl overflow-hidden relative"
               >
-                {/* Botão Fechar */}
+                {/* Botão Fechar (Fixo no topo direito e com z-index alto) */}
                 <button
                   onClick={() => setIsDetailOpen(null)}
-                  className="absolute top-6 right-6 p-2 rounded-full hover:bg-pink-50 text-slate-400 hover:text-pink-600 transition-all"
+                  className="absolute top-6 right-6 p-2 rounded-full hover:bg-pink-50 text-slate-400 hover:text-pink-600 transition-all z-30"
                 >
                   <X size={20} />
                 </button>
 
-                {/* 1. TOPO (FULL WIDTH) */}
-                <div className="w-full border-b border-pink-100/60 pb-4 text-left">
-                  <h2 className="text-xl font-bold text-slate-800 tracking-tight font-sans">
-                    Fluxo do Pedido
-                  </h2>
-                  <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-mono">
-                    Gerenciador de Atendimento e Entrega
-                  </p>
-                </div>
-
-                {/* 6. FLUXO DO PEDIDO (TIMELINE HORIZONTAL MINIMALISTA COMPACTA) */}
-                <div className="w-full bg-pink-50/20 border border-pink-100/40 rounded-2xl p-4 md:p-5">
-                  <div className="relative flex items-center justify-between w-full max-w-2xl mx-auto px-4 py-2">
-                    {/* Linha de progresso cinza de fundo */}
-                    <div className="absolute left-6 right-6 top-1/2 h-[2px] bg-slate-100 -translate-y-1/2 z-0" />
-                    {/* Linha de progresso rosa ativa */}
-                    <div
-                      className="absolute left-6 top-1/2 h-[2px] bg-pink-400 -translate-y-1/2 z-0 transition-all duration-500"
-                      style={{
-                        width: `${(currentStatusIndex / (milestones.length - 1)) * 92}%`
-                      }}
-                    />
-
-                    {milestones.map((ms, idx) => {
-                      const isCompleted = idx < currentStatusIndex;
-                      const isActive = idx === currentStatusIndex;
-                      return (
-                        <div key={idx} className="relative z-10 flex flex-col items-center">
-                          <button
-                            onClick={() => {
-                              // Fast status transition if clicking milestones
-                              const statusMapping = ["quote", "waiting_deposit", "production", "ready", "delivered"];
-                              onUpdateStatus(order.id, statusMapping[idx] as any);
-                            }}
-                            className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all duration-300 focus:outline-none ${
-                              isActive
-                                ? "bg-pink-500 border-pink-500 text-white shadow-md shadow-pink-200 scale-110"
-                                : isCompleted
-                                  ? "bg-white border-pink-300 text-pink-500"
-                                  : "bg-white border-slate-200 text-slate-400 hover:border-pink-200"
-                            }`}
-                          >
-                            <span className="text-[10px] font-black">{idx + 1}</span>
-                          </button>
-                          <span
-                            className={`text-[9px] font-bold uppercase tracking-wider mt-2.5 text-center hidden md:inline ${
-                              isActive ? "text-pink-600" : "text-slate-400"
-                            }`}
-                          >
-                            {ms.label}
-                          </span>
-                        </div>
-                      );
-                    })}
+                {/* Scrollable Container wrapper for body elements */}
+                <div className="flex-1 overflow-y-auto p-8 md:p-10 pb-6 space-y-8 scrollbar-hide min-h-0 relative">
+                  {/* 1. TOPO (FULL WIDTH) */}
+                  <div className="w-full border-b border-pink-100/60 pb-4 text-left">
+                    <h2 className="text-xl font-bold text-slate-800 tracking-tight font-sans">
+                      Fluxo do Pedido
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-1 uppercase tracking-widest font-mono">
+                      Gerenciador de Atendimento e Entrega
+                    </p>
                   </div>
-                </div>
 
-                {/* 2. BLOCO 1 (DADOS DO CLIENTE - 100% LARGURA EM BLOCO ÚNICO) */}
-                <div className="w-full bg-[#FAF9F6] border border-[#F0E6D2]/60 rounded-2xl p-5 space-y-4">
-                  <div className="border-b border-[#F0E6D2]/40 pb-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Dados do Cliente
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-3 font-sans text-xs">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Nome do Cliente</span>
-                      <span className="font-semibold text-slate-700 uppercase">{order.customerName || "Não Informado"}</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">CPF / CNPJ</span>
-                      <span className="font-mono text-slate-700 font-semibold">{order.customerCpfCnpj || "Não Informado"}</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Data de Nascimento</span>
-                      <span className="font-mono text-slate-700">{(order as any).birthDate || (order as any).customerBirthDate || "Não informado"}</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Contato WhatsApp</span>
-                      <span className="font-semibold text-slate-700">{order.contact || "Não Informado"}</span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">E-mail</span>
-                      <span className="text-slate-600 font-medium select-all">{(order as any).customerEmail || (order as any).email || "Não Informado"}</span>
+                  {/* 6. FLUXO DO PEDIDO (TIMELINE HORIZONTAL MINIMALISTA COMPACTA) */}
+                  <div className="w-full bg-pink-50/20 border border-pink-100/40 rounded-2xl p-4 md:p-5">
+                    <div className="relative flex items-center justify-between w-full max-w-2xl mx-auto px-4 py-2">
+                      {/* Linha de progresso cinza de fundo */}
+                      <div className="absolute left-6 right-6 top-1/2 h-[2px] bg-slate-100 -translate-y-1/2 z-0" />
+                      {/* Linha de progresso rosa ativa */}
+                      <div
+                        className="absolute left-6 top-1/2 h-[2px] bg-pink-400 -translate-y-1/2 z-0 transition-all duration-500"
+                        style={{
+                          width: `${(currentStatusIndex / (milestones.length - 1)) * 92}%`
+                        }}
+                      />
+
+                      {milestones.map((ms, idx) => {
+                        const isCompleted = idx < currentStatusIndex;
+                        const isActive = idx === currentStatusIndex;
+                        return (
+                          <div key={idx} className="relative z-10 flex flex-col items-center">
+                            <button
+                              onClick={() => {
+                                // Fast status transition if clicking milestones
+                                const statusMapping = ["quote", "waiting_deposit", "production", "ready", "delivered"];
+                                onUpdateStatus(order.id, statusMapping[idx] as any);
+                              }}
+                              className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all duration-300 focus:outline-none ${
+                                isActive
+                                  ? "bg-pink-500 border-pink-500 text-white shadow-md shadow-pink-200 scale-110"
+                                  : isCompleted
+                                    ? "bg-white border-pink-300 text-pink-500"
+                                    : "bg-white border-slate-200 text-slate-400 hover:border-pink-200"
+                              }`}
+                            >
+                              <span className="text-[10px] font-black">{idx + 1}</span>
+                            </button>
+                            <span
+                              className={`text-[9px] font-bold uppercase tracking-wider mt-2.5 text-center hidden md:inline ${
+                                isActive ? "text-pink-600" : "text-slate-400"
+                              }`}
+                            >
+                              {ms.label}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
 
-                {/* 3. BLOCO 2 (DADOS DO PEDIDO + ENTREGA - 100% LARGURA EM BLOCO ÚNICO) */}
-                <div className="w-full bg-[#FAF9F6] border border-[#F0E6D2]/60 rounded-2xl p-5 space-y-4">
-                  <div className="border-b border-[#F0E6D2]/40 pb-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Dados do Pedido & Entrega
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-3 font-sans text-xs">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Status do Fluxo</span>
-                      <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${
-                        STATUS_GROUPS.find((g) => g.dbStatuses.includes(order.status.toLowerCase()))?.bgLight || "bg-slate-50 text-slate-500 border-slate-200"
-                      }`}>
-                        {statusOptions.find((s) => s.value === order.status.toLowerCase())?.label || order.status}
+                  {/* 2. BLOCO 1 (DADOS DO CLIENTE - 100% LARGURA EM BLOCO ÚNICO) */}
+                  <div className="w-full bg-[#FAF9F6] border border-[#F0E6D2]/60 rounded-2xl p-5 space-y-4">
+                    <div className="border-b border-[#F0E6D2]/40 pb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Dados do Cliente
                       </span>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Código de Identificação</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-slate-800 bg-white px-2 py-0.5 border border-slate-200 rounded">
-                          {order.code}
-                        </span>
-                        {order.isEmergency && (
-                          <span className="text-red-500 bg-red-50 p-1 border border-red-200 rounded animate-pulse" title="Urgente">
-                            <Flame size={12} className="stroke-[2px]" />
-                          </span>
-                        )}
+                    <div className="flex flex-col gap-3 font-sans text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Nome do Cliente</span>
+                        <span className="font-semibold text-slate-700 uppercase">{order.customerName || "Não Informado"}</span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">CPF / CNPJ</span>
+                        <span className="font-mono text-slate-700 font-semibold">{order.customerCpfCnpj ? formatCPFOrCNPJ(order.customerCpfCnpj) : "Não Informado"}</span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Data de Nascimento</span>
+                        <span className="font-mono text-slate-700">{(order as any).birthDate || (order as any).customerBirthDate || "Não informado"}</span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Contato WhatsApp</span>
+                        <span className="font-semibold text-slate-700">{order.contact ? formatPhone(order.contact) : "Não Informado"}</span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">E-mail</span>
+                        <span className="text-slate-600 font-medium select-all">{(order as any).customerEmail || (order as any).email || "Não Informado"}</span>
                       </div>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Ateliê Selecionado</span>
-                      <span className="font-bold text-slate-700 uppercase">
-                        {order.companyId === 'pallyra' ? "La Pallyra" :
-                         order.companyId === 'guennita' ? "com amor, Guennita" :
-                         order.companyId === 'mimada' ? "Mimada Sim" :
-                         order.companyId === 'tuttymimo' ? "Tutty Mimo" : order.companyId}
-                      </span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Data do Pedido</span>
-                      <span className="text-slate-600 font-medium">
-                        {order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy HH:mm") : "--/--/----"}
-                      </span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Data de Entrega</span>
-                      <span className="font-bold text-slate-700">
-                        {order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy") : "Não agendada"}
-                      </span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Tipo de Entrega</span>
-                      <span className="font-bold text-pink-600 uppercase tracking-widest text-[10px]">
-                        {order.deliveryType === 'retirada' ? "Retirada" :
-                         order.deliveryType === 'delivery' ? "Entrega Local" : "Envio por Correios / Transportadora"}
-                      </span>
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1">
-                      <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Endereço de Destino</span>
-                      <span className="text-slate-600 font-medium text-left sm:text-right max-w-md">
-                        {order.address || "Não informado (Retirada direta no Ateliê)"}
-                      </span>
-                    </div>
                   </div>
-                </div>
 
-                {/* 4. BLOCO 3 (ITENS DO PEDIDO - LAYOUT NORMAL ERP) */}
-                <div className="w-full bg-[#FAF9F6] border border-[#F0E6D2]/60 rounded-2xl p-5 space-y-4">
-                  <div className="border-b border-[#F0E6D2]/40 pb-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Itens do Pedido (Catálogo)
-                    </span>
+                  {/* 3. BLOCO 2 (DADOS DO PEDIDO + ENTREGA - 100% LARGURA EM BLOCO ÚNICO) */}
+                  <div className="w-full bg-[#FAF9F6] border border-[#F0E6D2]/60 rounded-2xl p-5 space-y-4">
+                    <div className="border-b border-[#F0E6D2]/40 pb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Dados do Pedido & Entrega
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-3 font-sans text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Status do Fluxo</span>
+                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${
+                          STATUS_GROUPS.find((g) => g.dbStatuses.includes(order.status.toLowerCase()))?.bgLight || "bg-slate-50 text-slate-500 border-slate-200"
+                        }`}>
+                          {statusOptions.find((s) => s.value === order.status.toLowerCase())?.label || order.status}
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Código de Identificação</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-bold text-slate-800 bg-white px-2 py-0.5 border border-slate-200 rounded">
+                            {order.code}
+                          </span>
+                          {order.isEmergency && (
+                            <span className="text-red-500 bg-red-50 p-1 border border-red-200 rounded animate-pulse" title="Urgente">
+                              <Flame size={12} className="stroke-[2px]" />
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Ateliê Selecionado</span>
+                        <span className="font-bold text-slate-700 uppercase">
+                          {order.companyId === 'pallyra' ? "La Pallyra" :
+                           order.companyId === 'guennita' ? "com amor, Guennita" :
+                           order.companyId === 'mimada' ? "Mimada Sim" :
+                           order.companyId === 'tuttymimo' ? "Tutty Mimo" : order.companyId}
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Data do Pedido</span>
+                        <span className="text-slate-600 font-medium">
+                          {order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy HH:mm") : "--/--/----"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Data de Entrega</span>
+                        <span className="font-bold text-slate-700">
+                          {order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy") : "Não agendada"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Tipo de Entrega</span>
+                        <span className="font-bold text-pink-600 uppercase tracking-widest text-[10px]">
+                          {order.deliveryType === 'retirada' ? "Retirada" :
+                           order.deliveryType === 'delivery' ? "Entrega Local" : "Envio por Correios / Transportadora"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1">
+                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Endereço de Destino</span>
+                        <span className="text-slate-600 font-medium text-left sm:text-right max-w-md">
+                          {order.address || "Não informado (Retirada direta no Ateliê)"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead>
-                        <tr className="border-b border-[#F0E6D2]/60 pb-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                          <th className="py-2">Produto</th>
-                          <th className="py-2 text-center">Quantidade</th>
-                          <th className="py-2 text-right">Valor Unitário</th>
-                          <th className="py-2 text-right">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {order.items?.map((item, index) => (
-                          <tr key={index} className="hover:bg-slate-50 transition-colors">
-                            <td className="py-3 font-semibold text-slate-700 uppercase">
-                              {item.product_name}
-                            </td>
-                            <td className="py-3 text-center text-slate-600 font-bold">
-                              {item.quantity}
-                            </td>
-                            <td className="py-3 text-right text-slate-500 font-mono">
-                              {formatCurrency(item.retail_price || 0)}
-                            </td>
-                            <td className="py-3 text-right font-bold text-slate-800 font-mono">
-                              {formatCurrency((item.retail_price || 0) * (item.quantity || 0))}
-                            </td>
+
+                  {/* 4. BLOCO 3 (ITENS DO PEDIDO - LAYOUT NORMAL ERP) */}
+                  <div className="w-full bg-[#FAF9F6] border border-[#F0E6D2]/60 rounded-2xl p-5 space-y-4">
+                    <div className="border-b border-[#F0E6D2]/40 pb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Itens do Pedido (Catálogo)
+                      </span>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-[#F0E6D2]/60 pb-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                            <th className="py-2">Produto</th>
+                            <th className="py-2 text-center">Quantidade</th>
+                            <th className="py-2 text-right">Valor Unitário</th>
+                            <th className="py-2 text-right">Total</th>
                           </tr>
-                        ))}
-                        {(!order.items || order.items.length === 0) && (
-                          <tr>
-                            <td colSpan={4} className="py-4 text-center text-slate-400">
-                              Nenhum item adicionado a este pedido.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {order.items?.map((item, index) => (
+                            <tr key={index} className="hover:bg-slate-50 transition-colors">
+                              <td className="py-3 font-semibold text-slate-700 uppercase">
+                                {item.product_name}
+                              </td>
+                              <td className="py-3 text-center text-slate-600 font-bold">
+                                {item.quantity}
+                              </td>
+                              <td className="py-3 text-right text-slate-500 font-mono">
+                                {formatCurrency(item.retail_price || 0)}
+                              </td>
+                              <td className="py-3 text-right font-bold text-slate-800 font-mono">
+                                {formatCurrency((item.retail_price || 0) * (item.quantity || 0))}
+                              </td>
+                            </tr>
+                          ))}
+                          {(!order.items || order.items.length === 0) && (
+                            <tr>
+                              <td colSpan={4} className="py-4 text-center text-slate-400">
+                                Nenhum item adicionado a este pedido.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* 5. BLOCO 4 (RESUMO FINANCEIRO - LAYOUT NORMAL) */}
+                  <div className="w-full bg-[#FAF9F6] border border-[#F0E6D2]/60 rounded-2xl p-5 space-y-4">
+                    <div className="border-b border-[#F0E6D2]/40 pb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Preços & Resumo Financeiro
+                      </span>
+                    </div>
+                    <div className="space-y-2.5 text-xs text-slate-600 font-sans">
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-slate-400 uppercase text-[9px] tracking-wider">Subtotal</span>
+                        <span className="font-semibold text-slate-700 font-mono">
+                          {formatCurrency((order.total || 0) - (order.shippingCost || 0))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-slate-400 uppercase text-[9px] tracking-wider">Taxa de Envio / Frete</span>
+                        <span className="font-semibold text-slate-700 font-mono">
+                          {formatCurrency(order.shippingCost || 0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2.5 border-t border-slate-100">
+                        <span className="text-[11px] font-black text-slate-800 uppercase tracking-wide">Desconto Concedido</span>
+                        <span className="font-mono text-emerald-600 font-bold">
+                          - {formatCurrency(0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center pt-3 border-t border-dashed border-[#F0E6D2]">
+                        <span className="text-xs font-black text-slate-800 uppercase tracking-widest">Valor Total Líquido</span>
+                        <span className="text-xl font-black text-pink-600 font-mono">
+                          {formatCurrency(order.total || 0)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Histórico e Alteração Rápida de Status */}
+                  <div className="w-full bg-[#FAF9F6] border border-[#F0E6D2]/60 rounded-2xl p-5 space-y-4">
+                    <div className="border-b border-[#F0E6D2]/40 pb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Atualizar Status do Pedido
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {statusOptions.map((opt) => {
+                        const optGroup = STATUS_GROUPS.find((g) => g.dbStatuses.includes(opt.value));
+                        const isActive = order.status.toLowerCase() === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={() => onUpdateStatus(order.id, opt.value as any)}
+                            className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest border transition-all ${
+                              isActive
+                                ? "bg-pink-500 border-pink-500 text-white"
+                                : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-700"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
-                {/* 5. BLOCO 4 (RESUMO FINANCEIRO - LAYOUT NORMAL) */}
-                <div className="w-full bg-[#FAF9F6] border border-[#F0E6D2]/60 rounded-2xl p-5 space-y-4">
-                  <div className="border-b border-[#F0E6D2]/40 pb-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Preços & Resumo Financeiro
-                    </span>
-                  </div>
-                  <div className="space-y-2.5 text-xs text-slate-600 font-sans">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-slate-400 uppercase text-[9px] tracking-wider">Subtotal</span>
-                      <span className="font-semibold text-slate-700 font-mono">
-                        {formatCurrency((order.total || 0) - (order.shippingCost || 0))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-slate-400 uppercase text-[9px] tracking-wider">Taxa de Envio / Frete</span>
-                      <span className="font-semibold text-slate-700 font-mono">
-                        {formatCurrency(order.shippingCost || 0)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center pt-2.5 border-t border-slate-100">
-                      <span className="text-[11px] font-black text-slate-800 uppercase tracking-wide">Desconto Concedido</span>
-                      <span className="font-mono text-emerald-600 font-bold">
-                        - {formatCurrency(0)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center pt-3 border-t border-dashed border-[#F0E6D2]">
-                      <span className="text-xs font-black text-slate-800 uppercase tracking-widest">Valor Total Líquido</span>
-                      <span className="text-xl font-black text-pink-600 font-mono">
-                        {formatCurrency(order.total || 0)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Histórico e Alteração Rápida de Status */}
-                <div className="w-full bg-[#FAF9F6] border border-[#F0E6D2]/60 rounded-2xl p-5 space-y-4">
-                  <div className="border-b border-[#F0E6D2]/40 pb-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Atualizar Status do Pedido
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {statusOptions.map((opt) => {
-                      const optGroup = STATUS_GROUPS.find((g) => g.dbStatuses.includes(opt.value));
-                      const isActive = order.status.toLowerCase() === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          onClick={() => onUpdateStatus(order.id, opt.value as any)}
-                          className={`px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest border transition-all ${
-                            isActive
-                              ? "bg-pink-500 border-pink-500 text-white"
-                              : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50 hover:text-slate-700"
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 7. BOTÕES (FINAL DA PÁGINA) - ESTILO 3D CLEAN PREMIUM */}
-                <div className="w-full flex flex-col sm:flex-row gap-4 pt-4 border-t border-[#F0E6D2]/60">
+                {/* 7. BOTÕES (RODAPÉ FIXO MANTIDO VISÍVEL SEMPRE) - ESTILO 3D CLEAN PREMIUM */}
+                <div className="w-full bg-white border-t border-pink-100/70 px-8 py-5 flex flex-col sm:flex-row gap-4 shrink-0 shadow-[0_-8px_24px_rgba(212,140,140,0.06)] z-20">
                   <button
                     onClick={async () => {
                       const doc = await generatePremiumA4Receipt(order, settings);
                       setPdfData({ doc, fileName: "Comprovante_" + order.code });
                       setIsPdfPreviewOpen(true);
                     }}
-                    className="flex-1 select-none flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-xs font-bold text-white uppercase tracking-widest bg-gradient-to-b from-slate-800 to-slate-955 border-b-[3px] border-slate-900 transition-all hover:-translate-y-[2px] active:translate-y-[1px] hover:shadow-lg active:shadow-sm"
+                    className="flex-1 select-none flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-xs font-bold text-white uppercase tracking-widest bg-gradient-to-b from-slate-800 to-slate-900 border-b-[3px] border-slate-950 transition-all hover:-translate-y-[2px] active:translate-y-[1px] hover:shadow-lg active:shadow-sm"
                   >
                     📄 Gerar Comprovante PDF
                   </button>
@@ -1054,7 +1057,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                         );
                       }
                     }}
-                    className="flex-1 select-none flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-xs font-bold text-white uppercase tracking-widest bg-gradient-to-b from-emerald-500 to-emerald-650 border-b-[3px] border-emerald-700 transition-all hover:-translate-y-[2px] active:translate-y-[1px] hover:shadow-lg active:shadow-sm"
+                    className="flex-1 select-none flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-xs font-bold text-white uppercase tracking-widest bg-gradient-to-b from-emerald-500 to-emerald-600 border-b-[3px] border-emerald-700 transition-all hover:-translate-y-[2px] active:translate-y-[1px] hover:shadow-lg active:shadow-sm"
                   >
                     📤 Compartilhar no WhatsApp
                   </button>
@@ -1162,6 +1165,7 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({
     (editingOrder?.companyId as CompanyId) || (companyId as CompanyId),
   );
   const [cpfCnpj, setCpfCnpj] = useState(editingOrder?.customerCpfCnpj || "");
+  const [contact, setContact] = useState(editingOrder?.contact || "");
   const [deliveryType, setDeliveryType] = useState(
     editingOrder?.deliveryType || "pickup",
   );
@@ -1175,17 +1179,6 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({
   );
   const totalWithShipping = subtotal + shipping;
   const depositValue = subtotal * 0.5;
-
-  const maskCpfCnpj = (value: string) => {
-    const v = value.replace(/\D/g, "");
-    if (v.length <= 11)
-      return v
-        .replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
-        .slice(0, 14);
-    return v
-      .replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5")
-      .slice(0, 18);
-  };
 
   const companiesList = [
     { id: "pallyra", name: "La Pallyra" },
@@ -1230,7 +1223,7 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({
               const formData = new FormData(e.currentTarget);
               await onSave({
                 customerName: formData.get("customerName") as string,
-                contact: formData.get("contact") as string,
+                contact: contact,
                 customerCpfCnpj: cpfCnpj,
                 address: formData.get("address") as string,
                 total: totalWithShipping,
@@ -1245,6 +1238,8 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({
                 isWholesale: isWholesale,
                 isEmergency: formData.get("isEmergency") === "on",
                 companyId: selectedAtelier,
+                marketplace: (formData.get("marketplace") as string) || "",
+                marketplaceTax: Number(formData.get("marketplaceTax")) || 0,
               });
               onClose();
             } catch (err) {
@@ -1296,7 +1291,7 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({
               </label>
               <input
                 value={cpfCnpj}
-                onChange={(e) => setCpfCnpj(maskCpfCnpj(e.target.value))}
+                onChange={(e) => setCpfCnpj(formatCPFOrCNPJ(e.target.value))}
                 placeholder="000.000.000-00"
                 required
                 type="text"
@@ -1308,8 +1303,8 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({
                 Contato
               </label>
               <input
-                name="contact"
-                defaultValue={editingOrder?.contact}
+                value={contact}
+                onChange={(e) => setContact(formatPhone(e.target.value))}
                 required
                 type="text"
                 placeholder="(44) 9 9999-9999"
@@ -1571,6 +1566,47 @@ const OrderFormModal: React.FC<OrderFormModalProps> = ({
                       : totalWithShipping) || 0,
                   )}
                 </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Marketplace Integration */}
+          <div className="p-6 rounded-2xl bg-slate-50 border border-lilac/10 space-y-4">
+            <h4 className="text-[10px] font-black uppercase text-slate-800 tracking-widest pl-1">
+              Integração Marketplace / Origem da Venda
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[9px] uppercase font-black text-[#A09898] tracking-widest pl-2">
+                  Plataforma / Canal (Ex: Shopee, Mercado Livre, Elo7)
+                </label>
+                <select
+                  name="marketplace"
+                  defaultValue={editingOrder?.marketplace || ""}
+                  className="w-full bg-white border border-lilac/20 rounded-xl px-5 py-3 text-[11px] font-black outline-none text-slate-900"
+                >
+                  <option value="">Nenhum (Venda Direta)</option>
+                  <option value="shopee">Shopee</option>
+                  <option value="mercado_livre">Mercado Livre</option>
+                  <option value="elo7">Elo7</option>
+                  <option value="shein">Shein</option>
+                  <option value="site_proprio">Site Próprio</option>
+                  <option value="whatsapp">WhatsApp / Instagram</option>
+                  <option value="outro">Outro (Canal Externo)</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[9px] uppercase font-black text-[#A09898] tracking-widest pl-2">
+                  Taxa do Marketplace (%)
+                </label>
+                <input
+                  name="marketplaceTax"
+                  type="number"
+                  step="0.01"
+                  defaultValue={editingOrder?.marketplaceTax || 0}
+                  placeholder="Ex: 12.5 (12.5% de taxa)"
+                  className="w-full bg-white border border-lilac/20 rounded-xl px-5 py-3 text-[11px] font-black outline-none font-mono text-slate-900"
+                />
               </div>
             </div>
           </div>

@@ -52,7 +52,6 @@ import { useAuth } from "./AuthProvider";
 // Modular Tabs
 import { DashboardTab } from "./Admin/DashboardTab";
 import { OrdersTab } from "./Admin/OrdersTab";
-import { AgendaTab } from "./Admin/AgendaTab";
 import { InventoryTab } from "./Admin/InventoryTab";
 import { ProductsTab } from "./Admin/ProductsTab";
 import { ClientsTab } from "./Admin/ClientsTab";
@@ -76,7 +75,6 @@ import { ImageWithFallback } from "./ImageWithFallback";
 type TabType =
   | "dashboard"
   | "orders"
-  | "agenda"
   | "inventory"
   | "products"
   | "clients"
@@ -240,7 +238,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     { id: "clients", label: "Clientes", category: "OPERAÇÃO", icon: User },
     { id: "products", label: "Produtos", category: "OPERAÇÃO", icon: Box },
     { id: "inventory", label: "Estoque", category: "OPERAÇÃO", icon: Archive },
-    { id: "agenda", label: "Agenda", category: "OPERAÇÃO", icon: Calendar },
     { id: "finance", label: "Financeiro", category: "FINANCEIRO", icon: DollarSign },
     { id: "auditoria", label: "Auditoria", category: "FINANCEIRO", icon: FileCheck },
     { id: "reports", label: "Relatórios", category: "FINANCEIRO", icon: BarChart3 },
@@ -556,8 +553,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                         settings[selectedCompanyId]?.monthly_goal || 0
                       }
                       onAction={(action) => {
-                        if (action === "view_agenda") setActiveTab("agenda");
-                        else if (action === "new_order") setActiveTab("orders");
+                        if (action === "view_agenda") {
+                          // Agenda tab is removed. Do nothing.
+                        } else if (action === "new_order") setActiveTab("orders");
                         else if (action === "new_client")
                           setActiveTab("clients");
                         else if (action === "new_insumo")
@@ -601,16 +599,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       initialOrderId={selectedOrderId}
                     />
                   )}
-                  {activeTab === "agenda" && (
-                    <AgendaTab
-                      orders={sales}
-                      dates={settings.commercial?.commemorative_dates || []}
-                      onSelectOrder={(id) => {
-                        setSelectedOrderId(id);
-                        setActiveTab("orders");
-                      }}
-                    />
-                  )}
                   {activeTab === "inventory" && (
                     <InventoryTab
                       insumos={insumos}
@@ -652,7 +640,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <CommemorativeDatesTab />
                   )}
                   {activeTab === "finance" && (
-                    <FinanceTab companyId={selectedCompanyId} orders={sales} />
+                    <FinanceTab
+                      companyId={selectedCompanyId}
+                      orders={sales}
+                      products={products}
+                      insumos={insumos}
+                    />
                   )}
                   {activeTab === "reports" && (
                     <ReportsTab
