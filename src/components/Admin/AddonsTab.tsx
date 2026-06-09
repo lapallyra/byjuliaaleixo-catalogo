@@ -194,21 +194,21 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => {
                         setEditingAddon(addon);
                         setIsModalOpen(true);
                       }}
-                      className="p-3 bg-slate-50 text-[#A09898] rounded-xl hover:bg-lilac hover:text-white transition-all border border-transparent shadow-sm"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 text-[#A09898] rounded-xl hover:bg-lilac hover:text-white transition-all border border-transparent shadow-sm text-[9px] font-black uppercase tracking-widest"
                     >
-                      <Edit2 size={14} />
+                      <Edit2 size={14} /> Editar
                     </button>
                     <button
                       onClick={() => handleDelete(addon.id)}
-                      className="p-3 bg-slate-50 text-[#A09898] rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-transparent shadow-sm"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 text-[#A09898] rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-transparent shadow-sm text-[9px] font-black uppercase tracking-widest"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={14} /> Excluir
                     </button>
                   </div>
                 </div>

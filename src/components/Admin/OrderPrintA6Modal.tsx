@@ -11,12 +11,7 @@ interface OrderPrintA6ModalProps {
 export const OrderPrintA6Modal: React.FC<OrderPrintA6ModalProps> = ({ order, onClose }) => {
 
   useEffect(() => {
-    // Automatically trigger print when modal opens
-    // Optional: wait a moment for rendering
-    const timer = setTimeout(() => {
-      window.print();
-    }, 500);
-    return () => clearTimeout(timer);
+    // A6 print is deprecated.
   }, []);
 
   return (

@@ -735,6 +735,10 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
     const textLines = doc.splitTextToSize(evaluationNote, 180);
     doc.text(textLines, 15, y);
 
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    window.open(pdfUrl, '_blank');
+
     // Save
     doc.save(`auditoria_${prd.product_name.toLowerCase().replace(/ /g, "_")}.pdf`);
   };
@@ -1053,9 +1057,9 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                                   setEditingMaterial(insumo);
                                   setIsMaterialModalOpen(true);
                                 }}
-                                className="p-2 border border-[#F0E6D2] text-[#A09898] hover:text-[#4A4444] rounded-lg hover:bg-[#FAF9F6] transition-all cursor-pointer"
+                                className="flex items-center gap-1.5 px-3 py-1.5 border border-[#F0E6D2] text-[#A09898] hover:text-[#4A4444] rounded-lg hover:bg-[#FAF9F6] transition-all cursor-pointer text-[9px] font-black uppercase tracking-widest"
                               >
-                                <Edit size={12} />
+                                <Edit size={12} /> Editar
                               </button>
                             </div>
                           </td>
@@ -1110,21 +1114,21 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
 
                       <div className="flex justify-between items-center pt-2 border-t border-[#F0E6D2]/60 text-[9px] font-black uppercase text-[#A09898]">
                         <span>Histórico de Compras Ativo</span>
-                        <div className="flex gap-1.5">
+                        <div className="flex gap-2">
                           <button
                             onClick={() => {
                               setEditingSupplier(sup);
                               setIsSupplierModalOpen(true);
                             }}
-                            className="p-1.5 border border-[#F0E6D2] text-[#A09898] hover:text-[#4A4444] hover:bg-white rounded-lg transition-colors cursor-pointer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 border border-[#F0E6D2] text-[#A09898] hover:text-[#4A4444] hover:bg-white rounded-lg transition-colors cursor-pointer text-[9px] font-black uppercase tracking-widest"
                           >
-                            <Edit size={11} />
+                            <Edit size={11} /> Editar
                           </button>
                           <button
                             onClick={() => handleDeleteSupplier(sup.id)}
-                            className="p-1.5 border border-red-200 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition-all cursor-pointer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition-all cursor-pointer text-[9px] font-black uppercase tracking-widest"
                           >
-                            <Trash2 size={11} />
+                            <Trash2 size={11} /> Excluir
                           </button>
                         </div>
                       </div>

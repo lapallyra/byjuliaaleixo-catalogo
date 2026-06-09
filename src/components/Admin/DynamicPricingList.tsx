@@ -143,18 +143,18 @@ export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({
                     {!isPercentage && "R$"} {item.value.toFixed(2)}{" "}
                     {isPercentage && "%"}
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex flex-wrap items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => setEditingId(item.id)}
-                      className="p-2 text-[#D1CACA] hover:text-lilac hover:bg-lilac/5 rounded-lg transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[#D1CACA] hover:text-lilac hover:bg-lilac/5 rounded-lg transition-all text-[9px] font-black uppercase tracking-widest"
                     >
-                      <Edit2 size={14} />
+                      <Edit2 size={14} /> Editar
                     </button>
                     <button
                       onClick={() => handleRemove(item.id)}
-                      className="p-2 text-[#D1CACA] hover:text-slate-9000 hover:bg-slate-50 rounded-lg transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[#D1CACA] hover:text-slate-9000 hover:bg-slate-50 rounded-lg transition-all text-[9px] font-black uppercase tracking-widest"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={14} /> Excluir
                     </button>
                   </div>
                 </div>

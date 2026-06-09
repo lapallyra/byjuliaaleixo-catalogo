@@ -30,6 +30,7 @@ import {
 import { Product, Order, Customer, Insumo, CompanyId } from "../../types";
 import { safeFormat } from "../../lib/dateUtils";
 import { formatCurrency } from "../../lib/currencyUtils";
+import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 import {
   subMonths,
   startOfMonth,
@@ -145,11 +146,23 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         </div>
         <div className="flex items-center gap-3 bg-white border border-lilac/20 p-2 px-4 rounded-2xl shadow-sm">
           <button
-            onClick={() => window.print()}
-            className="p-2 hover:bg-slate-50 text-[#A09898] hover:text-lilac rounded-xl transition-all"
-            title="Visualização em PDF"
+            onClick={() => {
+              const rows = lists.productRank.map((p, idx) => [
+                `${idx + 1}º`,
+                p.name,
+                p.category || "---",
+                `${p.sold} un.`
+              ]);
+              exportGenericReportPDF({
+                title: "Gerencial - Produtos Mais Vendidos (" + selectedMonth + ")",
+                columns: ["Ranking", "Produto", "Categoria", "Qtd. Vendida"],
+                rows,
+                filters: `Período: ${selectedMonth}`
+              });
+            }}
+            className="flex items-center gap-2 p-2 hover:bg-slate-50 text-[#A09898] hover:text-lilac rounded-xl transition-all text-[9px] font-black uppercase tracking-widest"
           >
-            <Printer size={14} />
+            <Printer size={14} /> Abrir PDF
           </button>
           <div className="w-px h-4 bg-slate-200" />
           <Filter size={14} className="text-lilac" />
@@ -188,8 +201,8 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
             </div>
           </div>
         </div>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-[300px] w-full min-w-0 flex-1 overflow-hidden">
+          <ResponsiveContainer width="99%" height="100%" minWidth={0} minHeight={0}>
             <BarChart data={salesVolumeData}>
               <CartesianGrid
                 strokeDasharray="3 3"

@@ -23,6 +23,7 @@ import {
   updateCustomer,
   addCustomer,
 } from "../../services/firebaseService";
+import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 import { isWithinInterval, addDays, startOfDay, endOfDay } from "date-fns";
 
 interface ClientsTabProps {
@@ -203,11 +204,24 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
             }}
           />
           <button
-            onClick={() => window.print()}
-            className="flex items-center justify-center p-4 bg-white text-[#D1CACA] border border-lilac/10 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group"
-            title="Visualização em PDF"
+            onClick={() => {
+              const rows = filteredCustomers.map(c => [
+                c.name,
+                c.phone || "---",
+                c.instagram || "---",
+                `${c.ordersCount || 0}`,
+                `R$ ${(c.totalSpent || 0).toFixed(2)}`
+              ]);
+              exportGenericReportPDF({
+                title: "Relatório de Clientes",
+                columns: ["Nome", "Telefone", "Instagram", "Qtd. Pedidos", "Valor Investido"],
+                rows,
+                filters: `Busca: ${searchTerm || 'Nenhuma'}`
+              });
+            }}
+            className="flex items-center justify-center px-6 py-4 bg-white text-[#D1CACA] border border-lilac/10 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group text-[9px] font-black uppercase tracking-widest gap-2"
           >
-            <Printer size={18} className="group-hover:scale-110 transition-transform" />
+            <Printer size={16} className="group-hover:scale-110 transition-transform" /> Abrir PDF
           </button>
           <button
             onClick={() => {
@@ -319,37 +333,37 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                   })}
                 </td>
                 <td className="py-6 text-right pr-8">
-                  <div className="flex justify-end gap-3">
+                  <div className="flex justify-end gap-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedCustomer(c);
                         setIsDetailModalOpen(true);
                       }}
-                      className="p-3 rounded-xl bg-white text-[#D1CACA] hover:text-lilac transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[#D1CACA] hover:text-lilac transition-all border border-slate-50 hover:border-lilac/20 text-[9px] font-bold uppercase tracking-widest"
                       title="Ver Detalhes"
                     >
-                      <Users size={16} />
+                      <Users size={14} /> Detalhes
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleOpenEdit(c);
                       }}
-                      className="p-3 rounded-xl bg-white text-[#D1CACA] hover:text-slate-900 transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[#D1CACA] hover:text-slate-900 transition-all border border-slate-50 hover:border-slate-200 text-[9px] font-bold uppercase tracking-widest"
                       title="Editar"
                     >
-                      <Edit size={16} />
+                      <Edit size={14} /> Editar
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(c.id);
                       }}
-                      className="p-3 rounded-xl bg-slate-50 text-rose-200 hover:text-slate-9000 transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 text-rose-300 hover:text-white hover:bg-rose-500 transition-all text-[9px] font-bold uppercase tracking-widest"
                       title="Excluir"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={14} /> Excluir
                     </button>
                   </div>
                 </td>

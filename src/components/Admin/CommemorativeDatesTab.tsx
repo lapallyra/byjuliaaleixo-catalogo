@@ -416,21 +416,21 @@ export function CommemorativeDatesTab() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex flex-wrap items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => {
                           setEditingDate(date);
                           setIsModalOpen(true);
                         }}
-                        className="p-2 hover:bg-slate-50 rounded-xl text-[#A09898] hover:text-slate-900 transition-all"
+                        className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-slate-50 rounded-xl text-[#A09898] hover:text-slate-900 transition-all text-[9px] font-black uppercase tracking-widest"
                       >
-                        <Edit2 size={16} />
+                        <Edit2 size={14} /> Editar
                       </button>
                       <button
                         onClick={() => handleDelete(date.id)}
-                        className="p-2 hover:bg-slate-50 rounded-xl text-[#A09898] hover:text-slate-9000 transition-all"
+                        className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-slate-50 rounded-xl text-[#A09898] hover:text-rose-500 transition-all text-[9px] font-black uppercase tracking-widest"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} /> Excluir
                       </button>
                     </div>
                   </div>

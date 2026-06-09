@@ -157,6 +157,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     const unsubFeedbacks = subscribeToFeedbacks(setFeedbacks);
     const unsubFunnel = subscribeToCheckoutEvents(setCheckoutEvents);
 
+    // LOGS SOLICITADOS NA TAREFA
+    const logInterval = setInterval(() => {
+      console.log("--- AUDITORIA DE LAYOUT DEV ---");
+      
+      const sections = document.querySelectorAll('div, section, main, aside');
+      sections.forEach(el => {
+        const bounds = el.getBoundingClientRect();
+        
+        // Containers supostamente vazios mas com muita altura
+        if (bounds.height > 100 && el.children.length === 0) {
+          console.log("[VAZIO > 100px]", el.tagName, el.className, bounds.height);
+        }
+        
+        // Seções principais e altura
+        if (el.id || el.tagName.toLowerCase() === 'main' || el.classList.contains('flex-1')) {
+          console.log("[SEÇÃO]", el.tagName, el.id || el.className, "Altura Renderizada:", bounds.height);
+        }
+      });
+      
+      // Checar componentes de estado
+      if (tabError) console.log("[FALHA]", "Componente/Aba", activeTab, "Falha:", tabError);
+      
+    }, 5000);
+
     return () => {
       window.removeEventListener('edit-order', handleEditOrder);
       unsubProducts();
@@ -167,6 +191,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       unsubSuggestions();
       unsubFeedbacks();
       unsubFunnel();
+      clearInterval(logInterval);
     };
   }, [isAdmin, user]);
 

@@ -28,6 +28,39 @@ import { PrizeRouletteModal } from './components/PrizeRouletteModal';
 import { sendNotifications } from './services/notificationService';
 import { updateOrder } from './services/firebaseService';
 import { playSuccessSound } from './utils/audio';
+
+function GlobalLayoutAuditor() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      console.log(`\n=== AUDITORIA DE LAYOUT DEV: ${location.pathname} ===`);
+      const elements = Array.from(document.querySelectorAll('*'));
+      
+      let emptyContainersCount = 0;
+      
+      elements.forEach((el) => {
+        if (['IMG', 'BR', 'HR', 'INPUT', 'TEXTAREA', 'SVG', 'PATH', 'IFRAME', 'SCRIPT'].includes(el.tagName.toUpperCase())) return;
+        
+        const bounds = el.getBoundingClientRect();
+        const hasContent = el.innerHTML.trim().length > 0;
+        
+        if (bounds.height > 100 && !hasContent && (el as HTMLElement).offsetHeight > 0) {
+          console.warn(`[GHOST SPACE] Encontrado container vazio > 100px.`);
+          console.warn(`Altura: ${bounds.height}px | Tag: ${el.tagName} | Classes: ${el.className}`);
+          emptyContainersCount++;
+        }
+      });
+      
+      console.log(`[AUDIT COMPLETED] ${emptyContainersCount} ghost containers reportados.`);
+    }, 2000); 
+    
+    return () => clearTimeout(timeout);
+  }, [location.pathname]);
+
+  return null;
+}
+
 function SparklesContainer({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
@@ -62,7 +95,10 @@ function SparklesContainer({ children }: { children: React.ReactNode }) {
     }
   };
 
-  return <div className="app-wrapper w-full flex flex-col items-stretch min-h-[100dvh]" onMouseMove={createSparkles}>{children}</div>;
+  return <div className="app-wrapper w-full flex flex-col items-stretch min-h-[100dvh]" onMouseMove={createSparkles}>
+    <GlobalLayoutAuditor />
+    {children}
+  </div>;
 }
 
 // Wrapper to handle company paths

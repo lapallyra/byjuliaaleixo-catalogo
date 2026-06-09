@@ -18,6 +18,7 @@ import {
 import { CSVHandler } from "./CSVHandler";
 import { Insumo } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
+import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 
 interface InventoryTabProps {
   insumos: Insumo[];
@@ -131,11 +132,23 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
             }}
           />
           <button
-            onClick={() => window.print()}
-            className="flex items-center justify-center p-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group"
-            title="Visualização em PDF"
+            onClick={() => {
+              const rows = filtered.map(ins => [
+                ins.name,
+                ins.category || "---",
+                `${ins.quantity} ${ins.unit}`,
+                `R$ ${(ins.costPrice || 0).toFixed(2)}`
+              ]);
+              exportGenericReportPDF({
+                title: "Relatório de Estoque (Insumos)",
+                columns: ["Material", "Categoria", "Estoque Físico", "Custo Unit."],
+                rows,
+                filters: `Busca: ${searchTerm || 'Nenhuma'} | Categoria: ${categoryFilter}`
+              });
+            }}
+            className="flex items-center justify-center px-6 py-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group text-[9px] font-black uppercase tracking-widest gap-2"
           >
-            <Printer size={18} className="group-hover:scale-110 transition-transform" />
+            <Printer size={16} className="group-hover:scale-110 transition-transform" /> Abrir PDF
           </button>
           <button
             onClick={() => {
@@ -226,7 +239,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                   </td>
                   <td className="py-6 px-8 text-right">
                     <div
-                      className="flex justify-end gap-3"
+                      className="flex justify-end gap-2"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
@@ -235,24 +248,27 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                             isDetailOpen === insumo.id ? null : insumo.id,
                           )
                         }
-                        className="p-3 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-lilac transition-all"
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-lilac hover:bg-white transition-all text-[9px] font-black uppercase tracking-widest border border-transparent hover:border-lilac/20"
+                        title="Ver Detalhes"
                       >
-                        <Info size={16} />
+                        <Info size={14} /> Detalhes
                       </button>
                       <button
                         onClick={() => {
                           setEditingInsumo(insumo);
                           setIsModalOpen(true);
                         }}
-                        className="p-3 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-slate-900 transition-all"
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-slate-900 hover:bg-white transition-all text-[9px] font-black uppercase tracking-widest border border-transparent hover:border-slate-200"
+                        title="Editar"
                       >
-                        <Edit size={16} />
+                        <Edit size={14} /> Editar
                       </button>
                       <button
                         onClick={() => setInsumoToDelete(insumo.id || null)}
-                        className="p-3 rounded-xl bg-slate-50 text-rose-200 hover:text-slate-9000 transition-all"
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 text-rose-300 hover:bg-rose-500 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest"
+                        title="Excluir"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} /> Excluir
                       </button>
                     </div>
                   </td>

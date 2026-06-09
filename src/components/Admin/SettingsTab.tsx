@@ -1130,27 +1130,27 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                           className="w-full bg-white border border-lilac/10 rounded-xl px-4 py-2 text-xs font-bold outline-none"
                         />
                       </div>
-                      <div className="flex gap-2 justify-end pt-4 md:pt-0">
+                      <div className="flex flex-wrap gap-2 justify-end pt-4 md:pt-0">
                         <button 
                           onClick={() => {
                             const newRules = [...(settings.shipping_rules || [])];
                             newRules[idx].active = !newRules[idx].active;
                             updateField('shipping_rules', newRules);
                           }}
-                          className={`p-2 rounded-xl transition-all ${rule.active ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest ${rule.active ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}
                           title={rule.active ? 'Desativar' : 'Ativar'}
                         >
-                          {rule.active ? <CheckCircle size={16} /> : <X size={16} />}
+                          {rule.active ? <CheckCircle size={14} /> : <X size={14} />} {rule.active ? 'Desativar' : 'Ativar'}
                         </button>
                         <button 
                           onClick={() => {
                             const newRules = (settings.shipping_rules || []).filter(r => r.id !== rule.id);
                             updateField('shipping_rules', newRules);
                           }}
-                          className="p-2 bg-slate-100 text-slate-400 hover:text-rose-600 rounded-xl transition-all"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-400 hover:text-white hover:bg-rose-500 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest"
                           title="Remover"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} /> Excluir
                         </button>
                       </div>
                     </div>

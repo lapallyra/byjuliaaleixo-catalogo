@@ -36,6 +36,7 @@ import { formatCurrency } from "../../lib/currencyUtils";
 import { getSiteSettings, getGlobalSettings } from "../../services/firebaseService";
 
 import { ImageWithFallback } from "../ImageWithFallback";
+import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 
 interface ProductsTabProps {
   products: Product[];
@@ -202,11 +203,24 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
             }}
           />
           <button
-            onClick={() => window.print()}
-            className="flex items-center justify-center p-4 bg-slate-50 text-slate-400 border border-slate-100 rounded-xl hover:text-pink-600 hover:bg-white hover:border-pink-200 transition-all shadow-sm group"
-            title="Visualização em PDF"
+            onClick={() => {
+              const rows = filtered.map(p => [
+                p.product_name || "Sem Nome",
+                p.category || "---",
+                p.subcategory || "---",
+                `R$ ${(p.retail_price || 0).toFixed(2)}`,
+                (p.stock || 0).toString()
+              ]);
+              exportGenericReportPDF({
+                title: "Relatório de Produtos",
+                columns: ["Produto", "Categoria", "Subcat.", "Preço (Varejo)", "Est."],
+                rows,
+                filters: `Ateliê: ${selectedAtelier} | Cat: ${selectedTab}`
+              });
+            }}
+            className="flex items-center justify-center px-6 py-4 bg-slate-50 text-slate-400 border border-slate-100 rounded-xl hover:text-pink-600 hover:bg-white hover:border-pink-200 transition-all shadow-sm group text-[9px] font-black uppercase tracking-widest gap-2"
           >
-            <Printer size={18} className="group-hover:scale-110 transition-transform" />
+            <Printer size={16} className="group-hover:scale-110 transition-transform" /> Abrir PDF
           </button>
           <button
             onClick={async () => {
@@ -299,30 +313,30 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => setViewingProduct(p)}
-                      className="p-3 rounded-xl bg-white text-slate-400 hover:bg-pink-700 hover:text-white transition-all border border-slate-100"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-slate-400 hover:bg-pink-700 hover:text-white transition-all border border-slate-100 text-[10px] font-bold uppercase tracking-widest"
                       title="Ver Detalhes"
                     >
-                      <Eye size={16} />
+                      <Eye size={14} /> Ver
                     </button>
                     <button
                       onClick={() => {
                         setEditingProduct(p);
                         setIsModalOpen(true);
                       }}
-                      className="p-3 rounded-xl bg-slate-50 text-slate-500 hover:text-white hover:bg-pink-700 transition-all border border-slate-100"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 text-slate-500 hover:text-white hover:bg-pink-700 transition-all border border-slate-100 text-[10px] font-bold uppercase tracking-widest"
                       title="Editar"
                     >
-                      <Edit size={16} />
+                      <Edit size={14} /> Editar
                     </button>
                     <button
                       onClick={() => setProductToDelete(p.id)}
-                      className="p-3 rounded-xl bg-white text-red-300 hover:bg-red-500 hover:text-white transition-all border border-slate-100"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-red-400 hover:bg-red-500 hover:text-white transition-all border border-slate-100 text-[10px] font-bold uppercase tracking-widest"
                       title="Excluir"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={14} /> Excluir
                     </button>
                   </div>
                 </div>

@@ -10,6 +10,7 @@ import {
   Percent,
   Sparkles,
   X,
+  Edit,
 } from "lucide-react";
 import {
   subscribeToPrizes,
@@ -131,15 +132,15 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({
                     setEditingPrize(prize);
                     setIsModalOpen(true);
                   }}
-                  className="p-3 bg-white border border-rose-100 rounded-xl text-[#A09898] hover:text-slate-900 transition-all"
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-rose-100 rounded-xl text-[#A09898] hover:text-slate-900 transition-all text-[9px] font-black uppercase tracking-widest"
                 >
-                  <Save size={16} />
+                  <Edit size={14} /> Editar
                 </button>
                 <button
                   onClick={() => handleDelete(prize.id)}
-                  className="p-3 bg-white border border-rose-100 rounded-xl text-rose-200 hover:text-slate-9000 transition-all"
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-rose-100 rounded-xl text-rose-300 hover:text-white hover:bg-rose-500 transition-all text-[9px] font-black uppercase tracking-widest"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={14} /> Excluir
                 </button>
               </div>
             </div>

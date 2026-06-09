@@ -15,8 +15,8 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ order, onClose
     pdfDoc.save(`${fileName}.pdf`);
   };
 
-  const handlePrint = () => {
-    window.open(pdfUrl, '_blank')!.print();
+  const handleOpenPDF = () => {
+    window.open(pdfUrl, '_blank');
   };
 
   return (
@@ -31,8 +31,8 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({ order, onClose
         </div>
         <div className="p-4 border-t flex justify-around">
           <button onClick={handleDownload} className="flex flex-col items-center gap-1"><Download size={20} /> <span className="text-[10px]">Baixar</span></button>
-          <button onClick={handlePrint} className="flex flex-col items-center gap-1"><Printer size={20} /> <span className="text-[10px]">Imprimir</span></button>
-          <button className="flex flex-col items-center gap-1"><Share2 size={20} /> <span className="text-[10px]">Compartilhar</span></button>
+          <button onClick={handleOpenPDF} className="flex flex-col items-center gap-1"><Printer size={20} /> <span className="text-[10px]">Abrir PDF</span></button>
+          <button className="flex flex-col items-center gap-1 opacity-50 cursor-not-allowed" title="Em breve"><Share2 size={20} /> <span className="text-[10px]">Compartilhar</span></button>
         </div>
       </div>
     </div>

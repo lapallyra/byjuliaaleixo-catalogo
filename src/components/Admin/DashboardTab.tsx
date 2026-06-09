@@ -6,7 +6,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
 } from "recharts";
 import {
   TrendingUp,
@@ -475,7 +474,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               </button>
             </div>
 
-            <div className="space-y-4 relative z-10">
+            <div className="w-full overflow-x-auto pb-8 pt-4 px-4 -mx-4 scrollbar-hide relative z-10">
+              <div className="min-w-[820px] space-y-4">
               {pendingOrders.length === 0 && (
                 <div className="py-20 text-center rounded-[1.5rem] bg-[#FAF9F6] border border-dashed border-[#F0E6D2]">
                   <ShoppingCart
@@ -543,8 +543,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                       style={{ backgroundColor: statusColor }}
                     />
 
-                    <div className="flex-1 w-full overflow-x-auto scrollbar-hide">
-                      <div className="grid grid-cols-[minmax(180px,1.5fr)_minmax(180px,1.5fr)_110px_130px_100px_90px_40px] items-center gap-4 px-5 py-4 min-w-[820px]">
+                    <div className="flex-1 w-full">
+                      <div className="grid grid-cols-[minmax(180px,1.5fr)_minmax(180px,1.5fr)_110px_130px_100px_90px_40px] items-center gap-4 px-5 py-4 w-full">
                         
                         {/* [1. NOME DO CLIENTE & ATELIÊ] */}
                         <div className="flex flex-col justify-center min-w-0 pr-4">
@@ -643,6 +643,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                   </motion.div>
                 );
               })}
+              </div>
             </div>
           </section>
         </div>

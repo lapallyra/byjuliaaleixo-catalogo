@@ -1,7 +1,117 @@
 import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 import { Order, SiteSettings } from "../types";
 import { formatCurrency } from "../lib/currencyUtils";
 import { safeFormat, safeFormatISO } from "../lib/dateUtils";
+
+/**
+ * Interface para a configuração do relatório genérico
+ */
+export interface GenericReportConfig {
+  title: string;
+  columns: string[];
+  rows: any[][];
+  userName?: string;
+  filters?: string;
+}
+
+/**
+ * Gera um PDF genérico em formato retrato ou paisagem dependendo do número de colunas.
+ */
+export const exportGenericReportPDF = (config: GenericReportConfig, settings?: Partial<SiteSettings>) => {
+  const isLandscape = config.columns.length > 5;
+  const doc = new jsPDF({
+    orientation: isLandscape ? "landscape" : "portrait",
+    unit: "mm",
+    format: "a4"
+  });
+
+  const primaryColor = settings?.theme_primary_color || "#cca062";
+  const studioName = settings?.store_name || "Sistema de Gestão Ateliê";
+  
+  // Pegar data atual
+  const dateStr = safeFormat(new Date(), "dd/MM/yyyy HH:mm");
+  const user = config.userName || "Usuário Admin";
+  
+  // Header
+  let y = 15;
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor("#1e293b");
+  doc.text(studioName.toUpperCase(), 15, y);
+  
+  y += 8;
+  doc.setFont("Helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor(primaryColor);
+  doc.text(config.title.toUpperCase(), 15, y);
+  
+  // Metadata Info
+  doc.setFont("Helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor("#64748b");
+  
+  y += 6;
+  doc.text(`Gerado em: ${dateStr}`, 15, y);
+  doc.text(`Responsável: ${user}`, 15, y + 5);
+  if (config.filters) {
+    doc.text(`Filtros: ${config.filters}`, 15, y + 10);
+    y += 10;
+  } else {
+    y += 5;
+  }
+  
+  y += 8;
+  doc.setDrawColor("#e2e8f0");
+  doc.setLineWidth(0.5);
+  doc.line(15, y, isLandscape ? 282 : 195, y);
+  y += 6;
+
+  // Render da tabela auto-paginada
+  (doc as any).autoTable({
+    startY: y,
+    head: [config.columns],
+    body: config.rows,
+    theme: 'grid',
+    headStyles: {
+      fillColor: primaryColor,
+      textColor: '#ffffff',
+      fontStyle: 'bold',
+      halign: 'center'
+    },
+    bodyStyles: {
+      textColor: '#334155',
+      fontSize: 8,
+    },
+    alternateRowStyles: {
+      fillColor: '#f8fafc'
+    },
+    margin: { left: 15, right: 15 },
+    didDrawPage: function (data: any) {
+      // Rodapé institucional e paginação
+      const str = 'Página ' + doc.internal.getNumberOfPages();
+      doc.setFontSize(8);
+      
+      const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+      
+      doc.setDrawColor("#e2e8f0");
+      doc.setLineWidth(0.5);
+      doc.line(15, pageHeight - 15, isLandscape ? 282 : 195, pageHeight - 15);
+      
+      doc.setFont("Helvetica", "italic");
+      doc.setTextColor("#94a3b8");
+      doc.text("Documento gerado eletronicamente.", 15, pageHeight - 10);
+      
+      doc.setFont("Helvetica", "normal");
+      doc.text(str, isLandscape ? 282 : 195, pageHeight - 10, { align: "right" });
+    }
+  });
+
+  // Abrir o PDF em nova aba no navegador (e tbm pode chamar .save, ou retornar Blob url)
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  window.open(pdfUrl, '_blank');
+};
 
 /**
  * Exports an elegant, portrait print A4 format receipt for an individual order.
@@ -231,6 +341,10 @@ export const exportOrderReceiptPDF = (order: Order, settings: Partial<SiteSettin
   doc.line(125, y + 10, 190, y + 10);
   doc.text("Assinatura do Cliente", 157.5, y + 15, { align: "center" });
 
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  window.open(pdfUrl, '_blank');
+
   doc.save(`Recibo_Pedido_${order.code}.pdf`);
 };
 
@@ -339,6 +453,10 @@ export const exportOrdersReportPDF = (orders: Order[], companyId: string) => {
   doc.setTextColor("#0f172a");
   doc.text("VALOR TOTAL DOS PEDIDOS ATIVOS (EXCLUINDO CANCELADOS):", 15, y);
   doc.text(formatCurrency(totalRevenue), 192, y, { align: "right" });
+
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  window.open(pdfUrl, '_blank');
 
   doc.save(`Relatorio_Pedidos_${companyId || "Geral"}.pdf`);
 };
@@ -555,6 +673,10 @@ export const exportFinanceReportPDF = (data: {
   doc.setTextColor("#94a3b8");
   doc.text("Este balanço financeiro corporativo é gerido eletronicamente pela interface de Admin do Ateliê.", 15, y);
   doc.text("La Pallyra • com amor, Guennita • Mimada Sim • Tutty Mimo — Gestão Unificada Premium.", 15, y + 4);
+
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  window.open(pdfUrl, '_blank');
 
   doc.save(`Performance_Financeira_${data.companyId}_${monthLabel.replace(/\s+/g, '_')}.pdf`);
 };
