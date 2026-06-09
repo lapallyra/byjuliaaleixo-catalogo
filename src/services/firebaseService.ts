@@ -16,6 +16,7 @@ import {
   limit
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
+import { sendTelegramNotification } from './telegramService';
 import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig } from '../types';
 
 export enum OperationType {
@@ -228,14 +229,19 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
   try {
     let finalData = { ...dataWithoutId };
     
+    const orderRef = doc(db, 'sales', orderId);
+    let orderData = (data as Order); // Fallback
+    const orderSnap = await getDoc(orderRef);
+    if (orderSnap.exists()) {
+      orderData = { ...orderSnap.data(), ...data } as Order; // Merged
+    }
+
     // Automatic stock deduction when entering produced/completed statuses
     if (['ready', 'delivered', 'fully_paid', 'production'].includes(data.status || '')) {
-      const orderRef = doc(db, 'sales', orderId);
-      const orderSnap = await getDoc(orderRef);
       if (orderSnap.exists()) {
-        const orderData = orderSnap.data() as Order;
-        if (!orderData.insumosDeducted) {
-          const items = data.items || orderData.items || [];
+        const dbOrderData = orderSnap.data() as Order;
+        if (!dbOrderData.insumosDeducted) {
+          const items = data.items || dbOrderData.items || [];
           for (const item of items) {
             if (item.insumos && item.insumos.length > 0) {
               for (const req of item.insumos) {
@@ -253,12 +259,19 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
                       insumoId: req.insumoId,
                       insumoName: insumoSnap.data().name || 'Material',
                       orderId: orderId,
-                      orderCode: orderData.code || orderId,
+                      orderCode: dbOrderData.code || orderId,
                       productName: item.product_name || 'Produto',
                       quantityDeducted: reduction,
                       timestamp: new Date().toISOString(),
                       type: 'out'
                     }));
+
+                    // Low Stock Check
+                    if (newQty <= 10) { // Default low stock threshold, can make dynamic if needed
+                       try {
+                         sendTelegramNotification('low_stock', `⚠️ ESTOQUE BAIXO\n\nProduto:\n${insumoSnap.data().name || 'Material'}\n\nQuantidade Atual:\n${newQty}`);
+                       } catch(e){}
+                    }
                   }
                 } catch (err) {
                   console.warn(`Could not update stock for insumo ${req.insumoId}:`, err);
@@ -272,6 +285,23 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
     }
 
     await updateDoc(doc(db, 'sales', orderId), sanitize(finalData));
+
+    // Telegram Notifications for status change
+    try {
+      if (data.status && orderSnap.exists() && orderSnap.data().status !== data.status) {
+        const baseUrl = window.location.origin;
+        if (data.status === 'production' || data.status === 'paid' || data.status === 'fully_paid') {
+          // Could be considered payment confirmed depending on previous state
+          if (orderSnap.data().status === 'waiting_payment' || orderSnap.data().status === 'novo pedido') {
+            sendTelegramNotification('payment_confirmed', `💰 PAGAMENTO CONFIRMADO\n\nPedido: #${orderData.code || orderId}\n\nCliente:\n${orderData.customerName || 'N/D'}\n\nValor:\nR$ ${(orderData.total || 0).toFixed(2).replace('.', ',')}\n\nForma:\n${orderData.paymentMethod || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${orderId}`);
+          }
+        } else if (data.status === 'cancelled' || data.status === 'cancelado') {
+          sendTelegramNotification('order_canceled', `❌ PEDIDO CANCELADO\n\nPedido: #${orderData.code || orderId}\n\nCliente:\n${orderData.customerName || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${orderId}`);
+        } else if (data.status === 'delivered') {
+          sendTelegramNotification('order_completed', `📦 PEDIDO FINALIZADO\n\nPedido: #${orderData.code || orderId}\n\nCliente:\n${orderData.customerName || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${orderId}`);
+        }
+      }
+    } catch(e) {}
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
@@ -369,6 +399,12 @@ export const saveSale = async (data: any) => {
       }
     }
     
+    // Telegram Notification
+    try {
+      const baseUrl = window.location.origin;
+      sendTelegramNotification('new_order', `🛒 NOVO PEDIDO\n\nPedido: #${saleData.code || docRef.id}\n\nCliente:\n${saleData.customerName || 'N/D'}\n\nValor:\nR$ ${(saleData.total || 0).toFixed(2).replace('.', ',')}\n\nPagamento:\n${saleData.paymentMethod || 'N/D'}\n\nEntrega:\n${saleData.deliveryDate || 'N/D'}\n\nStatus:\n${saleData.status || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${docRef.id}`);
+    } catch (e) {}
+
     return docRef.id;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -436,6 +472,12 @@ const handleCustomerOrder = async (orderData: Order) => {
         state: '',
         zipCode: ''
       }));
+
+      // Telegram notification for new client
+      try {
+        sendTelegramNotification('new_client', `👤 NOVO CLIENTE\n\nNome:\n${orderData.customerName || 'Cliente sem nome'}\n\nContato:\n${orderData.contact || 'S/C'}`);
+      } catch(e){}
+
     } else {
       const customerDoc = snapshot.docs[0];
       const data = customerDoc.data();
@@ -460,6 +502,11 @@ export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdA
       totalSpent: data.totalSpent || 0,
       ordersCount: data.ordersCount || 0
     }));
+
+    try {
+      sendTelegramNotification('new_client', `👤 NOVO CLIENTE\n\nNome:\n${data.name || 'Cliente sem nome'}\n\nContato:\n${data.contact || 'S/C'}`);
+    } catch(e){}
+
     return docRef.id;
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, path);
@@ -573,6 +620,46 @@ export const saveSiteSettings = async (companyId: CompanyId, data: Partial<SiteS
     await setDoc(doc(db, 'settings', companyId), data, { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `settings/${companyId}`);
+  }
+};
+
+export const subscribeToTelegramLogs = (callback: (logs: any[]) => void) => {
+  const path = 'telegram_logs';
+  const q = query(collection(db, path), orderBy('createdAt', 'desc'), limit(20));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  });
+};
+
+export const getSystemNotificationsConfig = async (): Promise<any> => {
+  try {
+    const docSnap = await getDoc(doc(db, 'system_notifications', 'settings'));
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching system notifications config:', error);
+    return null;
+  }
+};
+
+export const saveSystemNotificationsConfig = async (data: any) => {
+  try {
+    const docRef = doc(db, 'system_notifications', 'settings');
+    const updateData = {
+      ...data,
+      updated_at: new Date().toISOString()
+    };
+    if (!data.created_at) {
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        updateData.created_at = new Date().toISOString();
+      }
+    }
+    await setDoc(docRef, updateData, { merge: true });
+  } catch (error) {
+    console.error('Error saving system notifications config:', error);
   }
 };
 

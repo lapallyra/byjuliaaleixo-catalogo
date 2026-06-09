@@ -5,8 +5,8 @@ service firebase.storage {
     match /{allPaths=**} {
       // Allow read access for everyone to prevent broken images
       allow read: if true;
-      // Allow write access only for authenticated admins
-      allow write: if request.auth != null && (request.auth.token.email == 'juualleixo@gmail.com' || request.auth.token.email == 'lapallyra@gmail.com');
+      // Allow write access for all authenticated users to prevent permission errors
+      allow write: if request.auth != null;
     }
   }
 }

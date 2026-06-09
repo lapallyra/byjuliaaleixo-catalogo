@@ -139,6 +139,21 @@ export interface FinanceEntry {
   paymentMethod?: string;
 }
 
+export interface SystemNotificationConfig {
+  id?: string;
+  telegram_enabled: boolean;
+  telegram_bot_token: string;
+  telegram_chat_id: string;
+  notify_new_order?: boolean;
+  notify_payment_confirmed?: boolean;
+  notify_order_canceled?: boolean;
+  notify_order_completed?: boolean;
+  notify_low_stock?: boolean;
+  notify_new_client?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SiteSettings {
   id: string;
   companyId: CompanyId;

@@ -34,9 +34,13 @@ import {
   getGlobalSettings,
   saveGlobalSettings,
   saveAppConfig,
+  getSystemNotificationsConfig,
+  saveSystemNotificationsConfig,
+  subscribeToTelegramLogs
 } from "../../services/firebaseService";
 import { format } from "date-fns";
 import { ImageWithFallback } from "../ImageWithFallback";
+import { resendTelegramNotification } from "../../services/telegramService";
 
 interface SettingsTabProps {
   companyId: CompanyId;
@@ -65,6 +69,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
   const [settings, setSettings] = useState<Partial<SiteSettings>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [telegramConfig, setTelegramConfig] = useState<any>({
+    telegram_enabled: false,
+    telegram_bot_token: '',
+    telegram_chat_id: '',
+  });
+  const [telegramStatus, setTelegramStatus] = useState<'idle' | 'success' | 'error' | 'loading'>('idle');
+  const [telegramLogs, setTelegramLogs] = useState<any[]>([]);
+
   const [showEditor, setShowEditor] = useState(false);
   const [tempLogo, setTempLogo] = useState<string | null>(null);
   const [editingAtelierId, setEditingAtelierId] = useState<CompanyId | null>(
@@ -91,6 +103,17 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
          setSettings(globalData);
       }
 
+      const tgConfig = await getSystemNotificationsConfig();
+      if (tgConfig) {
+        setTelegramConfig({
+          ...tgConfig,
+          telegram_bot_token: tgConfig.telegram_bot_token ? decryptHex(tgConfig.telegram_bot_token) : ''
+        });
+        if (tgConfig.telegram_enabled && tgConfig.telegram_bot_token && tgConfig.telegram_chat_id) {
+           setTelegramStatus('success');
+        }
+      }
+
       // Load others for branding overview
       const ids: CompanyId[] = ["pallyra", "guennita", "mimada", "tuttymimo"];
       const multi: Record<string, Partial<SiteSettings>> = {};
@@ -102,6 +125,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
       setLoading(false);
     };
     load();
+
+    const unsubscribeTelegramLogs = subscribeToTelegramLogs((logs) => {
+      setTelegramLogs(logs);
+    });
+
+    return () => {
+      unsubscribeTelegramLogs();
+    };
   }, [companyId]);
 
   const handleSave = async () => {
@@ -183,6 +214,50 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
       ...prev,
       [id]: { ...prev[id], [field]: value },
     }));
+  };
+
+  const encryptHex = (str: string) => btoa(str).split('').reverse().join('');
+  const decryptHex = (str: string) => {
+    try {
+       return atob(str.split('').reverse().join(''));
+    } catch(e) { return "" }
+  };
+
+  const handleTelegramChange = async (key: string, value: any) => {
+    const updated = { ...telegramConfig, [key]: value };
+    setTelegramConfig(updated);
+    
+    const toSave = { ...updated };
+    if (toSave.telegram_bot_token && toSave.telegram_bot_token.trim() !== '') {
+        toSave.telegram_bot_token = encryptHex(toSave.telegram_bot_token);
+    } else {
+        toSave.telegram_bot_token = '';
+    }
+    await saveSystemNotificationsConfig(toSave);
+  };
+
+  const testTelegram = async () => {
+    setTelegramStatus('loading');
+    try {
+      const token = telegramConfig.telegram_bot_token;
+      if (!token) throw new Error("Sem token");
+
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: telegramConfig.telegram_chat_id,
+          text: "🎉 Integração Telegram configurada com sucesso!"
+        })
+      });
+      if (res.ok) {
+        setTelegramStatus('success');
+      } else {
+        setTelegramStatus('error');
+      }
+    } catch {
+       setTelegramStatus('error');
+    }
   };
 
   if (loading)
@@ -1164,6 +1239,171 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest leading-relaxed">
                 • Efeitos sonoros são gerados de forma limpa pelo navegador via Web Audio API, exigindo uma primeira interação na página para contornar restrições de autoplayer do navegador.
               </p>
+            </div>
+
+            {/* Configuração Telegram */}
+            <div className="bg-white rounded-3xl p-8 border border-sky-100 space-y-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="flex items-center gap-2 text-sm font-black text-sky-900 uppercase tracking-wider">
+                    <Smartphone size={18} />
+                    Telegram
+                  </h4>
+                  <p className="text-[10px] text-sky-600/70 uppercase font-bold tracking-widest mt-1">
+                    Receba notificações de pedidos no seu Telegram.
+                  </p>
+                </div>
+                {telegramStatus === 'success' && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100 text-[10px] font-bold uppercase tracking-widest text-emerald-600">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    Telegram Conectado
+                  </div>
+                )}
+                {(telegramStatus === 'error' || telegramStatus === 'idle') && telegramConfig.telegram_bot_token === '' && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 rounded-lg border border-rose-100 text-[10px] font-bold uppercase tracking-widest text-rose-600">
+                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
+                    Telegram Desconectado
+                  </div>
+                )}
+                {telegramStatus === 'error' && telegramConfig.telegram_bot_token !== '' && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 rounded-lg border border-rose-100 text-[10px] font-bold uppercase tracking-widest text-rose-600">
+                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
+                    Falha ao Conectar
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 bg-slate-50/50 rounded-2xl border border-slate-100 flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1 pr-4">
+                    <p className="text-xs font-black text-slate-900 uppercase tracking-wider">Ativar Notificações Telegram</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed normal-case">
+                      Liga ou desliga o envio prático de alertas.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleTelegramChange("telegram_enabled", !telegramConfig.telegram_enabled)}
+                    className={`w-14 h-8 rounded-full transition-all duration-300 relative flex items-center px-1 shrink-0 ${
+                      telegramConfig.telegram_enabled ? "bg-emerald-500" : "bg-slate-300"
+                    }`}
+                    style={{ minWidth: '56px' }}
+                  >
+                    <div
+                      className={`w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                        telegramConfig.telegram_enabled ? "translate-x-6" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200/60">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                      Bot Token
+                    </label>
+                    <input
+                      type="password"
+                      value={telegramConfig.telegram_bot_token || ""}
+                      onChange={(e) => handleTelegramChange("telegram_bot_token", e.target.value)}
+                      placeholder="Ex: 123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"
+                      className="w-full bg-[#FAF9F6] border border-slate-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-sky-500 transition-all shadow-sm"
+                    />
+                    {telegramConfig.telegram_bot_token && telegramConfig.telegram_bot_token.length > 5 && (
+                      <p className="text-[9px] font-mono text-slate-400 ml-2">
+                        Token Salvo: {'*'.repeat(Math.max(0, telegramConfig.telegram_bot_token.length - 4)) + telegramConfig.telegram_bot_token.slice(-4)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                      Chat ID
+                    </label>
+                    <input
+                      type="text"
+                      value={telegramConfig.telegram_chat_id || ""}
+                      onChange={(e) => handleTelegramChange("telegram_chat_id", e.target.value)}
+                      placeholder="Ex: -1001234567890"
+                      className="w-full bg-[#FAF9F6] border border-slate-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-sky-500 transition-all shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                {telegramConfig.telegram_enabled && (
+                  <div className="pt-4 border-t border-slate-200/60 space-y-4">
+                    <h5 className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                      Eventos para Notificar
+                    </h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {[
+                        { key: "notify_new_order", label: "Novo Pedido", icon: "🛒" },
+                        { key: "notify_payment_confirmed", label: "Pagamento Confirmado", icon: "💰" },
+                        { key: "notify_order_canceled", label: "Pedido Cancelado", icon: "❌" },
+                        { key: "notify_order_completed", label: "Pedido Finalizado", icon: "📦" },
+                        { key: "notify_low_stock", label: "Estoque Baixo", icon: "⚠️" },
+                        { key: "notify_new_client", label: "Novo Cliente", icon: "👤" }
+                      ].map((evt) => (
+                         <label key={evt.key} className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-sky-300 transition-colors">
+                           <input
+                             type="checkbox"
+                             checked={!!telegramConfig[evt.key]}
+                             onChange={(e) => handleTelegramChange(evt.key, e.target.checked)}
+                             className="w-4 h-4 text-sky-600 rounded focus:ring-sky-500"
+                           />
+                           <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
+                             <span>{evt.icon}</span> {evt.label}
+                           </span>
+                         </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    disabled={telegramStatus === 'loading'}
+                    onClick={testTelegram}
+                    className="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-50 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2"
+                  >
+                    {telegramStatus === 'loading' ? (
+                      <>⏳ Testando...</>
+                    ) : (
+                      <>🤖 Testar Conexão</>
+                    )}
+                  </button>
+                </div>
+
+                {/* Logs de Notificações */}
+                {telegramLogs.length > 0 && (
+                  <div className="pt-4 border-t border-slate-200/60 space-y-4">
+                    <h5 className="text-[10px] uppercase font-black text-slate-500 ml-2">Ultimas Notificações (Logs)</h5>
+                    <div className="space-y-3">
+                      {telegramLogs.map(log => (
+                        <div key={log.id} className={`p-4 rounded-xl border ${log.status === 'error' ? 'bg-red-50/50 border-red-100' : 'bg-white border-slate-100'}`}>
+                          <div className="flex justify-between items-start">
+                             <div>
+                                <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${log.status === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
+                                  {log.status === 'success' ? '🟢 Enviado' : '🔴 Falha'} - {new Date(log.createdAt?.seconds * 1000).toLocaleString()}
+                                </span>
+                                <p className="text-xs text-slate-600 mt-2 whitespace-pre-wrap">{log.message}</p>
+                                {log.status === 'error' && log.errorDetails && (
+                                  <p className="text-[10px] text-red-500 mt-1 font-mono">{log.errorDetails}</p>
+                                )}
+                             </div>
+                             <button
+                               onClick={() => resendTelegramNotification(log.id, log)}
+                               className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2"
+                             >
+                               <RotateCw size={12} /> Reenviar
+                             </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
