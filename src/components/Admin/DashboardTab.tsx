@@ -6,6 +6,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  Cell,
 } from "recharts";
 import {
   TrendingUp,
@@ -31,12 +35,13 @@ import {
   Target,
   CheckCircle2,
   MoreVertical,
+  ArrowUpRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Order, Product, CompanyId, CommemorativeDate } from "../../types";
 import { safeFormat, safeFormatISO } from "../../lib/dateUtils";
 import { formatCurrency } from "../../lib/currencyUtils";
-import { startOfDay, isToday } from "date-fns";
+import { startOfDay, isToday, subDays, isAfter, format, parseISO } from "date-fns";
 import { getUpcomingDates } from "../../services/calendarService";
 import { commemorativeDateService } from "../../services/commemorativeDateService";
 import { getMobileDateOccurrence } from "../../lib/commemorativeDateUtils";
@@ -51,6 +56,35 @@ interface DashboardTabProps {
   ) => void;
   onOpenOrder: (order: Order) => void;
 }
+
+const ChartCard: React.FC<{ title: string; subtitle: string; children: React.ReactNode; icon: any }> = ({ title, subtitle, children, icon: Icon }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="bg-white p-6 rounded-[2rem] border border-[#F0E6D2] shadow-[0_15px_40px_rgba(240,230,210,0.2)] flex flex-col h-[400px]"
+  >
+    <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-[#FAF9F6] rounded-xl border border-[#F0E6D2] text-[#D88D85]">
+          <Icon size={16} />
+        </div>
+        <div>
+          <h3 className="text-[10px] font-black uppercase text-[#4A3A34] tracking-[0.2em]">{title}</h3>
+          <p className="text-[8px] text-[#A09088] font-bold uppercase tracking-widest mt-0.5">{subtitle}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">
+        <ArrowUpRight size={12} />
+        <span className="text-[9px] font-black uppercase tracking-widest">Live</span>
+      </div>
+    </div>
+    <div className="flex-1 w-full min-h-0">
+      <ResponsiveContainer width="100%" height="100%">
+        {children as any}
+      </ResponsiveContainer>
+    </div>
+  </motion.div>
+);
 
 const OpportunitiesWidget: React.FC = () => {
   const [dates, setDates] = useState<CommemorativeDate[]>([]);
@@ -210,6 +244,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     waitingCount,
     currentMonthNetProfit,
     pendingOrders,
+    dailySalesData,
+    topProductsData,
   } = useMemo(() => {
     let activeCount = 0;
     let delivCount = 0;
@@ -222,19 +258,44 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
     let revenueSinceStartOfMonth = 0;
 
+    // Charts Data Calculation (Last 30 Days)
+    const thirtyDaysAgo = subDays(startOfDay(now), 30);
+    const dailyMap = new Map<string, number>();
+    const productMap = new Map<string, number>();
+
+    // Initialize daily map with zeros for last 30 days
+    for (let i = 0; i < 30; i++) {
+        const d = subDays(startOfDay(now), i);
+        dailyMap.set(format(d, 'dd/MM'), 0);
+    }
+
     orders.forEach(o => {
       const status = o.status.toLowerCase();
       if (status === 'delivered') delivCount++;
       else if (status === 'cancelled') cancCount++;
       else if (['pending', 'quote', 'waiting_deposit'].includes(status)) {
          waitCount++;
-         activeCount++; // Count them as active as well, or maybe active = all non-final? Let's say all non-cancelled/delivered is active
+         activeCount++;
       }
       else activeCount++;
 
-      const date = new Date(o.createdAt?.toDate ? o.createdAt.toDate() : o.createdAt || Date.now());
-      if (date.getMonth() === currentMonth && date.getFullYear() === currentYear && status !== 'cancelled') {
+      const orderDate = new Date(o.createdAt?.toDate ? o.createdAt.toDate() : o.createdAt || Date.now());
+      
+      if (orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear && status !== 'cancelled') {
         revenueSinceStartOfMonth += (Number(o.total) || 0);
+      }
+
+      // Fill Chart Data (Sales trends and Products)
+      if (isAfter(orderDate, thirtyDaysAgo) && status !== 'cancelled') {
+         const dateKey = format(orderDate, 'dd/MM');
+         if (dailyMap.has(dateKey)) {
+            dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + (Number(o.total) || 0));
+         }
+
+         o.items?.forEach(item => {
+            const pName = item.product_name || 'Personalizado';
+            productMap.set(pName, (productMap.get(pName) || 0) + item.quantity);
+         });
       }
     });
 
@@ -247,7 +308,13 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         const timeB = b.createdAt?.toMillis?.() || (b.createdAt as any)?.seconds * 1000 || Date.now();
         return timeB - timeA;
       })
-      .slice(0, 10); // show a few more
+      .slice(0, 10);
+
+    const salesChart = Array.from(dailyMap.entries()).map(([date, total]) => ({ date, total })).reverse();
+    const productsChart = Array.from(productMap.entries())
+        .map(([name, sales]) => ({ name, sales }))
+        .sort((a, b) => b.sales - a.sales)
+        .slice(0, 5);
 
     return {
       activeOrdersCount: activeCount,
@@ -256,6 +323,8 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       waitingCount: waitCount,
       currentMonthNetProfit: netProfitEstimate,
       pendingOrders: pending,
+      dailySalesData: salesChart,
+      topProductsData: productsChart,
     };
   }, [orders]);
 
@@ -429,6 +498,90 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           </motion.div>
         ))}
       </header>
+
+      {/* 1.5. Analytics Section - Charts Group */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <ChartCard 
+          title="Faturamento Diário" 
+          subtitle="Desempenho de vendas (últimos 30 dias)"
+          icon={TrendingUp}
+        >
+          <AreaChart data={dailySalesData}>
+            <defs>
+              <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#D88D85" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#D88D85" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F0E6D2" opacity={0.5} />
+            <XAxis 
+              dataKey="date" 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fontSize: 9, fill: '#A09088', fontWeight: 'bold' }}
+              dy={10}
+            />
+            <YAxis 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fontSize: 9, fill: '#A09088', fontWeight: 'bold' }}
+              tickFormatter={(val) => `R$ ${val}`}
+            />
+            <Tooltip 
+              contentStyle={{ 
+                borderRadius: '16px', 
+                border: '1px solid #F0E6D2', 
+                boxShadow: '0 10px 30px rgba(240,230,210,0.3)',
+                fontSize: '10px',
+                fontWeight: 'bold',
+                textTransform: 'uppercase'
+              }}
+              formatter={(value: number) => [formatCurrency(value), 'Vendas']}
+            />
+            <Area 
+              type="monotone" 
+              dataKey="total" 
+              stroke="#D88D85" 
+              strokeWidth={3}
+              fillOpacity={1} 
+              fill="url(#colorTotal)" 
+            />
+          </AreaChart>
+        </ChartCard>
+
+        <ChartCard 
+          title="Produtos Populares" 
+          subtitle="Itens mais vendidos (últimos 30 dias)"
+          icon={BarChartIcon}
+        >
+          <BarChart data={topProductsData} layout="vertical" margin={{ left: 30 }}>
+            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#F0E6D2" opacity={0.5} />
+            <XAxis type="number" hide />
+            <YAxis 
+              dataKey="name" 
+              type="category" 
+              axisLine={false} 
+              tickLine={false} 
+              width={100}
+              tick={{ fontSize: 8, fill: '#4A3A34', fontWeight: '800' }}
+            />
+            <Tooltip 
+               cursor={{ fill: '#FAF9F6' }}
+               contentStyle={{ 
+                borderRadius: '16px', 
+                border: '1px solid #F0E6D2', 
+                fontSize: '10px',
+                fontWeight: 'bold'
+              }}
+            />
+            <Bar dataKey="sales" radius={[0, 8, 8, 0]} barSize={20}>
+              {topProductsData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={['#D88D85', '#E6B3AC', '#F3D4D1', '#D48C8C', '#C07B7B'][index % 5]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ChartCard>
+      </section>
 
       {/* Caixa */}
       <div className="bg-white p-6 rounded-[1.5rem] border border-[#F0E6D2] flex items-center justify-between shadow-sm">

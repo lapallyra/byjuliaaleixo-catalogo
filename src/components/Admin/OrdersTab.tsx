@@ -573,16 +573,16 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
         </div>
       </div>
 
-      {/* Orders List - Grid for Balanced Layout on Larger Wide Screens */}
+      {/* Orders List - Mini Cards Intelligent Grid */}
       <div className="w-full pb-20">
-        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6">
         {orders.filter((order) => {
           if (selectedStatusFilter === "all") return true;
           const group = STATUS_GROUPS.find((g) => g.id === selectedStatusFilter);
           if (!group) return true;
           return group.dbStatuses.includes(order.status.toLowerCase());
         }).length === 0 ? (
-          <div className="py-24 text-center bg-white rounded-[2.5rem] border border-[#F0E6D2] text-[#A09898] font-bold uppercase tracking-widest text-[9px] shadow-[0_10px_30px_rgba(240,230,210,0.1)]">
+          <div className="col-span-full py-24 text-center bg-white rounded-[2.5rem] border border-[#F0E6D2] text-[#A09898] font-bold uppercase tracking-widest text-[9px] shadow-[0_10px_30px_rgba(240,230,210,0.1)]">
             Nenhum pedido encontrado nesta etapa.
           </div>
         ) : (
@@ -601,115 +601,110 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
             return (
               <motion.div
                 key={`order-card-${order.id}`}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: Math.min(idx * 0.04, 0.4) }}
-                className="bg-[#FFFFFF] rounded-[1.5rem] border border-[#F0E6D2] shadow-[0_6px_20px_rgba(240,230,210,0.5)] transition-all hover:shadow-[0_12px_32px_rgba(240,230,210,0.6)] hover:-translate-y-[2px] duration-300 flex items-stretch cursor-pointer relative"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.25, delay: Math.min(idx * 0.015, 0.3) }}
+                className="group relative bg-[#FFFFFF] rounded-[1.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden cursor-pointer h-full flex flex-col"
                 onClick={() => setIsDetailOpen(order.id)}
               >
-                {/* 1. Barra Lateral Colorida do Status */}
+                {/* Status Accent Strip */}
                 <div 
-                  className="w-2 shrink-0 transition-all duration-300 rounded-l-[1.5rem]"
+                  className="h-1.5 w-full" 
                   style={{ backgroundColor: statusGroup?.color || "#e2e8f0" }}
                 />
 
-                {/* Main Content Area - Professional Fluid Grid */}
-                <div className="flex-1 w-full">
-                  <div className="flex flex-col md:flex-row md:items-center gap-8 px-6 py-5 w-full">
-                    
-                    {/* [1. CLIENTE & ATELIÊ] */}
-                    <div className="flex-1 min-w-[200px]">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="font-mono text-[14px] font-bold text-slate-800 tracking-wider">
-                          {order.code}
-                        </span>
-                        <span 
-                          className="text-[9px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-lg text-slate-500 bg-slate-50 border border-slate-100"
-                        >
-                          {brandTheme.name}
-                        </span>
-                      </div>
-                      <h4 className="text-[17px] font-bold text-slate-700 tracking-tight leading-tight">
-                        {order.customerName}
-                      </h4>
+                <div className="p-4 flex flex-col flex-1 gap-3">
+                  {/* Header */}
+                  <div className="flex justify-between items-start">
+                    <div className="flex flex-col">
+                      <span className="font-mono text-[11px] font-black text-slate-800 tracking-widest">
+                        {order.code}
+                      </span>
+                      <span className="text-[7px] font-black uppercase tracking-widest text-slate-400 mt-0.5">
+                        {brandTheme.name}
+                      </span>
                     </div>
-
-                    {/* [2. PRODUTO] */}
-                    <div className="flex items-center gap-4 min-w-[240px] flex-[1.5]">
-                      <div className="w-14 h-14 shrink-0 rounded-2xl bg-white border border-slate-100 overflow-hidden flex items-center justify-center relative shadow-sm">
-                        {cardProduct.image ? (
-                          <img 
-                            src={cardProduct.image} 
-                            alt={cardProduct.name} 
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <Box size={24} className="text-slate-200" />
-                        )}
-                        {cardProduct.count > 1 && (
-                          <span className="absolute -top-1 -right-1 bg-pink-600 text-white text-[8px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                            {cardProduct.count}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                         <span className="text-[14px] font-bold text-slate-600 leading-tight">
-                            {cardProduct.name || "Produto Personalizado"}
-                         </span>
-                         {order.items && order.items.length > 1 && (
-                           <span className="text-[9px] font-black text-pink-400 uppercase tracking-widest mt-1">
-                             + {order.items.length - 1} outros itens
-                           </span>
-                         )}
-                      </div>
+                    <div className="flex items-center gap-1.5 bg-slate-50 px-1.5 py-1 rounded-lg border border-slate-100">
+                      <Calendar size={10} className="text-pink-300" />
+                      <span className="text-[9px] font-bold text-slate-600">
+                        {order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM") : "--/--"}
+                      </span>
                     </div>
+                  </div>
 
-                    {/* [3. DATA DE ENTREGA] */}
-                    <div className="flex flex-col justify-center gap-1.5 min-w-[100px]">
-                      <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Entrega</span>
-                      <div className="flex items-center gap-2 text-slate-700 text-[13px] font-bold">
-                        <Calendar size={14} className="text-pink-300" />
-                        <span>
-                          {order.deliveryDate
-                            ? safeFormatISO(order.deliveryDate, "dd/MM")
-                            : "--/--"}
+                  {/* Customer Name */}
+                  <h4 className="text-[14px] font-black text-slate-700 tracking-tight leading-tight line-clamp-1">
+                    {order.customerName}
+                  </h4>
+
+                  {/* Product Preview */}
+                  <div className="flex items-center gap-3 bg-slate-50/10 p-2 rounded-xl border border-slate-50">
+                    <div className="w-10 h-10 shrink-0 rounded-lg bg-white border border-slate-100 overflow-hidden flex items-center justify-center relative shadow-xs">
+                      {cardProduct.image ? (
+                        <img 
+                          src={cardProduct.image} 
+                          alt={cardProduct.name} 
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <Box size={16} className="text-slate-200" />
+                      )}
+                      {cardProduct.count > 1 && (
+                        <span className="absolute -top-1 -right-1 bg-pink-600 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm">
+                          {cardProduct.count}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                       <span className="text-[11px] font-bold text-slate-600 leading-tight truncate">
+                          {cardProduct.name || "Personalizado"}
+                       </span>
+                    </div>
+                  </div>
+
+                  {/* Footer Section */}
+                  <div className="mt-auto pt-3 border-t border-slate-50 flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-col">
+                        <span className="text-[7px] font-black text-slate-300 uppercase tracking-widest">Total</span>
+                        <span className="text-[13px] font-black text-slate-900">
+                          {formatCurrency(Number(order.total) || 0)}
                         </span>
                       </div>
-                    </div>
-
-                    {/* [3. STATUS] */}
-                    <div className="min-w-[150px]">
-                      <span className={`flex items-center justify-center text-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-600 border-slate-200"} w-full shadow-sm`}>
-                        {order.status === 'delivered' || order.status === 'fully_paid' ? (
-                          <CheckCircle2 size={13} className="shrink-0" />
-                        ) : order.status === 'cancelled' ? (
-                          <XCircle size={13} className="shrink-0" />
-                        ) : null}
-                        <span>{statusGroup?.label || order.status}</span>
+                      <span className={`px-2 py-1 rounded-lg text-[7px] font-black tracking-widest uppercase border ${statusGroup?.bgLight || "bg-slate-50 text-slate-600"} shadow-xs`}>
+                        {statusGroup?.label || order.status}
                       </span>
                     </div>
 
-                    {/* [4. VALOR TOTAL] */}
-                    <div className="flex flex-col justify-center gap-1 md:text-right min-w-[120px]">
-                      <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Total</span>
-                      <p className="text-[15px] font-black text-slate-900 tracking-tight whitespace-nowrap">
-                        {formatCurrency(Number(order.total) || 0)}
-                      </p>
-                    </div>
-
-                    {/* [5. MENU ...] */}
-                    <div className="flex justify-end pl-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <ActionsDropdown 
-                        order={order}
-                        onOpenDetail={() => setIsDetailOpen(order.id)}
-                        onPrint={() => exportOrderReceiptPDF(order, settings || {})}
-                        onEdit={() => {
-                          setEditingOrder(order);
-                          setIsModalOpen(true);
-                        }}
-                        onDelete={() => setOrderToDelete(order.id)}
-                      />
+                    {/* Quick Actions */}
+                    <div className="flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex gap-1.5">
+                        <button 
+                          onClick={() => setIsDetailOpen(order.id)}
+                          className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-white border border-transparent hover:border-slate-200 transition-all"
+                          title="Ver Detalhes"
+                        >
+                          <Eye size={12} />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setEditingOrder(order);
+                            setIsModalOpen(true);
+                          }}
+                          className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-pink-600 hover:bg-pink-50 border border-transparent hover:border-pink-100 transition-all"
+                          title="Editar"
+                        >
+                          <Edit size={12} />
+                        </button>
+                      </div>
+                      <button 
+                        onClick={() => setOrderToDelete(order.id)}
+                        className="p-2 rounded-lg bg-white text-red-300 hover:text-white hover:bg-red-500 border border-slate-100 transition-all"
+                        title="Excluir"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   </div>
                 </div>
