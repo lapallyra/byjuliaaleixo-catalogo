@@ -323,11 +323,14 @@ export const saveSale = async (data: any) => {
     const today = new Date();
     const deliveryDate = calculateDeliveryDate(today, 7);
     
+    const isKitOrder = data.items && data.items.some((item: any) => item.isKit);
+    const code = data.code || (isKitOrder ? await generateUniqueKitCode() : generateOrderCode(data.companyId));
+    
     const saleData = sanitize({
       ...data,
       createdAt: serverTimestamp(),
       dateFormatted: formatDate(today),
-      code: data.code || generateOrderCode(data.companyId),
+      code: code,
       status: 'novo pedido',
       source: 'catalogo',
       deliveryDate: deliveryDate,
@@ -513,6 +516,19 @@ function formatDate(date: Date): string {
   const m = (date.getMonth() + 1).toString().padStart(2, '0');
   const y = date.getFullYear();
   return `${d}/${m}/${y}`;
+}
+
+function generateKitOrderCode(): string {
+  const random = Math.floor(10000 + Math.random() * 90000).toString();
+  return `K${random}T`;
+}
+
+async function generateUniqueKitCode(): Promise<string> {
+    while(true) {
+        const code = generateKitOrderCode();
+        const existing = await getOrderByCode(code);
+        if (!existing) return code;
+    }
 }
 
 function generateOrderCode(companyId: CompanyId): string {

@@ -531,80 +531,55 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           </section>
         )}
 
-        {/* PRODUTOS EM DESTAQUE */}
-        <section id="produtos" className="mb-20 md:mb-32 scroll-mt-24">
-          <HeartDivider text="Produtos em Destaque" />
+        {/* KITS EXCLUSIVOS */}
+        <section id="kits" className="mb-20 md:mb-32 scroll-mt-24">
+          <HeartDivider text="Kits Exclusivos" />
           <p className="text-center text-xs text-gray-500 uppercase tracking-widest font-bold -mt-4 mb-10 px-4">
-            Nossos mimos mais desejados e clicados dos ateliês
+             Curadoria de kits prontos para presentear
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto px-4 select-none">
-            {featuredProducts.length === 0 ? (
+            {kits.length === 0 ? (
               <p className="col-span-full text-center text-xs uppercase font-bold tracking-widest text-[#cca062]/60 py-12">
-                Nenhum produto cadastrado ainda.
+                Nenhum kit disponível.
               </p>
             ) : (
-              featuredProducts.map((prod) => {
-                const companyColors: Record<CompanyId, string> = {
-                  pallyra: '#cca062',
-                  guennita: '#5b2122',
-                  mimada: '#c96b71',
-                  tuttymimo: '#d4bda1'
-                };
-                const companyNames: Record<CompanyId, string> = {
-                  pallyra: 'La Pallyra',
-                  guennita: 'com amor, Guennita',
-                  mimada: 'Mimada Sim',
-                  tuttymimo: 'Tutty Mimo'
-                };
-                const companyRoutes: Record<CompanyId, string> = {
-                  pallyra: '/lapallyra',
-                  guennita: '/comamorguennita',
-                  mimada: '/mimadasim',
-                  tuttymimo: '/tuttymimo'
-                };
-                const accent = companyColors[prod.company] || '#cca062';
-                const name = companyNames[prod.company] || 'Ateliê';
-                const route = companyRoutes[prod.company] || '#';
-
+              kits.map((kit) => {
                 return (
                   <motion.div
-                    key={prod.id}
+                    key={kit.id}
                     initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    onClick={() => navigate(`${route}?search=${encodeURIComponent(prod.product_name)}`)}
+                    onClick={() => navigate('/kits')}
                     className="flex flex-col border border-[#e8dcc8]/60 bg-white rounded-3xl overflow-hidden cursor-pointer hover:border-transparent hover:shadow-md transition-all group"
                   >
                     <div className="w-full aspect-square bg-[#faf8f5] overflow-hidden relative">
                       <ImageWithFallback 
-                        src={prod.image} 
-                        alt={prod.product_name} 
+                        src={kit.image} 
+                        alt={kit.product_name} 
                         className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" 
                         isThumbnail={true}
                       />
-                      <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-xs" style={{ color: accent, border: `1px solid ${accent}30` }}>
-                        {name}
-                      </div>
                     </div>
                     
                     <div className="flex flex-col items-center text-center p-4 flex-1 justify-between">
                       <div className="w-full mb-2">
-                        <span className="text-[8px] font-black tracking-widest uppercase block mb-1 opacity-60" style={{ color: accent }}>
-                          {prod.category}
+                        <span className="text-[8px] font-black tracking-widest uppercase block mb-1 opacity-60" style={{ color: '#cca062' }}>
+                          Kit
                         </span>
                         <h5 className="font-serif text-xs tracking-wide text-[#6d5443] truncate w-full mb-1">
-                          {prod.product_name}
+                          {kit.product_name}
                         </h5>
                       </div>
                       
                       <div className="w-full mt-auto pt-2">
                         <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-2">
-                          A partir de R$ {prod.current_price?.toFixed(2).replace('.', ',')}
+                          R$ {kit.current_price?.toFixed(2).replace('.', ',')}
                         </span>
                         <span className="inline-block text-[8px] font-black uppercase tracking-widest text-[#cca062] group-hover:text-[#c36266] transition-colors leading-none">
-                          Ver no Catálogo →
+                          Ver Kit →
                         </span>
                       </div>
                     </div>
@@ -616,10 +591,25 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           
           <div className="flex justify-center mt-12 px-4">
             <button
-              onClick={() => navigate('/colecoes')}
+              onClick={() => navigate('/kits')}
               className="bg-[#cca062] hover:bg-[#c36266] text-white transition-all text-[9px] font-black uppercase tracking-widest px-8 py-3.5 rounded-full shadow-sm cursor-pointer hover:scale-105 active:scale-95"
             >
-              Ver Todas as Coleções por Ateliê
+              Ver Todos os Kits
+            </button>
+          </div>
+        </section>
+        
+        {/* FAIXA INCENTIVO - MONTE SEU KIT */}
+        <section className="mb-20 md:mb-32 px-4">
+          <div className="bg-[#FAF8F5] border border-[#e8dcc8]/50 rounded-[2rem] p-8 md:p-12 flex flex-col items-center text-center shadow-inner">
+            <p className="text-[#6d5443] text-sm md:text-lg font-serif italic mb-8 max-w-xl leading-relaxed">
+              "Nem todo presente perfeito já está pronto. Crie uma combinação única e surpreenda alguém especial."
+            </p>
+            <button
+              onClick={() => navigate('/kit-meukit')}
+              className="bg-white hover:bg-[#F5F3EF] text-[#6d5443] border border-[#cca062]/30 transition-all text-[10px] font-black uppercase tracking-widest px-8 py-4 rounded-full shadow-[0_4px_6px_rgba(0,0,0,0.05),_inset_0_2px_0_rgba(255,255,255,1)] hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              Monte Seu Kit
             </button>
           </div>
         </section>

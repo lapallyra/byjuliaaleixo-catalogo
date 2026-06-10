@@ -210,10 +210,29 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
                  <span className="text-xl font-black text-[#D88D85]">{formatCurrency(kit.current_price)}</span>
                  {kit.kitDiscountPercentage ? <span className="text-[10px] text-slate-400 font-bold bg-slate-100 px-2 py-1 rounded-full line-through">{formatCurrency(kit.original_price)}</span> : null}
               </div>
+              <div className="text-[10px] uppercase font-black text-slate-500 bg-slate-100 p-2 rounded-lg text-center">
+                 Estoque: {Math.min(...(kit.kitItems?.map(item => {
+                     if (item.type === 'product') {
+                         const p = normalProducts.find(x => x.id === item.id);
+                         return p ? Math.floor((p.stock || 0) / item.quantity) : 0;
+                     }
+                     if (item.type === 'insumo') {
+                         const i = companyInsumos.find(x => x.id === item.id);
+                         return i ? Math.floor((i.quantity || 0) / item.quantity) : 0;
+                     }
+                     return 999;
+                 }) || [0]))} unid.
+              </div>
             </div>
             <div className="flex gap-2 mt-4 pt-4 border-t border-[#F0E6D2]">
                <button onClick={() => handleEdit(kit)} className="flex-1 bg-slate-50 text-slate-600 hover:bg-[#FAF9F6] border border-[#F0E6D2] hover:text-[#D88D85] py-2 rounded-xl text-[10px] uppercase font-black tracking-widest transition-all">
                   Editar Kit
+               </button>
+               <button onClick={() => {
+                 setFormData({ ...kit, id: undefined, product_name: `${kit.product_name} (Cópia)` });
+                 setIsModalOpen(true);
+               }} className="p-2 border border-[#F0E6D2] rounded-xl text-slate-500 hover:bg-slate-50 hover:text-[#D88D85] transition-colors">
+                  <Layers size={16} />
                </button>
                <button onClick={async () => {
                  if (confirm("Tem certeza que deseja deletar este kit?")) {
@@ -405,7 +424,7 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
                       </h4>
                       
                       <div className="flex justify-between items-center mb-3">
-                         <span className="text-[10px] uppercase font-bold tracking-widest">Soma dos Custos (Itens)</span>
+                         <span className="text-[10px] uppercase font-bold tracking-widest">Custo Total (Componentes)</span>
                          <span className="font-mono text-sm">{formatCurrency(currentRawTotal)}</span>
                       </div>
                       
@@ -422,10 +441,30 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
                          </div>
                       </div>
 
+                      <div className="space-y-2 mb-4 pt-2 border-b border-white/10 pb-4">
+                        <div className="flex justify-between text-[10px]">
+                           <span className="text-slate-400">Lucro Bruto</span>
+                           <span className={currentFinalTotal - currentRawTotal >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                             {formatCurrency(currentFinalTotal - currentRawTotal)}
+                           </span>
+                        </div>
+                         <div className="flex justify-between text-[10px]">
+                           <span className="text-slate-400">Margem</span>
+                           <span className={currentFinalTotal - currentRawTotal >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                             {currentFinalTotal > 0 ? ((currentFinalTotal - currentRawTotal) / currentFinalTotal * 100).toFixed(1) : "0.0"}%
+                           </span>
+                        </div>
+                      </div>
+                      
+                      {currentFinalTotal < currentRawTotal && (
+                        <div className="bg-rose-900/40 text-rose-200 text-[9px] font-bold p-3 rounded-lg border border-rose-500/30 mb-4 text-center">
+                          ⚠️ PREÇO ABAIXO DO CUSTO: O Kit gerará prejuízo.
+                        </div>
+                      )}
+
                       <div className="flex justify-between items-center pt-2">
                          <div className="space-y-1">
-                           <p className="text-[9px] uppercase font-black tracking-widest text-emerald-400">Preço Calculado Final</p>
-                           <p className="text-[8px] text-slate-400">Refletirá automaticamente no site</p>
+                           <p className="text-[9px] uppercase font-black tracking-widest text-[#D88D85]">Preço Sugerido / Venda</p>
                          </div>
                          <span className="text-3xl font-black tracking-tighter text-white">{formatCurrency(currentFinalTotal)}</span>
                       </div>

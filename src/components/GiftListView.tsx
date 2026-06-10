@@ -18,6 +18,10 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
   const [loading, setLoading] = useState(true);
 
   // Reservation Modal state
+  const [selectedItemForDetails, setSelectedItemForDetails] = useState<any | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  // Reservation Modal state
   const [selectedItemForReserve, setSelectedItemForReserve] = useState<any | null>(null);
   const [isReserveModalOpen, setIsReserveModalOpen] = useState(false);
   const [reserveName, setReserveName] = useState('');
@@ -159,7 +163,7 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
             <div className="flex-1 max-w-md w-full">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-[11px] font-mono font-black text-[#D4AF37]">{listProgressPercent}% Concluída</span>
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{giftedItemsCount} de {totalItemsCount} presenteados</span>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{giftedItemsCount} de {totalItemsCount} presentes escolhidos</span>
               </div>
               <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden relative border border-gray-200/50">
                 <motion.div 
@@ -183,11 +187,15 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className={`group flex flex-col md:flex-row gap-6 items-center p-6 bg-white border rounded-3xl transition-all relative overflow-hidden ${
+                  className={`group flex flex-col md:flex-row gap-6 items-center p-6 bg-white border rounded-3xl transition-all relative overflow-hidden cursor-pointer ${
                     status !== 'disponivel' 
                       ? 'bg-neutral-50/50 border-gray-100 opacity-90' 
                       : 'border-gray-100 hover:shadow-xl hover:border-[#D4AF37]/30'
                   }`}
+                  onClick={() => {
+                      setSelectedItemForDetails(item);
+                      setIsDetailsModalOpen(true);
+                  }}
                 >
                   <div className="w-32 h-32 rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0 relative">
                     {item.image ? (
@@ -210,20 +218,27 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
                         {item.product_name}
                       </h3>
                       
+                      {/* Item Type Badge */}
+                      <span className="inline-block px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 text-[9px] font-black uppercase tracking-wider self-center border border-gray-100">
+                        {item.isKit 
+                          ? (item.kitType === 'kit_pronto' ? 'Kit Pronto' : 'Kit Personalizado') 
+                          : 'Produto'}
+                      </span>
+                      
                       {/* Luxury Status Badges */}
                       {status === 'disponivel' && (
-                        <span className="inline-block px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-wider self-center border border-emerald-100">
+                        <span className="inline-block px-3 py-1 rounded-full bg-white text-emerald-900 text-[9px] font-bold uppercase tracking-widest self-center border border-emerald-100 shadow-sm">
                           Disponível
                         </span>
                       )}
                       {status === 'reservado' && (
-                        <span className="inline-block px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 text-[9px] font-black uppercase tracking-wider self-center border border-amber-100 flex items-center gap-1">
+                        <span className="inline-block px-3 py-1 rounded-full bg-white text-amber-900 text-[9px] font-bold uppercase tracking-widest self-center border border-amber-100 shadow-sm flex items-center gap-1">
                           <Lock size={10} /> Reservado
                         </span>
                       )}
                       {status === 'presenteado' && (
-                        <span className="inline-block px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-600 text-[9px] font-black uppercase tracking-wider self-center border border-neutral-200 flex items-center gap-1">
-                          <CheckCircle size={10} /> Presenteado
+                        <span className="inline-block px-3 py-1 rounded-full bg-white text-neutral-900 text-[9px] font-black uppercase tracking-widest self-center border border-neutral-200 shadow-sm flex items-center gap-1">
+                          Presenteado
                         </span>
                       )}
                     </div>
@@ -294,6 +309,49 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
             </p>
         </div>
       </div>
+
+      {/* Details Modal */}
+      <AnimatePresence>
+        {isDetailsModalOpen && selectedItemForDetails && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-[2rem] p-6 md:p-8 max-w-sm w-full shadow-2xl relative border border-[#D4AF37]/20"
+            >
+              <button 
+                onClick={() => setIsDetailsModalOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/5 transition-all text-gray-400 hover:text-black z-20"
+              >
+                <X size={18} />
+              </button>
+              
+              <div className="aspect-square w-full rounded-2xl bg-gray-50 mb-6 overflow-hidden">
+                <ImageWithFallback src={selectedItemForDetails.image} alt={selectedItemForDetails.product_name} className="w-full h-full object-cover" />
+              </div>
+
+              <h3 className="text-xl font-black text-black mb-2">{selectedItemForDetails.product_name}</h3>
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-4">
+                {selectedItemForDetails.isKit ? (selectedItemForDetails.kitType === 'kit_pronto' ? 'Kit Pronto' : 'Kit Personalizado') : 'Produto'}
+              </p>
+              <p className="text-sm text-gray-600 mb-6 leading-relaxed bg-gray-50 p-4 rounded-xl">{selectedItemForDetails.description}</p>
+              
+              <div className="text-2xl font-black text-[#D4AF37] mb-6">R$ {selectedItemForDetails.retail_price.toFixed(2)}</div>
+              
+              <button
+                onClick={() => {
+                  setIsDetailsModalOpen(false);
+                  handleOpenReserveModal(selectedItemForDetails);
+                }}
+                className="w-full py-4 bg-[#D4AF37] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#C5A030]"
+              >
+                Reservar
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Reservation Name Dialog Modal */}
       <AnimatePresence>

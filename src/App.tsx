@@ -11,6 +11,7 @@ import { SalesNotificationPortal } from './components/SalesNotificationPortal';
 import { AuthProvider } from './components/AuthProvider';
 import { DocumentSearch } from './components/DocumentSearch';
 import { KitsView } from './components/KitsView';
+import { KitConstructor } from './components/KitConstructor';
 import { GiftListView } from './components/GiftListView';
 import { AteliersPresentationView } from './components/AteliersPresentationView';
 import { AboutMeView } from './components/AboutMeView';
@@ -316,7 +317,7 @@ function MainApp() {
         <Route path="/atelies" element={<AteliersPresentationView />} />
         <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />
         <Route path="/kits" element={<KitsView allProducts={allProducts} />} />
-        <Route path="/kit-meukit" element={<KitsView allProducts={allProducts} />} />
+        <Route path="/kit-meukit" element={<KitConstructor allProducts={allProducts} />} />
         <Route path="/sobrenos" element={<AboutMeView />} />
         <Route path="/listadepresentes-info" element={<GiftListInfoView />} />
         
