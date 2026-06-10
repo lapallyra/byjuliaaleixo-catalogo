@@ -45,6 +45,7 @@ import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGlobalSettings, getGiftList, updateOrderStatus } from '../services/firebaseService';
+import { validateProductStock } from '../utils/stockValidation';
 import { playSuccessSound } from '../utils/audio';
 import { functions } from '../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
@@ -192,7 +193,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [isFiltering, setIsFiltering] = useState(false);
 
   const companyProducts = useMemo(() => {
-    return allProducts.filter(p => p.company === companyId);
+    return allProducts.filter(p => p.company === companyId && !p.isKit);
   }, [allProducts, companyId]);
 
   useEffect(() => {
@@ -277,6 +278,17 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setIsDirectCheckoutLoading(true);
     
     try {
+      // Validate complete cart
+      for (const item of cart) {
+         const p = companyProducts.find(cp => cp.id === item.id) || item;
+         const validation = await validateProductStock(p, item.quantity);
+         if (!validation.valid) {
+            alert(`Item indisponível: ${validation.reason}`);
+            setIsDirectCheckoutLoading(false);
+            return;
+         }
+      }
+
       const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
       let dscto = 0;
       if (checkoutData?.cupom === 'GANHEI10') {
@@ -786,20 +798,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             <aside className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} hidden md:flex flex-col border-r ${theme.borderLine} transition-all duration-500 bg-white/50 backdrop-blur-md sticky top-0 h-full overflow-hidden shrink-0`}>
           <div className="p-4 border-b border-black/5 flex items-center justify-between">
             {!isSidebarCollapsed && (
-              <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Categorias</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#cca062]">Categorias</span>
             )}
-            <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-2 hover:bg-black/5 rounded-lg text-neutral-400">
+            <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-2 hover:bg-[#cca062]/10 rounded-lg text-[#cca062]">
                {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-1 scrollbar-none">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-2 scrollbar-none">
             <button
               onClick={() => handleCategoryClick(null)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${!selectedCategory ? 'bg-neutral-900 text-white shadow-lg' : 'hover:bg-black/5 text-neutral-500'}`}
+              className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${!selectedCategory ? 'text-white shadow-md shadow-[#cca062]/20 font-black' : 'hover:bg-[#cca062]/5 text-[#6d5443] font-medium'}`}
               style={{ backgroundColor: !selectedCategory ? theme.accentColor : '' }}
             >
               <LayoutGrid size={18} />
-              {!isSidebarCollapsed && <span className="text-xs font-bold whitespace-nowrap">Tudo</span>}
+              {!isSidebarCollapsed && <span className="text-xs tracking-wider whitespace-nowrap">Tudo</span>}
             </button>
             
             {categories.map((category) => {
@@ -808,11 +820,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 <button
                   key={`side-${category}`}
                   onClick={() => handleCategoryClick(category)}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${isActive ? 'bg-neutral-900 text-white shadow-lg' : 'hover:bg-black/5 text-neutral-500'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${isActive ? 'text-white shadow-md shadow-[#cca062]/20 font-black' : 'hover:bg-[#cca062]/5 text-[#5c4a3d]/80 font-medium'}`}
                   style={{ backgroundColor: isActive ? theme.accentColor : '' }}
                 >
                   {getCategoryIcon(category)}
-                  {!isSidebarCollapsed && <span className="text-xs font-bold whitespace-nowrap line-clamp-1">{category}</span>}
+                  {!isSidebarCollapsed && <span className="text-xs tracking-wider whitespace-nowrap line-clamp-1">{category}</span>}
                 </button>
               );
             })}
@@ -820,7 +832,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         </aside>
 
         {/* Content Area */}
-        <div className="flex-1 flex flex-col min-h-0 bg-white/30 overflow-y-auto scrollbar-none">
+        <div className="flex-1 flex flex-col min-h-0 bg-[#FAF9F6] overflow-y-auto scrollbar-none">
           <div className="pt-0"> 
 
           </div>
@@ -833,7 +845,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               <div className="md:hidden flex overflow-x-auto gap-2 pb-6 scrollbar-none snap-x">
                 <button
                   onClick={() => handleCategoryClick(null)}
-                  className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${!selectedCategory ? 'bg-neutral-900 text-white' : 'bg-white border border-neutral-200 text-neutral-500'}`}
+                  className={`px-4 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-all shadow-sm ${!selectedCategory ? 'text-white shadow-md shadow-[#cca062]/20' : 'bg-white border border-[#cca062]/20 text-[#6d5443] hover:border-[#cca062]/40'}`}
                   style={{ backgroundColor: !selectedCategory ? theme.accentColor : '' }}
                 >
                   Tudo
@@ -842,12 +854,43 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   <button
                     key={`pill-${category}`}
                     onClick={() => handleCategoryClick(category)}
-                    className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${selectedCategory === category ? 'bg-neutral-900 text-white' : 'bg-white border border-neutral-200 text-neutral-500'}`}
+                    className={`px-4 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-all shadow-sm ${selectedCategory === category ? 'text-white shadow-md shadow-[#cca062]/20' : 'bg-white border border-[#cca062]/20 text-[#6d5443] hover:border-[#cca062]/40'}`}
                     style={{ backgroundColor: selectedCategory === category ? theme.accentColor : '' }}
                   >
                     {category}
                   </button>
                 ))}
+              </div>
+
+              {/* Welcome Editorial Header - Vitrine de Presentes Personalizados */}
+              <div className="text-center mb-16 mt-6 px-4">
+                <div 
+                  className="inline-flex items-center gap-2 px-4 py-2 border rounded-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] mb-6 transition-transform hover:scale-105"
+                  style={{ 
+                    backgroundColor: `${theme.accentColor}0e`,
+                    borderColor: `${theme.accentColor}30`,
+                    color: theme.accentColor
+                  }}
+                >
+                  <Sparkle size={13} className="animate-spin-slow" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.25em] font-sans">
+                    Vitrine de Presentes Personalizados
+                  </span>
+                </div>
+                
+                <h1 className="font-serif text-3xl md:text-5xl lg:text-6xl text-[#6d5443] tracking-tight mt-1 mb-5 italic font-black leading-tight max-w-4xl mx-auto">
+                  Encante com Afeto & Exclusividade
+                </h1>
+                
+                <p className="font-sans text-[10px] md:text-xs uppercase tracking-[0.28em] text-[#cca062] font-semibold mb-6">
+                  Presentes sob medida que transformam momentos em memórias afetivas
+                </p>
+                
+                <div className="w-16 h-[2px] mx-auto my-6 rounded-full" style={{ backgroundColor: `${theme.accentColor}40` }}></div>
+                
+                <p className="text-[#5c4a3d]/80 text-sm max-w-2xl mx-auto leading-relaxed font-sans font-medium">
+                  Nossos mimos são desenhados individualmente com todo carinho, cuidado e rigor artesanal do ateliê. Uma verdadeira curadoria de peças selecionadas para celebrar conexões reais.
+                </p>
               </div>
 
               {/* Loading Overlay between Filters */}
@@ -859,8 +902,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     exit={{ opacity: 0 }}
                     className="flex flex-col items-center justify-center py-32"
                   >
-                    <Loader2 size={36} className="animate-spin" style={{ color: theme.accentColor }} />
-                    <span className="text-[10px] font-sans font-black uppercase tracking-[0.3em] mt-4 opacity-50">Sincronizando Ateliê...</span>
+                    <Loader2 size={36} className="animate-spin text-[#cca062]" />
+                    <span className="text-[10px] font-sans font-black uppercase tracking-[0.3em] mt-4 opacity-50 text-[#6d5443]">Sincronizando Ateliê...</span>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -869,10 +912,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.5 }}
                   >
-                    {/* Grid - Returned to Horizontal Smaller Cards */}
+                    {/* Grid - Premium Vertical Cards Showcase */}
                     {filteredProducts.length > 0 ? (
                       <>
-                      <div id="catalog-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 pb-32">
+                      <div id="catalog-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8 pb-32">
                         {paginatedProducts.map((product, idx) => {
                           const today = new Date();
                           const createdAtDate = product.createdAt?.toMillis ? new Date(product.createdAt.toMillis()) : product.createdAt instanceof Date ? product.createdAt : new Date();
@@ -882,62 +925,108 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           return (
                             <motion.div
                               key={`prod-${product.id}-${idx}`}
-                              initial={{ opacity: 0, scale: 0.98 }}
-                              whileInView={{ opacity: 1, scale: 1 }}
-                              viewport={{ once: true, margin: "-50px" }}
-                              transition={{ duration: 0.6, delay: (idx % 3) * 0.05 }}
+                              initial={{ opacity: 0, y: 30 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true, margin: "-100px" }}
+                              transition={{ duration: 0.8, delay: (idx % 3) * 0.08, ease: [0.16, 1, 0.3, 1] }}
                               onClick={() => setSelectedProduct(product)}
-                              className="group relative flex flex-col p-3 cursor-pointer bg-white rounded-2xl border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
-                              style={{ borderColor: theme.accentColor }}
+                              className="group relative flex flex-col justify-between overflow-hidden bg-white rounded-[2rem] border border-[#cca062]/20 shadow-[0_8px_30px_rgba(232,220,180,0.12)] hover:shadow-[0_24px_50px_rgba(198,166,100,0.18)] hover:-translate-y-2 transition-all duration-750 cursor-pointer"
                             >
-                              <div className="flex flex-row gap-4 items-stretch">
-                                {/* Thumbnail Image with Hover Change (Left) */}
-                                <div className="relative w-32 md:w-36 h-auto rounded-xl overflow-hidden bg-neutral-50 shrink-0 aspect-square">
+                              {/* Top Aspect Square Image Area */}
+                              <div className="aspect-square w-full relative overflow-hidden bg-neutral-50/50 border-b border-neutral-100">
+                                <ImageWithFallback 
+                                  src={product.image || ''} 
+                                  alt="Product"
+                                  className={`w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 ${product.image_hover ? 'group-hover:opacity-0' : ''}`}
+                                  containerClassName="w-full h-full absolute inset-0"
+                                />
+                                {product.image_hover && (
                                   <ImageWithFallback 
-                                    src={product.image || ''} 
-                                    alt="Product"
-                                    className={`w-full h-full object-cover transition-opacity duration-300 ${product.image_hover ? 'group-hover:opacity-0' : ''}`}
+                                    src={product.image_hover || ''} 
+                                    alt="Product Hover"
+                                    className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-1000 group-hover:scale-105"
                                     containerClassName="w-full h-full absolute inset-0"
                                   />
-                                  {product.image_hover && (
-                                    <ImageWithFallback 
-                                      src={product.image_hover || ''} 
-                                      alt="Product Hover"
-                                      className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                      containerClassName="w-full h-full absolute inset-0"
-                                    />
+                                )}
+
+                                {/* Category Badge and Labels */}
+                                <div className="absolute top-4 left-4 flex flex-col gap-1.5 pointer-events-none z-10">
+                                  <span className="bg-white/95 backdrop-blur-md text-[#cca062] border border-[#cca062]/20 text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-sm">
+                                    {product.category || 'exclusivo'}
+                                  </span>
+                                  {isNew && (
+                                    <span className="inline-flex items-center gap-1 bg-gradient-to-br from-[#dfba6b] via-[#fff5d6] to-[#b38d3f] text-[#473319] border border-[#ffd175]/45 shadow-[0_4px_12px_rgba(179,141,63,0.3),inset_0_1px_1px_rgba(255,255,255,0.45)] text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
+                                      <Sparkles size={8} className="animate-pulse text-[#473319] shrink-0" /> Novidade
+                                    </span>
+                                  )}
+                                  {product.isFeatured && (
+                                    <span className="inline-flex items-center gap-1 bg-gradient-to-br from-[#dfba6b] via-[#fff5d6] to-[#b38d3f] text-[#473319] border border-[#ffd175]/45 shadow-[0_4px_12px_rgba(179,141,63,0.3),inset_0_1px_1px_rgba(255,255,255,0.45)] text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full">
+                                      <Sparkles size={8} className="animate-pulse text-[#473319] shrink-0" /> Best Seller
+                                    </span>
                                   )}
                                 </div>
+                                
+                                {/* Glassmorphic Hover Overlay */}
+                                <div className="absolute inset-0 bg-[#6d5443]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none flex items-center justify-center">
+                                  <div className="bg-white/90 text-[#6d5443] text-[9px] font-black uppercase tracking-[0.2em] px-5 py-3 rounded-full shadow-lg border border-[#cca062]/10 backdrop-blur-sm -translate-y-2 group-hover:translate-y-0 transition-all duration-500">
+                                    ver detalhes
+                                  </div>
+                                </div>
+                              </div>
 
-                                {/* Info - Prices + Icons (Right) */}
-                                <div className="flex-1 flex flex-col justify-between py-1">
-                                  <div>
-                                    <p className="text-xs text-neutral-500 opacity-50 line-through">
-                                      de: R$ {(product.current_price || product.original_price || (product.retail_price * 1.25)).toFixed(2).replace('.', ',')}
-                                    </p>
-                                    <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap">
-                                      <span className="text-xs md:text-sm font-semibold text-neutral-600">por:</span>
-                                      <span className="text-lg md:text-xl font-black text-neutral-900">R$ {(product.retail_price || 0).toFixed(2).replace('.', ',')}</span>
+                              {/* Card Info Content */}
+                              <div className="p-6 flex flex-col flex-1 justify-between gap-5">
+                                <div className="space-y-2.5">
+                                  <p className="text-[9px] font-black uppercase tracking-widest text-[#cca062] font-sans">
+                                    Ateliê {companyName}
+                                  </p>
+                                  <h3 className="font-serif text-base md:text-lg font-bold text-[#6d5443] leading-tight group-hover:text-[#cca062] transition-colors truncate">
+                                    {product.product_name}
+                                  </h3>
+                                  <p className="text-xs text-neutral-500/90 leading-relaxed line-clamp-2 min-h-[2.5rem]">
+                                    {product.description || 'Um presente personalizado maravilhoso e inesquecível feito sob medida com todo carinho.'}
+                                  </p>
+                                </div>
+
+                                {/* Prices and Premium 3D Action Section */}
+                                <div className="pt-4 border-t border-[#cca062]/10 flex flex-col gap-4">
+                                  <div className="flex justify-between items-baseline">
+                                    <div className="flex flex-col">
+                                      <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Valor de Venda</span>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        <p className="text-xs text-neutral-400/80 line-through">
+                                          {formatCurrency(product.current_price || product.original_price || (product.retail_price * 1.25))}
+                                        </p>
+                                        <span className="text-lg font-black text-[#6d5443] font-sans">
+                                          {formatCurrency(product.retail_price || 0)}
+                                        </span>
+                                      </div>
                                     </div>
                                     
-                                    {(product.isWholesaleEnabled || product.wholesale_min_qty) && (
-                                      <p className="text-[11px] md:text-xs text-neutral-500 mt-2">
-                                        atacado: R$ {(product.wholesale_price || 0).toFixed(2).replace('.', ',')}
-                                      </p>
+                                    {product.isWholesaleEnabled && product.wholesale_price && (
+                                      <div className="text-right">
+                                        <span className="text-[8px] font-black text-[#cca062] uppercase tracking-widest block">Atacado</span>
+                                        <span className="text-xs font-black text-[#6d5443] font-sans block">{formatCurrency(product.wholesale_price)}</span>
+                                      </div>
                                     )}
                                   </div>
 
-                                  <div className="flex items-center gap-2 mt-auto pt-3">
+                                  {/* Action Buttons: 3D Soft Touch Styling */}
+                                  <div className="flex items-center gap-2">
                                     <button 
                                       onClick={(e) => { 
                                         e.stopPropagation();
                                         onAddToCart(product, 1); 
                                         setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
                                       }}
-                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity flex-1 flex items-center justify-center shrink-0 border"
-                                      style={{ backgroundColor: theme.accentColor, borderColor: theme.accentColor }}
+                                      className="flex-1 py-3 px-4 rounded-xl text-white font-black uppercase tracking-[0.18em] text-[9px] shadow-[0_4px_12px_rgba(198,166,100,0.3),_inset_0_-2px_0_rgba(0,0,0,0.18)] hover:shadow-[0_6px_18px_rgba(198,166,100,0.45),_inset_0_-2px_0_rgba(0,0,0,0.18)] active:translate-y-[2px] active:shadow-[0_2px_6px_rgba(198,166,100,0.2),_inset_0_1px_3px_rgba(0,0,0,0.12)] transition-all duration-200 flex items-center justify-center gap-1.5"
+                                      style={{ 
+                                        background: `linear-gradient(135deg, ${theme.accentColor}dd, ${theme.accentColor}ff)`,
+                                        borderColor: `${theme.accentColor}25` 
+                                      }}
                                     >
-                                      <ShoppingCart size={18} />
+                                      <ShoppingCart size={13} className="stroke-[2.5]" />
+                                      Adicionar
                                     </button>
                                     <button 
                                       onClick={(e) => { 
@@ -945,20 +1034,19 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                           onAddToGiftList?.(product);
                                           setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
                                       }}
-                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity shrink-0 border"
-                                      style={{ backgroundColor: theme.accentColor, borderColor: theme.accentColor }}
+                                      className="p-3 rounded-xl border flex items-center justify-center shrink-0 active:translate-y-[2px] transition-all duration-200"
+                                      style={{ 
+                                        backgroundColor: `${theme.accentColor}0e`, 
+                                        borderColor: `${theme.accentColor}30`,
+                                        color: theme.accentColor,
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.02)' 
+                                      }}
+                                      title="Adicionar à Lista de Presentes"
                                     >
-                                      <Gift size={18} />
+                                      <Gift size={13} className="stroke-[2.5]" />
                                     </button>
                                   </div>
                                 </div>
-                              </div>
-                              
-                              {/* Bottom - Product Name */}
-                              <div className="mt-3 px-1">
-                                <h3 className="font-tahoma text-sm md:text-base font-bold leading-tight text-neutral-900 line-clamp-2">
-                                  {product.product_name}
-                                </h3>
                               </div>
                             </motion.div>
                           )})}

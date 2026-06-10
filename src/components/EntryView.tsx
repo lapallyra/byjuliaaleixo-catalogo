@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, MapPin, Heart, ChevronRight, ChevronLeft, User, ShoppingBag, Star, Info, Package, Mail, Sparkles, CheckSquare, MessageCircle, ShieldCheck, Handshake, Laptop, Scissors, Gift, Bike, Truck, X } from 'lucide-react';
+import { Search, MapPin, Heart, ChevronRight, ChevronLeft, User, ShoppingBag, Star, Info, Package, Mail, Sparkles, CheckSquare, MessageCircle, ShieldCheck, Handshake, Laptop, Scissors, Gift, Bike, Truck, X, PackagePlus } from 'lucide-react';
 import { AppConfig, CompanyId, SiteSettings, Product } from '../types';
 import { useAuth } from './AuthProvider';
 import { subscribeToAllSettings, subscribeToFeedbacks, addFeedback } from '../services/firebaseService';
@@ -230,7 +230,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
   const featuredProducts = React.useMemo(() => {
     return [...allProducts]
-      .filter(p => p.isVisible !== false) // Only active/visible ones
+      .filter(p => p.isVisible !== false && !p.isKit) // Only active/visible ones, not kits
       .sort((a, b) => {
         const clicksA = a.clicksCount || 0;
         const clicksB = b.clicksCount || 0;
@@ -240,6 +240,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         return 0;
       })
       .slice(0, 8);
+  }, [allProducts]);
+
+  const kits = React.useMemo(() => {
+    return allProducts.filter(p => p.isKit && p.isVisible !== false).slice(0, 4);
   }, [allProducts]);
 
   const fallbackTestimonials = [
@@ -487,6 +491,45 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             </div>
           </div>
         </section>
+
+        {/* KITS PROMOCIONAIS */}
+        {kits.length > 0 && (
+          <section className="mb-20 md:mb-32">
+            <div className="bg-[#faf8f5] border border-[#e8dcc8]/50 rounded-[3rem] p-10 md:p-16 flex flex-col items-center text-center relative overflow-hidden group">
+               <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:scale-110 group-hover:opacity-40 transition-all duration-1000 rotate-12">
+                   <PackagePlus size={120} className="text-[#cca062]" />
+               </div>
+               
+               <h3 className="font-serif text-3xl md:text-5xl text-[#6d5443] mb-4 relative z-10">Kits Promocionais</h3>
+               <p className="text-xs uppercase tracking-widest font-black text-[#cca062] mb-12 max-w-lg leading-relaxed relative z-10">
+                 Combinações perfeitas com descontos exclusivos e controle de estoque real em todos os ateliês.
+               </p>
+
+               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl mx-auto relative z-10 mb-12">
+                  {kits.map(kit => (
+                     <div key={kit.id} className="bg-white p-4 rounded-3xl border border-[#cca062]/20 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all cursor-pointer" onClick={() => navigate('/kits')}>
+                        <div className="aspect-square bg-neutral-50 rounded-xl overflow-hidden mb-4 border border-[#e8dcc8]/30">
+                           <ImageWithFallback src={kit.image} alt={kit.product_name} className="w-full h-full object-cover" isThumbnail />
+                        </div>
+                        <h4 className="font-bold text-[#6d5443] text-sm line-clamp-2 leading-tight">{kit.product_name}</h4>
+                        <div className="mt-2 text-[#cca062] font-black text-sm tracking-tighter">
+                           R$ {kit.current_price?.toFixed(2).replace('.', ',')}
+                           {kit.kitDiscountPercentage ? <span className="block text-[9px] uppercase tracking-widest text-[#cca062] bg-[#cca062]/10 w-max mx-auto px-2 py-0.5 rounded-full mt-1">-{kit.kitDiscountPercentage}% OFF</span> : null}
+                        </div>
+                     </div>
+                  ))}
+               </div>
+
+               <button
+                  onClick={() => navigate('/kits')}
+                  className="bg-[#6d5443] hover:bg-[#5b4535] text-white transition-all text-xs font-black uppercase tracking-widest px-10 py-5 rounded-full shadow-lg cursor-pointer hover:scale-105 active:scale-95 inline-flex items-center gap-3 relative z-10"
+                >
+                  <PackagePlus size={18} />
+                  ACESSAR TODOS OS KITS
+                </button>
+            </div>
+          </section>
+        )}
 
         {/* PRODUTOS EM DESTAQUE */}
         <section id="produtos" className="mb-20 md:mb-32 scroll-mt-24">

@@ -24,6 +24,8 @@ import { ImageWithFallback } from './ImageWithFallback';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { uploadImage, compressImage } from '../services/firebaseStorageService';
 
+import { validateProductStock } from '../utils/stockValidation';
+
 interface ProductDetailPageProps {
   product: Product;
   onClose: () => void;
@@ -109,15 +111,30 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   };
 
   // Add to cart with fully packed customization details
-  const handleAddToCart = () => {
-    const packedProduct: Product = {
-      ...product,
-      retail_price: currentPrice,
-    };
+  const handleAddToCart = async () => {
+    setIsUploading(true); // Reusing as loading state for AddToCart check
+    try {
+      const stockCheck = await validateProductStock(product, quantity);
+      if (!stockCheck.valid) {
+         alert(`❌ Ops! ${stockCheck.reason}`);
+         setIsUploading(false);
+         return;
+      }
 
-    onAddToCart(packedProduct, quantity);
-    setShowToast('Adicionado ao carrinho!');
-    setTimeout(() => setShowToast(null), 3000);
+      const packedProduct: Product = {
+        ...product,
+        retail_price: currentPrice,
+      };
+
+      onAddToCart(packedProduct, quantity);
+      setShowToast('Adicionado ao carrinho!');
+      setTimeout(() => setShowToast(null), 3000);
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao validar estoque.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Calculate relative lists
@@ -270,7 +287,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               <button 
                 type="button"
                 onClick={handleAddToCart}
-                className="py-5 rounded-2xl text-[11px] uppercase tracking-[0.2em] font-black transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
+                disabled={isUploading}
+                className="py-5 rounded-2xl text-[11px] uppercase tracking-[0.2em] font-black transition-all duration-300 flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
                 style={{
                   background: `linear-gradient(135deg, ${accentColor}dd, ${accentColor}ff)`,
                   color: '#fff',
