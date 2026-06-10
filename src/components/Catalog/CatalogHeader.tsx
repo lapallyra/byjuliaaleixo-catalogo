@@ -1,7 +1,11 @@
-import React from 'react';
-import { ShoppingCart, Search, Gift, PackagePlus, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { ShoppingCart, Search, Gift } from 'lucide-react';
+import { BotaoVoltar } from '../BotaoVoltar';
 import { CompanyId } from '../../types';
+import { CatalogInfoBar } from './CatalogInfoBar';
+import { FestiveBanner } from './FestiveBanner';
+import { motion } from 'motion/react';
+import { ImageWithFallback } from '../ImageWithFallback';
 
 export const CatalogHeader: React.FC<{
   companyName: string;
@@ -15,115 +19,124 @@ export const CatalogHeader: React.FC<{
   onGoBack: () => void;
   onLogoClick?: () => void;
   companyId?: CompanyId;
-}> = ({ 
-  companyName, 
-  logoUrl, 
-  theme, 
-  onSearch, 
-  onGoBack, 
-  companyId, 
-  onGiftListClick, 
-  giftListCount, 
-  onLogoClick,
-  onCartClick,
-  cartCount
-}) => {
-  const navigate = useNavigate();
+}> = ({ companyName, logoUrl, theme, onSearch, onGoBack, companyId, onGiftListClick, giftListCount, onLogoClick }) => {
+  const isMimada = companyId === 'mimada' || companyName.toLowerCase().includes('mimada');
+  const isPallyra = companyId === 'pallyra';
 
   return (
-    <header className="relative z-50 w-full bg-[#FAF9F6] border-b border-[#cca062]/10 shadow-[0_4px_24px_rgba(232,220,180,0.06)] px-4 py-3 md:py-4">
-      <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <header className="relative z-50 w-full" style={{ backgroundColor: theme.primaryColor || '#FAF9F6' }}>
+      <BotaoVoltar onClick={onGoBack} />
+      
+      {/* Editorial Luxury Header */}
+      <div className={`w-full flex-col items-center justify-center pt-4 pb-4 px-6 transition-all duration-700 relative overflow-hidden`}
+           style={{ 
+             backgroundColor: theme.primaryColor || (isMimada ? '#FF007F' : (isPallyra ? '#FAF9F6' : '#ffffff')),
+           }}>
         
-        {/* Left Side: Elegant Typography Branding */}
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <button 
-            type="button" 
-            onClick={onGoBack} 
-            className="p-2 -ml-2 text-[#6d5443] hover:text-[#cca062] hover:bg-[#cca062]/5 rounded-full transition-all active:scale-95 shrink-0"
-            title="Voltar"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          
-          <div className="flex flex-col select-none cursor-pointer" onClick={onLogoClick}>
-            <span className="font-serif text-xl md:text-2xl font-black italic tracking-tight text-[#6d5443] leading-tight">
-              Presentes Personalizados
-            </span>
-            <span className="text-[9px] font-black uppercase tracking-[0.25em] text-[#cca062] font-sans">
-              by Julia Aleixo
-            </span>
-          </div>
+        {/* Subtle Background Elements - Now for all brands with brand accent color */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-[0.04]">
+           <div className="w-[100vw] h-[100vw] rounded-full border-[1px] absolute scale-150 animate-[spin_120s_linear_infinite]" style={{ borderColor: theme.accentColor }} />
+           <div className="w-[80vw] h-[80vw] rounded-full border-[1px] absolute scale-125 animate-[spin_90s_linear_infinite_reverse]" style={{ borderColor: theme.accentColor }} />
         </div>
 
-        {/* Center: Main Menu Principal - 3D Soft Touch Buttons */}
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-center md:absolute md:left-1/2 md:-translate-x-1/2">
-          <button
-            type="button"
-            onClick={() => navigate('/kits')}
-            className="px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-[#6d5443] bg-white border border-[#cca062]/20 hover:border-[#cca062]/60 hover:text-[#cca062] transition-all duration-300 shadow-[0_4px_12px_rgba(198,166,100,0.06),_inset_0_-1.5px_0_rgba(198,166,100,0.15)] active:translate-y-[1px] active:shadow-[0_2px_6px_rgba(198,166,100,0.04)] flex items-center gap-2 cursor-pointer"
-          >
-            <Gift size={11} className="text-[#cca062] stroke-[2.5]" />
-            Kits Prontos
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => navigate('/kit-meukit')}
-            className="px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-[#6d5443] bg-white border border-[#cca062]/20 hover:border-[#cca062]/60 hover:text-[#cca062] transition-all duration-300 shadow-[0_4px_12px_rgba(198,166,100,0.06),_inset_0_-1.5px_0_rgba(198,166,100,0.15)] active:translate-y-[1px] active:shadow-[0_2px_6px_rgba(198,166,100,0.04)] flex items-center gap-2 cursor-pointer"
-          >
-            <PackagePlus size={11} className="text-[#cca062] stroke-[2.5]" />
-            Monte Seu Kit
-          </button>
+        <div className="w-full flex items-center justify-between px-6 py-6 relative z-10">
+            {/* LEFT SIDE: Logo & Name */}
+            <div className="flex items-center gap-4 md:gap-6">
+              <motion.div 
+                 initial={{ opacity: 0, scale: 0.8 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 whileHover={{ scale: 1.05, y: -4 }}
+                 whileTap={{ scale: 0.97, y: 0 }}
+                 transition={{ duration: 0.8, ease: "easeOut" }}
+                 onClick={onLogoClick}
+                 className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center relative overflow-hidden cursor-pointer backdrop-blur-xl group`}
+                 style={{ 
+                   background: isMimada && theme.primaryColor !== '#FFFFFF' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)',
+                   borderTop: `1px solid rgba(255,255,255,0.3)`,
+                   borderLeft: `1px solid rgba(255,255,255,0.1)`,
+                   borderRight: `1px solid rgba(0,0,0,0.05)`,
+                   borderBottom: `1px solid rgba(0,0,0,0.1)`,
+                   boxShadow: `
+                     inset 0 6px 16px rgba(255,255,255,0.2),
+                     inset 0 -6px 16px rgba(0,0,0,0.05),
+                     0 10px 30px -10px ${theme.accentColor}30,
+                     0 0 25px -5px ${theme.accentColor}15
+                   `
+                 }}
+              >
+                {logoUrl ? (
+                  <ImageWithFallback
+                    src={logoUrl}
+                    alt={companyName}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    referrerPolicy="no-referrer"
+                    loading="eager"
+                  />
+                ) : (
+                  <div className="text-xl font-black text-gray-400 font-serif lowercase italic">
+                    {companyName.split(' ').map(n => n[0]).join('')}
+                  </div>
+                )}
+                <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-20 group-hover:opacity-40 transition-opacity duration-500" style={{ backgroundColor: theme.accentColor }} />
+              </motion.div>
+              
+              <motion.h1 
+                   initial={{ opacity: 0, x: -20 }}
+                   animate={{ opacity: 1, x: 0 }}
+                   transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+                   className={`text-2xl md:text-3xl lg:text-4xl leading-[0.8] tracking-tight font-beauty`}
+                   style={{ 
+                     color: theme.accentColor,
+                     textShadow: `0px 10px 40px ${theme.accentColor}33`,
+                     letterSpacing: '-1px'
+                   }}>
+                {companyName}
+              </motion.h1>
+            </div>
+            
+            {/* RIGHT SIDE: Minimalist Search & Access */}
+            <motion.div 
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.4, duration: 0.8 }}
+               className="flex items-center gap-6 group"
+            >
+               <div className="flex items-center gap-4 w-48 md:w-64 border-b-2 pb-2 transition-all duration-500 group-focus-within:border-opacity-100" 
+                    style={{ borderColor: `${theme.accentColor}33` }}>
+                 <Search size={16} className={`opacity-40 transition-opacity group-focus-within:opacity-100 ${theme.textPrimary}`}  />
+                 <input 
+                   type="text" 
+                   placeholder="O que você procura?" 
+                   className={`bg-transparent text-[11px] font-sans tracking-[0.2em] uppercase outline-none w-full placeholder:text-opacity-40 transition-all font-black`}
+                   
+                   onChange={(e) => onSearch(e.target.value)}
+                 />
+               </div>
+               
+               <button 
+                 onClick={onGiftListClick}
+                 className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-all duration-300 relative group/btn hover:scale-110"
+                 title="Ver Lista de Presentes"
+               >
+                 <Gift size={20} strokeWidth={2} />
+                 <span className="text-[8px] font-black uppercase tracking-tighter">Listas</span>
+                 {giftListCount > 0 && (
+                    <span className={`absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center rounded-full text-[8px] shadow-lg animate-pulse ${theme.cartBadge}`}>
+                      {giftListCount}
+                    </span>
+                 )}
+               </button>
+            </motion.div>
         </div>
-
-        {/* Right Side: Seamless minimal actions */}
-        <div className="flex items-center justify-between sm:justify-end gap-3 w-full md:w-auto shrink-0 border-t border-[#cca062]/5 pt-3 md:pt-0 md:border-t-0">
-          
-          {/* Soft minimal search input */}
-          <div className="flex items-center gap-2 px-3 py-1.5 border border-[#cca062]/10 bg-white/60 focus-within:bg-white focus-within:border-[#cca062]/40 rounded-xl transition-all duration-300 w-full max-w-[200px]">
-            <Search size={12} className="text-[#cca062] opacity-70 shrink-0" />
-            <input 
-              type="text" 
-              placeholder="Buscar presentes..." 
-              className="bg-transparent text-[10px] font-sans tracking-wide text-[#6d5443] outline-none w-full placeholder:text-[#6d5443]/40 font-semibold"
-              onChange={(e) => onSearch(e.target.value)}
+        
+        {/* Festive Banner - Keep full width */}
+        <CatalogInfoBar theme={theme} />
+        <div className="px-6 pb-4">
+            <FestiveBanner 
+              companyId={companyId || 'pallyra'} 
+              primaryColor={theme.accentColor} 
             />
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Gift List Action */}
-            <button 
-              type="button"
-              onClick={onGiftListClick}
-              className="w-9 h-9 border border-[#cca062]/10 hover:border-[#cca062]/30 bg-white hover:bg-[#cca062]/5 text-[#6d5443] hover:text-[#cca062] flex items-center justify-center rounded-xl transition-all duration-300 relative shrink-0 active:scale-95"
-              title="Lista de Presentes"
-            >
-              <Gift size={15} className="stroke-[2]" />
-              {giftListCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#cca062] text-white text-[8px] font-black w-4.5 h-4.5 flex items-center justify-center rounded-full shadow-sm">
-                  {giftListCount}
-                </span>
-              )}
-            </button>
-
-            {/* Shopping Cart Button */}
-            <button 
-              type="button"
-              onClick={onCartClick}
-              className="w-11 h-11 bg-[#6d5443] text-white flex items-center justify-center rounded-xl transition-all duration-300 relative shrink-0 shadow-[0_4px_12px_rgba(109,84,67,0.25),_inset_0_-2px_0_rgba(0,0,0,0.18)] hover:shadow-[0_6px_18px_rgba(109,84,67,0.35),_inset_0_-2px_0_rgba(0,0,0,0.18)] active:translate-y-[1px]"
-              title="Ver Sacola de Presentes"
-            >
-              <ShoppingCart size={15} className="stroke-[2.5]" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#cca062] text-white text-[8px] font-black w-4.5 h-4.5 flex items-center justify-center rounded-full shadow-sm border border-white">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
-
         </div>
-
       </div>
     </header>
   );

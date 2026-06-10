@@ -36,10 +36,6 @@ export interface Product {
     translateY?: number;
     rotate?: number;
   };
-  isKit?: boolean;
-  kitType?: 'kit_pronto' | 'monte_seu_kit';
-  kitItems?: { type: 'product' | 'insumo' | 'addon'; id: string; quantity: number }[];
-  kitDiscountPercentage?: number;
 }
 
 export interface Variation {

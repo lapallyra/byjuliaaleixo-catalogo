@@ -116,7 +116,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-col gap-6 py-8 border-y border-slate-100 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-8 border-y border-slate-100 mb-10">
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Código do Pedido</label>
               <div className="text-xl font-black text-slate-900 tracking-tighter italic">#{order.code}</div>
@@ -136,7 +136,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
           </div>
 
           {/* Customer */}
-          <div className="mb-12 flex flex-col gap-6 bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
+          <div className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Cliente / Comprador</label>
               <div className="text-xl font-black text-slate-900 uppercase tracking-tight">{order.customerName}</div>
@@ -147,72 +147,70 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
             </div>
           </div>
 
-          {/* Items */}
-          <div className="flex flex-col gap-4 mb-12">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-gray-300 pb-2">Itens do Pedido</h3>
-            {order.items?.map((item, idx) => (
-              <div 
-                key={`receipt-item-${order.id || "ord"}-${item.id || item.product_name}-${idx}`}
-                className="flex flex-col gap-2 p-4 bg-white border border-slate-100 rounded-xl"
-              >
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Produto</label>
-                  <div className="text-[14px] font-bold text-slate-800 uppercase leading-snug">{item.product_name}</div>
-                </div>
-                
-                <div className="text-xs text-gray-600 mt-1 mb-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                  <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Detalhes / Personalização</span>
-                  {(item as any).selectedVariation && <p className="mb-0.5"><strong>Opção:</strong> {(item as any).selectedVariation}</p>}
-                  {(item as any).customName && <p className="mb-0.5"><strong>Nome:</strong> {(item as any).customName}</p>}
-                  {(item as any).customPhrase && <p className="mb-0.5"><strong>Frase:</strong> {(item as any).customPhrase}</p>}
-                  {(item as any).customFile && (
-                    <p className="mb-0.5">
-                      <strong>Img/Anexo:</strong>{" "}
-                      <a href={(item as any).customFile} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline font-bold">
-                        [Ver Arquivo]
-                      </a>
-                    </p>
-                  )}
-                  {(item as any).customNotes && <p className="mb-0.5 text-neutral-500 italic"><strong>Obs:</strong> {(item as any).customNotes}</p>}
-                  {!((item as any).selectedVariation || (item as any).customName || (item as any).customPhrase || (item as any).customFile || (item as any).customNotes) && (
-                    <span className="text-gray-400 italic">Padrão</span>
-                  )}
-                </div>
-
-                <div className="flex gap-6 border-t border-slate-50 pt-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Qtd</label>
-                    <div className="text-[14px] font-bold text-slate-600">{item.quantity}</div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Unitário</label>
-                    <div className="text-[14px] text-slate-500 font-mono">R$ {(item.retail_price || 0).toFixed(2)}</div>
-                  </div>
-                  <div className="space-y-1 ml-auto text-right">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Total do Item</label>
-                    <div className="text-[14px] font-bold text-slate-800 font-mono">R$ {((item.retail_price || 0) * (item.quantity || 1)).toFixed(2)}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Items Table */}
+          <table className="w-full mb-12">
+            <thead className="border-b border-gray-300 text-xs text-gray-500 uppercase tracking-wider">
+              <tr className="text-left">
+                <th className="py-3">Produto</th>
+                <th className="py-3 text-center">Qtd</th>
+                <th className="py-3">Detalhes</th>
+                <th className="py-3 text-right">Unitário</th>
+                <th className="py-3 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm">
+              {order.items?.map((item, idx) => (
+                <tr
+                  key={`receipt-item-${order.id || "ord"}-${item.id || item.product_name}-${idx}`}
+                  className="border-b border-gray-50"
+                >
+                  <td className="py-4 font-bold">{item.product_name}</td>
+                  <td className="py-4 text-center">{item.quantity}</td>
+                  <td className="py-4 text-gray-700 text-xs max-w-[220px]">
+                    {(item as any).selectedVariation && <p className="mb-0.5"><strong>Opção:</strong> {(item as any).selectedVariation}</p>}
+                    {(item as any).customName && <p className="mb-0.5"><strong>Nome:</strong> {(item as any).customName}</p>}
+                    {(item as any).customPhrase && <p className="mb-0.5"><strong>Frase:</strong> {(item as any).customPhrase}</p>}
+                    {(item as any).customFile && (
+                      <p className="mb-0.5">
+                        <strong>Img/Anexo:</strong>{" "}
+                        <a href={(item as any).customFile} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline font-bold">
+                          [Ver Arquivo]
+                        </a>
+                      </p>
+                    )}
+                    {(item as any).customNotes && <p className="mb-0.5 text-neutral-500 italic"><strong>Obs:</strong> {(item as any).customNotes}</p>}
+                    {!((item as any).selectedVariation || (item as any).customName || (item as any).customPhrase || (item as any).customFile || (item as any).customNotes) && (
+                      <span className="text-gray-400 italic">Padrão</span>
+                    )}
+                  </td>
+                  <td className="py-4 text-right">
+                    R$ {(item.retail_price || 0).toFixed(2)}
+                  </td>
+                  <td className="py-4 text-right font-bold">
+                    R${" "}
+                    {((item.retail_price || 0) * (item.quantity || 1)).toFixed(
+                      2,
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
           {/* Summary */}
-          <div className="flex flex-col gap-6 mb-12 bg-slate-50 border border-slate-100 p-6 rounded-2xl items-end">
-            <div className="w-full md:w-64 flex flex-col gap-6 text-right font-sans">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Subtotal</label>
-                <div className="text-[15px] font-black text-slate-700 font-mono">R$ {order.total.toFixed(2)}</div>
+          <div className="flex justify-end mb-12">
+            <div className="w-64 space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>R$ {order.total.toFixed(2)}</span>
               </div>
-              
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Frete / Entrega</label>
-                <div className="text-[15px] font-black text-slate-700 font-mono">R$ {order.shippingCost?.toFixed(2) || "0.00"}</div>
+              <div className="flex justify-between text-gray-500">
+                <span>Frete</span>
+                <span>R$ {order.shippingCost?.toFixed(2) || "0.00"}</span>
               </div>
-
-              <div className="space-y-1 pt-6 border-t border-slate-200">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Total Geral</label>
-                <div className="text-2xl font-black text-slate-900 font-mono">R$ {order.total.toFixed(2)}</div>
+              <div className="flex justify-between font-bold text-xl pt-3 border-t border-slate-200">
+                <span>Total</span>
+                <span>R$ {order.total.toFixed(2)}</span>
               </div>
             </div>
           </div>

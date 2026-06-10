@@ -981,34 +981,42 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                         Itens do Pedido (Catálogo)
                       </span>
                     </div>
-                    <div className="flex flex-col gap-4">
-                      {order.items?.map((item, index) => (
-                        <div key={index} className="bg-white p-4 rounded-xl border border-[#F0E6D2]/60 shadow-sm flex flex-col gap-2">
-                           <div className="space-y-1">
-                             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Produto</label>
-                             <div className="text-[13px] font-bold text-slate-700 uppercase leading-snug">{item.product_name}</div>
-                           </div>
-                           <div className="flex gap-6 mt-2">
-                             <div className="space-y-1">
-                               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Quantidade</label>
-                               <div className="text-[13px] font-bold text-slate-600">{item.quantity}</div>
-                             </div>
-                             <div className="space-y-1">
-                               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Valor Unitário</label>
-                               <div className="text-[13px] text-slate-500 font-mono">{formatCurrency(item.retail_price || 0)}</div>
-                             </div>
-                             <div className="space-y-1">
-                               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Total</label>
-                               <div className="text-[13px] font-bold text-slate-800 font-mono">{formatCurrency((item.retail_price || 0) * (item.quantity || 0))}</div>
-                             </div>
-                           </div>
-                        </div>
-                      ))}
-                      {(!order.items || order.items.length === 0) && (
-                        <div className="py-4 text-center text-slate-400 text-xs">
-                          Nenhum item adicionado a este pedido.
-                        </div>
-                      )}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-[#F0E6D2]/60 pb-2 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                            <th className="py-2">Produto</th>
+                            <th className="py-2 text-center">Quantidade</th>
+                            <th className="py-2 text-right">Valor Unitário</th>
+                            <th className="py-2 text-right">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {order.items?.map((item, index) => (
+                            <tr key={index} className="hover:bg-slate-50 transition-colors">
+                              <td className="py-3 font-semibold text-slate-700 uppercase">
+                                {item.product_name}
+                              </td>
+                              <td className="py-3 text-center text-slate-600 font-bold">
+                                {item.quantity}
+                              </td>
+                              <td className="py-3 text-right text-slate-500 font-mono">
+                                {formatCurrency(item.retail_price || 0)}
+                              </td>
+                              <td className="py-3 text-right font-bold text-slate-800 font-mono">
+                                {formatCurrency((item.retail_price || 0) * (item.quantity || 0))}
+                              </td>
+                            </tr>
+                          ))}
+                          {(!order.items || order.items.length === 0) && (
+                            <tr>
+                              <td colSpan={4} className="py-4 text-center text-slate-400">
+                                Nenhum item adicionado a este pedido.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
 
@@ -1019,7 +1027,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                         Preços & Resumo Financeiro
                       </span>
                     </div>
-                    <div className="flex flex-col gap-6 font-sans">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 font-sans">
                       <div className="space-y-1">
                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Subtotal</label>
                         <div className="text-[14px] font-black text-slate-900 font-mono leading-tight">

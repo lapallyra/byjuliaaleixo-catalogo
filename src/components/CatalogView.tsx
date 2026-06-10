@@ -45,7 +45,6 @@ import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGlobalSettings, getGiftList, updateOrderStatus } from '../services/firebaseService';
-import { validateProductStock } from '../utils/stockValidation';
 import { playSuccessSound } from '../utils/audio';
 import { functions } from '../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
@@ -98,90 +97,90 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     if (companyId === 'pallyra') {
       return {
         ...rawTheme,
-        bg: 'bg-[#FAF9F6]',
-        primaryColor: '#FAF9F6',
+        bg: 'bg-[#FAF8F5]',
+        primaryColor: '#FAF8F5',
         accentColor: '#C6A664',
-        textPrimary: 'text-[#3A322C]',
-        textSecondary: 'text-[#3A322C]/75',
-        textMuted: 'text-[#C6A664]/80',
-        textVeryMuted: 'text-[#C6A664]/40',
-        borderLine: 'border-[#C6A664]/15',
+        textPrimary: 'text-[#161616]',
+        textSecondary: 'text-[#161616]/70',
+        textMuted: 'text-[#161616]/50',
+        textVeryMuted: 'text-[#161616]/30',
+        borderLine: 'border-[#161616]/10',
         cardBg: 'bg-white',
         searchBg: 'bg-[#C6A664]/5 border-[#C6A664]/20',
-        inputPlaceholder: 'placeholder:text-[#3A322C]/40',
-        sidebarBg: 'bg-[#FAF9F6]',
-        btnPrimary: 'bg-[#C6A664] text-white hover:bg-[#b09053]',
-        btnSecondary: 'bg-white border-[#C6A664]/25 text-[#3A322C] hover:bg-[#C6A664]/5',
-        btnSecondaryText: 'text-[#3A322C]/70 hover:text-[#3A322C]',
-        categoryActive: 'text-white bg-[#C6A664]',
-        categoryInactive: 'text-[#3A322C]/65 hover:text-[#C6A664]',
-        cartBadge: 'bg-[#C6A664] text-white border-none'
+        inputPlaceholder: 'placeholder:text-[#161616]/30',
+        sidebarBg: 'bg-white',
+        btnPrimary: 'bg-[#1c1c1c] text-[#C6A664] hover:bg-[#C6A664] hover:text-[#1c1c1c]',
+        btnSecondary: 'bg-[#161616]/5 border-[#161616]/10 text-[#161616] hover:bg-[#161616]/10',
+        btnSecondaryText: 'text-[#161616]/70 hover:text-[#161616]',
+        categoryActive: 'text-[#C6A664] bg-white border-b-2 border-[#C6A664]',
+        categoryInactive: 'text-[#161616]/50 hover:text-[#C6A664]',
+        cartBadge: 'bg-[#161616] text-[#C6A664] border-none'
       };
     } else if (companyId === 'guennita') {
       return {
         ...rawTheme,
-        bg: 'bg-[#FAF9F6]',
-        primaryColor: '#FAF9F6',
-        accentColor: '#8A2E3D',
-        textPrimary: 'text-[#3A2325]',
-        textSecondary: 'text-[#3A2325]/75',
-        textMuted: 'text-[#8A2E3D]/80',
-        textVeryMuted: 'text-[#8A2E3D]/40',
-        borderLine: 'border-[#8A2E3D]/15',
+        bg: 'bg-[#FCFAF9]',
+        primaryColor: '#FCFAF9',
+        accentColor: '#6B1D2F',
+        textPrimary: 'text-[#2D020D]',
+        textSecondary: 'text-[#2D020D]/75',
+        textMuted: 'text-[#6B1D2F]/50',
+        textVeryMuted: 'text-[#6B1D2F]/30',
+        borderLine: 'border-[#6B1D2F]/15',
         cardBg: 'bg-white',
-        searchBg: 'bg-[#8A2E3D]/5 border-[#8A2E3D]/15',
-        inputPlaceholder: 'placeholder:text-[#3A2325]/40',
-        sidebarBg: 'bg-[#FAF9F6]',
-        btnPrimary: 'bg-[#8A2E3D] text-white hover:bg-[#6C202B]',
-        btnSecondary: 'bg-white border-[#8A2E3D]/25 text-[#3A2325] hover:bg-[#8A2E3D]/5',
-        btnSecondaryText: 'text-[#3A2325]/75 hover:text-[#3A2325]',
-        categoryActive: 'text-white bg-[#8A2E3D]',
-        categoryInactive: 'text-[#3A2325]/65 hover:text-[#8A2E3D]',
-        cartBadge: 'bg-[#8A2E3D] text-white border-none'
+        searchBg: 'bg-[#6B1D2F]/5 border-[#6B1D2F]/15',
+        inputPlaceholder: 'placeholder:text-[#6B1D2F]/40',
+        sidebarBg: 'bg-white',
+        btnPrimary: 'bg-[#6B1D2F] text-white hover:bg-[#85273B] transition-colors',
+        btnSecondary: 'bg-[#F7E6E8] border-[#6B1D2F]/15 text-[#6B1D2F] hover:bg-[#ecd0d4]',
+        btnSecondaryText: 'text-[#6B1D2F]/70 hover:text-[#6B1D2F]',
+        categoryActive: 'text-[#6B1D2F] bg-[#F7E6E8] border-b-2 border-[#6B1D2F]',
+        categoryInactive: 'text-[#6B1D2F]/50 hover:text-[#6B1D2F]',
+        cartBadge: 'bg-[#6B1D2F] text-white'
       };
     } else if (companyId === 'tuttymimo') {
       return {
         ...rawTheme,
-        bg: 'bg-[#FAF9F6]',
-        primaryColor: '#FAF9F6',
+        bg: 'bg-[#FCFAF7]',
+        primaryColor: '#FCFAF7',
         accentColor: '#D4BDA1',
-        textPrimary: 'text-[#4A3E3B]',
-        textSecondary: 'text-[#4A3E3B]/75',
-        textMuted: 'text-[#D4BDA1]/80',
-        textVeryMuted: 'text-[#D4BDA1]/40',
+        textPrimary: 'text-[#5C4A3D]',
+        textSecondary: 'text-[#5C4A3D]/75',
+        textMuted: 'text-[#D4BDA1]/70',
+        textVeryMuted: 'text-[#D4BDA1]/30',
         borderLine: 'border-[#D4BDA1]/25',
         cardBg: 'bg-white',
         searchBg: 'bg-[#D4BDA1]/10 border-[#D4BDA1]/25',
-        inputPlaceholder: 'placeholder:text-[#4A3E3B]/40',
-        sidebarBg: 'bg-[#FAF9F6]',
-        btnPrimary: 'bg-[#D4BDA1] text-white hover:bg-[#bd9f80]',
-        btnSecondary: 'bg-white border-[#D4BDA1]/35 text-[#4A3E3B] hover:bg-[#D4BDA1]/10',
-        btnSecondaryText: 'text-[#4A3E3B]/75 hover:text-[#4A3E3B]',
-        categoryActive: 'text-white bg-[#D4BDA1]',
-        categoryInactive: 'text-[#4A3E3B]/65 hover:text-[#D4BDA1]',
-        cartBadge: 'bg-[#D4BDA1] text-white border-none'
+        inputPlaceholder: 'placeholder:text-[#D4BDA1]/60',
+        sidebarBg: 'bg-white',
+        btnPrimary: 'bg-[#D4BDA1] text-white hover:bg-[#C2AA8F] transition-colors',
+        btnSecondary: 'bg-[#F5EFE6] border-[#D4BDA1]/25 text-[#7A6251] hover:bg-[#EBE2D5]',
+        btnSecondaryText: 'text-[#7A6251]/80 hover:text-[#5C4A3D]',
+        categoryActive: 'text-[#7A6251] bg-[#F5EFE6] border-b-2 border-[#D4BDA1]',
+        categoryInactive: 'text-[#7A6251]/60 hover:text-[#7A6251]',
+        cartBadge: 'bg-[#D4BDA1] text-white'
       };
     } else {
       return {
         ...rawTheme,
-        bg: 'bg-[#FAF9F6]',
-        primaryColor: '#FAF9F6',
-        accentColor: '#D27B88',
-        textPrimary: 'text-[#3D2C2E]',
-        textSecondary: 'text-[#3D2C2E]/75',
-        textMuted: 'text-[#D27B88]/80',
-        textVeryMuted: 'text-[#D27B88]/40',
-        borderLine: 'border-[#D27B88]/15',
+        bg: 'bg-[#FEFCFD]',
+        primaryColor: '#FEFCFD',
+        accentColor: '#EC4899',
+        textPrimary: 'text-black',
+        textSecondary: 'text-black/75',
+        textMuted: 'text-black/50',
+        textVeryMuted: 'text-black/20',
+        borderLine: 'border-[#EC4899]/15',
         cardBg: 'bg-white',
-        searchBg: 'bg-[#D27B88]/5 border-[#D27B88]/15',
-        inputPlaceholder: 'placeholder:text-[#3D2C2E]/40',
-        sidebarBg: 'bg-[#FAF9F6]',
-        btnPrimary: 'bg-[#D27B88] text-white hover:bg-[#bc616e]',
-        btnSecondary: 'bg-white border-[#D27B88]/25 text-[#3D2C2E] hover:bg-[#D27B88]/5',
-        btnSecondaryText: 'text-[#3D2C2E]/70 hover:text-[#3D2C2E]',
-        categoryActive: 'text-white bg-[#D27B88]',
-        categoryInactive: 'text-[#3D2C2E]/65 hover:text-[#D27B88]',
-        cartBadge: 'bg-[#D27B88] text-white border-none'
+        searchBg: 'bg-[#EC4899]/5 border-[#EC4899]/15',
+        inputPlaceholder: 'placeholder:text-black/30',
+        sidebarBg: 'bg-white',
+        btnPrimary: 'bg-[#EC4899] text-white hover:bg-[#DB2777]',
+        btnSecondary: 'bg-black/5 border-black/10 text-black hover:bg-black/10',
+        btnSecondaryText: 'text-black/70 hover:text-black',
+        categoryActive: 'text-[#EC4899] bg-white border-b-2 border-[#EC4899]',
+        categoryInactive: 'text-black/50 hover:text-[#EC4899]',
+        cartBadge: 'bg-[#EC4899] text-white border-none'
       };
     }
   }, [companyId, rawTheme]);
@@ -193,7 +192,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [isFiltering, setIsFiltering] = useState(false);
 
   const companyProducts = useMemo(() => {
-    return allProducts.filter(p => p.company === companyId && !p.isKit);
+    return allProducts.filter(p => p.company === companyId);
   }, [allProducts, companyId]);
 
   useEffect(() => {
@@ -278,17 +277,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     setIsDirectCheckoutLoading(true);
     
     try {
-      // Validate complete cart
-      for (const item of cart) {
-         const p = companyProducts.find(cp => cp.id === item.id) || item;
-         const validation = await validateProductStock(p, item.quantity);
-         if (!validation.valid) {
-            alert(`Item indisponível: ${validation.reason}`);
-            setIsDirectCheckoutLoading(false);
-            return;
-         }
-      }
-
       const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
       let dscto = 0;
       if (checkoutData?.cupom === 'GANHEI10') {
@@ -795,159 +783,72 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         ) : (
           <>
             {/* Vertical Collapsible Category Sidebar */}
-            <aside 
-              className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} hidden md:flex flex-col border-r transition-all duration-500 bg-white/60 backdrop-blur-md sticky top-0 h-full overflow-hidden shrink-0`}
-              style={{ borderColor: `${theme.accentColor}12` }}
+            <aside className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} hidden md:flex flex-col border-r ${theme.borderLine} transition-all duration-500 bg-white/50 backdrop-blur-md sticky top-0 h-full overflow-hidden shrink-0`}>
+          <div className="p-4 border-b border-black/5 flex items-center justify-between">
+            {!isSidebarCollapsed && (
+              <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Categorias</span>
+            )}
+            <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-2 hover:bg-black/5 rounded-lg text-neutral-400">
+               {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-1 scrollbar-none">
+            <button
+              onClick={() => handleCategoryClick(null)}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${!selectedCategory ? 'bg-neutral-900 text-white shadow-lg' : 'hover:bg-black/5 text-neutral-500'}`}
+              style={{ backgroundColor: !selectedCategory ? theme.accentColor : '' }}
             >
-              <div 
-                className="p-4 flex items-center justify-between"
-                style={{ borderBottom: `1px solid ${theme.accentColor}12` }}
-              >
-                {!isSidebarCollapsed && (
-                  <span className="text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: theme.accentColor }}>Categorias</span>
-                )}
-                <button 
-                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-                  className="p-2 rounded-lg text-[#cca062] transition-colors hover:bg-black/[0.02]"
-                  style={{ color: theme.accentColor }}
+              <LayoutGrid size={18} />
+              {!isSidebarCollapsed && <span className="text-xs font-bold whitespace-nowrap">Tudo</span>}
+            </button>
+            
+            {categories.map((category) => {
+              const isActive = selectedCategory === category;
+              return (
+                <button
+                  key={`side-${category}`}
+                  onClick={() => handleCategoryClick(category)}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${isActive ? 'bg-neutral-900 text-white shadow-lg' : 'hover:bg-black/5 text-neutral-500'}`}
+                  style={{ backgroundColor: isActive ? theme.accentColor : '' }}
                 >
-                   {isSidebarCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+                  {getCategoryIcon(category)}
+                  {!isSidebarCollapsed && <span className="text-xs font-bold whitespace-nowrap line-clamp-1">{category}</span>}
                 </button>
-              </div>
-              <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-2 scrollbar-none">
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col min-h-0 bg-white/30 overflow-y-auto scrollbar-none">
+          <div className="pt-0"> 
+
+          </div>
+
+          {/* Main Scroll Content */}
+          <main className="p-4 md:p-8 relative">
+            <div className="max-w-[1400px] mx-auto h-full flex flex-col pt-4">
+              
+              {/* Horizontal Category Pill Menu for Mobile */}
+              <div className="md:hidden flex overflow-x-auto gap-2 pb-6 scrollbar-none snap-x">
                 <button
                   onClick={() => handleCategoryClick(null)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${!selectedCategory ? 'text-white font-extrabold shadow-[0_4px_12px_rgba(0,0,0,0.06),_inset_0_1.5px_0_rgba(255,255,255,0.25),_inset_0_-2px_0_rgba(0,0,0,0.12)]' : 'text-[#6d5443] hover:scale-[1.01] border border-transparent'}`}
-                  style={{ 
-                    backgroundColor: !selectedCategory ? theme.accentColor : 'transparent',
-                    borderColor: !selectedCategory ? `${theme.accentColor}40` : 'transparent',
-                    borderWidth: '1px'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedCategory) {
-                      e.currentTarget.style.backgroundColor = `${theme.accentColor}0e`;
-                      e.currentTarget.style.borderColor = `${theme.accentColor}18`;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedCategory) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.borderColor = 'transparent';
-                    }
-                  }}
+                  className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${!selectedCategory ? 'bg-neutral-900 text-white' : 'bg-white border border-neutral-200 text-neutral-500'}`}
+                  style={{ backgroundColor: !selectedCategory ? theme.accentColor : '' }}
                 >
-                  <LayoutGrid size={16} />
-                  {!isSidebarCollapsed && <span className="text-xs font-semibold tracking-wider whitespace-nowrap">Tudo</span>}
+                  Tudo
                 </button>
-                
-                {categories.map((category) => {
-                  const isActive = selectedCategory === category;
-                  return (
-                    <button
-                      key={`side-${category}`}
-                      onClick={() => handleCategoryClick(category)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'text-white font-extrabold shadow-[0_4px_12px_rgba(0,0,0,0.06),_inset_0_1.5px_0_rgba(255,255,255,0.25),_inset_0_-2px_0_rgba(0,0,0,0.12)]' : 'text-[#5c4a3d]/85 hover:scale-[1.01] border border-transparent'}`}
-                      style={{ 
-                        backgroundColor: isActive ? theme.accentColor : 'transparent',
-                        borderColor: isActive ? `${theme.accentColor}40` : 'transparent',
-                        borderWidth: '1px'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = `${theme.accentColor}0e`;
-                          e.currentTarget.style.borderColor = `${theme.accentColor}18`;
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                          e.currentTarget.style.borderColor = 'transparent';
-                        }
-                      }}
-                    >
-                      {getCategoryIcon(category)}
-                      {!isSidebarCollapsed && <span className="text-xs font-semibold tracking-wider whitespace-nowrap line-clamp-1">{category}</span>}
-                    </button>
-                  );
-                })}
+                {categories.map((category) => (
+                  <button
+                    key={`pill-${category}`}
+                    onClick={() => handleCategoryClick(category)}
+                    className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${selectedCategory === category ? 'bg-neutral-900 text-white' : 'bg-white border border-neutral-200 text-neutral-500'}`}
+                    style={{ backgroundColor: selectedCategory === category ? theme.accentColor : '' }}
+                  >
+                    {category}
+                  </button>
+                ))}
               </div>
-            </aside>
-
-            {/* Content Area */}
-            <div className="flex-1 flex flex-col min-h-0 bg-[#FAF9F6] overflow-y-auto scrollbar-none">
-              <div className="pt-0"> 
-
-              </div>
-
-              {/* Main Scroll Content */}
-              <main className="p-4 md:p-8 relative">
-                <div className="max-w-[1400px] mx-auto h-full flex flex-col pt-4">
-                  
-                  {/* Horizontal Category Pill Menu for Mobile */}
-                  <div className="md:hidden flex overflow-x-auto gap-2 pb-6 scrollbar-none snap-x">
-                    <button
-                      onClick={() => handleCategoryClick(null)}
-                      className={`px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-[0.16em] whitespace-nowrap transition-all duration-300 ${!selectedCategory ? 'text-white shadow-[0_4px_10px_rgba(0,0,0,0.1),_inset_0_1px_0_rgba(255,255,255,0.25),_inset_0_-2px_0_rgba(0,0,0,0.12)]' : 'bg-white text-[#6d5443]'}`}
-                      style={{ 
-                        backgroundColor: !selectedCategory ? theme.accentColor : '#ffffff',
-                        borderColor: !selectedCategory ? `${theme.accentColor}30` : `${theme.accentColor}12`,
-                        borderWidth: '1px'
-                      }}
-                    >
-                      Tudo
-                    </button>
-                    {categories.map((category) => {
-                      const isActive = selectedCategory === category;
-                      return (
-                        <button
-                          key={`pill-${category}`}
-                          onClick={() => handleCategoryClick(category)}
-                          className={`px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-[0.16em] whitespace-nowrap transition-all duration-300 ${isActive ? 'text-white shadow-[0_4px_10px_rgba(0,0,0,0.1),_inset_0_1px_0_rgba(255,255,255,0.25),_inset_0_-2px_0_rgba(0,0,0,0.12)]' : 'bg-white text-[#5c4a3d]'}`}
-                          style={{ 
-                            backgroundColor: isActive ? theme.accentColor : '#ffffff',
-                            borderColor: isActive ? `${theme.accentColor}30` : `${theme.accentColor}12`,
-                            borderWidth: '1px'
-                          }}
-                        >
-                          {category}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  
-                  {/* Welcome Editorial Header - Vitrine de Presentes Personalizados */}
-                  <div className="text-center mb-16 mt-6 px-4">
-                    <div 
-                      className="inline-flex items-center gap-2 px-4 py-2 border rounded-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] mb-6 transition-transform hover:scale-105"
-                      style={{ 
-                        backgroundColor: `${theme.accentColor}0e`,
-                        borderColor: `${theme.accentColor}30`,
-                        color: theme.accentColor
-                      }}
-                    >
-                      <Sparkle size={13} className="animate-spin-slow" />
-                      <span className="text-[9px] font-black uppercase tracking-[0.25em] font-sans">
-                        Vitrine de Presentes Personalizados
-                      </span>
-                    </div>
-                    
-                    <h1 className={`font-serif text-3xl md:text-5xl lg:text-6xl tracking-tight mt-1 mb-5 italic font-extrabold leading-tight max-w-4xl mx-auto ${theme.textPrimary}`}>
-                      Encante com Afeto & Exclusividade
-                    </h1>
-                    
-                    <p 
-                      className="font-sans text-[10px] md:text-xs uppercase tracking-[0.28em] font-bold mb-6"
-                      style={{ color: theme.accentColor }}
-                    >
-                      Presentes sob medida que transformam momentos em memórias afetivas
-                    </p>
-                    
-                    <div className="w-16 h-[1.5px] mx-auto my-6 rounded-full" style={{ backgroundColor: `${theme.accentColor}30` }}></div>
-                    
-                    <p className={`text-sm max-w-2xl mx-auto leading-relaxed font-sans font-medium ${theme.textSecondary} opacity-85`}>
-                      Nossos mimos são desenhados individualmente com todo carinho, cuidado e rigor artesanal do ateliê. Uma verdadeira curadoria de peças selecionadas para celebrar conexões reais.
-                    </p>
-                  </div>
 
               {/* Loading Overlay between Filters */}
               <AnimatePresence mode="wait">
@@ -958,8 +859,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     exit={{ opacity: 0 }}
                     className="flex flex-col items-center justify-center py-32"
                   >
-                    <Loader2 size={36} className="animate-spin text-[#cca062]" />
-                    <span className="text-[10px] font-sans font-black uppercase tracking-[0.3em] mt-4 opacity-50 text-[#6d5443]">Sincronizando Ateliê...</span>
+                    <Loader2 size={36} className="animate-spin" style={{ color: theme.accentColor }} />
+                    <span className="text-[10px] font-sans font-black uppercase tracking-[0.3em] mt-4 opacity-50">Sincronizando Ateliê...</span>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -968,10 +869,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.5 }}
                   >
-                    {/* Grid - Premium Vertical Cards Showcase */}
+                    {/* Grid - Returned to Horizontal Smaller Cards */}
                     {filteredProducts.length > 0 ? (
                       <>
-                      <div id="catalog-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8 pb-32">
+                      <div id="catalog-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 pb-32">
                         {paginatedProducts.map((product, idx) => {
                           const today = new Date();
                           const createdAtDate = product.createdAt?.toMillis ? new Date(product.createdAt.toMillis()) : product.createdAt instanceof Date ? product.createdAt : new Date();
@@ -981,144 +882,62 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           return (
                             <motion.div
                               key={`prod-${product.id}-${idx}`}
-                              initial={{ opacity: 0, y: 30 }}
-                              whileInView={{ opacity: 1, y: 0 }}
-                              viewport={{ once: true, margin: "-100px" }}
-                              transition={{ duration: 0.8, delay: (idx % 3) * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                              initial={{ opacity: 0, scale: 0.98 }}
+                              whileInView={{ opacity: 1, scale: 1 }}
+                              viewport={{ once: true, margin: "-50px" }}
+                              transition={{ duration: 0.6, delay: (idx % 3) * 0.05 }}
                               onClick={() => setSelectedProduct(product)}
-                              className="group relative flex flex-col justify-between overflow-hidden bg-white rounded-[2rem] border transition-all duration-500 cursor-pointer shadow-[0_6px_20px_rgba(109,84,67,0.03)] hover:shadow-[0_12px_36px_rgba(109,84,67,0.08)] hover:-translate-y-1.5"
-                              style={{ borderColor: `${theme.accentColor}18` }}
+                              className="group relative flex flex-col p-3 cursor-pointer bg-white rounded-2xl border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
+                              style={{ borderColor: theme.accentColor }}
                             >
-                              {/* Top Aspect Square Image Area */}
-                              <div className="aspect-square w-full relative overflow-hidden bg-neutral-50/50 border-b border-neutral-100">
-                                <ImageWithFallback 
-                                  src={product.image || ''} 
-                                  alt="Product"
-                                  className={`w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 ${product.image_hover ? 'group-hover:opacity-0' : ''}`}
-                                  containerClassName="w-full h-full absolute inset-0"
-                                />
-                                {product.image_hover && (
+                              <div className="flex flex-row gap-4 items-stretch">
+                                {/* Thumbnail Image with Hover Change (Left) */}
+                                <div className="relative w-32 md:w-36 h-auto rounded-xl overflow-hidden bg-neutral-50 shrink-0 aspect-square">
                                   <ImageWithFallback 
-                                    src={product.image_hover || ''} 
-                                    alt="Product Hover"
-                                    className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-1000 group-hover:scale-105"
+                                    src={product.image || ''} 
+                                    alt="Product"
+                                    className={`w-full h-full object-cover transition-opacity duration-300 ${product.image_hover ? 'group-hover:opacity-0' : ''}`}
                                     containerClassName="w-full h-full absolute inset-0"
                                   />
-                                )}
-
-                                {/* Category Badge and Labels */}
-                                <div className="absolute top-4 left-4 flex flex-col gap-1.5 pointer-events-none z-10">
-                                  <span 
-                                    className="backdrop-blur-md text-[7.5px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.02)] border"
-                                    style={{
-                                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                      borderColor: `${theme.accentColor}25`,
-                                      color: theme.accentColor
-                                    }}
-                                  >
-                                    {product.category || 'exclusivo'}
-                                  </span>
-                                  {isNew && (
-                                    <span 
-                                      className="inline-flex items-center gap-1 border text-[7.5px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.02)] backdrop-blur-md"
-                                      style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                        borderColor: `${theme.accentColor}35`,
-                                        color: theme.accentColor
-                                      }}
-                                    >
-                                      <Sparkles size={8} className="animate-pulse shrink-0" style={{ color: theme.accentColor }} />
-                                      Novidade
-                                    </span>
-                                  )}
-                                  {product.isFeatured && (
-                                    <span 
-                                      className="inline-flex items-center gap-1 border text-[7.5px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.02)] backdrop-blur-md"
-                                      style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                        borderColor: `${theme.accentColor}35`,
-                                        color: theme.accentColor
-                                      }}
-                                    >
-                                      <Sparkles size={8} className="animate-pulse shrink-0" style={{ color: theme.accentColor }} />
-                                      Best Seller
-                                    </span>
+                                  {product.image_hover && (
+                                    <ImageWithFallback 
+                                      src={product.image_hover || ''} 
+                                      alt="Product Hover"
+                                      className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                      containerClassName="w-full h-full absolute inset-0"
+                                    />
                                   )}
                                 </div>
-                                
-                                {/* Glassmorphic Hover Overlay */}
-                                <div className="absolute inset-0 bg-[#3a322c]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none flex items-center justify-center">
-                                  <div 
-                                    className="bg-white/95 text-[9px] font-bold uppercase tracking-[0.2em] px-5 py-2.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.05)] border backdrop-blur-sm -translate-y-2 group-hover:translate-y-0 transition-all duration-500"
-                                    style={{ 
-                                      borderColor: `${theme.accentColor}25`,
-                                      color: theme.accentColor
-                                    }}
-                                  >
-                                    ver detalhes
-                                  </div>
-                                </div>
-                              </div>
 
-                              {/* Card Info Content */}
-                              <div className="p-6 flex flex-col flex-1 justify-between gap-5">
-                                <div className="space-y-2.5">
-                                  <p 
-                                    className="text-[8.5px] font-bold uppercase tracking-[0.25em] font-sans flex items-center gap-1"
-                                    style={{ color: theme.accentColor }}
-                                  >
-                                    <span>✦</span> Ateliê {companyName}
-                                  </p>
-                                  <h3 className={`font-serif text-base md:text-lg font-bold leading-tight transition-colors duration-300 truncate ${theme.textPrimary}`}>
-                                    {product.product_name}
-                                  </h3>
-                                  <p className={`text-[11px] leading-relaxed line-clamp-2 min-h-[2.2rem] ${theme.textSecondary} opacity-80 font-sans`}>
-                                    {product.description || 'Um presente personalizado maravilhoso e inesquecível feito sob medida com todo carinho.'}
-                                  </p>
-                                </div>
-
-                                {/* Prices and Premium 3D Action Section */}
-                                <div 
-                                  className="pt-4 border-t flex flex-col gap-4 transition-colors"
-                                  style={{ borderColor: `${theme.accentColor}12` }}
-                                >
-                                  <div className="flex justify-between items-center">
-                                    <div className="flex flex-col">
-                                      <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-widest leading-none">Valor Especial</span>
-                                      <div className="flex items-baseline gap-1.5 mt-1">
-                                        <p className="text-[10px] text-neutral-400/70 line-through font-sans">
-                                          {formatCurrency(product.current_price || product.original_price || (product.retail_price * 1.25))}
-                                        </p>
-                                        <span className={`text-lg font-black font-sans leading-none ${theme.textPrimary}`}>
-                                          {formatCurrency(product.retail_price || 0)}
-                                        </span>
-                                      </div>
+                                {/* Info - Prices + Icons (Right) */}
+                                <div className="flex-1 flex flex-col justify-between py-1">
+                                  <div>
+                                    <p className="text-xs text-neutral-500 opacity-50 line-through">
+                                      de: R$ {(product.current_price || product.original_price || (product.retail_price * 1.25)).toFixed(2).replace('.', ',')}
+                                    </p>
+                                    <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap">
+                                      <span className="text-xs md:text-sm font-semibold text-neutral-600">por:</span>
+                                      <span className="text-lg md:text-xl font-black text-neutral-900">R$ {(product.retail_price || 0).toFixed(2).replace('.', ',')}</span>
                                     </div>
                                     
-                                    {product.isWholesaleEnabled && product.wholesale_price && (
-                                      <div className="text-right">
-                                        <span className="text-[7.5px] font-bold text-neutral-400 uppercase tracking-widest leading-none block">No Atacado</span>
-                                        <span className={`text-xs font-semibold font-sans mt-0.5 block`} style={{ color: theme.accentColor }}>{formatCurrency(product.wholesale_price)}</span>
-                                      </div>
+                                    {(product.isWholesaleEnabled || product.wholesale_min_qty) && (
+                                      <p className="text-[11px] md:text-xs text-neutral-500 mt-2">
+                                        atacado: R$ {(product.wholesale_price || 0).toFixed(2).replace('.', ',')}
+                                      </p>
                                     )}
                                   </div>
 
-                                  {/* Action Buttons: 3D Soft Touch Styling */}
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 mt-auto pt-3">
                                     <button 
                                       onClick={(e) => { 
                                         e.stopPropagation();
                                         onAddToCart(product, 1); 
                                         setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
                                       }}
-                                      className="flex-1 py-3 px-4 rounded-xl text-white font-extrabold uppercase tracking-[0.16em] text-[9.5px] transition-all duration-200 flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.08),_inset_0_1.5px_0_rgba(255,255,255,0.35),_inset_0_-2.5px_0_rgba(0,0,0,0.15)] hover:shadow-[0_6px_18px_rgba(0,0,0,0.12),_inset_0_1.5px_0_rgba(255,255,255,0.38),_inset_0_-2.5px_0_rgba(0,0,0,0.15)] hover:-translate-y-[1px] active:translate-y-[1.5px] active:shadow-[0_2px_4px_rgba(0,0,0,0.05),_inset_0_1px_0_rgba(255,255,255,0.2)]"
-                                      style={{ 
-                                        background: `linear-gradient(135deg, ${theme.accentColor}d9, ${theme.accentColor})`,
-                                        borderColor: `${theme.accentColor}25`
-                                      }}
+                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity flex-1 flex items-center justify-center shrink-0 border"
+                                      style={{ backgroundColor: theme.accentColor, borderColor: theme.accentColor }}
                                     >
-                                      <ShoppingCart size={11} className="stroke-[2.5]" />
-                                      Adicionar
+                                      <ShoppingCart size={18} />
                                     </button>
                                     <button 
                                       onClick={(e) => { 
@@ -1126,18 +945,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                                           onAddToGiftList?.(product);
                                           setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
                                       }}
-                                      className="p-3 rounded-xl border flex items-center justify-center shrink-0 transition-all duration-200 shadow-[0_4px_10px_rgba(0,0,0,0.02),_inset_0_1px_0_rgba(255,255,255,0.8),_inset_0_-1.5px_0_rgba(0,0,0,0.05)] hover:shadow-[0_6px_14px_rgba(0,0,0,0.04),_inset_0_1px_0_rgba(255,255,255,0.8)] active:translate-y-[1.5px] cursor-pointer"
-                                      style={{ 
-                                        backgroundColor: `${theme.accentColor}0e`, 
-                                        borderColor: `${theme.accentColor}25`,
-                                        color: theme.accentColor
-                                      }}
-                                      title="Adicionar à Lista de Presentes"
+                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity shrink-0 border"
+                                      style={{ backgroundColor: theme.accentColor, borderColor: theme.accentColor }}
                                     >
-                                      <Gift size={11} className="stroke-[2.5]" />
+                                      <Gift size={18} />
                                     </button>
                                   </div>
                                 </div>
+                              </div>
+                              
+                              {/* Bottom - Product Name */}
+                              <div className="mt-3 px-1">
+                                <h3 className="font-tahoma text-sm md:text-base font-bold leading-tight text-neutral-900 line-clamp-2">
+                                  {product.product_name}
+                                </h3>
                               </div>
                             </motion.div>
                           )})}

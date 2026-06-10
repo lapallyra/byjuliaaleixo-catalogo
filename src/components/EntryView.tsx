@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, MapPin, Heart, ChevronRight, ChevronLeft, User, ShoppingBag, Star, Info, Package, Mail, Sparkles, CheckSquare, MessageCircle, ShieldCheck, Handshake, Laptop, Scissors, Gift, Bike, Truck, X, PackagePlus } from 'lucide-react';
+import { Search, MapPin, Heart, ChevronRight, ChevronLeft, User, ShoppingBag, Star, Info, Package, Mail, Sparkles, CheckSquare, MessageCircle, ShieldCheck, Handshake, Laptop, Scissors, Gift, Bike, Truck, X } from 'lucide-react';
 import { AppConfig, CompanyId, SiteSettings, Product } from '../types';
 import { useAuth } from './AuthProvider';
 import { subscribeToAllSettings, subscribeToFeedbacks, addFeedback } from '../services/firebaseService';
@@ -230,7 +230,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
   const featuredProducts = React.useMemo(() => {
     return [...allProducts]
-      .filter(p => p.isVisible !== false && !p.isKit) // Only active/visible ones, not kits
+      .filter(p => p.isVisible !== false) // Only active/visible ones
       .sort((a, b) => {
         const clicksA = a.clicksCount || 0;
         const clicksB = b.clicksCount || 0;
@@ -240,10 +240,6 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         return 0;
       })
       .slice(0, 8);
-  }, [allProducts]);
-
-  const kits = React.useMemo(() => {
-    return allProducts.filter(p => p.isKit && p.isVisible !== false).slice(0, 4);
   }, [allProducts]);
 
   const fallbackTestimonials = [
@@ -492,94 +488,80 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           </div>
         </section>
 
-        {/* KITS PROMOCIONAIS */}
-        {kits.length > 0 && (
-          <section className="mb-20 md:mb-32">
-            <div className="bg-[#faf8f5] border border-[#e8dcc8]/50 rounded-[3rem] p-10 md:p-16 flex flex-col items-center text-center relative overflow-hidden group">
-               <div className="absolute top-0 right-0 p-8 opacity-20 group-hover:scale-110 group-hover:opacity-40 transition-all duration-1000 rotate-12">
-                   <PackagePlus size={120} className="text-[#cca062]" />
-               </div>
-               
-               <h3 className="font-serif text-3xl md:text-5xl text-[#6d5443] mb-4 relative z-10">Kits Promocionais</h3>
-               <p className="text-xs uppercase tracking-widest font-black text-[#cca062] mb-12 max-w-lg leading-relaxed relative z-10">
-                 Combinações perfeitas com descontos exclusivos e controle de estoque real em todos os ateliês.
-               </p>
-
-               <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl mx-auto relative z-10 mb-12">
-                  {kits.map(kit => (
-                     <div key={kit.id} className="bg-white p-4 rounded-3xl border border-[#cca062]/20 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all cursor-pointer" onClick={() => navigate('/kits')}>
-                        <div className="aspect-square bg-neutral-50 rounded-xl overflow-hidden mb-4 border border-[#e8dcc8]/30">
-                           <ImageWithFallback src={kit.image} alt={kit.product_name} className="w-full h-full object-cover" isThumbnail />
-                        </div>
-                        <h4 className="font-bold text-[#6d5443] text-sm line-clamp-2 leading-tight">{kit.product_name}</h4>
-                        <div className="mt-2 text-[#cca062] font-black text-sm tracking-tighter">
-                           R$ {kit.current_price?.toFixed(2).replace('.', ',')}
-                           {kit.kitDiscountPercentage ? <span className="block text-[9px] uppercase tracking-widest text-[#cca062] bg-[#cca062]/10 w-max mx-auto px-2 py-0.5 rounded-full mt-1">-{kit.kitDiscountPercentage}% OFF</span> : null}
-                        </div>
-                     </div>
-                  ))}
-               </div>
-
-               <button
-                  onClick={() => navigate('/kits')}
-                  className="bg-[#6d5443] hover:bg-[#5b4535] text-white transition-all text-xs font-black uppercase tracking-widest px-10 py-5 rounded-full shadow-lg cursor-pointer hover:scale-105 active:scale-95 inline-flex items-center gap-3 relative z-10"
-                >
-                  <PackagePlus size={18} />
-                  ACESSAR TODOS OS KITS
-                </button>
-            </div>
-          </section>
-        )}
-
-        {/* KITS EXCLUSIVOS */}
-        <section id="kits" className="mb-20 md:mb-32 scroll-mt-24">
-          <HeartDivider text="Kits Exclusivos" />
+        {/* PRODUTOS EM DESTAQUE */}
+        <section id="produtos" className="mb-20 md:mb-32 scroll-mt-24">
+          <HeartDivider text="Produtos em Destaque" />
           <p className="text-center text-xs text-gray-500 uppercase tracking-widest font-bold -mt-4 mb-10 px-4">
-             Curadoria de kits prontos para presentear
+            Nossos mimos mais desejados e clicados dos ateliês
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto px-4 select-none">
-            {kits.length === 0 ? (
+            {featuredProducts.length === 0 ? (
               <p className="col-span-full text-center text-xs uppercase font-bold tracking-widest text-[#cca062]/60 py-12">
-                Nenhum kit disponível.
+                Nenhum produto cadastrado ainda.
               </p>
             ) : (
-              kits.map((kit) => {
+              featuredProducts.map((prod) => {
+                const companyColors: Record<CompanyId, string> = {
+                  pallyra: '#cca062',
+                  guennita: '#5b2122',
+                  mimada: '#c96b71',
+                  tuttymimo: '#d4bda1'
+                };
+                const companyNames: Record<CompanyId, string> = {
+                  pallyra: 'La Pallyra',
+                  guennita: 'com amor, Guennita',
+                  mimada: 'Mimada Sim',
+                  tuttymimo: 'Tutty Mimo'
+                };
+                const companyRoutes: Record<CompanyId, string> = {
+                  pallyra: '/lapallyra',
+                  guennita: '/comamorguennita',
+                  mimada: '/mimadasim',
+                  tuttymimo: '/tuttymimo'
+                };
+                const accent = companyColors[prod.company] || '#cca062';
+                const name = companyNames[prod.company] || 'Ateliê';
+                const route = companyRoutes[prod.company] || '#';
+
                 return (
                   <motion.div
-                    key={kit.id}
+                    key={prod.id}
                     initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    onClick={() => navigate('/kits')}
+                    onClick={() => navigate(`${route}?search=${encodeURIComponent(prod.product_name)}`)}
                     className="flex flex-col border border-[#e8dcc8]/60 bg-white rounded-3xl overflow-hidden cursor-pointer hover:border-transparent hover:shadow-md transition-all group"
                   >
                     <div className="w-full aspect-square bg-[#faf8f5] overflow-hidden relative">
                       <ImageWithFallback 
-                        src={kit.image} 
-                        alt={kit.product_name} 
+                        src={prod.image} 
+                        alt={prod.product_name} 
                         className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" 
                         isThumbnail={true}
                       />
+                      <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-xs" style={{ color: accent, border: `1px solid ${accent}30` }}>
+                        {name}
+                      </div>
                     </div>
                     
                     <div className="flex flex-col items-center text-center p-4 flex-1 justify-between">
                       <div className="w-full mb-2">
-                        <span className="text-[8px] font-black tracking-widest uppercase block mb-1 opacity-60" style={{ color: '#cca062' }}>
-                          Kit
+                        <span className="text-[8px] font-black tracking-widest uppercase block mb-1 opacity-60" style={{ color: accent }}>
+                          {prod.category}
                         </span>
                         <h5 className="font-serif text-xs tracking-wide text-[#6d5443] truncate w-full mb-1">
-                          {kit.product_name}
+                          {prod.product_name}
                         </h5>
                       </div>
                       
                       <div className="w-full mt-auto pt-2">
                         <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-2">
-                          R$ {kit.current_price?.toFixed(2).replace('.', ',')}
+                          A partir de R$ {prod.current_price?.toFixed(2).replace('.', ',')}
                         </span>
                         <span className="inline-block text-[8px] font-black uppercase tracking-widest text-[#cca062] group-hover:text-[#c36266] transition-colors leading-none">
-                          Ver Kit →
+                          Ver no Catálogo →
                         </span>
                       </div>
                     </div>
@@ -591,25 +573,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           
           <div className="flex justify-center mt-12 px-4">
             <button
-              onClick={() => navigate('/kits')}
+              onClick={() => navigate('/colecoes')}
               className="bg-[#cca062] hover:bg-[#c36266] text-white transition-all text-[9px] font-black uppercase tracking-widest px-8 py-3.5 rounded-full shadow-sm cursor-pointer hover:scale-105 active:scale-95"
             >
-              Ver Todos os Kits
-            </button>
-          </div>
-        </section>
-        
-        {/* FAIXA INCENTIVO - MONTE SEU KIT */}
-        <section className="mb-20 md:mb-32 px-4">
-          <div className="bg-[#FAF8F5] border border-[#e8dcc8]/50 rounded-[2rem] p-8 md:p-12 flex flex-col items-center text-center shadow-inner">
-            <p className="text-[#6d5443] text-sm md:text-lg font-serif italic mb-8 max-w-xl leading-relaxed">
-              "Nem todo presente perfeito já está pronto. Crie uma combinação única e surpreenda alguém especial."
-            </p>
-            <button
-              onClick={() => navigate('/kit-meukit')}
-              className="bg-white hover:bg-[#F5F3EF] text-[#6d5443] border border-[#cca062]/30 transition-all text-[10px] font-black uppercase tracking-widest px-8 py-4 rounded-full shadow-[0_4px_6px_rgba(0,0,0,0.05),_inset_0_2px_0_rgba(255,255,255,1)] hover:scale-105 active:scale-95 cursor-pointer"
-            >
-              Monte Seu Kit
+              Ver Todas as Coleções por Ateliê
             </button>
           </div>
         </section>
