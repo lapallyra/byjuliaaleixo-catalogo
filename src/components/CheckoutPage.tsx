@@ -448,26 +448,37 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           </div>
         )}
 
-        <div className="space-y-3 pt-2">
-          <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            <span>Subtotal</span>
-            <span>R$ {subtotal.toFixed(2).replace('.', ',')}</span>
+        <div className="space-y-4 pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Subtotal</label>
+              <div className="text-[14px] font-black text-slate-900">
+                R$ {subtotal.toFixed(2).replace('.', ',')}
+              </div>
+            </div>
+            {discount > 0 && (
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-rose-400 uppercase tracking-widest leading-none">Desconto</label>
+                <div className="text-[14px] font-black text-rose-500">
+                  - R$ {discount.toFixed(2).replace('.', ',')}
+                </div>
+              </div>
+            )}
+            {freight > 0 && (
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Frete</label>
+                <div className="text-[14px] font-black text-slate-900">
+                  + R$ {freight.toFixed(2).replace('.', ',')}
+                </div>
+              </div>
+            )}
           </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-[10px] font-black text-rose-400 uppercase tracking-widest">
-              <span>Desconto</span>
-              <span>- R$ {discount.toFixed(2).replace('.', ',')}</span>
+          
+          <div className="pt-6 border-t border-lilac/10">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Geral Liquido</label>
+            <div className="text-3xl font-black text-slate-900 tracking-tighter mt-1">
+              R$ {total.toFixed(2).replace('.', ',')}
             </div>
-          )}
-          {freight > 0 && (
-            <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              <span>Frete</span>
-              <span>+ R$ {freight.toFixed(2).replace('.', ',')}</span>
-            </div>
-          )}
-          <div className="flex justify-between pt-4 border-t border-lilac/10">
-            <span className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Total Geral</span>
-            <span className="text-xl font-black text-slate-900">R$ {total.toFixed(2).replace('.', ',')}</span>
           </div>
         </div>
 
@@ -779,15 +790,32 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
 
              <div className="space-y-8">
               {renderFinancialSummary(true)}
-              <section className="bg-white rounded-[2.5rem] p-8 border border-lilac/10 shadow-sm">
-                <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-6">Confirmar Endereço</h3>
-                <div className="space-y-2 opacity-60">
-                  <p className="text-xs font-bold text-slate-700">{customerForm.nome}</p>
-                  <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">
-                    {customerForm.endereco}, {customerForm.numero}<br/>
-                    {customerForm.cidade} - {customerForm.estado}<br/>
-                    CEP: {customerForm.cep}
-                  </p>
+              <section className="bg-white rounded-[2.5rem] p-10 border border-lilac/10 shadow-sm">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] mb-8">
+                  Endereço de Entrega
+                </h3>
+                <div className="space-y-6">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Destinatário</label>
+                    <div className="text-[15px] font-black text-slate-900 uppercase leading-tight">
+                      {customerForm.nome}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Logradouro / Número</label>
+                    <div className="text-[15px] font-black text-slate-600 uppercase leading-snug">
+                      {customerForm.endereco}, {customerForm.numero}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Cidade / Estado / CEP</label>
+                    <div className="text-[15px] font-black text-slate-600 uppercase leading-tight">
+                      {customerForm.cidade} - {customerForm.estado} <br/>
+                      <span className="font-mono text-lilac">CEP: {customerForm.cep}</span>
+                    </div>
+                  </div>
                 </div>
               </section>
             </div>

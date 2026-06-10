@@ -385,14 +385,14 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-6 mb-8 text-center bg-[#FAF9F6] p-6 rounded-2xl border border-[#F0E6D2]">
-             <div>
-               <p className="text-[9px] font-black uppercase text-[#A09898] mb-1">Entradas Hoje</p>
-               <p className="text-xl font-bold text-slate-900">R$ 0,00</p>
+          <div className="grid grid-cols-2 gap-10 mb-8 text-center bg-[#FAF9F6] p-10 rounded-2xl border border-[#F0E6D2]">
+             <div className="space-y-1">
+               <label className="text-[10px] font-black uppercase text-[#A09898] tracking-widest leading-none">Entradas Hoje</label>
+               <div className="text-2xl font-black text-slate-800 tracking-tighter">R$ 0,00</div>
              </div>
-             <div className="border-l border-[#F0E6D2]">
-               <p className="text-[9px] font-black uppercase text-[#A09898] mb-1">Saídas Hoje</p>
-               <p className="text-xl font-bold text-slate-900">R$ 0,00</p>
+             <div className="border-l border-[#F0E6D2] space-y-1">
+               <label className="text-[10px] font-black uppercase text-[#A09898] tracking-widest leading-none">Saídas Hoje</label>
+               <div className="text-2xl font-black text-slate-800 tracking-tighter">R$ 0,00</div>
              </div>
           </div>
 
@@ -702,21 +702,18 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                    <h4 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-2">{viewingProductDetails.product_name}</h4>
                    <p className="text-[10px] font-black text-[#D88D85] uppercase tracking-[0.3em] mb-10">Métrica de Popularidade</p>
 
-                   <div className="grid grid-cols-3 gap-4 border-t border-slate-50 pt-10">
+                   <div className="grid grid-cols-1 gap-8 border-t border-slate-50 pt-10">
                       <div className="space-y-1">
-                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">No Mês</p>
-                         <p className="text-xl font-black text-slate-900">{(viewingProductDetails as any).monthlySales || 0}</p>
-                         <p className="text-[7px] font-black text-slate-400 uppercase">Vendas</p>
-                      </div>
-                      <div className="space-y-1 border-x border-slate-50">
-                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Acum.</p>
-                         <p className="text-xl font-black text-slate-900">{(viewingProductDetails as any).totalSales || 0}</p>
-                         <p className="text-[7px] font-black text-slate-400 uppercase">Vendas</p>
+                         <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">Vendas no Mês</label>
+                         <div className="text-3xl font-black text-slate-900 tracking-tighter">{(viewingProductDetails as any).monthlySales || 0}</div>
                       </div>
                       <div className="space-y-1">
-                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Engajamento</p>
-                         <p className="text-xl font-black text-[#D88D85]">{(viewingProductDetails as any).clicks || 0}</p>
-                         <p className="text-[7px] font-black text-slate-400 uppercase">Cliques/Interessados</p>
+                         <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Acumulado</label>
+                         <div className="text-3xl font-black text-slate-900 tracking-tighter">{(viewingProductDetails as any).totalSales || 0}</div>
+                      </div>
+                      <div className="space-y-1">
+                         <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">Engajamento / Cliques</label>
+                         <div className="text-3xl font-black text-[#D88D85] tracking-tighter">{(viewingProductDetails as any).clicks || 0}</div>
                       </div>
                    </div>
 

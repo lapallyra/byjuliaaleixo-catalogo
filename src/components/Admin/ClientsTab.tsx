@@ -388,65 +388,53 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                 <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-white text-lilac">
-                      <Phone size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
-                        Contato / WhatsApp
-                      </p>
-                      <p className="text-sm font-bold text-slate-900">
-                        {formatPhone(selectedCustomer.contact)}
-                      </p>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Contato / WhatsApp</label>
+                    <div className="text-[15px] font-black text-slate-900 leading-tight">
+                      {formatPhone(selectedCustomer.contact)}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-white text-lilac">
-                      <Mail size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
-                        Documento
-                      </p>
-                      <p className="text-sm font-bold text-slate-900">
-                        {selectedCustomer.cpfCnpj ? formatCPFOrCNPJ(selectedCustomer.cpfCnpj) : "NÃO INFORMADO"}
-                      </p>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Documento (CPF/CNPJ)</label>
+                    <div className="text-[15px] font-black text-slate-900 font-mono tracking-tight leading-tight">
+                      {selectedCustomer.cpfCnpj ? formatCPFOrCNPJ(selectedCustomer.cpfCnpj) : "NÃO INFORMADO"}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-white text-lilac">
-                      <CalendarIcon size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
-                        Nascimento
-                      </p>
-                      <p className="text-sm font-bold text-slate-900">
-                        {selectedCustomer.birthDate || "NÃO INFORMADO"}
-                      </p>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Data de Nascimento</label>
+                    <div className="text-[15px] font-black text-slate-900 font-mono tracking-tight leading-tight">
+                      {selectedCustomer.birthDate || "NÃO INFORMADO"}
                     </div>
                   </div>
                 </div>
+
                 <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-2xl bg-white text-lilac">
-                      <MapPin size={18} />
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Endereço Completo</label>
+                    <div className="text-[14px] font-black text-slate-900 uppercase leading-snug tracking-tight">
+                      {selectedCustomer.address ? (
+                        <>
+                          {selectedCustomer.address}{selectedCustomer.number ? `, ${selectedCustomer.number}` : ""}
+                          <div className="text-[11px] font-bold text-lilac mt-1">
+                            {selectedCustomer.neighborhood && `${selectedCustomer.neighborhood} - `}
+                            {selectedCustomer.city} / {selectedCustomer.state}
+                            {selectedCustomer.zipCode && ` (CEP: ${selectedCustomer.zipCode})`}
+                          </div>
+                        </>
+                      ) : (
+                        "SEM ENDEREÇO CADASTRADO"
+                      )}
                     </div>
-                    <div>
-                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
-                        Endereço
-                      </p>
-                      <p className="text-sm font-bold text-slate-900 leading-tight">
-                        {selectedCustomer.address || "SEM ENDEREÇO CADASTRADO"}
-                        <br />
-                        <span className="text-[10px] text-[#A09898]">
-                          {selectedCustomer.city} {selectedCustomer.state}{" "}
-                          {selectedCustomer.zipCode}
-                        </span>
-                      </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Histórico de Movimentação</label>
+                    <div className="text-[13px] font-bold text-slate-600 uppercase tracking-wide leading-tight">
+                       {selectedCustomer.ordersCount || 0} PEDIDOS REALIZADOS
                     </div>
                   </div>
                 </div>

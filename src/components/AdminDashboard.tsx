@@ -302,12 +302,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
 
           <div className="p-6 border-t border-[#F0E6D2] space-y-3 bg-white/30 backdrop-blur-sm">
           <button
-            onClick={() => window.open("/studiomockup", "_blank", "noopener,noreferrer")}
-            className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 text-white hover:shadow-lg hover:-translate-y-0.5 hover:shadow-slate-500/20 transition-all text-[9px] font-bold uppercase tracking-[0.15em] border border-transparent shadow-md"
-          >
-            <Sparkles size={16} /> {!isSidebarCollapsed && "Studio Mockup"}
-          </button>
-          <button
             onClick={() => {
               logout();
               window.location.href = "/";
@@ -392,15 +386,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                 </nav>
 
                 <div className="mt-auto pt-4 border-t border-[#F0E6D2] space-y-2">
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      window.open("/studiomockup", "_blank", "noopener,noreferrer");
-                    }}
-                    className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md transition-all text-[9px] font-bold uppercase tracking-[0.15em]"
-                  >
-                    <Sparkles size={16} /> Studio Mockup
-                  </button>
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);

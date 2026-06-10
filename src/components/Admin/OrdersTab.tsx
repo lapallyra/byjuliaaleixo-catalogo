@@ -872,26 +872,30 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                         Dados do Cliente
                       </span>
                     </div>
-                    <div className="flex flex-col gap-3 font-sans text-xs">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Nome do Cliente</span>
-                        <span className="font-semibold text-slate-700 uppercase">{order.customerName || "Não Informado"}</span>
+                    <div className="flex flex-col gap-6 font-sans">
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">Nome do Cliente</label>
+                        <div className="text-[15px] font-black text-slate-900 uppercase tracking-tight leading-tight">{order.customerName || "Não Informado"}</div>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">CPF / CNPJ</span>
-                        <span className="font-mono text-slate-700 font-semibold">{order.customerCpfCnpj ? formatCPFOrCNPJ(order.customerCpfCnpj) : "Não Informado"}</span>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">CPF / CNPJ</label>
+                        <div className="text-[15px] font-black text-slate-900 font-mono tracking-tight leading-tight">{order.customerCpfCnpj ? formatCPFOrCNPJ(order.customerCpfCnpj) : "Não Informado"}</div>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Data de Nascimento</span>
-                        <span className="font-mono text-slate-700">{(order as any).birthDate || (order as any).customerBirthDate || "Não informado"}</span>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">Data de Nascimento</label>
+                        <div className="text-[15px] font-black text-slate-900 font-mono tracking-tight leading-tight">{(order as any).birthDate || (order as any).customerBirthDate || "Não informado"}</div>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Contato WhatsApp</span>
-                        <span className="font-semibold text-slate-700">{order.contact ? formatPhone(order.contact) : "Não Informado"}</span>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">Contato WhatsApp</label>
+                        <div className="text-[15px] font-black text-slate-900 tracking-tight leading-tight">{order.contact ? formatPhone(order.contact) : "Não Informado"}</div>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">E-mail</span>
-                        <span className="text-slate-600 font-medium select-all">{(order as any).customerEmail || (order as any).email || "Não Informado"}</span>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">E-mail</label>
+                        <div className="text-[15px] font-black text-slate-900 select-all tracking-tight leading-tight">{(order as any).customerEmail || (order as any).email || "Não Informado"}</div>
                       </div>
                     </div>
                   </div>
@@ -903,61 +907,69 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                         Dados do Pedido & Entrega
                       </span>
                     </div>
-                    <div className="flex flex-col gap-3 font-sans text-xs">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Status do Fluxo</span>
-                        <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border ${
-                          STATUS_GROUPS.find((g) => g.dbStatuses.includes(order.status.toLowerCase()))?.bgLight || "bg-slate-50 text-slate-500 border-slate-200"
-                        }`}>
-                          {statusOptions.find((s) => s.value === order.status.toLowerCase())?.label || order.status}
-                        </span>
+                    <div className="flex flex-col gap-6 font-sans">
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">Status do Fluxo</label>
+                        <div className="flex mt-1">
+                          <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
+                            STATUS_GROUPS.find((g) => g.dbStatuses.includes(order.status.toLowerCase()))?.bgLight || "bg-slate-50 text-slate-500 border-slate-200"
+                          }`}>
+                            {statusOptions.find((s) => s.value === order.status.toLowerCase())?.label || order.status}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Código de Identificação</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-bold text-slate-800 bg-white px-2 py-0.5 border border-slate-200 rounded">
-                            {order.code}
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">Código de Identificação</label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-mono font-black text-slate-900 bg-white px-3 py-1 border border-[#F0E6D2] rounded-lg shadow-sm">
+                            #{order.code}
                           </span>
                           {order.isEmergency && (
-                            <span className="text-red-500 bg-red-50 p-1 border border-red-200 rounded animate-pulse" title="Urgente">
-                              <Flame size={12} className="stroke-[2px]" />
+                            <span className="text-red-500 bg-red-50 px-2 py-1 border border-red-100 rounded-lg text-[10px] font-black uppercase tracking-tighter flex items-center gap-1 shadow-sm">
+                              <Flame size={12} className="stroke-[3px]" /> Urgente
                             </span>
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Ateliê Selecionado</span>
-                        <span className="font-bold text-slate-700 uppercase">
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">Ateliê Selecionado</label>
+                        <div className="text-[15px] font-black text-slate-900 uppercase tracking-tight leading-tight">
                           {order.companyId === 'pallyra' ? "La Pallyra" :
                            order.companyId === 'guennita' ? "com amor, Guennita" :
                            order.companyId === 'mimada' ? "Mimada Sim" :
                            order.companyId === 'tuttymimo' ? "Tutty Mimo" : order.companyId}
-                        </span>
+                        </div>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Data do Pedido</span>
-                        <span className="text-slate-600 font-medium">
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">Data do Pedido</label>
+                        <div className="text-[15px] font-black text-slate-900 tracking-tight leading-tight">
                           {order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy HH:mm") : "--/--/----"}
-                        </span>
+                        </div>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Data de Entrega</span>
-                        <span className="font-bold text-slate-700">
-                          {order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy") : "Não agendada"}
-                        </span>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">Previsão de Entrega</label>
+                        <div className="text-[15px] font-black text-slate-900 tracking-tight leading-tight">
+                          {order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy") : "A COMBINAR"}
+                        </div>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-slate-100 gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Tipo de Entrega</span>
-                        <span className="font-bold text-pink-600 uppercase tracking-widest text-[10px]">
-                          {order.deliveryType === 'retirada' ? "Retirada" :
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">Tipo de Entrega</label>
+                        <div className="text-[13px] font-black text-pink-600 uppercase tracking-[0.1em] leading-tight">
+                          {order.deliveryType === 'retirada' ? "Retirada no Ateliê" :
                            order.deliveryType === 'delivery' ? "Entrega Local" : "Envio por Correios / Transportadora"}
-                        </span>
+                        </div>
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1">
-                        <span className="text-slate-400 uppercase font-semibold text-[9px] tracking-wider">Endereço de Destino</span>
-                        <span className="text-slate-600 font-medium text-left sm:text-right max-w-md">
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-slate-400 tracking-[0.15em] leading-none">Endereço de Destino</label>
+                        <div className="text-[14px] font-black text-slate-900 uppercase leading-snug tracking-tight">
                           {order.address || "Não informado (Retirada direta no Ateliê)"}
-                        </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1015,30 +1027,33 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
                         Preços & Resumo Financeiro
                       </span>
                     </div>
-                    <div className="space-y-2.5 text-xs text-slate-600 font-sans">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-slate-400 uppercase text-[9px] tracking-wider">Subtotal</span>
-                        <span className="font-semibold text-slate-700 font-mono">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 font-sans">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Subtotal</label>
+                        <div className="text-[14px] font-black text-slate-900 font-mono leading-tight">
                           {formatCurrency((order.total || 0) - (order.shippingCost || 0))}
-                        </span>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-slate-400 uppercase text-[9px] tracking-wider">Taxa de Envio / Frete</span>
-                        <span className="font-semibold text-slate-700 font-mono">
+
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Taxa de Envio</label>
+                        <div className="text-[14px] font-black text-slate-900 font-mono leading-tight">
                           {formatCurrency(order.shippingCost || 0)}
-                        </span>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center pt-2.5 border-t border-slate-100">
-                        <span className="text-[11px] font-black text-slate-800 uppercase tracking-wide">Desconto Concedido</span>
-                        <span className="font-mono text-emerald-600 font-bold">
+
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Desconto</label>
+                        <div className="text-[14px] font-black text-emerald-600 font-mono leading-tight">
                           - {formatCurrency(0)}
-                        </span>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center pt-3 border-t border-dashed border-[#F0E6D2]">
-                        <span className="text-xs font-black text-slate-800 uppercase tracking-widest">Valor Total Líquido</span>
-                        <span className="text-xl font-black text-pink-600 font-mono">
+
+                      <div className="space-y-1 bg-white p-3 rounded-xl border border-[#F0E6D2]">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Valor Total</label>
+                        <div className="text-[18px] font-black text-pink-600 font-mono tracking-tighter leading-tight mt-1">
                           {formatCurrency(order.total || 0)}
-                        </span>
+                        </div>
                       </div>
                     </div>
                   </div>

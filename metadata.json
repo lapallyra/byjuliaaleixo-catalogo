@@ -1,6 +1,6 @@
 {
   "name": "Ateliê dos Personalizados",
-  "description": "Uma plataforma elegante para catálogos de produtos personalizados e ferramentas internas de simulação para ateliês (Mockup Studio).",
+  "description": "Uma plataforma elegante para catálogos de produtos personalizados para ateliês.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

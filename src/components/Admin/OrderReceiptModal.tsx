@@ -116,40 +116,35 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
             </div>
           </div>
 
-          <div className="border-t border-b border-slate-200 py-6 mb-8 flex justify-between text-sm">
-            <div>
-              <p className="text-gray-500 uppercase font-bold text-xs mb-1">
-                Pedido
-              </p>
-              <p className="font-bold text-lg">{order.code}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-8 border-y border-slate-100 mb-10">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Código do Pedido</label>
+              <div className="text-xl font-black text-slate-900 tracking-tighter italic">#{order.code}</div>
             </div>
-            <div>
-              <p className="text-gray-500 uppercase font-bold text-xs mb-1">
-                Data
-              </p>
-              <p className="font-bold text-lg">
-                {safeFormat(new Date(), "dd/MM/yyyy")}
-              </p>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Data de Emissão</label>
+              <div className="text-xl font-black text-slate-900 tracking-tighter">{safeFormat(new Date(), "dd/MM/yyyy")}</div>
             </div>
-            <div>
-              <p className="text-gray-500 uppercase font-bold text-xs mb-1">
-                Entrega
-              </p>
-              <p className="font-bold text-lg">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Previsão de Entrega</label>
+              <div className="text-xl font-black text-[#D88D85] tracking-tighter">
                 {order.deliveryDate
                   ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy")
                   : "A Combinar"}
-              </p>
+              </div>
             </div>
           </div>
 
           {/* Customer */}
-          <div className="mb-10 text-sm">
-            <p className="text-gray-500 uppercase font-bold text-xs mb-1">
-              Cliente
-            </p>
-            <p className="font-bold text-lg">{order.customerName}</p>
-            <p className="text-gray-600">{order.contact}</p>
+          <div className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Cliente / Comprador</label>
+              <div className="text-xl font-black text-slate-900 uppercase tracking-tight">{order.customerName}</div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Canal de Contato</label>
+              <div className="text-xl font-black text-slate-600 truncate">{order.contact}</div>
+            </div>
           </div>
 
           {/* Items Table */}
