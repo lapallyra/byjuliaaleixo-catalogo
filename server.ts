@@ -10,16 +10,28 @@ async function startServer() {
   // Add JSON body parsing middleware
   app.use(express.json());
 
+  // Handle CORS and OPTIONS properly to prevent 405s
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(200);
+      return;
+    }
+    next();
+  });
+
   app.post("/api/createPreference", async (req, res) => {
+    console.log("HIT /api/createPreference POST", req.body);
     try {
-      const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+      const accessToken = req.body.accessToken || process.env.MERCADOPAGO_ACCESS_TOKEN;
       if (!accessToken) {
-        throw new Error("MERCADOPAGO_ACCESS_TOKEN is missing");
+        throw new Error("MERCADOPAGO_ACCESS_TOKEN is missing. Please configure it in the Admin Settings.");
       }
 
       const client = new MercadoPagoConfig({
         accessToken: accessToken,
-        options: { timeout: 10000 },
       });
       const preference = new Preference(client);
 
@@ -50,7 +62,15 @@ async function startServer() {
         init_point: result.init_point,
       });
     } catch (e: any) {
-      console.error("API /createPreference Error:", e?.response?.data || e.message);
+      console.error("========================");
+      console.error("API /createPreference Error Caught!");
+      console.error("Message:", e.message);
+      if (e.response) {
+         console.error("Response Data:", e.response.data);
+         console.error("Response Status:", e.response.status);
+      }
+      console.error("Stack:", e.stack);
+      console.error("========================");
       res.status(500).json({ error: e.message || "Internal server error" });
     }
   });
@@ -66,7 +86,7 @@ async function startServer() {
     // Production static serving
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('/(.*)', (req, res) => {
+    app.get('*all', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

@@ -13,16 +13,22 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
-    "@vercel/node": "^5.8.4",
     "@vitejs/plugin-react": "^5.0.4",
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "express": "^5.2.1",
+    "file-saver": "^2.0.5",
     "firebase": "^12.12.1",
+    "html-to-image": "^1.11.13",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.546.0",
     "mercadopago": "^3.0.0",
     "motion": "^12.23.24",
+    "papaparse": "^5.5.3",
+    "qrcode": "^1.5.4",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-router-dom": "^7.15.0",
@@ -33,11 +39,7 @@
   "devDependencies": {
     "@firebase/eslint-plugin-security-rules": "^0.0.2",
     "@types/express": "^5.0.6",
-<<<<<<< HEAD
-    "@types/node": "^22.19.19",
-=======
     "@types/node": "^22.14.0",
->>>>>>> 68eae5bcd3770273edda2112d71f8be3462c10f9
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.21",

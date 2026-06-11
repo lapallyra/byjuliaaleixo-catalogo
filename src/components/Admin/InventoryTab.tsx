@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { motion } from "motion/react";
 import {
   Search,
   Plus,
@@ -13,9 +14,12 @@ import {
   Hash,
   DollarSign,
   X,
+  Printer,
 } from "lucide-react";
+import { CSVHandler } from "./CSVHandler";
 import { Insumo } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
+import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 
 interface InventoryTabProps {
   insumos: Insumo[];
@@ -34,6 +38,39 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
     null,
   );
   const [insumoToDelete, setInsumoToDelete] = useState<string | null>(null);
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filtered.map(i => i.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      for (const id of selectedIds) {
+        await onDeleteInsumo(id);
+      }
+      setSelectedIds([]);
+      setIsBulkDeleteModalOpen(false);
+      alert("Insumos excluídos com sucesso!");
+    } catch (e) {
+      console.error("Erro na exclusão em massa:", e);
+      alert("Houve um erro ao excluir um ou mais insumos.");
+    }
+  };
 
   const confirmDelete = () => {
     if (insumoToDelete) {
@@ -60,10 +97,10 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
   const [isDetailOpen, setIsDetailOpen] = useState<string | null>(null);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
       {/* Critical Alert */}
       {criticalItems.length > 0 && (
-        <div className="bg-slate-50 border-1 border-rose-200 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in zoom-in-95 duration-500">
+        <div className="bg-slate-50 border-1 border-rose-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in zoom-in-95 duration-500">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-200 animate-pulse">
               <AlertTriangle size={24} />
@@ -99,8 +136,8 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
       )}
 
       {/* Top Bar */}
-      <div className="flex flex-col md:flex-row gap-6 justify-between items-center">
-        <div className="relative w-full md:w-96">
+      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-3xl border border-lilac/10 shadow-sm">
+        <div className="relative w-full lg:w-96">
           <Search
             className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D1CACA]"
             size={16}
@@ -113,164 +150,171 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button
-          onClick={() => {
-            setEditingInsumo({});
-            setIsModalOpen(true);
-          }}
-          className="w-full md:w-auto flex items-center justify-center gap-3 bg-black text-white font-black py-4 px-10 rounded-[1.25rem] hover:scale-105 transition-all shadow-xl text-[9px] uppercase tracking-[0.3em] border border-black/10"
-        >
-          <Plus size={18} /> Novo Insumo
-        </button>
+        <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto justify-center lg:justify-end">
+          <CSVHandler 
+            moduleName="Insumos" 
+            data={filtered} 
+            fields={['name', 'code', 'unit', 'quantity', 'costPrice', 'description']}
+            onImport={(newData) => {
+                for (const item of newData) {
+                    onSaveInsumo({
+                        ...item,
+                        quantity: Number(item.quantity) || 0,
+                        costPrice: Number(item.costPrice) || 0,
+                    });
+                }
+            }}
+          />
+          <button
+            onClick={() => {
+              const rows = filtered.map(ins => [
+                ins.name,
+                ins.category || "---",
+                `${ins.quantity} ${ins.unit}`,
+                `R$ ${(ins.costPrice || 0).toFixed(2)}`
+              ]);
+              exportGenericReportPDF({
+                title: "Relatório de Estoque (Insumos)",
+                columns: ["Material", "Categoria", "Estoque Físico", "Custo Unit."],
+                rows,
+                filters: `Busca: ${searchTerm || 'Nenhuma'}`
+              });
+            }}
+            className="flex items-center justify-center px-6 py-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group text-[9px] font-black uppercase tracking-widest gap-2"
+          >
+            <Printer size={16} className="group-hover:scale-110 transition-transform" /> PDF
+          </button>
+          <button
+            onClick={() => {
+              setEditingInsumo({});
+              setIsModalOpen(true);
+            }}
+            className="flex-1 md:flex-none flex items-center justify-center gap-3 bg-black text-white font-black py-4 px-10 rounded-[1.25rem] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl text-[9px] uppercase tracking-[0.3em] border border-black/10"
+          >
+            <Plus size={18} /> Novo Insumo
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-lilac/10 shadow-sm overflow-hidden overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[800px]">
-          <thead>
-            <tr className="bg-slate-50/50 border-b border-gray-50">
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-[#A09898]">
-                Cod. Insumo
-              </th>
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-[#A09898]">
-                Nome
-              </th>
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-[#A09898]">
-                Descrição
-              </th>
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-[#A09898]">
-                Quantidade
-              </th>
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-[#A09898]">
-                Vlr. Unitário
-              </th>
-              <th className="py-6 px-8 text-[9px] font-black uppercase tracking-[0.2em] text-[#A09898] text-right">
-                Ações
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50 uppercase">
-            {filtered.length === 0 && (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="py-24 text-center text-[#A09898] italic text-[11px] font-black tracking-widest opacity-50"
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(max(300px,20%),1fr))] gap-6 pb-20">
+        {filtered.length === 0 && (
+          <div className="col-span-full py-32 text-center bg-white rounded-3xl border border-dashed border-lilac/20">
+            <p className="text-[#A09898] italic text-[11px] font-black tracking-widest opacity-50 uppercase">
+              Nenhum insumo encontrado no catálogo.
+            </p>
+          </div>
+        )}
+        {filtered.map((insumo, idx) => {
+          const isCritical = insumo.quantity <= (insumo.criticalLimit || 5);
+          return (
+            <div
+              key={`ins-card-${insumo.id}-${idx}`}
+              className={`bg-white rounded-2xl border transition-all duration-300 p-8 flex flex-col gap-6 hover:shadow-xl group relative min-h-[360px] ${
+                selectedIds.includes(insumo.id) ? "border-lilac ring-1 ring-lilac/20" : "border-lilac/10 hover:border-lilac/30"
+              }`}
+            >
+              {/* Checkbox Overlay */}
+              <div className="absolute top-6 left-6 z-10" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(insumo.id)}
+                  onChange={(e) => handleSelectOne(insumo.id, e.target.checked)}
+                  className="rounded border-gray-300 text-lilac focus:ring-lilac cursor-pointer scale-110"
+                />
+              </div>
+
+              <div className="flex items-start justify-between pl-8">
+                <div className="flex flex-col gap-1">
+                  <span className="font-mono text-[9px] font-black text-lilac tracking-widest uppercase">
+                    #{insumo.code || "---"}
+                  </span>
+                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight group-hover:text-lilac transition-colors">
+                    {insumo.name}
+                  </h4>
+                  <span className="text-[10px] font-black text-[#A09898] uppercase tracking-widest">
+                    {insumo.category || "Geral"}
+                  </span>
+                </div>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
+                  isCritical ? "bg-rose-50 text-rose-500" : "bg-emerald-50 text-emerald-500"
+                }`}>
+                  <Package size={20} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-gray-50 bg-slate-50/50 rounded-2xl px-4">
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black text-[#A09898] uppercase tracking-widest mb-1">Qtd Atual</span>
+                  <span className={`text-sm font-black ${isCritical ? "text-rose-600" : "text-slate-900"}`}>
+                    {insumo.quantity} <span className="text-[9px] text-[#A09898] ml-0.5">{insumo.unit}</span>
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black text-[#A09898] uppercase tracking-widest mb-1">Preço/Un.</span>
+                  <span className="text-sm font-black text-slate-900">
+                    {formatCurrency(insumo.unitValue || 0)}
+                  </span>
+                </div>
+              </div>
+
+              {insumo.description && (
+                <p className="text-[10px] text-[#A09898] font-medium leading-relaxed line-clamp-2 px-2 italic">
+                  {insumo.description}
+                </p>
+              )}
+
+              <div className="flex items-center justify-between gap-3 pt-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setEditingInsumo(insumo);
+                      setIsModalOpen(true);
+                    }}
+                    className="p-3 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-slate-900 hover:bg-white transition-all border border-transparent hover:border-slate-200"
+                    title="Editar"
+                  >
+                    <Edit size={14} />
+                  </button>
+                  <button
+                    onClick={() => setInsumoToDelete(insumo.id || null)}
+                    className="p-3 rounded-xl bg-slate-50 text-rose-300 hover:bg-rose-500 hover:text-white transition-all border border-transparent"
+                    title="Excluir"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                
+                <button
+                  onClick={() => setIsDetailOpen(isDetailOpen === insumo.id ? null : insumo.id)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-9000 text-white text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md active:scale-95"
                 >
-                  Nenhum insumo encontrado no catálogo.
-                </td>
-              </tr>
-            )}
-            {filtered.map((insumo, idx) => (
-              <React.Fragment key={`ins-row-${insumo.id}-${idx}`}>
-                <tr
-                  className="group hover:bg-lilac-baby/30 transition-all cursor-pointer"
-                  onClick={() =>
-                    setIsDetailOpen(
-                      isDetailOpen === insumo.id ? null : insumo.id,
-                    )
-                  }
+                  <Info size={14} /> Detalhes
+                </button>
+              </div>
+
+              {isDetailOpen === insumo.id && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="pt-4 border-t border-gray-50 space-y-3"
                 >
-                  <td className="py-6 px-8">
-                    <span className="font-mono text-[10px] font-black text-lilac">
-                      #{insumo.code || "---"}
-                    </span>
-                  </td>
-                  <td className="py-6 px-8">
-                    <span className="text-xs font-black text-slate-900 tracking-tight">
-                      {insumo.name}
-                    </span>
-                  </td>
-                  <td className="py-6 px-8">
-                    <span className="text-[10px] text-[#A09898] font-bold truncate max-w-[150px] block">
-                      {insumo.description || "Sem detalhes"}
-                    </span>
-                  </td>
-                  <td className="py-6 px-8">
-                    <span
-                      className={`text-xs font-black ${insumo.quantity <= (insumo.criticalLimit || 5) ? "text-slate-9000" : "text-emerald-500"}`}
-                    >
-                      {insumo.quantity}{" "}
-                      <span className="text-[9px] uppercase font-sans text-[#A09898]">
-                        {insumo.unit}
-                      </span>
-                    </span>
-                  </td>
-                  <td className="py-6 px-8">
+                  <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-[#A09898]">Custo Total</span>
                     <span className="text-xs font-black text-slate-900">
-                      {formatCurrency(insumo.unitValue || 0)}
+                      {formatCurrency(insumo.costPrice || 0)}
                     </span>
-                  </td>
-                  <td className="py-6 px-8 text-right">
-                    <div
-                      className="flex justify-end gap-3"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        onClick={() =>
-                          setIsDetailOpen(
-                            isDetailOpen === insumo.id ? null : insumo.id,
-                          )
-                        }
-                        className="p-3 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-lilac transition-all"
-                      >
-                        <Info size={16} />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingInsumo(insumo);
-                          setIsModalOpen(true);
-                        }}
-                        className="p-3 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-slate-900 transition-all"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => setInsumoToDelete(insumo.id || null)}
-                        className="p-3 rounded-xl bg-slate-50 text-rose-200 hover:text-slate-9000 transition-all"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                {isDetailOpen === insumo.id && (
-                  <tr className="bg-slate-50/50">
-                    <td
-                      colSpan={6}
-                      className="px-12 py-8 border-b border-[#F0E6D2]"
-                    >
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
-                        <div>
-                          <p className="text-[8px] font-black uppercase tracking-widest text-[#A09898] mb-2">
-                            Último Valor Pago
-                          </p>
-                          <p className="text-sm font-black text-slate-900">
-                            {formatCurrency(insumo.costPrice || 0)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[8px] font-black uppercase tracking-widest text-[#A09898] mb-2">
-                            Categoria
-                          </p>
-                          <p className="text-xs font-black text-lilac italic">
-                            {insumo.category || "Não definida"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[8px] font-black uppercase tracking-widest text-[#A09898] mb-2">
-                            Subcategoria
-                          </p>
-                          <p className="text-xs font-black text-gray-600">
-                            {insumo.subcategory || "---"}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
+                  </div>
+                  <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-[#A09898]">Subcategoria</span>
+                    <span className="text-xs font-black text-lilac">
+                      {insumo.subcategory || "---"}
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {isModalOpen && (
@@ -317,6 +361,54 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
           </div>
         </div>
       )}
+
+      {isBulkDeleteModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center animate-in zoom-in-95">
+            <Trash2 size={48} className="mx-auto text-rose-500 mb-6" />
+            <h3 className="text-xl font-black mb-2 uppercase">
+              Excluir Insumos Selecionados?
+            </h3>
+            <p className="text-sm text-gray-500 mb-8">
+              Essa ação não pode ser desfeita e excluirá {selectedIds.length} insumos selecionados de forma segura e permanente.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsBulkDeleteModalOpen(false)}
+                className="flex-1 py-4 bg-slate-100 rounded-2xl font-black text-gray-500 uppercase text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-rose-600/30"
+              >
+                Sim, Excluir Todos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-lilac/20 shadow-2xl rounded-2xl p-4 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-2 duration-300">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">
+            {selectedIds.length} {selectedIds.length === 1 ? 'insumo selecionado' : 'insumos selecionados'}
+          </span>
+          <button
+            onClick={() => setIsBulkDeleteModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-rose-600 text-white font-black text-[9px] uppercase tracking-widest hover:bg-rose-700 transition-all hover:scale-105 active:scale-95 shadow-md shadow-rose-200"
+          >
+            <Trash2 size={14} /> Excluir Selecionados
+          </button>
+          <button
+            onClick={() => setSelectedIds([])}
+            className="text-[9px] font-black uppercase tracking-widest text-[#A09898] hover:text-slate-900 transition-colors"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -344,8 +436,22 @@ const InsumoFormModal: React.FC<
   const unitValRaw = qty > 0 ? cost / qty : 0;
   const unitVal = Math.ceil(unitValRaw * 100) / 100;
 
+  const defaultInsumoCategories = [
+    "Acessórios",
+    "Espirais e Wire-o",
+    "Papéis",
+    "Papelão Cinza",
+    "Plásticos e Bolsos",
+    "Fitas e Elásticos",
+    "Ferramentas",
+    "Embalagens",
+    "Tintas e Colas"
+  ];
   const categories = Array.from(
-    new Set(existingInsumos?.map((i) => i.category).filter(Boolean) || []),
+    new Set([
+      ...defaultInsumoCategories,
+      ...(existingInsumos?.map((i) => i.category).filter(Boolean) || [])
+    ]),
   );
   const subcategories = Array.from(
     new Set(
@@ -363,7 +469,7 @@ const InsumoFormModal: React.FC<
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-      <div className="bg-white  w-full  max-w-xl  rounded-[2rem] border border-lilac/30 p-8 md:p-10 shadow-2xl  relative max-h-[90vh] overflow-y-auto max-h-[90vh] overflow-y-auto">
+      <div className="bg-white  w-full  max-w-xl  rounded-3xl border border-lilac/30 p-8 md:p-10 shadow-2xl  relative max-h-[90vh] overflow-y-auto max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           disabled={loading}

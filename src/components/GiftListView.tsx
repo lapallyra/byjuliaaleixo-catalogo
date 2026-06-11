@@ -33,15 +33,10 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
   const handleBuyProduct = (product: Product, quantityRequested: number) => {
     if (!giftList) return;
     
-    // Add to cart for completion
-    const companyId = giftList.companyId || product.company || 'pallyra';
+    const qty = quantityRequested > 0 ? quantityRequested : 1;
     
-    setCarts((prev: Record<string, CartItem[]>) => {
-      const companyCart = prev[companyId] || [];
-      const qty = quantityRequested > 0 ? quantityRequested : 1;
-      // Replace or update cart items for this product
-      const updatedCart = [...companyCart.filter(item => item.id !== product.id), { ...product, quantity: qty }];
-      return { ...prev, [companyId]: updatedCart };
+    setCarts((prev: CartItem[]) => {
+      return [...prev.filter(item => item.id !== product.id), { ...product, quantity: qty }];
     });
 
     // Navigate to home, cart is available via floating button

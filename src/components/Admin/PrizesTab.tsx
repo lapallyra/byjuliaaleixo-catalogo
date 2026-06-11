@@ -10,6 +10,7 @@ import {
   Percent,
   Sparkles,
   X,
+  Edit,
 } from "lucide-react";
 import {
   subscribeToPrizes,
@@ -122,7 +123,7 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({
           <motion.div
             layout
             key={prize.id}
-            className="bg-white border border-rose-50 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl transition-all relative group overflow-hidden"
+            className="bg-white border border-rose-50 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all relative group overflow-hidden"
           >
             <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity">
               <div className="flex gap-2">
@@ -131,15 +132,15 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({
                     setEditingPrize(prize);
                     setIsModalOpen(true);
                   }}
-                  className="p-3 bg-white border border-rose-100 rounded-xl text-[#A09898] hover:text-slate-900 transition-all"
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-rose-100 rounded-xl text-[#A09898] hover:text-slate-900 transition-all text-[9px] font-black uppercase tracking-widest"
                 >
-                  <Save size={16} />
+                  <Edit size={14} /> Editar
                 </button>
                 <button
                   onClick={() => handleDelete(prize.id)}
-                  className="p-3 bg-white border border-rose-100 rounded-xl text-rose-200 hover:text-slate-9000 transition-all"
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-rose-100 rounded-xl text-rose-300 hover:text-white hover:bg-rose-500 transition-all text-[9px] font-black uppercase tracking-widest"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={14} /> Excluir
                 </button>
               </div>
             </div>
@@ -192,7 +193,7 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({
         ))}
 
         {prizes.length === 0 && (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center text-[#D1CACA] border-2 border-dashed border-rose-50 rounded-[3rem]">
+          <div className="col-span-full py-20 flex flex-col items-center justify-center text-[#D1CACA] border-2 border-dashed border-rose-50 rounded-3xl">
             <Gift size={48} className="mb-4 opacity-50" />
             <p className="text-[10px] font-black uppercase tracking-[0.3em]">
               Nenhum brinde cadastrado

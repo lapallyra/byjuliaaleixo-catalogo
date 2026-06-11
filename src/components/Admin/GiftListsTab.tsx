@@ -15,6 +15,7 @@ import { subscribeToGiftLists } from "../../services/firebaseService";
 import { db } from "../../lib/firebase";
 import { doc, deleteDoc } from "firebase/firestore";
 import { ImageWithFallback } from "../ImageWithFallback";
+import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 
 export const GiftListsTab: React.FC<{ companyId: string }> = ({
   companyId,
@@ -37,48 +38,20 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({
   };
 
   const handlePrint = (list: any) => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+    const rows = list.items.map((item: any) => [
+      item.product_name,
+      `R$ ${(item.retail_price || 0).toFixed(2)}`
+    ]);
 
-    const itemsHtml = list.items
-      .map(
-        (item: any) => `
-      <div style="display: flex; gap: 1rem; border-bottom: 1px solid #eee; padding: 0.5rem 0;">
-        <div style="font-weight: bold;">${item.product_name}</div>
-        <div style="margin-left: auto;">R$ ${item.retail_price.toFixed(2)}</div>
-      </div>
-    `,
-      )
-      .join("");
+    const total = list.items.reduce((acc: number, i: any) => acc + (i.retail_price || 0), 0);
+    rows.push(["TOTAL:", `R$ ${total.toFixed(2)}`]);
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Lista de Presentes - ${list.code}</title>
-          <style>
-            body { font-family: sans-serif; padding: 2rem; color: #333; }
-            h1 { text-transform: uppercase; font-size: 1.2rem; letter-spacing: 0.1em; }
-            .header { border-bottom: 2px solid #000; padding-bottom: 1rem; margin-bottom: 2rem; }
-            .code { font-family: monospace; font-size: 2rem; font-weight: bold; margin: 1rem 0; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Lista de Presentes</h1>
-            <div class="code">${list.code}</div>
-            <div>Data: ${list.createdAt?.toDate().toLocaleDateString()}</div>
-          </div>
-          <div class="items">
-            ${itemsHtml}
-          </div>
-          <div style="margin-top: 2rem; font-weight: bold; text-align: right;">
-            Total: R$ ${list.items.reduce((acc: number, i: any) => acc + i.retail_price, 0).toFixed(2)}
-          </div>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
+    exportGenericReportPDF({
+      title: `Lista de Presentes - Código: ${list.code}`,
+      columns: ["Produto", "Preço"],
+      rows,
+      filters: `Data: ${list.createdAt?.toDate?.()?.toLocaleDateString() || new Date(list.createdAt).toLocaleDateString()}`
+    });
   };
 
   const filtered = lists.filter((l) =>
@@ -126,20 +99,20 @@ export const GiftListsTab: React.FC<{ companyId: string }> = ({
                 <div className="p-3 bg-lilac/10 rounded-2xl text-lilac">
                   <Gift size={20} />
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex flex-wrap items-center gap-1">
                   <button
                     onClick={() => handlePrint(list)}
-                    className="p-2 text-[#A09898] hover:text-slate-900 transition-colors"
-                    title="Imprimir"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[#A09898] hover:text-slate-900 hover:bg-slate-50 transition-colors text-[9px] font-black uppercase tracking-widest"
+                    title="Abrir PDF"
                   >
-                    <Printer size={16} />
+                    <Printer size={14} /> Abrir PDF
                   </button>
                   <button
                     onClick={() => handleDelete(list.id)}
-                    className="p-2 text-[#A09898] hover:text-slate-9000 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-rose-300 hover:text-white hover:bg-rose-500 transition-colors text-[9px] font-black uppercase tracking-widest"
                     title="Excluir"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} /> Excluir
                   </button>
                 </div>
               </div>

@@ -48,7 +48,9 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     setUploadProgress(0);
 
     try {
+      console.log('Starting compression...');
       const compressedFile = await compressImage(file);
+      console.log('Compression complete, starting upload...');
       const { promise, task } = uploadImage(
         compressedFile,
         path,
@@ -58,14 +60,15 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       );
       uploadTaskRef.current = task;
       const url = await promise;
+      console.log('Upload complete, URL:', url);
       onUploadComplete(url);
     } catch (err: any) {
+      console.error('Upload Error Details:', err);
       if (err.code === "storage/canceled") {
         setError("O upload foi cancelado.");
       } else {
         setError(err.message || "Erro ao enviar.");
       }
-      console.error(err);
     } finally {
       setIsUploading(false);
       uploadTaskRef.current = null;

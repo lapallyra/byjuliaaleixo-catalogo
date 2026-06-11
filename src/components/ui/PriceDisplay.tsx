@@ -25,7 +25,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
   
   return (
     <div className={`flex flex-col gap-0.5 ${className} font-tahoma`}>
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0">
+      <div className="flex flex-col items-start gap-y-0.5">
         {originalPrice && originalPrice > price && (
           <span 
             className="text-[10px] line-through font-bold uppercase tracking-tighter"
@@ -44,7 +44,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
             </span>
           )}
           <span 
-            className={`text-base md:text-xl font-black ${priceClassName} tracking-normal`}
+            className={`text-xl md:text-2xl font-black ${priceClassName} tracking-tight`}
             style={{ color: displayAccentColor }}
           >
             {formatCurrency(price)}

@@ -14,6 +14,7 @@ import {
   BarChart2,
   Zap,
   Layout,
+  Printer,
 } from "lucide-react";
 import {
   BarChart,
@@ -29,6 +30,7 @@ import {
 import { Product, Order, Customer, Insumo, CompanyId } from "../../types";
 import { safeFormat } from "../../lib/dateUtils";
 import { formatCurrency } from "../../lib/currencyUtils";
+import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 import {
   subMonths,
   startOfMonth,
@@ -131,7 +133,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
   }, [customers, products, orders, insumos]);
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
       {/* Month Selector */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
@@ -143,6 +145,26 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
           </p>
         </div>
         <div className="flex items-center gap-3 bg-white border border-lilac/20 p-2 px-4 rounded-2xl shadow-sm">
+          <button
+            onClick={() => {
+              const rows = productRank.map((p, idx) => [
+                `${idx + 1}º`,
+                p.product_name,
+                p.category || "---",
+                `${p.sold} un.`
+              ]);
+              exportGenericReportPDF({
+                title: "Gerencial - Produtos Mais Vendidos (" + selectedMonth + ")",
+                columns: ["Ranking", "Produto", "Categoria", "Qtd. Vendida"],
+                rows,
+                filters: `Período: ${selectedMonth}`
+              });
+            }}
+            className="flex items-center gap-2 p-2 hover:bg-slate-50 text-[#A09898] hover:text-lilac rounded-xl transition-all text-[9px] font-black uppercase tracking-widest"
+          >
+            <Printer size={14} /> Abrir PDF
+          </button>
+          <div className="w-px h-4 bg-slate-200" />
           <Filter size={14} className="text-lilac" />
           <select
             value={selectedMonth}
@@ -165,7 +187,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
       </div>
 
       {/* Sales Volume Chart */}
-      <div className="p-8 rounded-[2.5rem] bg-white border border-lilac/10 shadow-sm">
+      <div className="p-8 rounded-3xl bg-white border border-lilac/10 shadow-sm">
         <div className="flex justify-between items-center mb-8">
           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">
             Volume de Vendas (Últimos 6 Meses)
@@ -179,8 +201,8 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
             </div>
           </div>
         </div>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-[300px] w-full min-w-0 flex-1 overflow-hidden">
+          <ResponsiveContainer width="99%" height="100%" minWidth={0} minHeight={0}>
             <BarChart data={salesVolumeData}>
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -219,7 +241,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
       {/* Main Rankings Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Leading Customers */}
-        <div className="p-8 rounded-[2.5rem] bg-white border border-lilac/10 shadow-sm">
+        <div className="p-8 rounded-3xl bg-white border border-lilac/10 shadow-sm">
           <div className="flex items-center gap-4 mb-8">
             <div className="p-3 rounded-2xl bg-lilac/5 text-lilac">
               <Trophy size={20} />
@@ -254,7 +276,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         </div>
 
         {/* Leading Products */}
-        <div className="p-8 rounded-[2.5rem] bg-white border border-lilac/10 shadow-sm">
+        <div className="p-8 rounded-3xl bg-white border border-lilac/10 shadow-sm">
           <div className="flex items-center gap-4 mb-8">
             <div className="p-3 rounded-2xl bg-blue-50 text-blue-500">
               <TrendingUp size={20} />
@@ -336,7 +358,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
               onClick={() =>
                 setActiveCard(activeCard === insight.id ? null : insight.id)
               }
-              className={`w-full p-8 rounded-[2.5rem] border transition-all text-left group flex flex-col shadow-sm ${activeCard === insight.id ? "bg-lilac/5 border-lilac" : "bg-white border-lilac/10 hover:border-lilac"}`}
+              className={`w-full p-8 rounded-3xl border transition-all text-left group flex flex-col shadow-sm ${activeCard === insight.id ? "bg-lilac/5 border-lilac" : "bg-white border-lilac/10 hover:border-lilac"}`}
             >
               <div
                 className={`p-3 rounded-2xl bg-white w-fit mb-6 ${insight.color}`}
@@ -364,7 +386,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
 
             {/* Expandable Detail Area */}
             {activeCard === insight.id && (
-              <div className="p-6 rounded-[2rem] bg-white border border-lilac/10 animate-in slide-in-from-top-2 duration-300 shadow-inner">
+              <div className="p-6 rounded-2xl bg-white border border-lilac/10 animate-in slide-in-from-top-2 duration-300 shadow-inner">
                 {insight.id === "vendas" && (
                   <div className="space-y-3">
                     {productRank.slice(0, 5).map((p, pIdx) => (

@@ -29,12 +29,14 @@ window.addEventListener('error', event => {
 
 const originalConsoleError = console.error;
 console.error = (...args) => {
-  if (args.length > 0 && typeof args[0] === 'string') {
+  if (args.length > 0) {
+    const errorStr = typeof args[0] === 'string' ? args[0] : (args[0] instanceof Error ? args[0].message : String(args[0]));
     if (
-      args[0].includes('INTERNAL ASSERTION FAILED: Pending promise was never set') ||
-      args[0].includes('The user aborted a request') ||
-      args[0].includes('signal is aborted without reason') ||
-      args[0].includes('Encountered two children with the same key')
+      errorStr.includes('INTERNAL ASSERTION FAILED: Pending promise was never set') ||
+      errorStr.includes('The user aborted a request') ||
+      errorStr.includes('signal is aborted without reason') ||
+      errorStr.includes('Encountered two children with the same key') ||
+      errorStr.includes('Missing or insufficient permissions')
     ) {
       return;
     }

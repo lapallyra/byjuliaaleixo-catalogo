@@ -34,22 +34,24 @@ import {
 } from 'lucide-react';
 import { CompanyId, AppConfig, Product, CartItem, SiteSettings } from '../types';
 import { CartSidebar } from './CartSidebar';
+import { CheckoutModal } from './CheckoutModal';
 import { GiftListSidebar } from './GiftListSidebar';
 import { SuggestionBox } from './SuggestionBox';
-import { ProductDetailModal } from './ProductDetailModal';
+import { ProductDetailPage } from './ProductDetailPage';
+
 
 import { CatalogHeader } from './Catalog/CatalogHeader';
-import { CatalogInfoBar } from './Catalog/CatalogInfoBar';
 import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
-import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGiftList } from '../services/firebaseService';
+import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGlobalSettings, getGiftList, updateOrderStatus } from '../services/firebaseService';
+import { playSuccessSound } from '../utils/audio';
 import { functions } from '../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { PRODUCTS, INITIAL_CONFIG } from '../constants';
 import { useAuth } from './AuthProvider';
 import { login } from '../lib/firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { themes } from '../lib/theme';
 import { formatCurrency } from '../lib/currencyUtils';
 import { ImageWithFallback } from './ImageWithFallback';
@@ -89,75 +91,143 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 }) => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const theme = themes[companyId] || themes['pallyra'];
+  const location = useLocation();
+  const rawTheme = themes[companyId] || themes['pallyra'];
+  const theme = useMemo(() => {
+    if (companyId === 'pallyra') {
+      return {
+        ...rawTheme,
+        bg: 'bg-[#FAF8F5]',
+        primaryColor: '#FAF8F5',
+        accentColor: '#C6A664',
+        textPrimary: 'text-[#161616]',
+        textSecondary: 'text-[#161616]/70',
+        textMuted: 'text-[#161616]/50',
+        textVeryMuted: 'text-[#161616]/30',
+        borderLine: 'border-[#161616]/10',
+        cardBg: 'bg-white',
+        searchBg: 'bg-[#C6A664]/5 border-[#C6A664]/20',
+        inputPlaceholder: 'placeholder:text-[#161616]/30',
+        sidebarBg: 'bg-white',
+        btnPrimary: 'bg-[#1c1c1c] text-[#C6A664] hover:bg-[#C6A664] hover:text-[#1c1c1c]',
+        btnSecondary: 'bg-[#161616]/5 border-[#161616]/10 text-[#161616] hover:bg-[#161616]/10',
+        btnSecondaryText: 'text-[#161616]/70 hover:text-[#161616]',
+        categoryActive: 'text-[#C6A664] bg-white border-b-2 border-[#C6A664]',
+        categoryInactive: 'text-[#161616]/50 hover:text-[#C6A664]',
+        cartBadge: 'bg-[#161616] text-[#C6A664] border-none'
+      };
+    } else if (companyId === 'guennita') {
+      return {
+        ...rawTheme,
+        bg: 'bg-[#FCFAF9]',
+        primaryColor: '#FCFAF9',
+        accentColor: '#6B1D2F',
+        textPrimary: 'text-[#2D020D]',
+        textSecondary: 'text-[#2D020D]/75',
+        textMuted: 'text-[#6B1D2F]/50',
+        textVeryMuted: 'text-[#6B1D2F]/30',
+        borderLine: 'border-[#6B1D2F]/15',
+        cardBg: 'bg-white',
+        searchBg: 'bg-[#6B1D2F]/5 border-[#6B1D2F]/15',
+        inputPlaceholder: 'placeholder:text-[#6B1D2F]/40',
+        sidebarBg: 'bg-white',
+        btnPrimary: 'bg-[#6B1D2F] text-white hover:bg-[#85273B] transition-colors',
+        btnSecondary: 'bg-[#F7E6E8] border-[#6B1D2F]/15 text-[#6B1D2F] hover:bg-[#ecd0d4]',
+        btnSecondaryText: 'text-[#6B1D2F]/70 hover:text-[#6B1D2F]',
+        categoryActive: 'text-[#6B1D2F] bg-[#F7E6E8] border-b-2 border-[#6B1D2F]',
+        categoryInactive: 'text-[#6B1D2F]/50 hover:text-[#6B1D2F]',
+        cartBadge: 'bg-[#6B1D2F] text-white'
+      };
+    } else if (companyId === 'tuttymimo') {
+      return {
+        ...rawTheme,
+        bg: 'bg-[#FCFAF7]',
+        primaryColor: '#FCFAF7',
+        accentColor: '#D4BDA1',
+        textPrimary: 'text-[#5C4A3D]',
+        textSecondary: 'text-[#5C4A3D]/75',
+        textMuted: 'text-[#D4BDA1]/70',
+        textVeryMuted: 'text-[#D4BDA1]/30',
+        borderLine: 'border-[#D4BDA1]/25',
+        cardBg: 'bg-white',
+        searchBg: 'bg-[#D4BDA1]/10 border-[#D4BDA1]/25',
+        inputPlaceholder: 'placeholder:text-[#D4BDA1]/60',
+        sidebarBg: 'bg-white',
+        btnPrimary: 'bg-[#D4BDA1] text-white hover:bg-[#C2AA8F] transition-colors',
+        btnSecondary: 'bg-[#F5EFE6] border-[#D4BDA1]/25 text-[#7A6251] hover:bg-[#EBE2D5]',
+        btnSecondaryText: 'text-[#7A6251]/80 hover:text-[#5C4A3D]',
+        categoryActive: 'text-[#7A6251] bg-[#F5EFE6] border-b-2 border-[#D4BDA1]',
+        categoryInactive: 'text-[#7A6251]/60 hover:text-[#7A6251]',
+        cartBadge: 'bg-[#D4BDA1] text-white'
+      };
+    } else {
+      return {
+        ...rawTheme,
+        bg: 'bg-[#FEFCFD]',
+        primaryColor: '#FEFCFD',
+        accentColor: '#EC4899',
+        textPrimary: 'text-black',
+        textSecondary: 'text-black/75',
+        textMuted: 'text-black/50',
+        textVeryMuted: 'text-black/20',
+        borderLine: 'border-[#EC4899]/15',
+        cardBg: 'bg-white',
+        searchBg: 'bg-[#EC4899]/5 border-[#EC4899]/15',
+        inputPlaceholder: 'placeholder:text-black/30',
+        sidebarBg: 'bg-white',
+        btnPrimary: 'bg-[#EC4899] text-white hover:bg-[#DB2777]',
+        btnSecondary: 'bg-black/5 border-black/10 text-black hover:bg-black/10',
+        btnSecondaryText: 'text-black/70 hover:text-black',
+        categoryActive: 'text-[#EC4899] bg-white border-b-2 border-[#EC4899]',
+        categoryInactive: 'text-black/50 hover:text-[#EC4899]',
+        cartBadge: 'bg-[#EC4899] text-white border-none'
+      };
+    }
+  }, [companyId, rawTheme]);
+
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
+  const [globalSettings, setGlobalSettings] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFiltering, setIsFiltering] = useState(false);
+
+  const companyProducts = useMemo(() => {
+    return allProducts.filter(p => p.company === companyId);
+  }, [allProducts, companyId]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchParam = params.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+  }, [location.search]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
   const highlights = useMemo(() => {
-    if (!allProducts || allProducts.length === 0) return [];
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - d.getDay()); // go back to Sunday
-    const weekSeed = d.getTime();
-
-    const seededRandom = (seed: number) => {
-      const x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
-    };
-
-    const sortedProducts = [...allProducts].sort((a,b) => (a.id || '').localeCompare(b.id || '')); 
+    if (!companyProducts || companyProducts.length === 0) return [];
     
-    const lowTicket = sortedProducts.filter(p => p.retail_price < 100);
-    const midTicket = sortedProducts.filter(p => p.retail_price >= 100 && p.retail_price < 200);
-    const highTicket = sortedProducts.filter(p => p.retail_price >= 200);
+    // Novidades: products from the last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const pickRandom = (arr: Product[], count: number, startSeed: number) => {
-      if (arr.length === 0) return [];
-      const result = [];
-      let currentSeed = startSeed;
-      const pool = [...arr];
-      for(let i=0; i<count; i++) {
-        if (pool.length === 0) break;
-        const index = Math.floor(seededRandom(currentSeed) * pool.length);
-        result.push(pool[index]);
-        pool.splice(index, 1);
-        currentSeed++;
-      }
-      return result;
-    }
+    const newProducts = companyProducts.filter(p => {
+      const createdAtDate = p.createdAt?.toMillis 
+        ? new Date(p.createdAt.toMillis()) 
+        : p.createdAt instanceof Date 
+          ? p.createdAt 
+          : new Date();
+      return createdAtDate >= sevenDaysAgo;
+    });
 
-    const hl = [
-      ...pickRandom(lowTicket.length > 0 ? lowTicket : sortedProducts, 1, weekSeed),
-      ...pickRandom(midTicket.length > 0 ? midTicket : sortedProducts, 2, weekSeed + 10),
-      ...pickRandom(highTicket.length > 0 ? highTicket : sortedProducts, 2, weekSeed + 20)
-    ].slice(0, 5);
-    
-    const uniqueHl = [];
-    const seenIds = new Set();
-    for (const p of hl) {
-      if (!seenIds.has(p.id)) {
-        seenIds.add(p.id);
-        uniqueHl.push(p);
-      }
+    // If no recent items, show some random ones as fallback but labeled as catalog
+    if (newProducts.length === 0) {
+      return companyProducts.slice(0, 5);
     }
     
-    // If we don't have enough unique highlights, fill from sortedProducts
-    let currentSeed = weekSeed + 100;
-    while (uniqueHl.length < 5 && uniqueHl.length < sortedProducts.length) {
-      const idx = Math.floor(seededRandom(currentSeed) * sortedProducts.length);
-      const p = sortedProducts[idx];
-      if (!seenIds.has(p.id)) {
-        seenIds.add(p.id);
-        uniqueHl.push(p);
-      }
-      currentSeed++;
-    }
-    
-    return uniqueHl;
-  }, [allProducts]);
+    return newProducts.slice(0, 6);
+  }, [companyProducts]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isGiftListOpen, setIsGiftListOpen] = useState(false);
@@ -165,22 +235,94 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isReadOnlyProduct, setIsReadOnlyProduct] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isDirectCheckoutLoading, setIsDirectCheckoutLoading] = useState(false);
 
-  const handleDirectCheckout = async () => {
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    // Auto deep-link to product details on load
+    const prodParam = params.get('product');
+    if (prodParam && allProducts.length > 0) {
+      const found = allProducts.find(p => p.id === prodParam);
+      if (found) {
+        setSelectedProduct(found);
+      }
+    }
+  }, [location.search, allProducts]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (selectedProduct) {
+      if (params.get('product') !== selectedProduct.id) {
+        params.set('product', selectedProduct.id);
+        const newSearch = params.toString();
+        window.history.pushState(null, '', `${window.location.pathname}?${newSearch}`);
+      }
+    } else {
+      if (params.has('product')) {
+        params.delete('product');
+        const newSearch = params.toString();
+        const newPath = newSearch ? `${window.location.pathname}?${newSearch}` : window.location.pathname;
+        window.history.pushState(null, '', newPath);
+      }
+    }
+  }, [selectedProduct]);
+
+  const handleOpenCheckout = () => {
+    setIsCheckoutOpen(true);
+  };
+
+  const handleDirectCheckout = async (checkoutData: any = {}) => {
     if (cart.length === 0) return;
     setIsDirectCheckoutLoading(true);
     
     try {
       const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
-      const total = subtotal;
+      let dscto = 0;
+      if (checkoutData?.cupom === 'GANHEI10') {
+        dscto = subtotal * 0.1;
+      }
+      const total = checkoutData?.total ?? (subtotal - dscto);
+      
+      const isFullPayment = checkoutData?.isFullPayment ?? true;
+      const amountToPay = checkoutData?.amountToPay ?? total;
 
       console.log("Saving initial sale...");
+      
+      const pers = checkoutData?.personalization || {};
+      const cli = checkoutData?.client || {};
+      const addr = checkoutData?.address || {};
+
+      let combinedObs = pers.persObs ? `Observações:\n${pers.persObs}` : "Pagamento via MP Direto";
+      if (!isFullPayment) {
+        combinedObs += `\n\nPAGAMENTO: Cliente optou por pagar SINAL DE 50% (R$ ${amountToPay.toFixed(2)}). Falta receber os outros 50%.`;
+        if (checkoutData?.plannedMethod === 'digital_booklet') {
+          combinedObs += `\n>> Forma escolhida para o restante: CARNÊ DIGITAL`;
+          combinedObs += `\n>> Condição de parcelamento: ${checkoutData.remainingInstallments}x de R$ ${Number(checkoutData.remainingInstallmentValue).toFixed(2)}`;
+          if (checkoutData?.bookletPayDay) {
+            combinedObs += `\n>> Vencimento: Dia ${checkoutData.bookletPayDay}`;
+          }
+        }
+      }
+      
+      if (pers.persName || pers.persAge || pers.persTheme || pers.persColors) {
+         combinedObs += `\n\nPersonalização solicitada:`;
+         if (pers.persName) combinedObs += `\nNome: ${pers.persName}`;
+         if (pers.persAge) combinedObs += `\nIdade/Frase: ${pers.persAge}`;
+         if (pers.persTheme) combinedObs += `\nTema: ${pers.persTheme}`;
+         if (pers.persColors) combinedObs += `\nCores: ${pers.persColors}`;
+      }
+
+      let addressString = "";
+      if (addr.rua) {
+         addressString = `${addr.rua}, ${addr.numero} - ${addr.bairro} - ${addr.cidade}/${addr.estado} CEP: ${addr.cep}. Ref: ${addr.ref}`;
+      }
+
       const docId = await saveSale({
-        customerName: "Cliente (Checkout Direto MP)",
-        customerEmail: "",
-        customerCpfCnpj: "",
-        contact: "",
+        customerName: cli.clientName || "Cliente",
+        customerEmail: cli.clientEmail || "",
+        customerCpfCnpj: cli.clientCpf || "",
+        contact: cli.clientContact || "",
         total,
         companyId,
         items: cart.map(item => ({
@@ -191,38 +333,80 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           retail_price: item.retail_price || 0,
           insumos: item.insumos || []
         })),
-        isWholesale: false, // Could check if min qty met but to keep simple we assume false unless explicitly handled
-        deliveryType: 'delivery',
+        isWholesale: false,
+        deliveryType: checkoutData.deliveryType,
         deliveryDate: "Agendar",
         isEmergency: false,
         paymentMethod: 'mercadopago',
+        paymentMode: checkoutData?.paymentMode || 'full',
+        plannedMethod: checkoutData?.plannedMethod || null,
+        remainingInstallments: checkoutData?.remainingInstallments || null,
+        remainingAmount: checkoutData?.remainingAmount || 0,
+        remainingFee: checkoutData?.remainingFee || 0,
+        remainingInstallmentValue: checkoutData?.remainingInstallmentValue || 0,
         source: 'catalog',
-        observations: "Pagamento via MP Direto"
+        observations: combinedObs,
+        address: addressString
       });
 
       const savedOrderCode = docId || crypto.randomUUID();
       
-      console.log('Calling createPreference');
-      const mpItems = cart.map(item => ({
-        title: String(item.product_name || "Item"),
-        quantity: Number(item.quantity) || 1,
-        unit_price: Number(item.retail_price) || 0,
-        currency_id: 'BRL'
-      }));
+      if (checkoutData?.isSimulated) {
+        console.log('[MODO TESTE] Simulando pagamento aprovado...');
+        await updateOrderStatus(savedOrderCode, 'paid');
+        playSuccessSound();
 
-      const preferencePayload = {
+        localStorage.setItem('mp_pending_order', JSON.stringify({
+            orderId: savedOrderCode,
+            cart: cart,
+            total: total,
+            companyName: companyName || companyId,
+            config: {
+               ...siteSettings,
+               roulette_prizes: globalSettings?.roulette_prizes || (siteSettings as any)?.roulette_prizes || []
+            },
+            formData: {
+              name: cli.clientName || "Cliente de Teste",
+              contact: cli.clientContact || "",
+              cpfCnpj: cli.clientCpf || "",
+              deliveryType: checkoutData.deliveryType,
+              address: addressString,
+              city: addr.cidade || "",
+              state: addr.estado || "",
+              zipCode: addr.cep || "",
+              paymentMethod: 'Modo Teste',
+              observations: combinedObs,
+              wonPrize: ''
+            }
+        }));
+
+        window.dispatchEvent(new CustomEvent('clear-cart'));
+        window.location.href = `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`;
+        return;
+      }
+      
+      console.log('Calling createPreference');
+      const finalMpItems = [{
+        title: !isFullPayment ? `Sinal (50%) - Pedido no Ateliê` : `Pedido no Ateliê`,
+        quantity: 1,
+        unit_price: amountToPay,
+        currency_id: 'BRL'
+      }];
+
+       const preferencePayload = {
         orderId: savedOrderCode,
         companyId: companyId,
-        items: mpItems,
+        items: finalMpItems,
         payer: {
-          name: "Cliente",
-          email: "cliente@loja.com" 
+          name: cli.clientName || "Cliente",
+          email: cli.clientEmail || "cliente@loja.com" 
         },
         back_urls: {
           success: `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`,
           failure: `${window.location.origin}${window.location.pathname}?payment_status=failed&order_id=${savedOrderCode}`,
           pending: `${window.location.origin}${window.location.pathname}?payment_status=pending&order_id=${savedOrderCode}`
         },
+        accessToken: globalSettings?.mercadopago_token || siteSettings?.mercadopago_token,
         auto_return: "approved"
       };
 
@@ -264,7 +448,22 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             cart,
             total,
             companyName,
-            config: siteSettings
+            config: {
+               ...siteSettings,
+               roulette_prizes: globalSettings?.roulette_prizes || (siteSettings as any)?.roulette_prizes || []
+            },
+            formData: {
+              name: cli.clientName || "Cliente",
+              contact: cli.clientContact || "",
+              cpfCnpj: cli.clientCpf || "",
+              deliveryType: checkoutData.deliveryType,
+              address: addressString,
+              city: addr.cidade || "",
+              state: addr.estado || "",
+              zipCode: addr.cep || "",
+              paymentMethod: 'mercadopago',
+              observations: combinedObs
+            }
          }));
          
          window.dispatchEvent(new CustomEvent('clear-cart'));
@@ -342,7 +541,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     if (!siteSettings) return;
     
     const root = document.documentElement;
-    const prefix = companyId === 'mimada' ? 'mimadasim' : companyId === 'pallyra' ? 'lapallyra' : 'guennita';
+    const prefix = companyId === 'mimada' ? 'mimadasim' : companyId === 'pallyra' ? 'lapallyra' : companyId === 'tuttymimo' ? 'tuttymimo' : 'guennita';
     
     if (siteSettings.theme_primary_color) root.style.setProperty(`--theme-primary-${prefix}`, siteSettings.theme_primary_color);
     if (siteSettings.theme_accent_color) root.style.setProperty(`--theme-accent-${prefix}`, siteSettings.theme_accent_color);
@@ -451,6 +650,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     const loadSettings = async () => {
       const data = await getSiteSettings(companyId);
       if (data) setSiteSettings(data);
+      const global = await getGlobalSettings();
+      if (global) setGlobalSettings(global);
     };
     loadSettings();
   }, [companyId]);
@@ -489,22 +690,31 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     return <Icon size={14} className="opacity-70" />;
   };
 
-  const companyName = companyId === 'pallyra' ? config.company_1_name : companyId === 'guennita' ? config.company_2_name : config.company_3_name;
-  const defaultLogo = companyId === 'pallyra' ? config.company_1_logo : companyId === 'guennita' ? config.company_2_logo : config.company_3_logo;
+  const handleCategoryClick = (category: string | null) => {
+    setIsFiltering(true);
+    setSelectedCategory(category);
+    setCurrentPage(1);
+    setTimeout(() => {
+      setIsFiltering(false);
+    }, 400);
+  };
+
+  const companyName = companyId === 'pallyra' ? config.company_1_name : companyId === 'guennita' ? config.company_2_name : companyId === 'mimada' ? config.company_3_name : config.company_4_name;
+  const defaultLogo = companyId === 'pallyra' ? config.company_1_logo : companyId === 'guennita' ? config.company_2_logo : companyId === 'mimada' ? config.company_3_logo : config.company_4_logo;
   
   const categories = useMemo(() => {
-    return Array.from(new Set(allProducts.map(p => p.category))).sort();
-  }, [allProducts]);
+    return Array.from(new Set(companyProducts.map(p => p.category))).sort();
+  }, [companyProducts]);
 
   const filteredProducts = useMemo(() => {
-    return allProducts.filter(p => {
+    return companyProducts.filter(p => {
       const matchesCategory = !selectedCategory || p.category === selectedCategory;
       const matchesSearch = !searchQuery || 
         p.product_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
         p.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [allProducts, selectedCategory, searchQuery]);
+  }, [companyProducts, selectedCategory, searchQuery]);
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -520,16 +730,16 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         alt="Product"
         className={`${className} object-cover w-full h-full`}
         containerClassName="w-full h-full absolute inset-0"
+        isThumbnail={true}
       />
     );
   };
 
   return (
     <div 
-      className={`min-h-[100dvh] pt-0 ${theme.bg} flex flex-col relative theme-${companyId === 'mimada' ? 'mimadasim' : companyId === 'pallyra' ? 'lapallyra' : 'guennita'}`}
+      className={`min-h-[100dvh] pt-0 ${theme.bg} flex flex-col relative theme-${companyId === 'mimada' ? 'mimadasim' : companyId === 'pallyra' ? 'lapallyra' : companyId === 'tuttymimo' ? 'tuttymimo' : 'guennita'}`}
     >
-      {/* New Header */}
-      <CatalogHeader 
+       <CatalogHeader 
         companyName={companyName}
         logoUrl={siteSettings?.store_logo || defaultLogo || null}
         theme={theme}
@@ -543,257 +753,285 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         onLogoClick={handleHiddenAdminClick}
       />
       
-      <div className="pt-0"> 
-        {/* Editorial Hero Section for Pallyra */}
+      <div className="flex-1 flex overflow-hidden">
+        {selectedProduct ? (
+          <div className="flex-1 overflow-y-auto bg-[#FAFAF9]" id="product-detail-scroll-container">
+            <ProductDetailPage 
+              product={selectedProduct}
+              onClose={() => {
+                setSelectedProduct(null);
+                setIsReadOnlyProduct(false);
+              }}
+              onAddToCart={(prod, qty) => {
+                if (qty === 0) {
+                  setSelectedProduct(prod);
+                  const container = document.getElementById('product-detail-scroll-container');
+                  if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                  onAddToCart(prod, qty);
+                  setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
+                }
+              }}
+              onAddToGiftList={isReadOnlyProduct ? undefined : (prod) => {
+                onAddToGiftList?.(prod);
+                setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
+              }}
+              allProducts={allProducts}
+              companyId={companyId}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Vertical Collapsible Category Sidebar */}
+            <aside className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} hidden md:flex flex-col border-r ${theme.borderLine} transition-all duration-500 bg-white/50 backdrop-blur-md sticky top-0 h-full overflow-hidden shrink-0`}>
+          <div className="p-4 border-b border-black/5 flex items-center justify-between">
+            {!isSidebarCollapsed && (
+              <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Categorias</span>
+            )}
+            <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-2 hover:bg-black/5 rounded-lg text-neutral-400">
+               {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-1 scrollbar-none">
+            <button
+              onClick={() => handleCategoryClick(null)}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${!selectedCategory ? 'bg-neutral-900 text-white shadow-lg' : 'hover:bg-black/5 text-neutral-500'}`}
+              style={{ backgroundColor: !selectedCategory ? theme.accentColor : '' }}
+            >
+              <LayoutGrid size={18} />
+              {!isSidebarCollapsed && <span className="text-xs font-bold whitespace-nowrap">Tudo</span>}
+            </button>
+            
+            {categories.map((category) => {
+              const isActive = selectedCategory === category;
+              return (
+                <button
+                  key={`side-${category}`}
+                  onClick={() => handleCategoryClick(category)}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${isActive ? 'bg-neutral-900 text-white shadow-lg' : 'hover:bg-black/5 text-neutral-500'}`}
+                  style={{ backgroundColor: isActive ? theme.accentColor : '' }}
+                >
+                  {getCategoryIcon(category)}
+                  {!isSidebarCollapsed && <span className="text-xs font-bold whitespace-nowrap line-clamp-1">{category}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </aside>
 
+        {/* Content Area */}
+        <div className="flex-1 flex flex-col min-h-0 bg-white/30 overflow-y-auto scrollbar-none">
+          <div className="pt-0"> 
 
+          </div>
 
-        <div className="max-w-[1600px] mx-auto px-4 mt-1">
-           <CatalogInfoBar theme={theme} />
-        </div>
-
-        <DateHighlights theme={theme} companyId={companyId} />
-
-        <FeaturedProductsCarousel 
-          products={allProducts.filter(p => p.isFeatured)} 
-          theme={theme} 
-          companyId={companyId}
-          onSelectProduct={(product) => setSelectedProduct(product)}
-        />
-
-        {/* Horizontal Category Menu - Unified Premium Design */}
-        <div className={`sticky top-0 z-[100] ${theme.bg} border-b ${theme.borderLine} shadow-sm backdrop-blur-xl bg-opacity-90`}>
-          <div className="max-w-[1600px] mx-auto px-4">
-            <div className="flex items-center gap-8 py-5 overflow-x-auto scrollbar-none snap-x h-16">
-              <button
-                onClick={() => { setSelectedCategory(null); setCurrentPage(1); }}
-                className={`flex-shrink-0 text-[11px] font-sans font-black uppercase tracking-[0.3em] transition-all relative pb-2`}
-                style={{ 
-                  color: !selectedCategory ? theme.accentColor : theme.textPrimary.replace('text-', ''),
-                  opacity: !selectedCategory ? 1 : 0.4
-                }}
-              >
-                Início
-                {!selectedCategory && (
-                  <motion.div layoutId="cat-glow" className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full" style={{ backgroundColor: theme.accentColor, boxShadow: `0 0 10px ${theme.accentColor}` }} />
-                )}
-              </button>
-              {categories.map((category) => {
-                const isActive = selectedCategory === category;
-                return (
+          {/* Main Scroll Content */}
+          <main className="p-4 md:p-8 relative">
+            <div className="max-w-[1400px] mx-auto h-full flex flex-col pt-4">
+              
+              {/* Horizontal Category Pill Menu for Mobile */}
+              <div className="md:hidden flex overflow-x-auto gap-2 pb-6 scrollbar-none snap-x">
+                <button
+                  onClick={() => handleCategoryClick(null)}
+                  className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${!selectedCategory ? 'bg-neutral-900 text-white' : 'bg-white border border-neutral-200 text-neutral-500'}`}
+                  style={{ backgroundColor: !selectedCategory ? theme.accentColor : '' }}
+                >
+                  Tudo
+                </button>
+                {categories.map((category) => (
                   <button
-                    key={`cat-${category}`}
-                    onClick={() => { setSelectedCategory(category); setCurrentPage(1); }}
-                    className={`flex-shrink-0 text-[11px] font-sans font-black uppercase tracking-[0.3em] transition-all relative pb-2`}
-                    style={{ 
-                      color: isActive ? theme.accentColor : theme.textPrimary.replace('text-', ''),
-                      opacity: isActive ? 1 : 0.4
-                    }}
+                    key={`pill-${category}`}
+                    onClick={() => handleCategoryClick(category)}
+                    className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${selectedCategory === category ? 'bg-neutral-900 text-white' : 'bg-white border border-neutral-200 text-neutral-500'}`}
+                    style={{ backgroundColor: selectedCategory === category ? theme.accentColor : '' }}
                   >
                     {category}
-                    {isActive && (
-                      <motion.div layoutId="cat-glow" className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full" style={{ backgroundColor: theme.accentColor, boxShadow: `0 0 10px ${theme.accentColor}` }} />
-                    )}
                   </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
+                ))}
+              </div>
 
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:px-8 md:py-2 relative">
-          <div className="max-w-[1700px] mx-auto h-full flex flex-col">
-            {/* Search */}
-            <div 
-              className={`${theme.searchBg} border ${theme.borderLine} rounded-xl px-4 md:px-6 py-3 md:py-4 mb-2 md:mb-4 flex items-center gap-4 transition-all focus-within:shadow-md`}
-              style={{ '--tw-focus-ring-color': `${theme.accentColor}40` } as any}
-            >
-              <Search className={theme.textMuted} size={18} />
-              <input 
-                type="text" 
-                placeholder="Buscar produtos..." 
-                className={`bg-transparent border-none ${theme.textPrimary} outline-none flex-1 ${theme.inputPlaceholder} text-sm`}
-                value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-              />
-            </div>
-
-            {/* Grid */}
-            {paginatedProducts.length > 0 ? (
-              <>
-              <div id="catalog-grid" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-10 pb-32">
-                {paginatedProducts.map((product, idx) => {
-                  const today = new Date();
-                  const createdAtDate = product.createdAt?.toMillis ? new Date(product.createdAt.toMillis()) : product.createdAt instanceof Date ? product.createdAt : new Date();
-                  const diffDays = Math.floor((today.getTime() - createdAtDate.getTime()) / (1000 * 60 * 60 * 24));
-                  const isNew = diffDays <= 10 || idx % 8 === 0;
-
-                  return (
-                    <motion.div
-                    key={`prod-${product.id}-${idx}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: (idx % 3) * 0.1 }}
-                    onClick={() => setSelectedProduct(product)}
-                    className="group relative flex p-3 cursor-pointer backdrop-blur-xl border border-white/20 rounded-[2rem] overflow-hidden transition-all duration-500 shadow-2xl hover:shadow-[0_25px_60px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:scale-[1.02]"
-                    style={{ 
-                      backgroundColor: companyId === 'guennita' 
-                        ? '#2B0406' // Darker burgundy 2 tones below #56070c
-                        : companyId === 'mimada' ? theme.primaryColor : theme.accentColor 
-                    }}
+              {/* Loading Overlay between Filters */}
+              <AnimatePresence mode="wait">
+                {isFiltering ? (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center py-32"
                   >
-                    {/* Image Section - Left (Horizontal Layout) */}
-                    <div className="relative w-[45%] aspect-square overflow-hidden bg-black/20 shrink-0 rounded-2xl">
-                      <motion.div 
-                        whileHover={{ scale: 1.15 }}
-                        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                        className="w-full h-full"
-                      >
-                        {renderProductImage(product.image, "w-full h-full object-cover transition-all duration-1000")}
-                      </motion.div>
+                    <Loader2 size={36} className="animate-spin" style={{ color: theme.accentColor }} />
+                    <span className="text-[10px] font-sans font-black uppercase tracking-[0.3em] mt-4 opacity-50">Sincronizando Ateliê...</span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {/* Grid - Returned to Horizontal Smaller Cards */}
+                    {filteredProducts.length > 0 ? (
+                      <>
+                      <div id="catalog-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 pb-32">
+                        {paginatedProducts.map((product, idx) => {
+                          const today = new Date();
+                          const createdAtDate = product.createdAt?.toMillis ? new Date(product.createdAt.toMillis()) : product.createdAt instanceof Date ? product.createdAt : new Date();
+                          const diffDays = Math.floor((today.getTime() - createdAtDate.getTime()) / (1000 * 60 * 60 * 24));
+                          const isNew = diffDays <= 7;
 
-                      {/* Premium/New Badge */}
-                      {(product.retail_price > 200 || isNew) && (
-                        <div className="absolute top-3 left-3 z-20">
-                          <span className="px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[7px] font-black uppercase tracking-[0.2em] backdrop-blur-md bg-white/90 text-[#1A1A1A] border border-white/20 shadow-sm">
-                            {product.retail_price > 200 ? 'Exclusive' : 'New'}
+                          return (
+                            <motion.div
+                              key={`prod-${product.id}-${idx}`}
+                              initial={{ opacity: 0, scale: 0.98 }}
+                              whileInView={{ opacity: 1, scale: 1 }}
+                              viewport={{ once: true, margin: "-50px" }}
+                              transition={{ duration: 0.6, delay: (idx % 3) * 0.05 }}
+                              onClick={() => setSelectedProduct(product)}
+                              className="group relative flex flex-col p-3 cursor-pointer bg-white rounded-2xl border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500"
+                              style={{ borderColor: theme.accentColor }}
+                            >
+                              <div className="flex flex-row gap-4 items-stretch">
+                                {/* Thumbnail Image with Hover Change (Left) */}
+                                <div className="relative w-32 md:w-36 h-auto rounded-xl overflow-hidden bg-neutral-50 shrink-0 aspect-square">
+                                  <ImageWithFallback 
+                                    src={product.image || ''} 
+                                    alt="Product"
+                                    className={`w-full h-full object-cover transition-opacity duration-300 ${product.image_hover ? 'group-hover:opacity-0' : ''}`}
+                                    containerClassName="w-full h-full absolute inset-0"
+                                  />
+                                  {product.image_hover && (
+                                    <ImageWithFallback 
+                                      src={product.image_hover || ''} 
+                                      alt="Product Hover"
+                                      className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                      containerClassName="w-full h-full absolute inset-0"
+                                    />
+                                  )}
+                                </div>
+
+                                {/* Info - Prices + Icons (Right) */}
+                                <div className="flex-1 flex flex-col justify-between py-1">
+                                  <div>
+                                    <p className="text-xs text-neutral-500 opacity-50 line-through">
+                                      de: R$ {(product.current_price || product.original_price || (product.retail_price * 1.25)).toFixed(2).replace('.', ',')}
+                                    </p>
+                                    <div className="flex items-baseline gap-1 mt-0.5 whitespace-nowrap">
+                                      <span className="text-xs md:text-sm font-semibold text-neutral-600">por:</span>
+                                      <span className="text-lg md:text-xl font-black text-neutral-900">R$ {(product.retail_price || 0).toFixed(2).replace('.', ',')}</span>
+                                    </div>
+                                    
+                                    {(product.isWholesaleEnabled || product.wholesale_min_qty) && (
+                                      <p className="text-[11px] md:text-xs text-neutral-500 mt-2">
+                                        atacado: R$ {(product.wholesale_price || 0).toFixed(2).replace('.', ',')}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-2 mt-auto pt-3">
+                                    <button 
+                                      onClick={(e) => { 
+                                        e.stopPropagation();
+                                        onAddToCart(product, 1); 
+                                        setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
+                                      }}
+                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity flex-1 flex items-center justify-center shrink-0 border"
+                                      style={{ backgroundColor: theme.accentColor, borderColor: theme.accentColor }}
+                                    >
+                                      <ShoppingCart size={18} />
+                                    </button>
+                                    <button 
+                                      onClick={(e) => { 
+                                          e.stopPropagation();
+                                          onAddToGiftList?.(product);
+                                          setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
+                                      }}
+                                      className="p-2.5 rounded-xl text-white hover:opacity-90 transition-opacity shrink-0 border"
+                                      style={{ backgroundColor: theme.accentColor, borderColor: theme.accentColor }}
+                                    >
+                                      <Gift size={18} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Bottom - Product Name */}
+                              <div className="mt-3 px-1">
+                                <h3 className="font-tahoma text-sm md:text-base font-bold leading-tight text-neutral-900 line-clamp-2">
+                                  {product.product_name}
+                                </h3>
+                              </div>
+                            </motion.div>
+                          )})}
+                      </div>
+                      
+                      {/* Pagination Controls */}
+                      {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-4 py-8 pb-32">
+                          <button 
+                            onClick={() => {
+                              setCurrentPage(p => Math.max(1, p - 1));
+                              document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            disabled={currentPage === 1}
+                            className={`p-2 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50 disabled:opacity-30 disabled:cursor-not-allowed`}
+                          >
+                            <ChevronLeft size={20} />
+                          </button>
+                          <span className="text-neutral-500 font-sans tracking-widest uppercase font-black text-[10px]">
+                            {currentPage} / {totalPages}
                           </span>
+                          <button 
+                            onClick={() => {
+                              setCurrentPage(p => Math.min(totalPages, p + 1));
+                              document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            disabled={currentPage === totalPages}
+                            className={`p-2 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50 disabled:opacity-30 disabled:cursor-not-allowed`}
+                          >
+                            <ChevronRight size={20} />
+                          </button>
                         </div>
                       )}
-                    </div>
-
-                    {/* Content Section - Right (Horizontal Layout) */}
-                    <div className="flex-1 pl-5 pr-2 py-4 flex flex-col justify-center space-y-4 relative overflow-hidden">
-                      {/* Name & Pricing Section (Bottom) */}
-                      <div className="space-y-3">
-                        <h3 className="font-fancy text-xl md:text-2xl font-medium leading-snug line-clamp-2" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}>
-                          {product.product_name}
-                        </h3>
-
-                        <div className="space-y-1 text-left">
-                          {product.original_price && (
-                            <p className="text-[10px] md:text-[11px] font-medium tracking-wide flex items-center gap-1.5" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>
-                               <span className="opacity-60 text-[8px] uppercase">de:</span>
-                               <span className={`line-through decoration-1 ${companyId === 'mimada' ? 'decoration-black/60' : 'decoration-white/60'}`}>{formatCurrency(product.original_price)}</span>
-                            </p>
-                          )}
-                          
-                          <div className="flex items-baseline gap-1.5 mt-0.5">
-                            <span className="text-[8px] md:text-[9px] uppercase tracking-wider font-light" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF', opacity: 0.6 }}>Por:</span>
-                            <span className="text-lg md:text-xl tracking-tight font-bold" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}>
-                              {formatCurrency(product.retail_price)}
-                            </span>
-                          </div>
-                          
-                          <p className="text-[8px] md:text-[9px] tracking-wide mt-1" style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF', opacity: 0.4 }}>
-                            2x de {formatCurrency(product.retail_price / 2)} sem juros
-                          </p>
-                        </div>
-                          <div className="flex items-center gap-3 pt-2">
-                             <button 
-                                onClick={(e) => { 
-                                  e.stopPropagation(); 
-                                  onAddToCart(product, 1); 
-                                  setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
-                                }}
-                                className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl transition-colors border ${companyId === 'mimada' ? 'bg-black/5 hover:bg-black/10 border-black/10' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}
-                                style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}
-                              >
-                                <ShoppingCart size={14} className="md:w-[16px] md:h-[16px]" />
-                             </button>
-                             <button 
-                                onClick={(e) => { 
-                                  e.stopPropagation(); 
-                                  onAddToGiftList(product); 
-                                  setToast({ message: 'Adicionado à Lista', type: 'gift' });
-                                }}
-                                className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl transition-colors border ${companyId === 'mimada' ? 'bg-black/5 hover:bg-black/10 border-black/10' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}
-                                style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}
-                              >
-                                <Gift size={14} className="md:w-[16px] md:h-[16px]" />
-                             </button>
-                          </div>
+                      </>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-32 text-neutral-400">
+                        <Package size={48} strokeWidth={1} className="mb-4 opacity-50" />
+                        <h3 className="text-base font-serif tracking-wide text-center text-neutral-900">Nenhum produto cadastrado</h3>
+                        <p className="text-xs text-center font-sans tracking-wide">Tente ajustar sua busca ou filtro de categoria.</p>
                       </div>
-
-                      {/* Subtle hover indicator */}
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-500">
-                         <div className={`p-2 rounded-full border ${companyId === 'mimada' ? 'border-black/10' : 'border-white/20'}`} style={{ color: companyId === 'guennita' || companyId === 'mimada' ? theme.accentColor : '#FFFFFF' }}>
-                           <ChevronRight size={14} />
-                         </div>
-                      </div>
-                    </div>
-
-                    {/* Background Decorative Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    )}
                   </motion.div>
-                )})}
-              </div>
-              
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-4 py-8 pb-32">
-                  <button 
-                    onClick={() => {
-                      setCurrentPage(p => Math.max(1, p - 1));
-                      document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    disabled={currentPage === 1}
-                    className={`p-2 rounded-full ${theme.btnSecondary} disabled:opacity-30 disabled:cursor-not-allowed`}
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <span className={`${theme.textPrimary} font-bold text-sm`}>
-                    Página {currentPage} de {totalPages}
-                  </span>
-                  <button 
-                    onClick={() => {
-                      setCurrentPage(p => Math.min(totalPages, p + 1));
-                      document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    disabled={currentPage === totalPages}
-                    className={`p-2 rounded-full ${theme.btnSecondary} disabled:opacity-30 disabled:cursor-not-allowed`}
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-                </div>
-              )}
-              </>
-            ) : (
-              <div className={`flex flex-col items-center justify-center py-32 ${theme.textMuted}`}>
-                <Package size={60} className="mb-6 opacity-20" />
-                <h3 className={`text-lg font-medium text-center ${theme.textPrimary}`}>Nenhum produto encontrado</h3>
-                <p className="text-sm text-center">Tente ajustar sua busca ou filtro de categoria</p>
-              </div>
-            )}
-          </div>
+                )}
+              </AnimatePresence>
+            </div>
+
+          {/* Sticky Boutique Floating Checkout Trigger - Removed as requested */}
           
-          {/* Footer Legal & Copyright */}
-          <footer className={`mt-10 pt-8 pb-16 border-t ${theme.borderLine} text-center space-y-4 px-6`}>
-             <div className="max-w-4xl mx-auto">
-                <p className={`text-[8px] md:text-[10px] uppercase font-black tracking-[0.2em] mb-2 ${theme.textPrimary}`}>Aspectos Legais e de Conformidade</p>
-                <p className={`text-[7px] md:text-[9px] leading-relaxed font-bold ${theme.textMuted}`}>
-                  Ao realizar um pedido, você concorda com nossos termos de produção artesanal. Os prazos de entrega podem variar de acordo com a complexidade da personalização. 
-                  Imagens meramente ilustrativas. As cores podem sofrer variações dependendo da calibração do seu monitor ou tela. 
-                  Proteção de Dados: Seus dados são utilizados exclusivamente para o processamento e entrega do seu pedido.
-                </p>
-                <div className={`mt-6 pt-4 border-t ${theme.borderLine} flex flex-col md:flex-row justify-between items-center gap-4`}>
-                   <span className={`text-[8px] font-black uppercase tracking-widest ${theme.textVeryMuted}`}>
-                     © {new Date().getFullYear()} {companyName} • Todos os direitos reservados
-                   </span>
-                   <span className={`text-[8px] font-black uppercase tracking-widest ${theme.textVeryMuted} flex items-center gap-1`}>
-                     Desenvolvido com <Heart size={8} className="text-rose-500 fill-rose-500" /> por Ateliês da Ju
-                   </span>
-                </div>
-             </div>
-          </footer>
         </main>
       </div>
+      </>
+      )}
+    </div>
 
-      <AnimatePresence>
+    {/* Footer Legal & Copyright - Full Width and Side-by-Side */}
+    <footer className={`flex-shrink-0 w-full pt-10 pb-20 border-t ${theme.borderLine} text-center space-y-4 px-6 bg-white/80 backdrop-blur-md relative z-10`}>
+        <div className="max-w-[1600px] mx-auto">
+          <p className={`text-[8px] font-sans font-black tracking-[0.3em] mb-4 uppercase text-neutral-800 opacity-60 text-center`}>Avisos Legais, Direitos e Produção</p>
+          <p className="text-[9px] leading-relaxed font-medium font-sans text-neutral-500 max-w-5xl mx-auto text-center px-4">
+            Ao realizar um pedido em nossa plataforma, você consente com os termos regulados de confecção artesanal exclusiva. O ciclo de produção e entrega dos produtos sob encomenda pode ser de 03 a 20 dias úteis, dependendo da especificidade, complexidade e ordem de fila de solicitações do ateliê. As fotografias são meramente ilustrativas e editoriais; cores e acabamentos podem sofrer mudanças de cor dependendo da configuração de seu dispositivo. Dados de faturamento coletados operam sob conformidade e proteção legal vigentes.
+          </p>
+          <div className={`mt-10 pt-6 border-t ${theme.borderLine} flex flex-col md:flex-row justify-between items-center gap-4`}>
+              <span className="text-[9px] font-sans font-bold tracking-widest text-neutral-400 uppercase">
+                © 2025 {companyName} • Todos os direitos reservados
+              </span>
+              <span className="text-[9px] font-sans font-bold tracking-widest text-neutral-400 uppercase flex items-center gap-1.5">
+                Desenvolvido com <Heart size={10} className="text-rose-500 fill-rose-500" /> por Ateliês da Ju
+              </span>
+          </div>
+        </div>
+    </footer>
+
+    <AnimatePresence>
         {isCartOpen && (
           <CartSidebar 
             cart={cart}
@@ -801,12 +1039,22 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             onRemove={onRemoveFromCart}
             onUpdateQty={onUpdateQuantity}
             onSetQty={onSetQuantity}
-            onCheckout={handleDirectCheckout}
+            onCheckout={handleOpenCheckout}
             isCheckoutLoading={isDirectCheckoutLoading}
             companyId={companyId}
           />
         )}
         
+        <CheckoutModal
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          cart={cart}
+          companyId={companyId}
+          onAddToCart={onAddToCart}
+          onCheckoutSubmit={handleDirectCheckout}
+          isSubmitting={isDirectCheckoutLoading}
+        />
+
         {isGiftListOpen && (
           <GiftListSidebar 
             giftList={giftList}
@@ -823,7 +1071,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
            isOpenExternal={isSuggestionOpen} 
            onCloseExternal={() => setIsSuggestionOpen(false)} 
         />
-
+        
         {/* List Search Overlay */}
         {isSearchingList && (
            <>
@@ -881,20 +1129,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
            </>
         )}
 
-        {selectedProduct && (
-          <ProductDetailModal 
-            product={selectedProduct}
-            onClose={() => {
-              setSelectedProduct(null);
-              setIsReadOnlyProduct(false);
-            }}
-            onAddToCart={onAddToCart}
-            onBuyNow={handleBuyNow}
-            onAddToGiftList={isReadOnlyProduct ? undefined : onAddToGiftList}
-            companyId={companyId}
-            isReadOnly={isReadOnlyProduct}
-          />
-        )}
+
 
         {toast && (
           <motion.div
@@ -971,6 +1206,12 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               <MessageCircle size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
             </a>
         </motion.div>
+        {toast && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] px-6 py-3 rounded-full bg-black text-white shadow-xl flex items-center gap-3">
+            {toast.type === 'success' ? <ShoppingCart size={16} /> : <Gift size={16} />}
+            <span className="text-[10px] uppercase font-bold tracking-widest">{toast.message}</span>
+          </div>
+        )}
     </div>
   );
 };

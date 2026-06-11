@@ -10,18 +10,33 @@ export const sendNotifications = async (
   const itemsSummary = cart
     .map(item => {
       let line = `*${item.product_name}* (x${item.quantity}) - R$ ${(item.retail_price * item.quantity).toFixed(2)}`;
+      if ((item as any).selectedVariation) {
+        line += `\n   • Opção: ${(item as any).selectedVariation}`;
+      }
+      if ((item as any).customName) {
+        line += `\n   • Nome p/ Gravação: ${(item as any).customName}`;
+      }
+      if ((item as any).customPhrase) {
+        line += `\n   • Frase: ${(item as any).customPhrase}`;
+      }
+      if ((item as any).customFile) {
+        line += `\n   • Arquivo: ${(item as any).customFile}`;
+      }
+      if ((item as any).customNotes) {
+        line += `\n   • Obs: ${(item as any).customNotes}`;
+      }
       if (item.giftInfo) {
-        line += `\n   Brinde: ${item.giftInfo}`;
+        line += `\n   🎁 Brinde: ${item.giftInfo}`;
       }
       return line;
     })
-    .join('\n');
+    .join('\n\n');
 
-  const deliveryInfo = checkoutData.deliveryType === 'pickup'
-    ? 'Retirada em Loja'
+  const deliveryInfo = checkoutData.deliveryType === 'retirada'
+    ? 'Retirada no Ateliê'
     : checkoutData.deliveryType === 'delivery'
-    ? `Entrega em: ${checkoutData.address}, ${checkoutData.city} - ${checkoutData.state}`
-    : 'Envio Postal';
+    ? `Delivery Local em: ${checkoutData.address}, ${checkoutData.city} - ${checkoutData.state}`
+    : `Envio Correios/Transportadora: ${checkoutData.address}, ${checkoutData.city} - ${checkoutData.state}`;
 
   const paymentInfo = checkoutData.paymentMethod === 'pix'
     ? `Pagamento via PIX\nCNPJ: ${config.store_cnpj}\nValor: R$ ${total.toFixed(2)}`

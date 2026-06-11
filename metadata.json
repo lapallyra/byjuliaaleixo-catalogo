@@ -1,6 +1,6 @@
 {
-  "name": "Ateliê de Personalizados",
-  "description": "Uma plataforma elegante para catálogos de produtos personalizados, integrando os ateliês La Pallyra, Guennita e Mimada Sim.",
+  "name": "Ateliê dos Personalizados",
+  "description": "Uma plataforma elegante para catálogos de produtos personalizados para ateliês.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

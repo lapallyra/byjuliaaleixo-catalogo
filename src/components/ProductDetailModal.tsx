@@ -81,7 +81,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.98, y: 10 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className={`w-full max-w-[1240px] h-[100dvh] md:h-[85vh] overflow-hidden relative flex flex-col md:flex-row shadow-[0_40px_100px_rgba(0,0,0,0.6)] md:rounded-[2.5rem] z-10 ${theme.bg}`}
+        className={`w-full max-w-screen-xl h-[100dvh] md:h-[85vh] overflow-hidden relative flex flex-col md:flex-row shadow-[0_40px_100px_rgba(0,0,0,0.6)] md:rounded-[2.5rem] z-10 ${theme.bg}`}
       >
         <button 
           onClick={onClose}
@@ -113,6 +113,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                        src={img || ''} 
                        alt="Thumbnail"
                        className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110" 
+                       isThumbnail={true}
                      />
                   </button>
                 ))}
@@ -245,21 +246,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </motion.div>
                 )}
 
-                <motion.button 
-                  whileHover={{ scale: 1.01, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                      onAddToCart(product, quantity);
-                      setShowToast(true);
-                      setTimeout(() => setShowToast(false), 2000);
-                  }}
-                  className={`w-full py-6 rounded-2xl text-[10px] uppercase tracking-normal font-black transition-all duration-700 flex items-center justify-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.15)] ${theme.btnPrimary} hover:shadow-[0_25px_60px_rgba(0,0,0,0.25)]`}
-                >
-                  <ShoppingCart size={20} strokeWidth={2} />
-                  Adicionar ao Carrinho
-                </motion.button>
-
-                <div className="flex gap-4 w-full">
+                <div className="grid grid-cols-2 gap-4 w-full">
+                  <motion.button 
+                    whileHover={{ scale: 1.01, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                        onAddToCart(product, quantity);
+                        setShowToast(true);
+                        setTimeout(() => setShowToast(false), 2000);
+                    }}
+                    className={`py-5 rounded-2xl text-[10px] uppercase tracking-normal font-black transition-all duration-700 flex items-center justify-center gap-2 shadow-lg ${theme.btnPrimary}`}
+                  >
+                    <ShoppingCart size={16} strokeWidth={2} />
+                    Adicionar
+                  </motion.button>
+                  
                   {onAddToGiftList && (
                     <button 
                        onClick={() => {
@@ -267,15 +268,18 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                          setShowGiftToast(true);
                          setTimeout(() => setShowGiftToast(false), 2000);
                        }}
-                       className={`flex-1 py-4 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group ${theme.btnSecondary}`}
+                       className={`flex items-center justify-center gap-2 py-5 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] ${theme.btnSecondary}`}
                     >
-                      <Gift size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
+                      <Gift size={16} strokeWidth={2} />
                       Lista
                     </button>
                   )}
+                </div>
+
+                <div className="w-full">
                   <button 
                     onClick={handleShare}
-                    className={`flex-1 py-4 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group ${theme.btnSecondary}`}
+                    className={`w-full py-4 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group ${theme.btnSecondary}`}
                   >
                     <Share2 size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
                     Partilhar

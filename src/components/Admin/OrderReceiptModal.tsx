@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { X, Printer, FileText, Flower2 } from "lucide-react";
 import { Order, CompanyId, SiteSettings } from "../../types";
-import { getSiteSettings } from "../../services/firebaseService";
+import { getGlobalSettings, getSiteSettings } from "../../services/firebaseService";
 import { safeFormat, safeFormatISO } from "../../lib/dateUtils";
 import { ImageWithFallback } from "../ImageWithFallback";
+import { exportOrderReceiptPDF } from "../../utils/pdfGenerator";
 
 interface OrderReceiptModalProps {
   order: Order;
@@ -22,19 +23,25 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
   useEffect(() => {
     const load = async () => {
       const data = await getSiteSettings(order.companyId as CompanyId);
-      if (data) setSettings(data);
+      const globalData = await getGlobalSettings();
+      if (data) {
+        setSettings({ ...data, ...globalData });
+      } else if (globalData) {
+        setSettings(globalData);
+      }
     };
     load();
   }, [order.companyId]);
 
   const handlePrint = () => {
-    window.print();
+    exportOrderReceiptPDF(order, settings);
   };
 
   const atelierNames: Record<string, string> = {
     pallyra: "La Pallyra",
     guennita: "com amor, Guennita",
     mimada: "Mimada Sim",
+    tuttymimo: "Tutty Mimo",
   };
 
   const studioName =
@@ -43,7 +50,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm print:p-0 print:bg-transparent overflow-y-auto">
       {/* Printable Area */}
-      <div className="bg-white w-full max-w-4xl max-h-[90vh] md:max-h-[95vh] rounded-[2rem] shadow-2xl overflow-y-auto scrollbar-hide flex flex-col relative print:shadow-none print:max-h-none print:w-full print:rounded-none my-auto">
+      <div className="bg-white w-full max-w-screen-lg max-h-[90vh] md:max-h-[95vh] rounded-[2rem] shadow-2xl overflow-y-auto scrollbar-hide flex flex-col relative print:shadow-none print:max-h-none print:w-full print:rounded-none my-auto">
         {/* Header - Not Printed */}
         <div className="p-6 border-b border-[#F0E6D2] flex justify-between items-center print:hidden bg-white sticky top-0 z-10">
           <div className="flex gap-2">
@@ -64,10 +71,10 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
             <button
               onClick={handlePrint}
               className="flex items-center gap-2 px-4 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all text-xs font-bold uppercase tracking-widest"
-              title="Imprimir"
+              title="Abrir PDF"
             >
               <Printer size={18} />
-              Imprimir
+              Abrir PDF
             </button>
             <button
               onClick={onClose}
@@ -109,40 +116,35 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
             </div>
           </div>
 
-          <div className="border-t border-b border-slate-200 py-6 mb-8 flex justify-between text-sm">
-            <div>
-              <p className="text-gray-500 uppercase font-bold text-xs mb-1">
-                Pedido
-              </p>
-              <p className="font-bold text-lg">{order.code}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-8 border-y border-slate-100 mb-10">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Código do Pedido</label>
+              <div className="text-xl font-black text-slate-900 tracking-tighter italic">#{order.code}</div>
             </div>
-            <div>
-              <p className="text-gray-500 uppercase font-bold text-xs mb-1">
-                Data
-              </p>
-              <p className="font-bold text-lg">
-                {safeFormat(new Date(), "dd/MM/yyyy")}
-              </p>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Data de Emissão</label>
+              <div className="text-xl font-black text-slate-900 tracking-tighter">{safeFormat(new Date(), "dd/MM/yyyy")}</div>
             </div>
-            <div>
-              <p className="text-gray-500 uppercase font-bold text-xs mb-1">
-                Entrega
-              </p>
-              <p className="font-bold text-lg">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Previsão de Entrega</label>
+              <div className="text-xl font-black text-[#D88D85] tracking-tighter">
                 {order.deliveryDate
                   ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy")
                   : "A Combinar"}
-              </p>
+              </div>
             </div>
           </div>
 
           {/* Customer */}
-          <div className="mb-10 text-sm">
-            <p className="text-gray-500 uppercase font-bold text-xs mb-1">
-              Cliente
-            </p>
-            <p className="font-bold text-lg">{order.customerName}</p>
-            <p className="text-gray-600">{order.contact}</p>
+          <div className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/50 p-8 rounded-3xl border border-slate-100">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Cliente / Comprador</label>
+              <div className="text-xl font-black text-slate-900 uppercase tracking-tight">{order.customerName}</div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Canal de Contato</label>
+              <div className="text-xl font-black text-slate-600 truncate">{order.contact}</div>
+            </div>
           </div>
 
           {/* Items Table */}
@@ -164,8 +166,22 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
                 >
                   <td className="py-4 font-bold">{item.product_name}</td>
                   <td className="py-4 text-center">{item.quantity}</td>
-                  <td className="py-4 text-gray-500 italic text-xs">
-                    Personalizado
+                  <td className="py-4 text-gray-700 text-xs max-w-[220px]">
+                    {(item as any).selectedVariation && <p className="mb-0.5"><strong>Opção:</strong> {(item as any).selectedVariation}</p>}
+                    {(item as any).customName && <p className="mb-0.5"><strong>Nome:</strong> {(item as any).customName}</p>}
+                    {(item as any).customPhrase && <p className="mb-0.5"><strong>Frase:</strong> {(item as any).customPhrase}</p>}
+                    {(item as any).customFile && (
+                      <p className="mb-0.5">
+                        <strong>Img/Anexo:</strong>{" "}
+                        <a href={(item as any).customFile} target="_blank" rel="noopener noreferrer" className="text-sky-600 hover:underline font-bold">
+                          [Ver Arquivo]
+                        </a>
+                      </p>
+                    )}
+                    {(item as any).customNotes && <p className="mb-0.5 text-neutral-500 italic"><strong>Obs:</strong> {(item as any).customNotes}</p>}
+                    {!((item as any).selectedVariation || (item as any).customName || (item as any).customPhrase || (item as any).customFile || (item as any).customNotes) && (
+                      <span className="text-gray-400 italic">Padrão</span>
+                    )}
                   </td>
                   <td className="py-4 text-right">
                     R$ {(item.retail_price || 0).toFixed(2)}
@@ -214,7 +230,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
         {/* Footer for desktop view - Not Printed */}
         <div className="p-8 bg-slate-50 border-t border-[#F0E6D2] print:hidden text-center">
           <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest">
-            Sistema de Gestão Ateliê © 2024
+            Sistema de Gestão Ateliê © 2025
           </p>
         </div>
       </div>

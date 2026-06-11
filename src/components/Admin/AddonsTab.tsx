@@ -91,7 +91,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-2xl bg-lilac/10 text-lilac shadow-lg shadow-lilac/5">
@@ -194,21 +194,21 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => {
                         setEditingAddon(addon);
                         setIsModalOpen(true);
                       }}
-                      className="p-3 bg-slate-50 text-[#A09898] rounded-xl hover:bg-lilac hover:text-white transition-all border border-transparent shadow-sm"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 text-[#A09898] rounded-xl hover:bg-lilac hover:text-white transition-all border border-transparent shadow-sm text-[9px] font-black uppercase tracking-widest"
                     >
-                      <Edit2 size={14} />
+                      <Edit2 size={14} /> Editar
                     </button>
                     <button
                       onClick={() => handleDelete(addon.id)}
-                      className="p-3 bg-slate-50 text-[#A09898] rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-transparent shadow-sm"
+                      className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 text-[#A09898] rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-transparent shadow-sm text-[9px] font-black uppercase tracking-widest"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={14} /> Excluir
                     </button>
                   </div>
                 </div>
@@ -216,7 +216,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
             </motion.div>
           ))}
           {filteredAddons.length === 0 && (
-            <div className="py-20 text-center rounded-[2rem] bg-white border-2 border-dashed border-[#F0E6D2] flex flex-col items-center justify-center opacity-40">
+            <div className="py-20 text-center rounded-3xl bg-white border-2 border-dashed border-[#F0E6D2] flex flex-col items-center justify-center opacity-40">
               <Sparkles size={40} className="mb-4 text-lilac" />
               <p className="text-[10px] font-black uppercase tracking-widest">
                 Nenhum adicional encontrado

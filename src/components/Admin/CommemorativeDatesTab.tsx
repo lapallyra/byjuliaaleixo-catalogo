@@ -243,7 +243,7 @@ export function CommemorativeDatesTab() {
 
       {/* Widget Hoje/Próximos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[3rem] p-10 text-white relative overflow-hidden group shadow-2xl shadow-indigo-500/20">
+        <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-10 text-white relative overflow-hidden group shadow-2xl shadow-indigo-500/20">
           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-1000">
             <Calendar size={180} strokeWidth={1} />
           </div>
@@ -294,7 +294,7 @@ export function CommemorativeDatesTab() {
           </div>
         </div>
 
-        <div className="bg-white rounded-[3rem] p-10 border border-[#F0E6D2] shadow-xl shadow-slate-200/50">
+        <div className="bg-white rounded-3xl p-10 border border-[#F0E6D2] shadow-xl shadow-slate-200/50">
           <h4 className="text-xs font-black uppercase tracking-widest text-[#A09898] mb-8 flex items-center gap-2">
             <Clock size={16} /> Próximos 40 dias
           </h4>
@@ -384,7 +384,7 @@ export function CommemorativeDatesTab() {
               return (
                 <div
                   key={date.id}
-                  className="bg-white rounded-[2.5rem] border border-[#F0E6D2] p-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all group relative overflow-hidden"
+                  className="bg-white rounded-3xl border border-[#F0E6D2] p-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all group relative overflow-hidden"
                 >
                   {!date.active && (
                     <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
@@ -416,21 +416,21 @@ export function CommemorativeDatesTab() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex flex-wrap items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => {
                           setEditingDate(date);
                           setIsModalOpen(true);
                         }}
-                        className="p-2 hover:bg-slate-50 rounded-xl text-[#A09898] hover:text-slate-900 transition-all"
+                        className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-slate-50 rounded-xl text-[#A09898] hover:text-slate-900 transition-all text-[9px] font-black uppercase tracking-widest"
                       >
-                        <Edit2 size={16} />
+                        <Edit2 size={14} /> Editar
                       </button>
                       <button
                         onClick={() => handleDelete(date.id)}
-                        className="p-2 hover:bg-slate-50 rounded-xl text-[#A09898] hover:text-slate-9000 transition-all"
+                        className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-slate-50 rounded-xl text-[#A09898] hover:text-rose-500 transition-all text-[9px] font-black uppercase tracking-widest"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} /> Excluir
                       </button>
                     </div>
                   </div>
@@ -482,7 +482,7 @@ export function CommemorativeDatesTab() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-[3rem] border border-[#F0E6D2] shadow-xl overflow-hidden"
+            className="bg-white rounded-3xl border border-[#F0E6D2] shadow-xl overflow-hidden"
           >
             <div className="p-10 border-b border-slate-50 flex items-center justify-between">
               <h3 className="text-xl font-display font-black text-slate-900 uppercase tracking-widest">
@@ -603,7 +603,7 @@ export function CommemorativeDatesTab() {
           />
           <motion.div
             layoutId="modal-date"
-            className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl relative z-10 overflow-hidden"
+            className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl relative z-10 overflow-hidden"
           >
             <div className="p-10 overflow-y-auto max-h-[85vh] no-scrollbar">
               <div className="flex justify-between items-center mb-10">

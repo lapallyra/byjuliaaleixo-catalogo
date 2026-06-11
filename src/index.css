@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Great+Vibes&family=Imperial+Script&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 
 @font-face {
   font-family: 'Sofia Carolyn';
@@ -13,8 +14,9 @@ html {
 @theme {
   --font-sans: "Tahoma", "Inter", "Verdana", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Cormorant Garamond", "Playfair Display", "Georgia", serif;
-  --font-cursive: "Alex Brush", cursive;
+  --font-cursive: "Great Vibes", cursive;
   --font-hand: "Great Vibes", cursive;
+  --font-atelier: "Great Vibes", cursive;
   --font-elegant: "Pinyon Script", cursive;
   --font-sofia: "Sofia Carolyn", cursive;
   --font-imperial: "Imperial Script", cursive;
@@ -34,7 +36,7 @@ html {
     font-weight: 400;
   }
   .font-beauty {
-    font-family: 'Beauty', 'Great Vibes', cursive;
+    font-family: var(--font-atelier);
   }
   .font-signature {
     font-family: var(--font-imperial);
@@ -67,13 +69,44 @@ html {
 }
 
 @layer base {
-  html, body, #root {
+  html, body {
     width: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0;
     background-color: #ffffff;
     color: #050505;
-    font-family: "Tahoma", sans-serif;
+    font-family: inherit;
     line-height: 1.25;
-    scroll-behavior: smooth;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background-color: inherit;
+  }
+
+  /* Fluid Typography Scale */
+  :root {
+    --text-fluid-xs: clamp(0.7rem, 0.65rem + 0.25vw, 0.85rem);
+    --text-fluid-sm: clamp(0.8rem, 0.75rem + 0.3vw, 1rem);
+    --text-fluid-base: clamp(0.95rem, 0.9rem + 0.4vw, 1.25rem);
+    --text-fluid-lg: clamp(1.1rem, 1rem + 0.6vw, 1.5rem);
+    --text-fluid-xl: clamp(1.3rem, 1.2rem + 0.8vw, 2rem);
+    --text-fluid-2xl: clamp(1.5rem, 1.35rem + 1.2vw, 2.75rem);
+  }
+  
+  /* Modern Dynamic Viewport Utilities */
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .h-screen {
+    height: 100vh;
+    height: 100dvh;
   }
   
   p {
@@ -280,6 +313,12 @@ html {
     --theme-text: #ffffff;
   }
 
+  .theme-tuttymimo {
+    --theme-primary: #fdfbf7;
+    --theme-accent: #f4e1dc;
+    --theme-text: #333333;
+  }
+
   /* Admin Dashboard Premium Theme - Dark Edition */
   .admin-bg {
     background-color: #0b0507; /* dark wine/black */
@@ -288,17 +327,17 @@ html {
       radial-gradient(at 100% 0%, rgba(131, 24, 67, 0.15) 0px, transparent 50%);
   }
 
-  body:has(.feminine-admin), html:has(.feminine-admin) {
+  body:has(.feminine-admin) {
     background-color: #0b0507 !important;
   }
 
   .feminine-admin {
     background-color: #0b0507;
+    min-height: 100dvh;
   }
 
-
   .feminine-admin svg.lucide {
-    stroke-width: 1.2 !important;
+    stroke-width: 1.5 !important;
   }
 
   .feminine-admin .font-black {
@@ -306,48 +345,89 @@ html {
   }
   
   .feminine-admin .font-bold {
-    font-weight: 400 !important;
+    font-weight: 600 !important;
   }
 
   .feminine-admin .tracking-widest {
     letter-spacing: 0.1em !important;
   }
   
-  .feminine-admin .text-slate-900 {
-    color: #fecdd3 !important; /* rose-200 */
+  /* Improve contrast for text */
+  .feminine-admin .text-slate-900, 
+  .feminine-admin .text-slate-800,
+  .feminine-admin .text-slate-700 {
+    color: #374151 !important; /* gray-700 for better legibility */
   }
 
-  .feminine-admin h1, .feminine-admin h2, .feminine-admin h3 {
-    font-family: var(--font-sans) !important;
-    letter-spacing: 0em !important;
+  .feminine-admin label,
+  .feminine-admin .text-slate-900,
+  .feminine-admin h1, .feminine-admin h2, .feminine-admin h3,
+  .feminine-admin h4 {
+    color: #1f2937 !important; /* gray-800 or black soft */
+    font-weight: 600 !important;
   }
 
-  .feminine-admin .bg-slate-900 {
-    background-color: #3e1b29 !important;
-  }
-
-  .feminine-admin.bg-slate-950 {
-    background-color: #0b0507 !important; /* dark wine/black */
+  .feminine-admin input::placeholder,
+  .feminine-admin textarea::placeholder {
+    color: #9ca3af !important; /* gray-400 for better visibility */
+    opacity: 1;
   }
   
-  .feminine-admin .text-slate-400 {
-    color: #fda4af !important; /* rose-300 */
+  .feminine-admin input, 
+  .feminine-admin textarea,
+  .feminine-admin select {
+    color: #4b5563 !important; /* gray-600 */
+    border-color: #e5e7eb !important;
+  }
+
+  .feminine-admin .text-\[#A09898\],
+  .feminine-admin .text-\[#D1CACA\],
+  .feminine-admin .text-slate-400,
+  .feminine-admin .text-gray-400,
+  .feminine-admin .text-gray-500 {
+    color: #4b5563 !important; /* Force gray-600/700 for readability */
   }
 
   .feminine-admin .text-slate-500 {
-    color: #fb7185 !important; /* rose-400 */
+    color: #4b5563 !important; /* gray-600 */
   }
   
-  .feminine-admin .text-slate-300 {
-    color: #fecdd3 !important; /* rose-200 */
+  /* Pink revision: Rosa médio sofisticado */
+  .feminine-admin .text-lilac,
+  .feminine-admin .text-pink-500 {
+    color: #db2777 !important; /* pink-600 */
   }
   
-  .feminine-admin .border-slate-100 {
-    border-color: #3e1b29 !important; /* dark rose */
+  .feminine-admin .bg-lilac,
+  .feminine-admin .bg-pink-500,
+  .feminine-admin .accent-lilac {
+    background-color: #db2777 !important;
+    accent-color: #db2777 !important;
+  }
+
+  .feminine-admin .bg-lilac\/10 {
+    background-color: rgba(219, 39, 119, 0.1) !important;
+  }
+
+  .feminine-admin .border-lilac {
+    border-color: #db2777 !important;
   }
   
-  .feminine-admin .bg-slate-100 {
-    background-color: #2b141e !important;
+  .feminine-admin .border-slate-100,
+  .feminine-admin .border-gray-100,
+  .feminine-admin .border-lilac\/10,
+  .feminine-admin .border-lilac\/20 {
+    border-color: #f3f4f6 !important;
+  }
+  
+  .feminine-admin .bg-slate-100,
+  .feminine-admin .bg-gray-50,
+  .feminine-admin .bg-slate-50 {
+    background-color: #f9fafb !important;
+  }
+
+  .feminine-admin .bg-white {
+    background-color: #ffffff !important;
   }
 
   .feminine-admin .text-gold {
@@ -417,6 +497,14 @@ html {
   }
   .tag-mimada {
     background-color: #FFC0CB;
+  }
+
+  .card-tuttymimo {
+    border: 2px solid #f4e1dc !important;
+  }
+  .tag-tuttymimo {
+    background-color: #f4e1dc;
+    color: #333333;
   }
 
   .brand-badge {

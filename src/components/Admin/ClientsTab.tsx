@@ -14,14 +14,18 @@ import {
   MapPin,
   Calendar as CalendarIcon,
   Mail,
+  Printer,
 } from "lucide-react";
+import { CSVHandler } from "./CSVHandler";
 import { Customer, CompanyId } from "../../types";
 import {
   deleteCustomer,
   updateCustomer,
   addCustomer,
 } from "../../services/firebaseService";
+import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 import { isWithinInterval, addDays, startOfDay, endOfDay } from "date-fns";
+import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
 
 interface ClientsTabProps {
   companyId: CompanyId;
@@ -40,6 +44,42 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
   );
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredCustomers.map(c => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setLoading(true);
+    try {
+      for (const id of selectedIds) {
+        await deleteCustomer(id);
+      }
+      setSelectedIds([]);
+      setIsBulkDeleteModalOpen(false);
+      alert("Clientes excluídos com sucesso!");
+    } catch (e) {
+      console.error("Erro na exclusão em massa:", e);
+      alert("Houve um erro ao excluir um ou mais clientes.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredCustomers = useMemo(
     () =>
       customers.filter((c) => {
@@ -48,7 +88,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
           (c.cpfCnpj && c.cpfCnpj.includes(searchTerm)) ||
           (c.code && c.code.includes(searchTerm));
         return matchesSearch;
-      }),
+      }).sort((a, b) => a.name.localeCompare(b.name)),
     [customers, searchTerm],
   );
 
@@ -169,9 +209,9 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-      <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
-        <div className="relative w-full max-w-md">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
+      <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center bg-white p-6 rounded-3xl border border-lilac/10 shadow-sm">
+        <div className="relative w-full lg:max-w-md">
           <Search
             className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D1CACA]"
             size={18}
@@ -184,19 +224,56 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button
-          onClick={() => {
-            setSelectedCustomer(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-3 px-10 py-4 bg-black text-white rounded-[1.25rem] font-black font-sans text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl border border-black/10"
-        >
-          <UserPlus size={18} /> Novo Cliente
-        </button>
+        <div className="flex items-center gap-4 w-full lg:w-auto justify-center lg:justify-end">
+          <CSVHandler 
+            moduleName="Clientes" 
+            data={filteredCustomers} 
+            fields={['name', 'code', 'contact', 'cpfCnpj', 'birthDate', 'address', 'city', 'state', 'zipCode']}
+            onImport={(newData) => {
+                for (const item of newData) {
+                    addCustomer({
+                        ...item,
+                        companyId: companyId,
+                        totalSpent: 0,
+                        ordersCount: 0,
+                    });
+                }
+            }}
+          />
+          <button
+            onClick={() => {
+              const rows = filteredCustomers.map(c => [
+                c.name,
+                c.contact || (c as any).phone || "---",
+                (c as any).instagram || "---",
+                `${c.ordersCount || 0}`,
+                `R$ ${(c.totalSpent || 0).toFixed(2)}`
+              ]);
+              exportGenericReportPDF({
+                title: "Relatório de Clientes",
+                columns: ["Nome", "Telefone", "Instagram", "Qtd. Pedidos", "Valor Investido"],
+                rows,
+                filters: `Busca: ${searchTerm || 'Nenhuma'}`
+              });
+            }}
+            className="flex items-center justify-center px-6 py-4 bg-white text-[#D1CACA] border border-lilac/10 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group text-[9px] font-black uppercase tracking-widest gap-2"
+          >
+            <Printer size={16} className="group-hover:scale-110 transition-transform" /> Abrir PDF
+          </button>
+          <button
+            onClick={() => {
+              setSelectedCustomer(null);
+              setIsModalOpen(true);
+            }}
+            className="flex-1 md:flex-none flex items-center justify-center gap-3 px-10 py-4 bg-black text-white rounded-[1.25rem] font-black font-sans text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl border border-black/10"
+          >
+            <UserPlus size={18} /> Novo Cliente
+          </button>
+        </div>
       </div>
 
       {birthdayCustomers.length > 0 && (
-        <div className="p-8 rounded-[2.5rem] bg-lilac/5 border border-lilac/10 backdrop-blur-xl flex items-center justify-between shadow-sm">
+        <div className="p-8 rounded-3xl bg-lilac/5 border border-lilac/10 backdrop-blur-xl flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-5">
             <div className="p-4 rounded-2xl bg-white text-lilac shadow-sm border border-lilac/10">
               <Cake size={24} />
@@ -216,128 +293,68 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
         </div>
       )}
 
-      <div className="bg-white rounded-[2.5rem] border border-lilac/10 shadow-sm overflow-hidden overflow-x-auto">
-        <table className="w-full text-left uppercase">
+      <div className="overflow-x-auto bg-white rounded-3xl border border-lilac/10 shadow-sm">
+        <table className="w-full">
           <thead>
-            <tr className="bg-white/50 border-b border-gray-50">
-              <th className="py-6 px-8 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
-                Cód
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
-                Cliente
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em]">
-                Contato
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em] text-center">
-                Compras
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em] text-right">
-                Investido
-              </th>
-              <th className="py-6 text-[9px] font-black text-[#A09898] tracking-[0.2em] text-right pr-8">
-                Ações
-              </th>
+            <tr className="bg-slate-50/50 border-b border-lilac/5">
+              <th className="px-6 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Código</th>
+              <th className="px-6 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Nome do Cliente</th>
+              <th className="px-6 py-5 text-left text-[9px] font-black text-slate-400 uppercase tracking-widest">Contato / WhatsApp</th>
+              <th className="px-6 py-5 text-right text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
-            {filteredCustomers.length === 0 && (
+          <tbody className="divide-y divide-lilac/5">
+            {filteredCustomers.length === 0 ? (
               <tr>
-                <td
-                  colSpan={6}
-                  className="py-24 text-center text-[#A09898] italic font-black text-[10px] tracking-widest opacity-50 uppercase"
-                >
+                <td colSpan={4} className="px-6 py-32 text-center text-[#A09898] italic font-black text-[10px] tracking-widest opacity-50 uppercase">
                   Nenhum cliente encontrado no sistema
                 </td>
               </tr>
-            )}
-            {filteredCustomers.map((c, idx) => (
-              <tr
-                key={c.id}
-                className="group hover:bg-lilac-baby/30 transition-all cursor-pointer"
-              >
-                <td className="py-6 px-8">
-                  <span className="font-mono text-[10px] text-lilac font-black tracking-tight">
-                    #{c.code}
-                  </span>
-                </td>
-                <td className="py-6">
-                  <div className="flex flex-col">
-                    <span className="font-black text-xs text-slate-900 tracking-tight group-hover:text-lilac transition-colors">
-                      {c.name}
-                    </span>
-                    <span className="text-[9px] text-[#A09898] font-black tracking-widest mt-1 opacity-70">
-                      {c.cpfCnpj}
-                    </span>
-                  </div>
-                </td>
-                <td className="py-6">
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <div className="p-2 rounded-lg bg-white group-hover:bg-white transition-colors">
-                      <Phone size={14} className="text-lilac" />
+            ) : (
+              filteredCustomers.map((c) => (
+                <tr key={c.id} className="hover:bg-lilac/[0.02] transition-colors group">
+                  <td className="px-6 py-5">
+                    <span className="text-[10px] font-black text-lilac uppercase tracking-widest">#{c.code}</span>
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="text-sm font-black text-slate-900 uppercase tracking-tight">{c.name}</span>
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center gap-2">
+                      <Phone size={12} className="text-lilac/40" />
+                      <span className="text-sm font-bold text-slate-700">{formatPhone(c.contact)}</span>
                     </div>
-                    <span className="text-[10px] font-black tracking-widest">
-                      {c.contact}
-                    </span>
-                  </div>
-                </td>
-                <td className="py-6 text-center">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-lilac/5 text-lilac text-[9px] font-black border border-lilac/10">
-                    <Hash size={10} /> {c.ordersCount || 0}
-                  </div>
-                </td>
-                <td className="py-6 text-right font-mono text-xs text-slate-900 font-black">
-                  R${" "}
-                  {(c.totalSpent || 0).toLocaleString("pt-BR", {
-                    minimumFractionDigits: 2,
-                  })}
-                </td>
-                <td className="py-6 text-right pr-8">
-                  <div className="flex justify-end gap-3">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCustomer(c);
-                        setIsDetailModalOpen(true);
-                      }}
-                      className="p-3 rounded-xl bg-white text-[#D1CACA] hover:text-lilac transition-all"
-                      title="Ver Detalhes"
-                    >
-                      <Users size={16} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenEdit(c);
-                      }}
-                      className="p-3 rounded-xl bg-white text-[#D1CACA] hover:text-slate-900 transition-all"
-                      title="Editar"
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(c.id);
-                      }}
-                      className="p-3 rounded-xl bg-slate-50 text-rose-200 hover:text-slate-9000 transition-all"
-                      title="Excluir"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-6 py-5">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleOpenEdit(c)}
+                        className="p-2.5 rounded-xl bg-slate-50 text-slate-400 hover:text-slate-900 hover:bg-white transition-all border border-transparent hover:border-slate-200"
+                        title="Editar"
+                      >
+                        <Edit size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="p-2.5 rounded-xl bg-slate-50 text-rose-300 hover:text-white hover:bg-rose-500 transition-all border border-transparent"
+                        title="Excluir"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       {isDetailModalOpen && selectedCustomer && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-white  w-full  max-w-2xl  rounded-[3rem] border border-lilac/30 overflow-hidden shadow-2xl  relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+          <div className="bg-white  w-full  max-w-2xl  rounded-3xl border border-lilac/30 overflow-hidden shadow-2xl  relative max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
             <div className="h-32 bg-gradient-to-r from-lilac to-lilac/80 p-8 flex items-end">
-              <div className="w-20 h-20 rounded-[2rem] bg-white text-lilac flex items-center justify-center shadow-xl translate-y-12">
+              <div className="w-20 h-20 rounded-2xl bg-white text-lilac flex items-center justify-center shadow-xl translate-y-12">
                 <Users size={32} />
               </div>
             </div>
@@ -358,7 +375,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                     {selectedCustomer.name}
                   </h2>
                   <p className="text-[10px] font-black text-lilac uppercase tracking-[0.3em] mt-2">
-                    Código do Cliente: #{selectedCustomer.code}
+                    Código do Cliente: {selectedCustomer.code}
                   </p>
                 </div>
                 <div className="text-right">
@@ -371,78 +388,53 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                 <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-white text-lilac">
-                      <Phone size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
-                        Contato / WhatsApp
-                      </p>
-                      <p className="text-sm font-bold text-slate-900">
-                        {selectedCustomer.contact}
-                      </p>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Contato / WhatsApp</label>
+                    <div className="text-[15px] font-black text-slate-900 leading-tight">
+                      {formatPhone(selectedCustomer.contact)}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-white text-lilac">
-                      <Mail size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
-                        Documento
-                      </p>
-                      <p className="text-sm font-bold text-slate-900">
-                        {selectedCustomer.cpfCnpj || "NÃO INFORMADO"}
-                      </p>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Documento (CPF/CNPJ)</label>
+                    <div className="text-[15px] font-black text-slate-900 font-mono tracking-tight leading-tight">
+                      {selectedCustomer.cpfCnpj ? formatCPFOrCNPJ(selectedCustomer.cpfCnpj) : "NÃO INFORMADO"}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-white text-lilac">
-                      <CalendarIcon size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
-                        Nascimento
-                      </p>
-                      <p className="text-sm font-bold text-slate-900">
-                        {selectedCustomer.birthDate || "NÃO INFORMADO"}
-                      </p>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Data de Nascimento</label>
+                    <div className="text-[15px] font-black text-slate-900 font-mono tracking-tight leading-tight">
+                      {selectedCustomer.birthDate || "NÃO INFORMADO"}
                     </div>
                   </div>
                 </div>
+
                 <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-2xl bg-white text-lilac">
-                      <MapPin size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
-                        Endereço
-                      </p>
-                      <p className="text-sm font-bold text-slate-900 leading-tight">
-                        {selectedCustomer.address || "SEM ENDEREÇO CADASTRADO"}
-                        <br />
-                        <span className="text-[10px] text-[#A09898]">
-                          {selectedCustomer.city} {selectedCustomer.state}{" "}
-                          {selectedCustomer.zipCode}
-                        </span>
-                      </p>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Endereço Completo</label>
+                    <div className="text-[14px] font-black text-slate-900 uppercase leading-snug tracking-tight">
+                      {selectedCustomer.address ? (
+                        <>
+                          {selectedCustomer.address}{selectedCustomer.number ? `, ${selectedCustomer.number}` : ""}
+                          <div className="text-[11px] font-bold text-lilac mt-1">
+                            {selectedCustomer.neighborhood && `${selectedCustomer.neighborhood} - `}
+                            {selectedCustomer.city} / {selectedCustomer.state}
+                            {selectedCustomer.zipCode && ` (CEP: ${selectedCustomer.zipCode})`}
+                          </div>
+                        </>
+                      ) : (
+                        "SEM ENDEREÇO CADASTRADO"
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-white text-lilac">
-                      <TrendingUp size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[7px] font-black text-[#A09898] uppercase tracking-widest">
-                        Frequência
-                      </p>
-                      <p className="text-sm font-bold text-slate-900 uppercase">
-                        {selectedCustomer.ordersCount || 0} PEDIDOS REALIZADOS
-                      </p>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Histórico de Movimentação</label>
+                    <div className="text-[13px] font-bold text-slate-600 uppercase tracking-wide leading-tight">
+                       {selectedCustomer.ordersCount || 0} PEDIDOS REALIZADOS
                     </div>
                   </div>
                 </div>
@@ -491,11 +483,12 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Nome Completo
+                    Nome Completo <span className="text-lilac">*</span>
                   </label>
                   <input
                     required
                     type="text"
+                    placeholder="Ex: Maria Silva"
                     className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.name}
                     onChange={(e) =>
@@ -505,7 +498,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    WhatsApp / Contato
+                    Contato / WhatsApp <span className="text-lilac">*</span>
                   </label>
                   <input
                     required
@@ -514,180 +507,140 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                     className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
                     value={formData.contact}
                     onChange={(e) => {
-                      let v = e.target.value.replace(/\D/g, "");
-                      v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
-                      v = v.replace(/(\d)(\d{4})$/, "$1-$2");
-                      setFormData({ ...formData, contact: v });
+                      setFormData({ ...formData, contact: formatPhone(e.target.value) });
                     }}
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-slate-50/50 p-6 rounded-3xl space-y-6 border border-lilac/5">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Informações Opcionais</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      CPF / CNPJ
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="000.000.000-00"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.cpfCnpj}
+                      onChange={(e) => {
+                        setFormData({ ...formData, cpfCnpj: formatCPFOrCNPJ(e.target.value) });
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      Data de Nascimento
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="DD/MM/AAAA"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.birthDate}
+                      onChange={(e) => {
+                        let v = e.target.value.replace(/\D/g, "");
+                        v = v.replace(/(\d{2})(\d{2})(\d{4})/, "$1/$2/$3");
+                        setFormData({ ...formData, birthDate: v });
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2 col-span-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      Endereço
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.address}
+                      onChange={(e) =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      Nº
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.number}
+                      onChange={(e) =>
+                        setFormData({ ...formData, number: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      Bairro
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.neighborhood}
+                      onChange={(e) =>
+                        setFormData({ ...formData, neighborhood: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      Cidade
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                      value={formData.city}
+                      onChange={(e) =>
+                        setFormData({ ...formData, city: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                      UF
+                    </label>
+                    <select
+                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-lilac outline-none text-slate-900"
+                      value={formData.state}
+                      onChange={(e) =>
+                        setFormData({ ...formData, state: e.target.value })
+                      }
+                    >
+                      <option value="">SELECIONE</option>
+                      {/* ... truncated for breviety, using same UF list ... */}
+                      {["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"].map((uf) => (
+                        <option key={uf} value={uf}>{uf}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    CPF / CNPJ
+                  <label className="text-[10px] uppercase font-black text-slate-400 ml-2">
+                    CEP
                   </label>
                   <input
-                    required
                     type="text"
-                    placeholder="000.000.000-00"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.cpfCnpj}
+                    placeholder="00.000-000"
+                    className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
+                    value={formData.zipCode}
                     onChange={(e) => {
                       let v = e.target.value.replace(/\D/g, "");
-                      if (v.length <= 11)
-                        v = v.replace(
-                          /(\d{3})(\d{3})(\d{3})(\d{2})/,
-                          "$1.$2.$3-$4",
-                        );
-                      else
-                        v = v.replace(
-                          /(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,
-                          "$1.$2.$3/$4-$5",
-                        );
-                      setFormData({ ...formData, cpfCnpj: v });
+                      v = v.replace(/(\d{2})(\d{3})(\d{3})/, "$1.$2-$3");
+                      setFormData({ ...formData, zipCode: v });
                     }}
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Data de Nascimento
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="DD/MM/AAAA"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.birthDate}
-                    onChange={(e) => {
-                      let v = e.target.value.replace(/\D/g, "");
-                      v = v.replace(/(\d{2})(\d{2})(\d{4})/, "$1/$2/$3");
-                      setFormData({ ...formData, birthDate: v });
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2 col-span-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Endereço
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Nº
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.number}
-                    onChange={(e) =>
-                      setFormData({ ...formData, number: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Bairro
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.neighborhood}
-                    onChange={(e) =>
-                      setFormData({ ...formData, neighborhood: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    Cidade
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                    value={formData.city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, city: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                    UF
-                  </label>
-                  <select
-                    className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest focus:border-lilac outline-none text-slate-900"
-                    value={formData.state}
-                    onChange={(e) =>
-                      setFormData({ ...formData, state: e.target.value })
-                    }
-                  >
-                    <option value="">SELECIONE</option>
-                    {[
-                      "AC",
-                      "AL",
-                      "AP",
-                      "AM",
-                      "BA",
-                      "CE",
-                      "DF",
-                      "ES",
-                      "GO",
-                      "MA",
-                      "MT",
-                      "MS",
-                      "MG",
-                      "PA",
-                      "PB",
-                      "PR",
-                      "PE",
-                      "PI",
-                      "RJ",
-                      "RN",
-                      "RS",
-                      "RO",
-                      "RR",
-                      "SC",
-                      "SP",
-                      "SE",
-                      "TO",
-                    ].map((uf) => (
-                      <option key={uf} value={uf}>
-                        {uf}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black text-[#A09898] ml-2">
-                  CEP
-                </label>
-                <input
-                  type="text"
-                  placeholder="00.000-000"
-                  className="w-full bg-white border border-lilac/20 rounded-2xl px-6 py-4 text-sm focus:border-lilac outline-none text-slate-900 font-bold"
-                  value={formData.zipCode}
-                  onChange={(e) => {
-                    let v = e.target.value.replace(/\D/g, "");
-                    v = v.replace(/(\d{2})(\d{3})(\d{3})/, "$1.$2-$3");
-                    setFormData({ ...formData, zipCode: v });
-                  }}
-                />
               </div>
 
               <div className="flex gap-4 pt-6">
@@ -741,6 +694,54 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {isBulkDeleteModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center animate-in zoom-in-95">
+            <Trash2 size={48} className="mx-auto text-rose-500 mb-6" />
+            <h3 className="text-xl font-black mb-2 uppercase">
+              Excluir Clientes Selecionados?
+            </h3>
+            <p className="text-sm text-gray-500 mb-8">
+              Essa ação não pode ser desfeita e excluirá {selectedIds.length} clientes selecionados de forma segura e permanente.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsBulkDeleteModalOpen(false)}
+                className="flex-1 py-4 bg-slate-100 rounded-2xl font-black text-gray-500 uppercase text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-rose-600/30"
+              >
+                Sim, Excluir Todos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-lilac/20 shadow-2xl rounded-2xl p-4 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-2 duration-300">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">
+            {selectedIds.length} {selectedIds.length === 1 ? 'cliente selecionado' : 'clientes selecionados'}
+          </span>
+          <button
+            onClick={() => setIsBulkDeleteModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-rose-600 text-white font-black text-[9px] uppercase tracking-widest hover:bg-rose-700 transition-all hover:scale-105 active:scale-95 shadow-md shadow-rose-200"
+          >
+            <Trash2 size={14} /> Excluir Selecionados
+          </button>
+          <button
+            onClick={() => setSelectedIds([])}
+            className="text-[9px] font-black uppercase tracking-widest text-[#A09898] hover:text-slate-900 transition-colors"
+          >
+            Cancelar
+          </button>
         </div>
       )}
     </div>

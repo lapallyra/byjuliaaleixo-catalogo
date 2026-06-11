@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ChevronLeft, AlertCircle, Gift, ArrowRight } from 'lucide-react';
 import { getOrderByCode, getGiftListWithStatus } from '../services/firebaseService';
 import { Order } from '../types';
@@ -6,39 +6,37 @@ import { OrderReceiptModal } from './Admin/OrderReceiptModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { themes } from '../lib/theme';
 import { ImageWithFallback } from './ImageWithFallback';
+import { useSearchParams } from 'react-router-dom';
 
 interface DocumentSearchProps {
   onGoBack: () => void;
 }
 
 export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
+  const [searchParams] = useSearchParams();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [order, setOrder] = useState<Order | null>(null);
   const [giftList, setGiftList] = useState<any | null>(null);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!code.trim()) return;
-
+  const triggerDirectSearch = async (searchVal: string) => {
+    if (!searchVal) return;
     setLoading(true);
     setError('');
     setOrder(null);
     setGiftList(null);
 
-    const uppercaseCode = code.trim().toUpperCase();
-
     // Try Order first
-    const fetchedOrder = await getOrderByCode(uppercaseCode);
+    const fetchedOrder = await getOrderByCode(searchVal);
     if (fetchedOrder) {
-      setOrder(fetchedOrder);
       setLoading(false);
+      window.location.href = `/rastreamento?code=${fetchedOrder.code}`;
       return;
     }
 
     // Try Gift List
-    const { data: fetchedList, status } = await getGiftListWithStatus(uppercaseCode);
+    const { data: fetchedList, status } = await getGiftListWithStatus(searchVal);
     if (status === 'found' && fetchedList) {
       setLoading(false);
       window.location.href = `/listadepresentes/${fetchedList.code}`;
@@ -51,6 +49,22 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
 
     setLoading(false);
     setError('Documento ou Lista não encontrados. Verifique o código e tente novamente.');
+  };
+
+  // Auto trigger search if code exists in URL search params
+  useEffect(() => {
+    const urlCode = searchParams.get('code');
+    if (urlCode) {
+      const sanitized = urlCode.trim().toUpperCase();
+      setCode(sanitized);
+      triggerDirectSearch(sanitized);
+    }
+  }, [searchParams]);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!code.trim()) return;
+    triggerDirectSearch(code.trim().toUpperCase());
   };
 
   return (

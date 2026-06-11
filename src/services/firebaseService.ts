@@ -16,6 +16,7 @@ import {
   limit
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
+import { sendTelegramNotification } from './telegramService';
 import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig } from '../types';
 
 export enum OperationType {
@@ -226,7 +227,81 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
   const path = `sales/${orderId}`;
   const { id: _, ...dataWithoutId } = data as any;
   try {
-    await updateDoc(doc(db, 'sales', orderId), sanitize(dataWithoutId));
+    let finalData = { ...dataWithoutId };
+    
+    const orderRef = doc(db, 'sales', orderId);
+    let orderData = (data as Order); // Fallback
+    const orderSnap = await getDoc(orderRef);
+    if (orderSnap.exists()) {
+      orderData = { ...orderSnap.data(), ...data } as Order; // Merged
+    }
+
+    // Automatic stock deduction when entering produced/completed statuses
+    if (['ready', 'delivered', 'fully_paid', 'production'].includes(data.status || '')) {
+      if (orderSnap.exists()) {
+        const dbOrderData = orderSnap.data() as Order;
+        if (!dbOrderData.insumosDeducted) {
+          const items = data.items || dbOrderData.items || [];
+          for (const item of items) {
+            if (item.insumos && item.insumos.length > 0) {
+              for (const req of item.insumos) {
+                try {
+                  const insumoRef = doc(db, 'insumos', req.insumoId);
+                  const insumoSnap = await getDoc(insumoRef);
+                  if (insumoSnap.exists()) {
+                    const currentQty = insumoSnap.data().quantity || 0;
+                    const reduction = req.quantity * item.quantity;
+                    const newQty = Math.max(0, currentQty - reduction);
+                    await updateDoc(insumoRef, { quantity: newQty });
+                    
+                    // Log movement
+                    await addDoc(collection(db, 'insumo_movements'), sanitize({
+                      insumoId: req.insumoId,
+                      insumoName: insumoSnap.data().name || 'Material',
+                      orderId: orderId,
+                      orderCode: dbOrderData.code || orderId,
+                      productName: item.product_name || 'Produto',
+                      quantityDeducted: reduction,
+                      timestamp: new Date().toISOString(),
+                      type: 'out'
+                    }));
+
+                    // Low Stock Check
+                    if (newQty <= 10) { // Default low stock threshold, can make dynamic if needed
+                       try {
+                         sendTelegramNotification('low_stock', `⚠️ ESTOQUE BAIXO\n\nProduto:\n${insumoSnap.data().name || 'Material'}\n\nQuantidade Atual:\n${newQty}`);
+                       } catch(e){}
+                    }
+                  }
+                } catch (err) {
+                  console.warn(`Could not update stock for insumo ${req.insumoId}:`, err);
+                }
+              }
+            }
+          }
+          finalData.insumosDeducted = true;
+        }
+      }
+    }
+
+    await updateDoc(doc(db, 'sales', orderId), sanitize(finalData));
+
+    // Telegram Notifications for status change
+    try {
+      if (data.status && orderSnap.exists() && orderSnap.data().status !== data.status) {
+        const baseUrl = window.location.origin;
+        if (data.status === 'production' || data.status === 'paid' || data.status === 'fully_paid') {
+          // Could be considered payment confirmed depending on previous state
+          if (orderSnap.data().status === 'waiting_payment' || orderSnap.data().status === 'novo pedido') {
+            sendTelegramNotification('payment_confirmed', `💰 PAGAMENTO CONFIRMADO\n\nPedido: #${orderData.code || orderId}\n\nCliente:\n${orderData.customerName || 'N/D'}\n\nValor:\nR$ ${(orderData.total || 0).toFixed(2).replace('.', ',')}\n\nForma:\n${(orderData as any).paymentMethod || (orderData as any).payment_method || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${orderId}`);
+          }
+        } else if (data.status === 'cancelled' || (data.status as any) === 'cancelado') {
+          sendTelegramNotification('order_canceled', `❌ PEDIDO CANCELADO\n\nPedido: #${orderData.code || orderId}\n\nCliente:\n${orderData.customerName || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${orderId}`);
+        } else if (data.status === 'delivered') {
+          sendTelegramNotification('order_completed', `📦 PEDIDO FINALIZADO\n\nPedido: #${orderData.code || orderId}\n\nCliente:\n${orderData.customerName || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${orderId}`);
+        }
+      }
+    } catch(e) {}
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
@@ -250,7 +325,8 @@ export const saveSale = async (data: any) => {
       status: 'novo pedido',
       source: 'catalogo',
       deliveryDate: deliveryDate,
-      estimatedDelivery: deliveryDate
+      estimatedDelivery: deliveryDate,
+      insumosDeducted: true // Already deducted on catalog purchase below
     });
     
     let docRef = doc(db, 'sales', saleData.code);
@@ -280,6 +356,8 @@ export const saveSale = async (data: any) => {
         status: 'paid',
         companyId: saleData.companyId,
         orderId: docRef.id,
+        marketplace: saleData.marketplace || '',
+        marketplaceTax: saleData.marketplaceTax || 0,
         createdAt: serverTimestamp()
       }));
     } catch (e) {
@@ -300,6 +378,20 @@ export const saveSale = async (data: any) => {
                 await updateDoc(insumoRef, { 
                     quantity: Math.max(0, currentQty - reduction) 
                 });
+                try {
+                  await addDoc(collection(db, 'insumo_movements'), sanitize({
+                    insumoId: requiredInsumo.insumoId,
+                    insumoName: insumoSnap.data()?.name || 'Material',
+                    orderId: docRef.id,
+                    orderCode: saleData.code || docRef.id,
+                    productName: item.product_name || 'Produto',
+                    quantityDeducted: reduction,
+                    timestamp: new Date().toISOString(),
+                    type: 'out'
+                  }));
+                } catch (logErr) {
+                  console.warn('Logging movement error:', logErr);
+                }
               }
             } catch (err) {
               console.warn(`Could not update stock for insumo ${requiredInsumo.insumoId}:`, err);
@@ -309,6 +401,12 @@ export const saveSale = async (data: any) => {
       }
     }
     
+    // Telegram Notification
+    try {
+      const baseUrl = window.location.origin;
+      sendTelegramNotification('new_order', `🛒 NOVO PEDIDO\n\nPedido: #${saleData.code || docRef.id}\n\nCliente:\n${saleData.customerName || 'N/D'}\n\nValor:\nR$ ${(saleData.total || 0).toFixed(2).replace('.', ',')}\n\nPagamento:\n${saleData.paymentMethod || 'N/D'}\n\nEntrega:\n${saleData.deliveryDate || 'N/D'}\n\nStatus:\n${saleData.status || 'N/D'}\n\nAbrir Pedido:\n${baseUrl}/admin/pedidos/${docRef.id}`);
+    } catch (e) {}
+
     return docRef.id;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -339,10 +437,11 @@ function generateOrderCode(companyId: CompanyId): string {
   const prefixMap: Record<string, string> = {
     'pallyra': 'LP',
     'guennita': 'CG',
-    'mimada': 'MS'
+    'mimada': 'MS',
+    'tuttymimo': 'TM'
   };
-  const prefix = prefixMap[companyId] || 'LP'; // Default to LP instead of AT
-  const random = crypto.randomUUID().slice(0, 4).toUpperCase();
+  const prefix = prefixMap[companyId] || 'LP';
+  const random = Math.floor(10000 + Math.random() * 90000).toString();
   return `${prefix}${random}`;
 }
 
@@ -375,6 +474,12 @@ const handleCustomerOrder = async (orderData: Order) => {
         state: '',
         zipCode: ''
       }));
+
+      // Telegram notification for new client
+      try {
+        sendTelegramNotification('new_client', `👤 NOVO CLIENTE\n\nNome:\n${orderData.customerName || 'Cliente sem nome'}\n\nContato:\n${orderData.contact || 'S/C'}`);
+      } catch(e){}
+
     } else {
       const customerDoc = snapshot.docs[0];
       const data = customerDoc.data();
@@ -388,10 +493,65 @@ const handleCustomerOrder = async (orderData: Order) => {
   }
 };
 
+export const syncCustomerFromCheckout = async (companyId: CompanyId, data: Partial<Customer>) => {
+  const path = 'customers';
+  try {
+    if (!data.contact) return;
+
+    // Search by contact first
+    const q = query(
+      collection(db, path),
+      where('contact', '==', data.contact),
+      where('companyId', '==', companyId)
+    );
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const customerDoc = snapshot.docs[0];
+      const existingData = customerDoc.data();
+      
+      // Update only if values are provided and more complete than existing
+      const updateData: any = {};
+      if (data.name && !existingData.name) updateData.name = data.name;
+      if (data.cpfCnpj && !existingData.cpfCnpj) updateData.cpfCnpj = data.cpfCnpj;
+      if (data.email && !existingData.email) updateData.email = data.email;
+      if (data.address && !existingData.address) updateData.address = data.address;
+      if (data.city && !existingData.city) updateData.city = data.city;
+      if (data.state && !existingData.state) updateData.state = data.state;
+      if (data.zipCode && !existingData.zipCode) updateData.zipCode = data.zipCode;
+      if (data.number && !existingData.number) updateData.number = data.number;
+      if (data.neighborhood && !existingData.neighborhood) updateData.neighborhood = data.neighborhood;
+
+      if (Object.keys(updateData).length > 0) {
+        await updateDoc(customerDoc.ref, updateData);
+      }
+    } else if (data.name) {
+      // Create new if not found
+      await addCustomer({
+        name: data.name,
+        contact: data.contact,
+        companyId: companyId,
+        cpfCnpj: data.cpfCnpj || '',
+        email: data.email || '',
+        address: data.address || '',
+        city: data.city || '',
+        state: data.state || '',
+        zipCode: data.zipCode || '',
+        number: data.number || '',
+        neighborhood: data.neighborhood || '',
+        totalSpent: 0,
+        ordersCount: 0,
+        birthDate: ''
+      });
+    }
+  } catch (error) {
+    console.error('Failed to sync customer from checkout:', error);
+  }
+};
 export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdAt'>) => {
   const path = 'customers';
   try {
-    const customerCode = crypto.randomUUID().slice(0, 8).toUpperCase();
+    const customerCode = Array.from({ length: 7 }, () => Math.floor(Math.random() * 10)).join('');
     const docRef = await addDoc(collection(db, path), sanitize({
       ...data,
       code: customerCode,
@@ -399,6 +559,11 @@ export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdA
       totalSpent: data.totalSpent || 0,
       ordersCount: data.ordersCount || 0
     }));
+
+    try {
+      sendTelegramNotification('new_client', `👤 NOVO CLIENTE\n\nNome:\n${data.name || 'Cliente sem nome'}\n\nContato:\n${data.contact || 'S/C'}`);
+    } catch(e){}
+
     return docRef.id;
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, path);
@@ -486,11 +651,72 @@ export const getSiteSettings = async (companyId: CompanyId): Promise<SiteSetting
   }
 };
 
+export const getGlobalSettings = async (): Promise<any> => {
+  try {
+    const docSnap = await getDoc(doc(db, 'settings', 'global'));
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching global settings:', error);
+    return null;
+  }
+};
+
+export const saveGlobalSettings = async (data: any) => {
+  try {
+    await setDoc(doc(db, 'settings', 'global'), data, { merge: true });
+  } catch (error) {
+    console.error('Error saving global settings:', error);
+  }
+};
+
 export const saveSiteSettings = async (companyId: CompanyId, data: Partial<SiteSettings>) => {
   try {
     await setDoc(doc(db, 'settings', companyId), data, { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `settings/${companyId}`);
+  }
+};
+
+export const subscribeToTelegramLogs = (callback: (logs: any[]) => void) => {
+  const path = 'telegram_logs';
+  const q = query(collection(db, path), orderBy('createdAt', 'desc'), limit(20));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  });
+};
+
+export const getSystemNotificationsConfig = async (): Promise<any> => {
+  try {
+    const docSnap = await getDoc(doc(db, 'system_notifications', 'settings'));
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching system notifications config:', error);
+    return null;
+  }
+};
+
+export const saveSystemNotificationsConfig = async (data: any) => {
+  try {
+    const docRef = doc(db, 'system_notifications', 'settings');
+    const updateData = {
+      ...data,
+      updated_at: new Date().toISOString()
+    };
+    if (!data.created_at) {
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        updateData.created_at = new Date().toISOString();
+      }
+    }
+    await setDoc(docRef, updateData, { merge: true });
+  } catch (error) {
+    console.error('Error saving system notifications config:', error);
   }
 };
 
@@ -582,6 +808,23 @@ export const getGiftList = async (code: string) => {
   }
 };
 
+export const getCustomerByCpf = async (cpf: string, companyId: string): Promise<Customer | null> => {
+  try {
+    const q = query(
+      collection(db, 'customers'),
+      where('companyId', '==', companyId),
+      where('cpfCnpj', '==', cpf)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      return snap.docs[0].data() as Customer;
+    }
+  } catch (error) {
+    console.error('Error fetching customer by CPF:', error);
+  }
+  return null;
+};
+
 export const getGiftListWithStatus = async (code: string): Promise<{ data: any | null, status: 'found' | 'expired' | 'not_found' }> => {
   const path = `giftLists/${code}`;
   try {
@@ -652,6 +895,8 @@ export const subscribeToSales = (callback: (sales: any[]) => void, companyId?: C
     const fallbackQ = companyId ? query(collection(db, path), where('companyId', '==', companyId)) : collection(db, path);
     onSnapshot(fallbackQ, (fallbackSnap) => {
       callback(fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (fallbackError) => {
+      handleFirestoreError(fallbackError, OperationType.LIST, path);
     });
   });
 };
@@ -698,6 +943,41 @@ export const subscribeToSuggestions = (callback: (suggestions: any[]) => void, c
 
 export const markSuggestionAsRead = async (id: string) => {
   await updateDoc(doc(db, 'suggestions', id), { read: true });
+};
+
+export const addFeedback = async (name: string, text: string, stars: number) => {
+  const path = 'feedbacks';
+  try {
+    await addDoc(collection(db, path), sanitize({
+      name,
+      text,
+      stars,
+      createdAt: serverTimestamp()
+    }));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+  }
+};
+
+export const subscribeToFeedbacks = (callback: (feedbacks: any[]) => void) => {
+  const path = 'feedbacks';
+  const q = query(collection(db, path), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (error) => {
+    console.warn("Ordered feedbacks failed, falling back to unordered", error);
+    onSnapshot(collection(db, path), (fallbackSnap) => {
+      const results = fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      results.sort((a: any, b: any) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+        return timeB - timeA;
+      });
+      callback(results);
+    }, (fallbackError) => {
+      handleFirestoreError(fallbackError, OperationType.GET, path);
+    });
+  });
 };
 
 export const subscribeToAddons = (callback: (addons: any[]) => void, companyId: CompanyId) => {
@@ -793,3 +1073,74 @@ export const subscribeToMonthlyProfitHistory = (callback: (entries: any[]) => vo
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   }, (error) => handleFirestoreError(error, OperationType.LIST, path));
 };
+
+export const logCheckoutEvent = async (
+  stepName: string, 
+  data: { 
+    companyId: string; 
+    clientName?: string; 
+    total?: number; 
+    itemsCount?: number; 
+    description?: string; 
+  }
+) => {
+  const path = 'checkout_funnel_logs';
+  try {
+    await addDoc(collection(db, path), sanitize({
+      ...data,
+      stepName,
+      createdAt: serverTimestamp()
+    }));
+  } catch (error) {
+    console.warn("Could not log checkout event", error);
+  }
+};
+
+export const subscribeToCheckoutEvents = (callback: (events: any[]) => void, companyId?: string) => {
+  const path = 'checkout_funnel_logs';
+  const q = companyId 
+    ? query(collection(db, path), where('companyId', '==', companyId))
+    : collection(db, path);
+    
+  return onSnapshot(q, (snapshot) => {
+    const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    list.sort((a: any, b: any) => {
+      const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+      const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+      return timeB - timeA;
+    });
+    callback(list);
+  }, (error) => {
+    handleFirestoreError(error, OperationType.LIST, path);
+  });
+};
+
+export const performSystemReset = async (): Promise<void> => {
+  const collectionsToClear = [
+    'customers',
+    'products',
+    'insumos',
+    'insumo_movements',
+    'sales',
+    'finance',
+    'monthly_profit_history',
+    'checkout_funnel_logs',
+    'giftLists'
+  ];
+
+  for (const colName of collectionsToClear) {
+    try {
+      const colRef = collection(db, colName);
+      const snapshot = await getDocs(colRef);
+      const deletePromises = snapshot.docs.map((docSnap) => 
+        deleteDoc(doc(db, colName, docSnap.id))
+      );
+      await Promise.all(deletePromises);
+      console.log(`Cleared collection: ${colName}`);
+    } catch (e) {
+      console.error(`Error resetting collection ${colName}:`, e);
+      throw e;
+    }
+  }
+};
+

@@ -1,4 +1,4 @@
-export type CompanyId = 'pallyra' | 'guennita' | 'mimada';
+export type CompanyId = 'pallyra' | 'guennita' | 'mimada' | 'tuttymimo';
 
 export interface Product {
   id: string;
@@ -20,6 +20,7 @@ export interface Product {
   subcategory: string;
   isVisible: boolean;
   isFeatured: boolean;
+  stock?: number;
   insumos?: { insumoId: string; quantity: number }[];
   variations?: Variation[];
   estimatedCost?: number;
@@ -72,13 +73,20 @@ export interface Order {
   address?: string;
   items: CartItem[];
   total: number;
-  status: 'quote' | 'approval' | 'waiting_deposit' | 'production' | 'assembly' | 'ready' | 'delivered' | 'cancelled' | 'pending' | 'delivery';
+  status: 'quote' | 'approval' | 'waiting_deposit' | 'production' | 'assembly' | 'ready' | 'delivered' | 'cancelled' | 'pending' | 'delivery' | 'waiting_payment' | 'planned_payment' | 'paid' | 'waiting_remaining' | 'planned_active' | 'fully_paid';
   createdAt: any; 
   deliveryDate: string;
-  deliveryType?: 'pickup' | 'delivery' | 'shipping';
+  deliveryType?: 'retirada' | 'delivery' | 'shipping';
   shippingCost?: number;
   isEmergency: boolean;
   paymentStatus?: 'pending' | 'paid' | 'cancelled' | 'partial' | 'refunded';
+  paymentMode?: 'full' | 'planned';
+  payment_method?: 'full' | 'planned';
+  plannedMethod?: 'credit_card' | 'digital_booklet';
+  remainingAmount?: number;
+  remainingInstallments?: number;
+  remainingInstallmentValue?: number;
+  remainingFee?: number;
   isWholesale: boolean;
   observations: string;
   photos?: string[];
@@ -86,6 +94,12 @@ export interface Order {
   signalValue?: number;
   source?: 'catalog' | 'admin';
   giftInfo?: string;
+  giftName?: string;
+  giftTheme?: string;
+  giftColors?: string;
+  insumosDeducted?: boolean;
+  marketplace?: string;
+  marketplaceTax?: number;
   history?: {
     status: Order['status'];
     timestamp: any;
@@ -99,6 +113,7 @@ export interface Customer {
   code: string; // 5 digits
   name: string;
   contact: string;
+  email?: string;
   cpfCnpj: string;
   birthDate: string;
   address: string;
@@ -109,6 +124,7 @@ export interface Customer {
   zipCode: string;
   totalSpent: number;
   ordersCount: number;
+  pendingBalance?: number;
   createdAt: any;
   companyId: CompanyId;
 }
@@ -124,6 +140,23 @@ export interface FinanceEntry {
   companyId: CompanyId;
   orderId?: string;
   paymentMethod?: string;
+  marketplace?: string;
+  marketplaceTax?: number;
+}
+
+export interface SystemNotificationConfig {
+  id?: string;
+  telegram_enabled: boolean;
+  telegram_bot_token: string;
+  telegram_chat_id: string;
+  notify_new_order?: boolean;
+  notify_payment_confirmed?: boolean;
+  notify_order_canceled?: boolean;
+  notify_order_completed?: boolean;
+  notify_low_stock?: boolean;
+  notify_new_client?: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SiteSettings {
@@ -148,6 +181,7 @@ export interface SiteSettings {
   store_logo_x?: number;
   store_logo_y?: number;
   store_name?: string;
+  store_legal_name?: string;
   store_slogan?: string;
   store_cnpj?: string;
   store_contact?: string;
@@ -169,18 +203,39 @@ export interface SiteSettings {
   theme_accent_color?: string;
   theme_text_color?: string;
   checkout_banner?: string;
+  instagram?: string;
+  about_me_photo?: string;
+  about_me_title?: string;
+  about_me_bio?: string;
+  about_me_purpose?: string;
   
+  // Mercado Pago Pix Automatic
+  mercadopago_token?: string;
+  pix_automatico_active?: boolean;
+  
+  shipping_rules?: {
+    id: string;
+    region: string;
+    cep_start: string;
+    cep_end: string;
+    price: number;
+    active: boolean;
+  }[];
+
   global_fixed_costs?: number;
   global_labor_cost_per_hour?: number;
   global_tax_rate?: number;
   fixed_costs_list?: { id: string; name: string; value: number }[];
   taxes_list?: { id: string; name: string; value: number; type?: string }[];
   labor_list?: { id: string; name: string; value: number }[];
+  test_mode?: boolean;
+  sound_notifications_active?: boolean;
 }
 
 export interface CartItem extends Product {
   quantity: number;
   productId?: string;
+  observations?: string;
 }
 
 export interface AppConfig {
@@ -193,6 +248,9 @@ export interface AppConfig {
   company_3_name: string;
   company_3_slogan: string;
   company_3_logo?: string;
+  company_4_name: string;
+  company_4_slogan: string;
+  company_4_logo?: string;
   whatsapp_number: string;
   background_color: string;
   text_color: string;
@@ -225,12 +283,14 @@ export interface CheckoutData {
   birthDate: string;
   cpfCnpj: string;
   contact: string;
-  deliveryType: 'pickup' | 'delivery' | 'shipping';
+  deliveryType: 'retirada' | 'delivery' | 'shipping';
   address: string;
   city: string;
   state: string;
   zipCode: string;
-  paymentMethod: 'pix' | 'credit_card' | 'pix_parcelado' | 'cash' | 'mercadopago';
+  paymentMethod: 'pix' | 'credit_card' | 'pix_parcelado' | 'cash' | 'mercadopago' | 'planned';
+  paymentMode?: 'full' | 'planned';
+  plannedMethod?: 'credit_card' | 'digital_booklet';
   installments?: number;
   needsChange?: 'SIM' | 'NÃO';
   changeAmount?: string;
