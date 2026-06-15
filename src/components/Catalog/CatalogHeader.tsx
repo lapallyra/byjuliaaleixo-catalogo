@@ -101,14 +101,12 @@ export const CatalogHeader: React.FC<{
                transition={{ delay: 0.4, duration: 0.8 }}
                className="flex items-center gap-6 group"
             >
-               <div className="flex items-center gap-4 w-48 md:w-64 border-b-2 pb-2 transition-all duration-500 group-focus-within:border-opacity-100" 
-                    style={{ borderColor: `${theme.accentColor}33` }}>
-                 <Search size={16} className={`opacity-40 transition-opacity group-focus-within:opacity-100 ${theme.textPrimary}`}  />
+               <div className="flex items-center gap-3 px-4 py-2 w-48 md:w-64 bg-black/[0.03] backdrop-blur-sm rounded-xl border border-black/[0.04] transition-all duration-300 group-focus-within:bg-white group-focus-within:border-black/10 group-focus-within:shadow-[0_4px_12px_rgba(0,0,0,0.03)]" >
+                 <Search size={14} className={`opacity-40 transition-opacity group-focus-within:opacity-80 ${theme.textPrimary}`}  />
                  <input 
                    type="text" 
-                   placeholder="O que você procura?" 
-                   className={`bg-transparent text-[11px] font-sans tracking-[0.2em] uppercase outline-none w-full placeholder:text-opacity-40 transition-all font-black`}
-                   
+                   placeholder="Buscar presentes..." 
+                   className={`bg-transparent text-xs font-sans tracking-wide outline-none w-full placeholder:text-neutral-400 text-neutral-800 transition-all`}
                    onChange={(e) => onSearch(e.target.value)}
                  />
                </div>
@@ -119,7 +117,7 @@ export const CatalogHeader: React.FC<{
                  title="Ver Lista de Presentes"
                >
                  <Gift size={20} strokeWidth={2} />
-                 <span className="text-[8px] font-black uppercase tracking-tighter">Listas</span>
+                 <span className="text-[8px] font-medium uppercase tracking-wider">Listas</span>
                  {giftListCount > 0 && (
                     <span className={`absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center rounded-full text-[8px] shadow-lg animate-pulse ${theme.cartBadge}`}>
                       {giftListCount}

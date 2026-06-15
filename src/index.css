@@ -1,48 +1,42 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Great+Vibes&family=Imperial+Script&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
-
-@font-face {
-  font-family: 'Sofia Carolyn';
-  src: url('https://fonts.cdnfonts.com/s/72856/SofiaCarolyn.woff') format('woff');
-  font-display: block;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..700;1,400..700&display=swap');
 
 html {
   scroll-behavior: smooth;
 }
 
 @theme {
-  --font-sans: "Tahoma", "Inter", "Verdana", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Cormorant Garamond", "Playfair Display", "Georgia", serif;
-  --font-cursive: "Great Vibes", cursive;
-  --font-hand: "Great Vibes", cursive;
-  --font-atelier: "Great Vibes", cursive;
-  --font-elegant: "Pinyon Script", cursive;
-  --font-sofia: "Sofia Carolyn", cursive;
-  --font-imperial: "Imperial Script", cursive;
-  --font-number: "Tahoma", sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", "Georgia", serif;
+  --font-cursive: "Playfair Display", serif;
+  --font-hand: "Playfair Display", serif;
+  --font-atelier: "Playfair Display", serif;
+  --font-elegant: "Playfair Display", serif;
+  --font-sofia: "Playfair Display", serif;
+  --font-imperial: "Playfair Display", serif;
+  --font-number: "Inter", sans-serif;
   --color-gold: #C6A664;
   --color-gold-deep: #B39254;
   --color-charcoal: #161616;
-  --color-soft-white: #F8F8F6;
-  --color-lilac: #E9D5FF;
-  --color-lilac-baby: #F5EBFF;
-  --color-deep-black: #050505;
+  --color-soft-white: #FAF9F6;
+  --color-lilac: #FAF5F2;
+  --color-lilac-baby: #FAF9F6;
+  --color-deep-black: #111111;
 }
 
 @layer utilities {
   .font-fancy {
-    font-family: var(--font-hand);
+    font-family: var(--font-serif);
     font-weight: 400;
   }
   .font-beauty {
-    font-family: var(--font-atelier);
+    font-family: var(--font-serif);
   }
   .font-signature {
-    font-family: var(--font-imperial);
+    font-family: var(--font-serif);
   }
   .font-tahoma {
-    font-family: "Tahoma", sans-serif;
+    font-family: var(--font-sans);
   }
   .font-number {
     font-family: var(--font-number);
@@ -543,4 +537,122 @@ html {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none !important;
+}
+
+/* ==========================================
+   APPLE TOUCH & LUXO MINIMALISTA CORE STYLES
+   ========================================== */
+
+/* Universal Inputs & Selects */
+.apple-input, .apple-select, textarea.apple-input {
+  background-color: #FAF9F6 !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  color: #1d1d1d !important;
+  border-radius: 12px !important; /* Cantos semi-arredondados suaves */
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  outline: none !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.01), 0 1px 2px rgba(0, 0, 0, 0.01) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.apple-input:focus, .apple-select:focus {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Universal Buttons */
+.apple-btn {
+  border-radius: 12px !important; /* Cantos semi-arredondados suaves */
+  padding: 12px 20px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.03em !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0,0,0,0.02) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+}
+
+/* Active touch state simulates a physical press */
+.apple-btn:active {
+  transform: scale(0.96) !important;
+}
+
+.apple-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Premium Modals with Backdrop Blur */
+.apple-modal-bg {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  background-color: rgba(250, 249, 246, 0.75) !important;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.apple-modal-content {
+  background-color: #ffffff !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.1), 0 10px 20px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Premium Apple-themed Sparkle Toast Container */
+.apple-toast {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(0, 0, 0, 0.04) !important;
+  color: #1a1a1a !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em !important;
+  padding: 10px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  animation: apple-toast-slideup 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.apple-toast::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 120%, rgba(198, 166, 100, 0.08) 0%, transparent 80%);
+  pointer-events: none;
+}
+
+@keyframes apple-toast-slideup {
+  0% {
+    transform: translateY(12px) scale(0.96);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Care & Quality Loader */
+.apple-loader {
+  border: 2px solid rgba(0, 0, 0, 0.05);
+  border-top-color: #1a1a1a;
+  border-radius: 50%;
+  animation: apple-spin 0.8s cubic-bezier(0.6, 0.2, 0.2, 0.8) infinite;
+}
+
+@keyframes apple-spin {
+  to { transform: rotate(360deg); }
 }

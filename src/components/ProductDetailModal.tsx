@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Minus, Plus, Share2, ShoppingCart, Gift } from 'lucide-react';
+import { X, Minus, Plus, Share2, ShoppingCart, Gift, Sparkles } from 'lucide-react';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { Product, CompanyId } from '../types';
 import { themes } from '../lib/theme';
@@ -176,7 +176,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             <button
                               key={`var-${vIdx}-${oIdx}`}
                               onClick={() => setSelectedVariation(`${v.name}: ${opt.name}`)}
-                              className={`px-6 py-3 text-[11px] font-bold rounded-xl border-2 transition-all duration-500 uppercase tracking-widest ${selectedVariation === `${v.name}: ${opt.name}` ? `scale-[1.05] shadow-lg ${theme.btnPrimary} border-transparent` : `${theme.btnSecondary}`}`}
+                              className={`px-4 py-2.5 text-[11px] font-semibold rounded-lg border transition-all duration-300 tracking-wide active:scale-95 ${selectedVariation === `${v.name}: ${opt.name}` ? `shadow-sm ${theme.btnPrimary} border-transparent` : `bg-white border-neutral-100 text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900`}`}
                             >
                               {opt.name}
                             </button>
@@ -211,10 +211,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <div className="mb-12 text-center md:text-left">
                  <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] mb-4 ${theme.textMuted}`}>Quantidade:</h3>
                  <div className="inline-flex flex-col gap-4 w-full md:w-auto">
-                   <div className={`flex items-center justify-center md:justify-start gap-8 border ${theme.borderLine} rounded-xl p-1.5 ${theme.cardBg} transition-all`}>
-                     <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all active:scale-90 ${theme.btnSecondary}`}><Minus size={14} strokeWidth={2} /></button>
-                     <span className={`text-sm font-number font-black w-6 text-center ${theme.textPrimary}`}>{quantity}</span>
-                     <button onClick={() => setQuantity(q => q + 1)} className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all active:scale-90 ${theme.btnSecondary}`}><Plus size={14} strokeWidth={2} /></button>
+                   <div className="flex items-center justify-center md:justify-start gap-6 border border-neutral-150 rounded-xl p-1 bg-neutral-50/50 max-w-max mx-auto md:mx-0 shadow-sm transition-all">
+                     <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-neutral-100 text-neutral-600 hover:text-neutral-900 transition-all active:scale-90 shadow-sm"><Minus size={12} /></button>
+                     <span className="text-sm font-semibold tracking-wide w-6 text-center text-neutral-800">{quantity}</span>
+                     <button onClick={() => setQuantity(q => q + 1)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-neutral-100 text-neutral-600 hover:text-neutral-900 transition-all active:scale-90 shadow-sm"><Plus size={12} /></button>
                    </div>
                  </div>
               </div>
@@ -248,42 +248,49 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                 <div className="grid grid-cols-2 gap-4 w-full">
                   <motion.button 
-                    whileHover={{ scale: 1.01, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => {
                         onAddToCart(product, quantity);
                         setShowToast(true);
                         setTimeout(() => setShowToast(false), 2000);
                     }}
-                    className={`py-5 rounded-2xl text-[10px] uppercase tracking-normal font-black transition-all duration-700 flex items-center justify-center gap-2 shadow-lg ${theme.btnPrimary}`}
+                    className={`py-3.5 px-6 rounded-xl text-xs font-semibold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 shadow-sm ${theme.btnPrimary}`}
+                    style={{ borderRadius: '12px' }}
                   >
-                    <ShoppingCart size={16} strokeWidth={2} />
+                    <ShoppingCart size={15} />
                     Adicionar
                   </motion.button>
                   
                   {onAddToGiftList && (
-                    <button 
+                    <motion.button 
+                       whileHover={{ y: -1 }}
+                       whileTap={{ scale: 0.96 }}
                        onClick={() => {
                          onAddToGiftList(product);
                          setShowGiftToast(true);
                          setTimeout(() => setShowGiftToast(false), 2000);
                        }}
-                       className={`flex items-center justify-center gap-2 py-5 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] ${theme.btnSecondary}`}
+                       className={`flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl border border-neutral-200 text-neutral-750 font-semibold text-xs tracking-wide transition-all ${theme.btnSecondary}`}
+                       style={{ borderRadius: '12px' }}
                     >
-                      <Gift size={16} strokeWidth={2} />
-                      Lista
-                    </button>
+                      <Gift size={15} />
+                      Lista de Presentes
+                    </motion.button>
                   )}
                 </div>
 
                 <div className="w-full">
-                  <button 
+                  <motion.button 
+                    whileHover={{ y: -1 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={handleShare}
-                    className={`w-full py-4 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group ${theme.btnSecondary}`}
+                    className={`w-full py-3 px-6 rounded-xl border border-neutral-200 text-neutral-700 font-semibold text-xs tracking-wide transition-all flex items-center justify-center gap-2 group ${theme.btnSecondary}`}
+                    style={{ borderRadius: '12px' }}
                   >
-                    <Share2 size={16} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
-                    Partilhar
-                  </button>
+                    <Share2 size={15} className="group-hover:scale-105 transition-transform" />
+                    Compartilhar Produto
+                  </motion.button>
                 </div>
               </div>
             </div>
@@ -293,33 +300,44 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <AnimatePresence>
           {showToast && (
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 bg-black text-white text-[10px] uppercase tracking-[0.2em] font-black rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[100] border border-white/10"
+              initial={{ opacity: 0, y: 12, x: '-50%' }}
+              animate={{ opacity: 1, y: 0, x: '-50%' }}
+              exit={{ opacity: 0, y: 8, x: '-50%' }}
+              className="apple-toast absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 min-w-[280px] justify-between shadow-[0_12px_32px_rgba(0,0,0,0.06)] border border-neutral-100/50"
             >
-              Adicionado ao Carrinho
+              <div className="flex items-center gap-2.5">
+                <ShoppingCart size={15} className="text-emerald-500 animate-bounce" />
+                <span className="text-neutral-800 text-[11px] font-medium tracking-wide">Adicionado ao Carrinho</span>
+              </div>
+              <Sparkles size={11} className="text-[#C6A664] animate-pulse" />
             </motion.div>
           )}
           {showGiftToast && (
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 bg-black text-white text-[10px] uppercase tracking-[0.2em] font-black rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[100] border border-white/10 flex items-center gap-2"
+              initial={{ opacity: 0, y: 12, x: '-50%' }}
+              animate={{ opacity: 1, y: 0, x: '-50%' }}
+              exit={{ opacity: 0, y: 8, x: '-50%' }}
+              className="apple-toast absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 min-w-[280px] justify-between shadow-[0_12px_32px_rgba(0,0,0,0.06)] border border-neutral-100/50"
             >
-              <Gift size={14} className="text-pink-400" />
-              Adicionado à sua lista!
+              <div className="flex items-center gap-2.5">
+                <Gift size={15} className="text-rose-500 animate-bounce" />
+                <span className="text-neutral-800 text-[11px] font-medium tracking-wide">Adicionado à Lista!</span>
+              </div>
+              <Sparkles size={11} className="text-[#C6A664] animate-pulse" />
             </motion.div>
           )}
           {showShareToast && (
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 px-8 py-4 bg-black text-white text-[10px] uppercase tracking-[0.2em] font-black rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[100] border border-white/10"
+              initial={{ opacity: 0, y: 12, x: '-50%' }}
+              animate={{ opacity: 1, y: 0, x: '-50%' }}
+              exit={{ opacity: 0, y: 8, x: '-50%' }}
+              className="apple-toast absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 min-w-[280px] justify-between shadow-[0_12px_32px_rgba(0,0,0,0.06)] border border-neutral-100/50"
             >
-              Link copiado para partilhar!
+              <div className="flex items-center gap-2.5">
+                <Share2 size={15} className="text-blue-500 animate-pulse" />
+                <span className="text-neutral-800 text-[11px] font-medium tracking-wide">Link Copiado!</span>
+              </div>
+              <Sparkles size={11} className="text-[#C6A664] animate-pulse" />
             </motion.div>
           )}
         </AnimatePresence>
