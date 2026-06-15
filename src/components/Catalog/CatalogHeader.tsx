@@ -133,6 +133,7 @@ export const CatalogHeader: React.FC<{
             <FestiveBanner 
               companyId={companyId || 'pallyra'} 
               primaryColor={theme.accentColor} 
+              onSearch={onSearch}
             />
         </div>
       </div>
