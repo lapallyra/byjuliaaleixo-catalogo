@@ -388,7 +388,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+              <div className="flex flex-col gap-6">
                 <div className="space-y-6">
                   <div className="space-y-1">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Contato / WhatsApp</label>
@@ -412,7 +412,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
                   </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-6 mt-2">
                   <div className="space-y-1">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Endereço Completo</label>
                     <div className="text-[14px] font-black text-slate-900 uppercase leading-snug tracking-tight">

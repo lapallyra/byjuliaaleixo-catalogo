@@ -636,18 +636,18 @@ export function CheckoutModal({
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border border-gray-100 p-6 md:p-8 rounded-3xl bg-white shadow-[0_4px_24px_-10px_rgba(0,0,0,0.03)]">
                      <div className="space-y-2">
                        <label className="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1">Nome da Criança / Pessoa <span className="text-rose-400 font-bold">*</span></label>
-                       <input value={persName} onChange={e => { setPersName(e.target.value); setErrors(p => ({...p, persName: ''})) }} className={`apple-input w-full ${errors.persName ? 'border-rose-300 focus:ring-rose-100' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Ex: Maria Alice" />
+                       <input value={persName} onChange={e => { setPersName(e.target.value); setErrors(p => ({...p, persName: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border ${errors.persName ? 'border-rose-300 focus:ring-rose-100' : 'border-transparent'} rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium text-gray-800`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Ex: Maria Alice" />
                        {errors.persName && <p className="text-rose-500 text-xs font-semibold mt-1.5 flex items-center gap-1">✨ {errors.persName}</p>}
                      </div>
                      <div className="space-y-2">
                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Idade / Frase</label>
-                       <input value={persAge} onChange={e => setPersAge(e.target.value)} className="apple-input w-full" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Ex: 1 aninho" />
+                       <input value={persAge} onChange={e => setPersAge(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium text-gray-800" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Ex: 1 aninho" />
                      </div>
                    </div>
 
                    <div className="space-y-2">
                      <label className="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1">Tema / Estilo <span className="text-rose-400 font-bold">*</span></label>
-                     <select value={persTheme} onChange={e => { setPersTheme(e.target.value); setErrors(p => ({...p, persTheme: ''})) }} className={`apple-select w-full ${errors.persTheme ? 'border-rose-300 focus:ring-rose-100' : ''}`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any}>
+                     <select value={persTheme} onChange={e => { setPersTheme(e.target.value); setErrors(p => ({...p, persTheme: ''})) }} className={`w-full p-4 bg-white border ${errors.persTheme ? 'border-rose-300 focus:ring-rose-100' : 'border-gray-200'} rounded-2xl focus:ring-2 focus:border-transparent outline-none transition-all text-sm font-medium cursor-pointer`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any}>
                        <option value="">Selecione o tema desejado</option>
                        <option value="Sereia">A Pequena Sereia</option>
                        <option value="Safari">Safari Baby</option>
@@ -1096,10 +1096,10 @@ export function CheckoutModal({
                        <button 
                          onClick={handleFinalize}
                          disabled={isSubmitting}
-                         className="w-full py-4 text-white rounded-xl font-semibold text-sm tracking-wide flex items-center justify-center gap-3 transition-transform hover:scale-[1.01] active:scale-[0.98] shadow-sm disabled:opacity-70 mb-3"
-                         style={{ backgroundColor: isSubmitting ? '#9CA3AF' : theme.accentColor, borderRadius: '12px' }}
+                         className="w-full py-6 text-white rounded-2xl font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-transform hover:scale-[1.01] active:scale-[0.98] shadow-lg hover:shadow-xl disabled:opacity-70 disabled:hover:scale-100 mb-3"
+                         style={{ backgroundColor: isSubmitting ? '#9CA3AF' : theme.accentColor, boxShadow: isSubmitting ? 'none' : `0 10px 25px -5px ${theme.accentColor}50` }}
                        >
-                         <Lock size={15} /> {isSubmitting ? 'Processando...' : `Pagar R$ ${(total > 100 && !payFullAmount ? total/2 : total).toFixed(2).replace('.', ',')}`}
+                         <Lock size={18} /> {isSubmitting ? 'Processando...' : `Pagar R$ ${(total > 100 && !payFullAmount ? total/2 : total).toFixed(2).replace('.', ',')}`}
                        </button>
                        
                        {showSimulatedButton && (

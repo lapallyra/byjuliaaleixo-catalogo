@@ -45,6 +45,7 @@ import {
   Heart,
   TrendingUp,
   FileCheck,
+  PackagePlus,
 } from "lucide-react";
 import { playSuccessSound } from "../utils/audio";
 import { useAuth } from "./AuthProvider";
@@ -54,6 +55,7 @@ import { DashboardTab } from "./Admin/DashboardTab";
 import { OrdersTab } from "./Admin/OrdersTab";
 import { InventoryTab } from "./Admin/InventoryTab";
 import { ProductsTab } from "./Admin/ProductsTab";
+import { KitsTab } from "./Admin/KitsTab";
 import { ClientsTab } from "./Admin/ClientsTab";
 import { FinanceTab } from "./Admin/FinanceTab";
 import { ReportsTab } from "./Admin/ReportsTab";
@@ -77,6 +79,7 @@ type TabType =
   | "orders"
   | "inventory"
   | "products"
+  | "kits"
   | "clients"
   | "finance"
   | "auditoria"
@@ -212,6 +215,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     { id: "orders", label: "Pedidos", category: "OPERAÇÃO", icon: ShoppingBag },
     { id: "clients", label: "Clientes", category: "OPERAÇÃO", icon: User },
     { id: "products", label: "Produtos", category: "OPERAÇÃO", icon: Box },
+    { id: "kits", label: "Kits", category: "OPERAÇÃO", icon: PackagePlus },
     { id: "inventory", label: "Estoque", category: "OPERAÇÃO", icon: Archive },
     { id: "finance", label: "Financeiro", category: "FINANCEIRO", icon: DollarSign },
     { id: "auditoria", label: "Auditoria", category: "FINANCEIRO", icon: FileCheck },
@@ -587,6 +591,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                         }
                       }}
                       onDeleteProduct={(id) => deleteProduct(id)}
+                    />
+                  )}
+                  {activeTab === "kits" && (
+                    <KitsTab
+                      products={products}
+                      insumos={insumos}
+                      companyId={selectedCompanyId}
                     />
                   )}
                   {activeTab === "clients" && (

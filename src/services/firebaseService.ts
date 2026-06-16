@@ -45,7 +45,7 @@ interface FirestoreErrorInfo {
   }
 }
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, shouldThrow: boolean = true) {
   // Ignore abort errors from the browser/SDK
   if (error instanceof Error && (error.name === 'AbortError' || error.message.toLowerCase().includes('abort'))) {
     console.warn('Firestore request was aborted (normal behavior):', path);
@@ -68,6 +68,12 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   }
+  
+  if (!shouldThrow) {
+    console.warn(`Firestore Subscription/Async Error for [${operationType}] at [${path}] (gracefully handled):`, JSON.stringify(errInfo));
+    return;
+  }
+
   console.error('Firestore Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }
@@ -219,7 +225,7 @@ export const subscribeToInsumos = (callback: (insumos: Insumo[]) => void) => {
   return onSnapshot(collection(db, path), (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Insumo)));
   }, (error) => {
-    handleFirestoreError(error, OperationType.GET, path);
+    handleFirestoreError(error, OperationType.GET, path, false);
   });
 };
 
@@ -317,11 +323,14 @@ export const saveSale = async (data: any) => {
     const today = new Date();
     const deliveryDate = calculateDeliveryDate(today, 7);
     
+    const isKitOrder = data.items && data.items.some((item: any) => item.isKit);
+    const code = data.code || (isKitOrder ? await generateUniqueKitCode() : generateOrderCode(data.companyId));
+    
     const saleData = sanitize({
       ...data,
       createdAt: serverTimestamp(),
       dateFormatted: formatDate(today),
-      code: data.code || generateOrderCode(data.companyId),
+      code: code,
       status: 'novo pedido',
       source: 'catalogo',
       deliveryDate: deliveryDate,
@@ -333,6 +342,19 @@ export const saveSale = async (data: any) => {
     try {
       await setDoc(docRef, saleData);
       console.log('✅ Document successfully added to sales collection:', docRef.id);
+      
+      // Auto-update Gift List items to 'presenteado' if they originated from a list
+      if (data.items && Array.isArray(data.items)) {
+        for (const item of data.items) {
+          if (item.giftListCode && item.id) {
+            try {
+              await updateGiftListItemStatusByCode(item.giftListCode, item.id, 'presenteado', data.customerName || "Convidado");
+            } catch (giftError) {
+              console.error('Error auto-updating gift list item on checkout:', giftError);
+            }
+          }
+        }
+      }
     } catch (dbError) {
       console.error('❌ Firestore setDoc ERROR for path "sales":', dbError);
       throw dbError;
@@ -364,9 +386,28 @@ export const saveSale = async (data: any) => {
       console.warn('Non-blocking finance registration error:', e);
     }
 
-    // Automatic stock deduction for insumos
+    // Automatic stock deduction for products, insumos, and kits
     if (saleData.items) {
       for (const item of saleData.items) {
+        
+        // 1. If it's a normal product (has productId), deduct its own stock if applicable
+        if (item.productId && !item.isKit) {
+           try {
+             const prodRef = doc(db, 'products', item.productId);
+             const prodSnap = await getDoc(prodRef);
+             if (prodSnap.exists()) {
+                const pData = prodSnap.data();
+                if (typeof pData.stock === 'number') {
+                   const newStock = Math.max(0, pData.stock - (item.quantity || 1));
+                   await updateDoc(prodRef, { stock: newStock });
+                }
+             }
+           } catch(err) {
+             console.warn('Could not update stock for product', item.productId, err);
+           }
+        }
+
+        // 2. Normal Product Insumos
         if (item.insumos && item.insumos.length > 0) {
           for (const requiredInsumo of item.insumos) {
             try {
@@ -398,6 +439,50 @@ export const saveSale = async (data: any) => {
             }
           }
         }
+
+        // 3. Kit Items Deduction
+        if (item.isKit && item.kitItems && item.kitItems.length > 0) {
+           for (const ki of item.kitItems) {
+              const qtyToDeduct = ki.quantity * item.quantity;
+              try {
+                if (ki.type === 'product') {
+                   const prodRef = doc(db, 'products', ki.id);
+                   const prodSnap = await getDoc(prodRef);
+                   if (prodSnap.exists()) {
+                      const pData = prodSnap.data();
+                      if (typeof pData.stock === 'number') {
+                         const newStock = Math.max(0, pData.stock - qtyToDeduct);
+                         await updateDoc(prodRef, { stock: newStock });
+                      }
+                   }
+                } else if (ki.type === 'insumo') {
+                   const insumoRef = doc(db, 'insumos', ki.id);
+                   const insumoSnap = await getDoc(insumoRef);
+                   if (insumoSnap.exists()) {
+                      const currentQty = insumoSnap.data().quantity || 0;
+                      await updateDoc(insumoRef, { 
+                          quantity: Math.max(0, currentQty - qtyToDeduct) 
+                      });
+                      try {
+                        await addDoc(collection(db, 'insumo_movements'), sanitize({
+                          insumoId: ki.id,
+                          insumoName: insumoSnap.data()?.name || 'Material Kit',
+                          orderId: docRef.id,
+                          orderCode: saleData.code || docRef.id,
+                          productName: `[Kit] ${item.product_name}`,
+                          quantityDeducted: qtyToDeduct,
+                          timestamp: new Date().toISOString(),
+                          type: 'out'
+                        }));
+                      } catch (logErr) {}
+                   }
+                }
+              } catch(err) {
+                 console.warn(`Could not update stock for kit item ${ki.id}:`, err);
+              }
+           }
+        }
+
       }
     }
     
@@ -431,6 +516,19 @@ function formatDate(date: Date): string {
   const m = (date.getMonth() + 1).toString().padStart(2, '0');
   const y = date.getFullYear();
   return `${d}/${m}/${y}`;
+}
+
+function generateKitOrderCode(): string {
+  const random = Math.floor(10000 + Math.random() * 90000).toString();
+  return `K${random}T`;
+}
+
+async function generateUniqueKitCode(): Promise<string> {
+    while(true) {
+        const code = generateKitOrderCode();
+        const existing = await getOrderByCode(code);
+        if (!existing) return code;
+    }
 }
 
 function generateOrderCode(companyId: CompanyId): string {
@@ -577,7 +675,7 @@ export const subscribeToCustomers = (callback: (customers: Customer[]) => void, 
     
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer)));
-  }, (error) => handleFirestoreError(error, OperationType.LIST, 'customers'));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, 'customers', false));
 };
 
 export const updateCustomer = async (id: string, data: Partial<Customer>) => {
@@ -606,7 +704,7 @@ export const subscribeToFinance = (callback: (entries: FinanceEntry[]) => void, 
     
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FinanceEntry)));
-  }, (error) => handleFirestoreError(error, OperationType.LIST, 'finance'));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, 'finance', false));
 };
 
 export const updateFinanceEntry = async (id: string, data: Partial<FinanceEntry>) => {
@@ -736,7 +834,7 @@ export const subscribeToAllSettings = (callback: (settings: Record<string, SiteS
       results[doc.id] = { id: doc.id, ...doc.data() } as SiteSettings;
     });
     callback(results);
-  }, (error) => handleFirestoreError(error, OperationType.LIST, path));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
 };
 
 export const saveAppConfig = async (data: Partial<AppConfig>) => {
@@ -754,7 +852,7 @@ export const subscribeToAppConfig = (callback: (config: AppConfig) => void) => {
     if (snapshot.exists()) {
       callback(snapshot.data() as AppConfig);
     }
-  }, (error) => handleFirestoreError(error, OperationType.GET, path));
+  }, (error) => handleFirestoreError(error, OperationType.GET, path, false));
 };
 
 export const saveGiftList = async (list: { code: string; items: Product[]; companyId: string }) => {
@@ -769,6 +867,40 @@ export const saveGiftList = async (list: { code: string; items: Product[]; compa
   } catch (error) {
     console.error('Failed to save gift list:', error);
     handleFirestoreError(error, OperationType.WRITE, path);
+    return false;
+  }
+};
+
+export const updateGiftListItemStatusByCode = async (
+  code: string,
+  itemId: string,
+  status: 'disponivel' | 'reservado' | 'presenteado',
+  name?: string
+) => {
+  const path = `giftLists/${code}`;
+  try {
+    const docRef = doc(db, 'giftLists', code);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const updatedItems = (data.items || []).map((item: any) => {
+        if (item.id === itemId) {
+          return {
+            ...item,
+            status,
+            reservedBy: status === 'reservado' ? (name || null) : (status === 'disponivel' ? null : (item.reservedBy || null)),
+            giftedBy: status === 'presenteado' ? (name || null) : (status === 'disponivel' ? null : (item.giftedBy || null))
+          };
+        }
+        return item;
+      });
+      await updateDoc(docRef, { items: updatedItems });
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Failed to update gift list item:', error);
+    handleFirestoreError(error, OperationType.UPDATE, path);
     return false;
   }
 };
@@ -910,7 +1042,7 @@ export const subscribeToProducts = (callback: (products: Product[]) => void, com
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
   }, (error) => {
-    handleFirestoreError(error, OperationType.GET, path);
+    handleFirestoreError(error, OperationType.GET, path, false);
   });
 };
 
@@ -937,7 +1069,7 @@ export const subscribeToSuggestions = (callback: (suggestions: any[]) => void, c
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   }, (error) => {
-    handleFirestoreError(error, OperationType.GET, path);
+    handleFirestoreError(error, OperationType.GET, path, false);
   });
 };
 
@@ -975,7 +1107,7 @@ export const subscribeToFeedbacks = (callback: (feedbacks: any[]) => void) => {
       });
       callback(results);
     }, (fallbackError) => {
-      handleFirestoreError(fallbackError, OperationType.GET, path);
+      handleFirestoreError(fallbackError, OperationType.GET, path, false);
     });
   });
 };
@@ -985,7 +1117,7 @@ export const subscribeToAddons = (callback: (addons: any[]) => void, companyId: 
   const q = query(collection(db, path), where('companyId', '==', companyId));
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-  }, (error) => handleFirestoreError(error, OperationType.LIST, path));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
 };
 
 export const saveAddon = async (data: any) => {
@@ -1007,6 +1139,19 @@ export const saveAddon = async (data: any) => {
   }
 };
 
+export const getAddons = async (companyId?: CompanyId): Promise<any[]> => {
+  const path = 'addons';
+  try {
+    const coll = collection(db, path);
+    const q = companyId ? query(coll, where('companyId', '==', companyId)) : coll;
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+    return [];
+  }
+};
+
 export const deleteAddon = async (id: string) => {
   const path = `addons/${id}`;
   try {
@@ -1021,7 +1166,7 @@ export const subscribeToPrizes = (callback: (prizes: any[]) => void, companyId: 
   const q = query(collection(db, path), where('companyId', '==', companyId));
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-  }, (error) => handleFirestoreError(error, OperationType.LIST, path));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
 };
 
 export const savePrize = async (data: any) => {
@@ -1071,7 +1216,7 @@ export const subscribeToMonthlyProfitHistory = (callback: (entries: any[]) => vo
     
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-  }, (error) => handleFirestoreError(error, OperationType.LIST, path));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
 };
 
 export const logCheckoutEvent = async (
@@ -1111,7 +1256,7 @@ export const subscribeToCheckoutEvents = (callback: (events: any[]) => void, com
     });
     callback(list);
   }, (error) => {
-    handleFirestoreError(error, OperationType.LIST, path);
+    handleFirestoreError(error, OperationType.LIST, path, false);
   });
 };
 

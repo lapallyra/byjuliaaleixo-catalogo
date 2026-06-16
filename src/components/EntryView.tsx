@@ -1,112 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Search, MapPin, Heart, ChevronRight, ChevronLeft, User, ShoppingBag, Star, Info, Package, Mail, Sparkles, CheckSquare, MessageCircle, ShieldCheck, Handshake, Laptop, Scissors, Gift, Bike, Truck, X } from 'lucide-react';
-import { AppConfig, CompanyId, SiteSettings, Product } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Search, Heart, Info, Package, Mail, User, Sparkles, ArrowRight, ArrowRightLeft, Gift, ShoppingBag, Eye, Star } from 'lucide-react';
+import { AppConfig, Product, SiteSettings, CompanyId } from '../types';
 import { useAuth } from './AuthProvider';
-import { subscribeToAllSettings, subscribeToFeedbacks, addFeedback } from '../services/firebaseService';
+import { subscribeToAllSettings } from '../services/firebaseService';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './ImageWithFallback';
-import { SuggestionBox } from './SuggestionBox';
-
-const AtelierCarousel = ({ 
-  title, 
-  accent, 
-  products, 
-  onNavigate 
-}: { 
-  title: string; 
-  accent: string; 
-  products: Product[]; 
-  onNavigate: () => void;
-}) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const scrollAmount = 300;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  return (
-    <div className="mb-12">
-      <div className="flex justify-between items-end mb-4 px-2">
-        <h4 className="font-beauty text-xl sm:text-2xl text-left font-normal select-none" style={{ color: accent }}>
-          {title}
-        </h4>
-        <div className="flex gap-2">
-          <button 
-            type="button"
-            onClick={() => scroll('left')}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#e8dcc8] bg-white text-[#6d5443] hover:text-[#cca062] hover:border-[#cca062] flex items-center justify-center transition-all cursor-pointer outline-none active:scale-90"
-            aria-label="Anterior"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button 
-            type="button"
-            onClick={() => scroll('right')}
-            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#e8dcc8] bg-white text-[#6d5443] hover:text-[#cca062] hover:border-[#cca062] flex items-center justify-center transition-all cursor-pointer outline-none active:scale-90"
-            aria-label="Próximo"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
-
-      <div 
-        ref={scrollRef}
-        className="flex gap-5 overflow-x-auto pb-4 scrollbar-hide scroll-smooth px-2 select-none"
-      >
-        {products.length === 0 ? (
-          [1, 2, 3, 4].map((_, i) => (
-            <div 
-              key={i} 
-              onClick={onNavigate}
-              className="min-w-[200px] sm:min-w-[240px] flex flex-col border border-[#e8dcc8]/60 bg-white rounded-2xl p-4 gap-3 cursor-pointer hover:border-transparent hover:shadow-md transition-all shrink-0"
-            >
-              <div className="w-full aspect-square bg-[#faf8f5] rounded-xl flex items-center justify-center">
-                <Sparkles size={20} className="text-[#cca062]/30" />
-              </div>
-              <h5 className="font-serif text-sm tracking-wide text-[#6d5443] text-center">Coleção em Breve</h5>
-            </div>
-          ))
-        ) : (
-          products.map((prod) => (
-            <div 
-              key={prod.id} 
-              onClick={onNavigate}
-              className="min-w-[210px] sm:min-w-[250px] max-w-[250px] flex flex-col border border-[#e8dcc8]/60 bg-white rounded-2xl overflow-hidden cursor-pointer hover:border-transparent hover:shadow-md transition-all shrink-0"
-            >
-              <div className="w-full aspect-[5/4] bg-[#faf8f5] overflow-hidden">
-                <ImageWithFallback 
-                  src={prod.image} 
-                  alt={prod.product_name} 
-                  className="w-full h-full object-cover transition-transform hover:scale-105 duration-[1.5s]" 
-                  isThumbnail={true}
-                />
-              </div>
-              <div className="flex flex-col items-center text-center p-4">
-                <span className="text-[9px] font-bold tracking-widest uppercase mb-1" style={{ color: accent }}>
-                  {prod.category}
-                </span>
-                <h5 className="font-serif text-sm tracking-wide text-[#6d5443] truncate w-full mb-1">
-                  {prod.product_name}
-                </h5>
-                <span className="text-[10px] uppercase tracking-wider text-gray-500">
-                  A PARTIR DE R$ {prod.current_price?.toFixed(2).replace('.', ',')}
-                </span>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-};
 
 interface EntryViewProps {
   config: AppConfig;
@@ -117,18 +15,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const [customSettings, setCustomSettings] = useState<Record<string, SiteSettings | null>>({});
-  const [isSuggestOpen, setIsSuggestOpen] = useState(false);
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [searchCode, setSearchCode] = useState('');
-
-  // Feedbacks states
-  const [dbFeedbacks, setDbFeedbacks] = useState<any[]>([]);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const [fbName, setFbName] = useState('');
-  const [fbText, setFbText] = useState('');
-  const [fbStars, setFbStars] = useState(5);
-  const [fbSubmitting, setFbSubmitting] = useState(false);
-  const [fbSuccess, setFbSuccess] = useState(false);
 
   useEffect(() => {
     return subscribeToAllSettings((results) => {
@@ -136,101 +23,9 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
     });
   }, []);
 
-  useEffect(() => {
-    return subscribeToFeedbacks((loaded) => {
-      // Keep only 4 feedbacks in carousel as requested:
-      // "lá só será possivel aparecer 4 feedback, ao incluir um novo, substituí o mais antigo."
-      setDbFeedbacks(loaded.slice(0, 4));
-    });
-  }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTestimonial((prev) => {
-        const count = dbFeedbacks.length > 0 ? dbFeedbacks.length : 3;
-        return (prev + 1) % count;
-      });
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [dbFeedbacks]);
-
-  const handleFeedbackSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fbName.trim() || !fbText.trim() || fbSubmitting) return;
-
-    setFbSubmitting(true);
-    try {
-      await addFeedback(fbName.trim(), fbText.trim(), fbStars);
-      setFbSuccess(true);
-      setFbName('');
-      setFbText('');
-      setFbStars(5);
-      setTimeout(() => {
-        setFbSuccess(false);
-        setIsFeedbackOpen(false);
-      }, 3000);
-    } catch (e) {
-      console.error(e);
-      alert('Erro ao enviar feedback.');
-    } finally {
-      setFbSubmitting(false);
-    }
-  };
-
-  const companies = [
-    { 
-      id: 'pallyra' as CompanyId, 
-      logo: customSettings['pallyra']?.store_logo || config.company_1_logo, 
-      name: 'La Pallyra', 
-      slogan: 'Organização e rotina com a sua cara. Papelaria artesanal, afetiva e totalmente personalizada para se adaptar à sua forma de viver e tornar em momentos especiais seu dia a dia.',
-      route: '/lapallyra',
-      image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=800&auto=format&fit=crop',
-      accent: '#cca062',
-      buttonBg: '#cca062',
-      buttonText: 'VER CATÁLOGO',
-      iconUrl: customSettings['pallyra']?.store_logo || ''
-    },
-    { 
-      id: 'guennita' as CompanyId, 
-      logo: customSettings['guennita']?.store_logo || config.company_2_logo, 
-      name: 'com amor, Guennita', 
-      slogan: 'Romantismo e sofisticação em cetim premium. Buquês de flores feitos à mão petála por petála, envoltos em embalagens elegantes para tornar os momentos inesquecíveis.',
-      route: '/comamorguennita',
-      image: 'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop',
-      accent: '#5b2122',
-      buttonBg: '#5b2122',
-      buttonText: 'VER CATÁLOGO',
-      iconUrl: customSettings['guennita']?.store_logo || ''
-    },
-    { 
-      id: 'mimada' as CompanyId, 
-      logo: customSettings['mimada']?.store_logo || config.company_3_logo, 
-      name: 'Mimada Sim', 
-      slogan: 'O ateliê onde a festa ganha vida! Lembranças e brindes personalizados, divertidos e feitos à mão para celebrar cada momento com alegria.',
-      route: '/mimadasim', // might not be clickable
-      image: 'https://images.unsplash.com/photo-1513201099705-a9746e1e201f?q=80&w=800&auto=format&fit=crop',
-      accent: '#c96b71',
-      buttonBg: '#c96b71',
-      buttonText: 'VER CATÁLOGO',
-      iconUrl: '' // gift icon will be used
-    },
-    { 
-      id: 'tuttymimo' as CompanyId, 
-      logo: customSettings['tuttymimo']?.store_logo || config.company_4_logo, 
-      name: 'Tutty Mimo', 
-      slogan: 'Para o nicho de bebês, maternidade e primeira infância. Estilo acolhedor, afetivo e premium.',
-      route: '/tuttymimo',
-      image: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=800&auto=format&fit=crop',
-      accent: '#d4bda1',
-      buttonBg: '#d4bda1',
-      buttonText: 'VER CATÁLOGO',
-      iconUrl: '' // gift icon will be used
-    }
-  ];
-
   const featuredProducts = React.useMemo(() => {
     return [...allProducts]
-      .filter(p => p.isVisible !== false) // Only active/visible ones
+      .filter(p => p.isVisible !== false && !p.isKit)
       .sort((a, b) => {
         const clicksA = a.clicksCount || 0;
         const clicksB = b.clicksCount || 0;
@@ -242,106 +37,146 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       .slice(0, 8);
   }, [allProducts]);
 
-  const fallbackTestimonials = [
-    { name: 'Juliana A.', text: 'A experiência foi absolutamente incrível! Cada detalhe feito com tanto carinho que emociona.', stars: 5 },
-    { name: 'Camila R.', text: 'Ficou mais lindo do que eu sonhei! A papelaria transformou todo o evento.', stars: 5 },
-    { name: 'Mariana L.', text: 'Atendimento impecável e o produto é simplesmente perfeito.', stars: 5 },
-  ];
+  const kits = React.useMemo(() => {
+    return allProducts.filter(p => p.isKit && p.isVisible !== false).slice(0, 4);
+  }, [allProducts]);
 
-  const testimonials = dbFeedbacks.length > 0 ? dbFeedbacks : fallbackTestimonials;
-
-  const HeartDivider = ({ text }: { text?: string }) => (
-    <div className="flex flex-col items-center justify-center my-8 w-full">
-      <div className="flex items-center justify-center w-full max-w-sm mb-2 gap-4">
-        <div className="h-[1px] flex-1 border-t border-dashed border-[#c36266]/30"></div>
-        <Heart size={14} strokeWidth={1.5} className="text-[#c36266]" />
-        <div className="h-[1px] flex-1 border-t border-dashed border-[#c36266]/30"></div>
-      </div>
-      {text && <h2 className="text-xl md:text-2xl font-serif text-[#6d5443] tracking-widest uppercase">{text}</h2>}
-    </div>
-  );
+  const getCompanyLabelAndColor = (companyId: CompanyId) => {
+    switch (companyId) {
+      case 'pallyra': 
+        return { label: 'La Pallyra', bg: 'bg-[#cca062]/10', text: 'text-[#cca062]', hoverBorder: 'group-hover:border-[#cca062]' };
+      case 'guennita': 
+        return { label: 'com amor, Guennita', bg: 'bg-[#5b2122]/10', text: 'text-[#5b2122]', hoverBorder: 'group-hover:border-[#5b2122]' };
+      case 'mimada': 
+        return { label: 'Mimada Sim', bg: 'bg-[#c96b71]/10', text: 'text-[#c96b71]', hoverBorder: 'group-hover:border-[#c96b71]' };
+      case 'tuttymimo': 
+        return { label: 'Tutty Mimo', bg: 'bg-[#d4bda1]/10', text: 'text-[#d4bda1]', hoverBorder: 'group-hover:border-[#d4bda1]' };
+      default: 
+        return { label: 'Ateliê Especial', bg: 'bg-[#6d5443]/10', text: 'text-[#6d5443]', hoverBorder: 'group-hover:border-[#cca062]' };
+    }
+  };
 
   const LogoAndSignature = ({ small = false }: { small?: boolean }) => (
-    <div className={`relative inline-flex flex-col items-center justify-center select-none py-2 px-4 font-sans ${
+    <div className={`relative inline-flex flex-col items-center justify-center select-none py-2 px-3 font-poppins ${
       small 
-        ? "min-w-[150px] sm:min-w-[180px]" 
+        ? "min-w-[140px] sm:min-w-[160px]" 
         : "min-w-[280px] sm:min-w-[420px]"
     }`}>
       {/* Camada Inferior (Fundo) - PRESENTES */}
       <div 
-        className={`font-sans font-black uppercase text-[#cca062]/15 leading-none select-none text-center ${
-          small ? "text-2xl sm:text-3xl" : "text-5xl sm:text-7xl"
+        className={`font-poppins font-extrabold uppercase text-[#cca062]/10 leading-none select-none text-center tracking-[0.05em] ${
+          small ? "text-xl sm:text-2xl" : "text-5xl sm:text-7xl"
         }`}
-        style={{ letterSpacing: small ? '-1px' : '-2px' }}
+        style={{ letterSpacing: small ? '2px' : '4px' }}
       >
         PRESENTES
       </div>
       
       {/* Camada Superior (Frente) - personalizados */}
       <div className={`absolute inset-0 flex items-center justify-center pointer-events-none select-none ${
-        small ? "pt-2 sm:pt-2.5" : "pt-4 sm:pt-6"
+        small ? "pt-1" : "pt-2 sm:pt-4"
       }`}>
-        <span className={`font-cursive text-[#211c1a] tracking-wide relative whitespace-nowrap ${
-          small ? "text-lg sm:text-xl" : "text-3xl sm:text-5xl"
+        <span className={`font-cursive text-[#3A312D] tracking-wide relative whitespace-nowrap ${
+          small ? "text-[15px] sm:text-[17px]" : "text-3xl sm:text-4xl"
         }`}>
           personalizados
         </span>
       </div>
 
       {/* Assinatura: BY JULIA ALEIXO */}
-      <div className={`absolute right-1 bottom-[1px] sm:bottom-[2px] uppercase tracking-[0.2em] font-normal text-[#211c1a] select-none ${
-        small ? "text-[5.5px] sm:text-[6.5px]" : "text-[8px] sm:text-[9.5px]"
+      <div className={`absolute right-1 bottom-[0px] font-sans uppercase tracking-[0.25em] font-bold text-[#6d5443]/85 select-none ${
+        small ? "text-[4.5px] sm:text-[5.5px]" : "text-[8px] sm:text-[9px]"
       }`}>
         BY JULIA ALEIXO
       </div>
     </div>
   );
 
-  return (
-    <div className="bg-[#fffdfa] min-h-[100dvh] w-full relative font-sans text-[#6d5443] selection:bg-[#e8dcc8] selection:text-[#3A312D] overflow-x-hidden">
-      
-      {/* HEADER (NAME ONLY, CENTRALIZED) */}
-      <header className="w-full bg-[#fffdfa] py-6 flex justify-center items-center z-50 select-none">
-        <div className="cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <LogoAndSignature />
-        </div>
-      </header>
+  const ateliers = [
+    {
+      id: 'pallyra',
+      name: 'La Pallyra',
+      subtitle: 'Papelaria & Cartonagem Afetiva',
+      tagline: 'Onde seus sonhos viram papel.',
+      route: '/lapallyra',
+      accentColor: '#cca062',
+      emoji: '📓',
+      details: 'Agendas, planners e mimos de papelaria feitos à mão.'
+    },
+    {
+      id: 'guennita',
+      name: 'com amor, Guennita',
+      subtitle: 'Premium Flores de Cetim',
+      tagline: 'Flores eternas tecidas com o coração.',
+      route: '/comamorguennita',
+      accentColor: '#5b2122',
+      emoji: '👑',
+      details: 'Rosas de cetim tecidas pétala por pétala com eterno afeto.'
+    },
+    {
+      id: 'mimada',
+      name: 'Mimada Sim',
+      subtitle: 'Lembranças & Brindes com Alma',
+      tagline: 'O mimo que seu convidado nunca esquece.',
+      route: '/mimadasim',
+      accentColor: '#c96b71',
+      emoji: '💅',
+      details: 'Mimos repletos de criatividade para casamentos e festas.'
+    },
+    {
+      id: 'tuttymimo',
+      name: 'Tutty Mimo',
+      subtitle: 'Maternidade & Primeira Infância',
+      tagline: 'O cuidado que seu bebê merece.',
+      route: '/tuttymimo',
+      accentColor: '#d4bda1',
+      emoji: '🍼',
+      details: 'Estilo acolhedor, tecidos macios e acabamentos impecáveis.'
+    }
+  ];
 
-      {/* NAVEGAÇÃO / FAIXA SLIM (Ateliês, Coleções, Sobre Nós, Lista de Presentes, Sugestões + Pesquisa interactiva) */}
-      <div className="w-full bg-white border-y border-[#e8dcc8]/40 py-2 px-6 shadow-sm flex flex-col sm:flex-row justify-between items-center sticky top-0 z-50 transition-all">
-        <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center gap-4 px-4">
-          
-          {/* Links de navegação */}
-          <div className="flex flex-wrap items-center gap-x-6 md:gap-x-10 gap-y-2 text-[#6d5443] tracking-widest text-[11px] sm:text-[10px] uppercase font-bold select-none">
-            <button 
-              onClick={() => navigate('/atelies')} 
-              className="hover:text-[#cca062] transition-colors uppercase font-bold tracking-widest text-[11px] sm:text-[10px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block font-bold"
-            >
+  return (
+    <div className="bg-[#fffdfa] min-h-[100dvh] w-full relative font-tahoma text-[#6d5443] selection:bg-[#e8dcc8] selection:text-[#3A312D] overflow-x-hidden antialiased">
+      
+      {/* LUXURY NAVIGATION HEADER */}
+      <header className="w-full bg-white/85 backdrop-blur-md border-b border-[#e8dcc8]/30 py-3.5 px-4 sm:px-6 sticky top-0 z-50 transition-all shadow-xs">
+        <div className="max-w-7xl mx-auto w-full flex flex-col md:flex-row justify-between items-center gap-4 px-2">
+          {/* LOGO */}
+          <div className="flex items-center gap-4 cursor-pointer hover:opacity-95 transition-opacity" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <LogoAndSignature small={true} />
+          </div>
+
+          {/* DENSE NAVIGATION LINKS */}
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5 text-[#6d5443]/90 tracking-[0.12em] font-semibold text-[10px] sm:text-[11px] uppercase select-none font-poppins">
+            <a href="#ateliers" className="hover:text-[#cca062] transition-colors relative group py-1">
               Ateliês
-            </button>
-            <a href="#produtos" className="hover:text-[#cca062] transition-colors">Coleções</a>
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
+            </a>
+            <a href="#kits" className="hover:text-[#cca062] transition-colors relative group py-1">
+              Kits Prontos
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
+            </a>
             <button 
-              onClick={() => navigate('/sobrenos')} 
-              className="hover:text-[#cca062] transition-colors uppercase font-bold tracking-widest text-[11px] sm:text-[10px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block font-bold"
+              onClick={() => navigate('/kit-meukit')} 
+              className="hover:text-[#cca062] transition-colors uppercase font-bold tracking-[0.12em] text-[10px] sm:text-[11px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block relative group py-1"
             >
-              Sobre Nós
+              Monte seu Kit
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </button>
-            <a href="#feedback" className="hover:text-[#cca062] transition-colors">Feedback</a>
+            <a href="#produtos" className="hover:text-[#cca062] transition-colors relative group py-1">
+              Produtos
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
+            </a>
             <button 
               onClick={() => navigate('/listadepresentes-info')} 
-              className="hover:text-[#cca062] transition-colors uppercase font-bold tracking-widest text-[11px] sm:text-[10px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block font-bold"
+              className="hover:text-[#cca062] transition-colors uppercase font-bold tracking-[0.12em] text-[10px] sm:text-[11px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block relative group py-1"
             >
               Lista de Presentes
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </button>
-            <button 
-              onClick={() => setIsSuggestOpen(true)} 
-              className="hover:text-[#cca062] transition-colors uppercase font-bold tracking-widest text-[11px] sm:text-[10px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block font-bold"
-            >
-              Sugestões
-            </button>
-          </div>
+          </nav>
           
-          {/* Barra de pesquisa direta de Pedidos ou Lista de Presentes */}
+          {/* MINI TRACKING FORM */}
           <form 
             onSubmit={(e) => {
               e.preventDefault();
@@ -351,505 +186,376 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 navigate('/document');
               }
             }}
-            className="flex items-center gap-2.5 bg-[#faf8f5] hover:bg-[#fffdfa] border border-[#e8dcc8] rounded-full px-4 py-1.5 text-[11px] sm:text-[12px] font-bold text-[#6d5443] shadow-sm hover:shadow transition-all w-full sm:w-auto max-w-[260px]"
+            className="flex items-center gap-2 bg-[#faf8f5] border border-[#e8dcc8]/75 rounded-full px-4 py-1.5 text-[11px] font-sans text-[#6d5443] shadow-xs hover:border-[#cca062]/50 transition-all w-full sm:w-auto max-w-[210px]"
           >
-            <button type="submit" className="text-[#cca062] hover:scale-110 active:scale-95 transition-all outline-none">
+            <button type="submit" className="text-[#cca062] outline-none hover:scale-105 transition-transform" title="Buscar rastreamento">
               <Search size={13} strokeWidth={2.5} />
             </button>
             <input 
               type="text" 
               value={searchCode}
               onChange={(e) => setSearchCode(e.target.value)}
-              placeholder="Digite o código (pedido/lista)..." 
-              className="bg-transparent focus:outline-none w-full text-[#6d5443] placeholder-[#6d5443]/50 font-medium select-text" 
+              placeholder="Rastreio do Pedido..." 
+              className="bg-transparent focus:outline-none w-full text-[#6d5443] placeholder-[#6d5443]/45 font-medium text-[11px] tracking-wide select-text border-none p-0" 
             />
           </form>
         </div>
-      </div>
+      </header>
 
-      <main className="max-w-7xl mx-auto px-6 pb-20">
+      {/* EDITORIAL HERO BANNER - DYNAMIC DESKTOP/MOBILE HERO */}
+      <section className="relative w-full overflow-hidden bg-gradient-to-b from-[#faf8f5] to-[#fffdfa] pt-12 pb-16 sm:py-20 border-b border-[#e8dcc8]/20">
+        {/* Soft Decorative Elements */}
+        <div className="absolute top-1/2 left-5 w-44 h-44 rounded-full bg-[#cca062]/4 blur-2xl pointer-events-none -translate-y-1/2" />
+        <div className="absolute top-10 right-10 w-64 h-64 rounded-full bg-[#c96b71]/3 blur-3xl pointer-events-none" />
         
-        {/* BLOCO SEPARADOR & FRASE SLOGAN EM UMA LINHA SÓ */}
-        <div className="flex flex-col items-center justify-center pt-8 pb-10 w-full select-none text-center">
-          <div className="flex items-center justify-center w-full max-w-sm mb-4 gap-4">
-            <div className="h-[1px] flex-1 border-t border-dashed border-[#c36266]/20"></div>
-            <Heart size={14} strokeWidth={1.5} className="text-[#c36266]" />
-            <div className="h-[1px] flex-1 border-t border-dashed border-[#c36266]/20"></div>
+        <div className="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-center text-center">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 border border-[#e8dcc8]/40 mb-5 shadow-2xs">
+            <Sparkles size={11} className="text-[#cca062]" /> 
+            <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#6d5443]/70 font-poppins">Curadorias Afetivas Feitas à Mão</span>
           </div>
-          <p className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] font-cursive text-[#6d5443] text-center px-4 max-w-4xl mx-auto select-none leading-tight">
-            Escolha o presente personalizado perfeito para o seu momento.
+          
+          <h1 className="font-poppins font-semibold text-3xl sm:text-5xl lg:text-6xl text-[#3A312D] tracking-tight leading-[1.1] max-w-3xl mb-6">
+            Onde o afeto se transforma em <span className="text-[#cca062] relative inline-block">presente perfeito</span>
+          </h1>
+          
+          <p className="text-xs sm:text-sm font-light text-[#6d5443]/80 max-w-xl leading-relaxed mb-8">
+            Kits exclusivos e lembranças personalizadas tecidas à mão por artesãs especialistas, pensados para abraçar memórias e surpreender quem você ama.
+          </p>
+          
+          {/* Elegantly Proportioned CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md">
+            <button
+              onClick={() => navigate('/kit-meukit')}
+              className="w-full sm:w-auto bg-[#3A312D] text-white hover:bg-[#6d5443] px-8 py-3.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] hover:shadow-md transition-all active:scale-98 font-poppins shadow-xs cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Gift size={13} className="text-[#e8dcc8]" />
+              Monte seu Kit
+            </button>
+            <a
+              href="#kits"
+              className="w-full sm:w-auto border border-[#e8dcc8] text-[#3A312D] bg-white/40 hover:bg-white hover:border-[#cca062] px-8 py-3.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-all font-poppins cursor-pointer flex items-center justify-center"
+            >
+              Ver Kits Exclusivos
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* BOUTIQUE ATELIERS HUB (INTERACTIVE VITRINE DE LUXO) */}
+      <section id="ateliers" className="scroll-mt-24 py-16 px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062]">Navegação Boutique</span>
+          <h2 className="text-2xl font-poppins font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Conheça Nossos Ateliês</h2>
+          <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3.5 mb-3"></div>
+          <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
+            Cada marca possui uma curadoria especializada com artigos confeccionados inteiramente de forma manual.
           </p>
         </div>
 
-        {/* ATELIERS SECTION */}
-        <section id="atelies" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-12 md:mb-16">
-          {companies.map((company, index) => (
-            <motion.div 
-              key={company.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: index * 0.1 }}
-              onClick={() => navigate(company.route)}
-              style={{
-                '--neon-glow': `${company.accent}44`,
-                '--neon-border': company.accent,
-              } as React.CSSProperties}
-              className="relative rounded-2xl p-6 flex flex-col items-center justify-between text-center border border-[#e8dcc8]/60 bg-[#fffffc] shadow-none hover:shadow-[0_0_25px_var(--neon-glow)] hover:border-[var(--neon-border)] transition-all duration-300 cursor-pointer min-h-[290px] group overflow-hidden"
+        {/* MOBILE: Editorial scroll-carousel; DESKTOP: Wide Grid */}
+        <div className="flex overflow-x-auto gap-5 pb-6 scrollbar-hide snap-x px-4 -mx-6 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-6">
+          {ateliers.map((atelier) => (
+            <div
+              key={atelier.id}
+              onClick={() => navigate(atelier.route)}
+              className="snap-center shrink-0 w-[275px] sm:w-auto flex flex-col justify-between border border-[#e8dcc8]/50 bg-white rounded-3xl p-6 shadow-2xs hover:shadow-md hover:border-[#cca062]/60 transition-all duration-500 cursor-pointer group relative overflow-hidden"
             >
-              {/* Decorative brand elements */}
-              <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-[#cca062]/5 blur-md" />
-              <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-[#c36266]/5 blur-md" />
-
-              <div className="flex flex-col items-center w-full">
-                {company.logo ? (
-                  <div className="w-16 h-16 rounded-full border border-[#e8dcc8]/60 flex items-center justify-center overflow-hidden mb-3 bg-white shadow-sm p-1 transition-all duration-300 group-hover:scale-105">
-                     <ImageWithFallback src={company.logo} alt={company.name} className="w-full h-full object-contain p-0.5" />
-                  </div>
-                ) : (
-                  <div className="w-16 h-16 rounded-full border border-[#e8dcc8]/60 flex items-center justify-center mb-3 text-[#c96b71] bg-white shadow-sm transition-all duration-300 group-hover:scale-105">
-                    <Package size={24} strokeWidth={1.5} />
-                  </div>
-                )}
+              {/* Card visual details */}
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[#cca062]/3 rounded-bl-full blur-xs pointer-events-none group-hover:bg-[#cca062]/6 transition-colors" />
+              
+              <div>
+                <div className="w-12 h-12 rounded-full border border-[#e8dcc8]/40 bg-[#faf8f5] flex items-center justify-center text-xl shadow-3xs mb-4 select-none group-hover:scale-105 transition-transform duration-300">
+                  {atelier.emoji}
+                </div>
                 
-                <h3 className="font-beauty text-2xl sm:text-3xl font-normal text-center leading-none mb-2 select-none" style={{ color: company.accent }}>
-                  {company.name}
+                <h3 className="font-poppins font-semibold text-base text-[#3A312D] leading-snug mb-0.5 group-hover:text-[#cca062] transition-colors">
+                  {atelier.name}
                 </h3>
                 
-                <p className="text-[11.5px] text-[#6d5443]/90 max-w-[210px] leading-relaxed select-none mb-4">
-                  {company.slogan}
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6d5443]/65 block mb-3 font-poppins">
+                  {atelier.subtitle}
+                </span>
+                
+                <p className="text-[11px] text-[#6d5443]/80 leading-relaxed font-light mb-4">
+                  {atelier.details}
                 </p>
               </div>
-              
-              <div className="w-full flex justify-center">
-                 <button 
-                   onClick={(e) => {
-                     e.stopPropagation();
-                     navigate(company.route);
-                   }}
-                   className="text-white text-[10px] font-bold tracking-widest uppercase px-6 py-2.5 rounded-full shadow-sm hover:opacity-95 active:scale-95 transition-all w-full max-w-[150px] leading-none"
-                   style={{ 
-                     backgroundColor: company.buttonBg,
-                     boxShadow: `0 4px 10px ${company.buttonBg}30`
-                   }}
-                 >
-                   {company.buttonText}
-                 </button>
+
+              <div className="pt-2 border-t border-[#faf8f5] mt-2 flex items-center justify-between">
+                <span className="font-cursive text-lg text-[#cca062]">
+                  &ldquo;{atelier.tagline}&rdquo;
+                </span>
+                <span className="w-7 h-7 rounded-full bg-[#faf8f5] border border-[#e8dcc8]/40 flex items-center justify-center text-[#cca062] group-hover:bg-[#cca062] group-hover:text-white transition-all">
+                  <ArrowRight size={12} strokeWidth={2.5} />
+                </span>
               </div>
-            </motion.div>
-          ))}
-        </section>
-
-        {/* COMO FUNCIONA */}
-        <section id="como-funciona" className="mb-12 md:mb-16">
-          <HeartDivider text="Como funciona" />
-          
-          <div className="relative mt-8 px-4 md:px-0">
-            {/* Dashed line connector */}
-            <div className="hidden md:block absolute top-[28px] left-[10%] right-[10%] h-[1px] border-t border-dashed border-[#cca062]/20 z-0" />
-            
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-4 relative z-10">
-               {[
-                 { 
-                   step: '1', 
-                   title: 'Garanta o seu mimo', 
-                   desc: 'Entre em nosso catálogo e escolha seus favoritos.', 
-                   icon: <ShoppingBag size={20} strokeWidth={1} className="text-[#cca062]"/> 
-                 },
-                 { 
-                   step: '2', 
-                   title: 'Análise da Arte', 
-                   desc: 'Nós criamos e você ajusta até 3x grátis. Nada vai para a produção sem a sua aprovação. Você no controle de cada detalhe!', 
-                   icon: <Laptop size={20} strokeWidth={1} className="text-[#cca062]"/> 
-                 }, 
-                 { 
-                   step: '3', 
-                   title: 'Início da Produção', 
-                   desc: 'Hora de produzir! Nosso prazo seguro varia de 03 a 20 dias úteis (conforme a quantidade do produto e de alterações). Quanto antes você aprovar a arte, mais rápido seu pedido entra na fila exclusiva de produção!', 
-                   icon: <Scissors size={20} strokeWidth={1} className="text-[#cca062]"/> 
-                 }, 
-                 { 
-                   step: '4', 
-                   title: 'Entrega', 
-                   desc: 'Entrega rastreada. Seu mimo em suas mãos com a segurança que você merece.', 
-                   icon: <Bike size={20} strokeWidth={1} className="text-[#cca062]"/> 
-                 }, 
-               ].map((item, index) => (
-                 <div key={item.step} className="flex flex-col items-center text-center group">
-                   <div className="w-14 h-14 rounded-full bg-white border border-[#e8dcc8]/60 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform z-10">
-                     {item.icon}
-                   </div>
-                   <h4 className="font-cursive text-lg text-[#cca062] leading-none mt-2 mb-0.5">Passo {item.step}</h4>
-                   <h5 className="text-[12px] font-bold tracking-wide text-[#6d5443] leading-none mb-1 select-none">{item.title}</h5>
-                   <p className="text-[11px] text-gray-500 max-w-[200px] leading-relaxed select-none px-2">{item.desc}</p>
-                 </div>
-               ))}
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* KITS EXCLUSIVOS */}
+      <section id="kits" className="scroll-mt-24 py-16 bg-[#faf8f5]/80 border-y border-[#e8dcc8]/15 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-10">
+            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062]">Prontos para Presentear</span>
+            <h2 className="text-2xl font-poppins font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Kits Únicos Selecionados</h2>
+            <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3.5 mb-3"></div>
+            <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
+              Combinações primorosas de produtos embalados com afeto, prontos para encantar em datas históricas.
+            </p>
           </div>
-        </section>
 
-        {/* PRODUTOS EM DESTAQUE */}
-        <section id="produtos" className="mb-20 md:mb-32 scroll-mt-24">
-          <HeartDivider text="Produtos em Destaque" />
-          <p className="text-center text-xs text-gray-500 uppercase tracking-widest font-bold -mt-4 mb-10 px-4">
-            Nossos mimos mais desejados e clicados dos ateliês
-          </p>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto px-4 select-none">
-            {featuredProducts.length === 0 ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto px-2">
+            {kits.length === 0 ? (
               <p className="col-span-full text-center text-xs uppercase font-bold tracking-widest text-[#cca062]/60 py-12">
-                Nenhum produto cadastrado ainda.
+                Nenhum kit disponível no momento.
               </p>
             ) : (
-              featuredProducts.map((prod) => {
-                const companyColors: Record<CompanyId, string> = {
-                  pallyra: '#cca062',
-                  guennita: '#5b2122',
-                  mimada: '#c96b71',
-                  tuttymimo: '#d4bda1'
-                };
-                const companyNames: Record<CompanyId, string> = {
-                  pallyra: 'La Pallyra',
-                  guennita: 'com amor, Guennita',
-                  mimada: 'Mimada Sim',
-                  tuttymimo: 'Tutty Mimo'
-                };
-                const companyRoutes: Record<CompanyId, string> = {
-                  pallyra: '/lapallyra',
-                  guennita: '/comamorguennita',
-                  mimada: '/mimadasim',
-                  tuttymimo: '/tuttymimo'
-                };
-                const accent = companyColors[prod.company] || '#cca062';
-                const name = companyNames[prod.company] || 'Ateliê';
-                const route = companyRoutes[prod.company] || '#';
-
+              kits.map((kit) => {
+                const badge = getCompanyLabelAndColor(kit.company);
                 return (
-                  <motion.div
-                    key={prod.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    onClick={() => navigate(`${route}?search=${encodeURIComponent(prod.product_name)}`)}
-                    className="flex flex-col border border-[#e8dcc8]/60 bg-white rounded-3xl overflow-hidden cursor-pointer hover:border-transparent hover:shadow-md transition-all group"
+                  <div                
+                    key={kit.id}
+                    onClick={() => navigate('/kits')}
+                    className="flex flex-col border border-[#e8dcc8]/50 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:border-transparent transition-all duration-500 group"
                   >
                     <div className="w-full aspect-square bg-[#faf8f5] overflow-hidden relative">
                       <ImageWithFallback 
-                        src={prod.image} 
-                        alt={prod.product_name} 
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-700" 
+                        src={kit.image} 
+                        alt={kit.product_name} 
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103" 
                         isThumbnail={true}
                       />
-                      <div className="absolute top-2 left-2 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-xs" style={{ color: accent, border: `1px solid ${accent}30` }}>
-                        {name}
+                      <div className="absolute top-2.5 left-2.5">
+                        <span className={`text-[8.5px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${badge.bg} ${badge.text}`}>
+                          Kit Especial
+                        </span>
                       </div>
                     </div>
                     
-                    <div className="flex flex-col items-center text-center p-4 flex-1 justify-between">
-                      <div className="w-full mb-2">
-                        <span className="text-[8px] font-black tracking-widest uppercase block mb-1 opacity-60" style={{ color: accent }}>
-                          {prod.category}
+                    <div className="p-3.5 flex flex-col items-center text-center">
+                        <span className="text-[8px] uppercase tracking-[0.1em] text-[#6d5443]/60 mb-0.5 font-bold">
+                          {badge.label}
                         </span>
-                        <h5 className="font-serif text-xs tracking-wide text-[#6d5443] truncate w-full mb-1">
-                          {prod.product_name}
-                        </h5>
-                      </div>
-                      
-                      <div className="w-full mt-auto pt-2">
-                        <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold block mb-2">
-                          A partir de R$ {prod.current_price?.toFixed(2).replace('.', ',')}
+                        <h3 className="font-poppins font-semibold text-[11px] sm:text-xs text-[#3A312D] truncate w-full mb-1 group-hover:text-[#cca062] transition-colors">
+                          {kit.product_name}
+                        </h3>
+                        <span className="text-[10px] sm:text-xs tracking-wider text-[#cca062] font-semibold">
+                          R$ {kit.current_price?.toFixed(2).replace('.', ',')}
                         </span>
-                        <span className="inline-block text-[8px] font-black uppercase tracking-widest text-[#cca062] group-hover:text-[#c36266] transition-colors leading-none">
-                          Ver no Catálogo →
-                        </span>
-                      </div>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })
             )}
           </div>
+        </div>
+      </section>
+      
+      {/* MONTE SEU KIT EXPLAINER (OBJECTIVE COMMERCIAL BANNER) */}
+      <section className="my-16 max-w-5xl mx-auto px-6">
+        <div className="bg-gradient-to-br from-[#faf8f5] to-white border border-[#e8dcc8]/60 rounded-3xl p-6 sm:p-10 shadow-3xs flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-[#cca062]/3 rounded-br-full blur-md pointer-events-none" />
+         
+          <div className="max-w-xl text-center lg:text-left relative z-10">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#cca062]/10 mb-3.5 border border-[#cca062]/10">
+              <Sparkles size={10} className="text-[#cca062]" />
+              <span className="text-[8px] font-bold uppercase tracking-widest text-[#cca062]">Customização Avançada</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-poppins font-semibold text-[#3A312D] tracking-tight mb-2">
+              Monte o Seu Próprio Kit de Afeto
+            </h3>
+            <p className="text-[11px] sm:text-xs text-[#6d5443]/85 leading-relaxed font-light mb-4">
+              Crie uma combinação personalizada escolhendo a caixa ideal, adicionando os mimos artesanais preferidos e inserindo um cartão com mensagem gravada. Rápido, objetivo e acolhedor!
+            </p>
+            <div className="grid grid-cols-3 gap-3 text-center text-[#6d5443]/70 font-semibold text-[8px] tracking-wider uppercase font-poppins pt-2">
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-white border border-[#e8dcc8] flex items-center justify-center font-bold font-sans">1</span>
+                <span>Escolha a Caixa</span>
+              </div>
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-white border border-[#e8dcc8] flex items-center justify-center font-bold font-sans">2</span>
+                <span>Adicione Mimos</span>
+              </div>
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-white border border-[#e8dcc8] flex items-center justify-center font-bold font-sans">3</span>
+                <span>Escolha o Cartão</span>
+              </div>
+            </div>
+          </div>
           
-          <div className="flex justify-center mt-12 px-4">
+          <div className="shrink-0 relative z-10">
             <button
-              onClick={() => navigate('/colecoes')}
-              className="bg-[#cca062] hover:bg-[#c36266] text-white transition-all text-[9px] font-black uppercase tracking-widest px-8 py-3.5 rounded-full shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+              onClick={() => navigate('/kit-meukit')}
+              className="bg-[#cca062] hover:bg-[#b88c52] text-white px-8 py-3.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-xs hover:shadow-md transition-all ease-out cursor-pointer inline-flex items-center gap-2"
             >
-              Ver Todas as Coleções por Ateliê
+              Iniciar Construtor <ArrowRight size={12} strokeWidth={2.5} />
             </button>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* TESTIMONIALS SECTION */}
-        <section id="feedback" className="mb-20 md:mb-28 scroll-mt-24">
-          <HeartDivider text="Feedback que amamos" />
-          
-          <div className="w-full relative bg-[#faf8f5] border border-[#e8dcc8]/50 p-8 sm:p-12 flex flex-col justify-center items-center text-center shadow-xs overflow-hidden h-[300px] sm:h-[320px] rounded-2xl">
-            <div className="absolute top-4 left-6 font-serif text-[120px] text-[#cca062]/10 select-none leading-none pointer-events-none font-black">
-              “
-            </div>
-            {testimonials.length > 0 && (
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentTestimonial}
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -30 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                  className="flex flex-col items-center justify-center w-full h-full"
-                >
-                  <div className="flex gap-1 mb-5 text-[#cca062]">
-                    {Array.from({ length: testimonials[currentTestimonial]?.stars || 5 }).map((_, i) => (
-                      <Star key={i} size={15} fill="currentColor" className="text-[#cca062]" />
-                    ))}
-                  </div>
-                  
-                  <p className="text-sm sm:text-base md:text-lg font-medium leading-relaxed text-[#6d5443] mb-6 max-w-lg px-2 italic">
-                    "{testimonials[currentTestimonial]?.text}"
-                  </p>
-                  
-                  <span className="text-xs sm:text-sm font-serif tracking-[0.25em] text-[#6d5443] uppercase font-bold relative">
-                    <span className="absolute -left-5 top-1/2 w-3 h-[1px] bg-[#cca062]/50" />
-                    {testimonials[currentTestimonial]?.name}
-                    <span className="absolute -right-5 top-1/2 w-3 h-[1px] bg-[#cca062]/50" />
-                  </span>
-                </motion.div>
-              </AnimatePresence>
-            )}
-
-            {/* Dot indicators */}
-            <div className="absolute bottom-6 flex gap-2 justify-center z-10">
-              {testimonials.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentTestimonial(idx)}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    currentTestimonial === idx ? 'bg-[#cca062] w-5' : 'bg-[#e8dcc8] hover:bg-[#cca062]/50'
-                  }`}
-                  aria-label={`Testimonial slide ${idx + 1}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* ADD FEEDBACK BUTTON */}
-          <div className="flex justify-center mt-6">
-            <button 
-              type="button"
-              onClick={() => setIsFeedbackOpen(true)}
-              className="border border-[#cca062] text-[#cca062] hover:bg-[#cca062] hover:text-white transition-colors text-[10px] sm:text-[11px] font-bold tracking-widest uppercase px-6 py-3 rounded-full flex items-center gap-2 outline-none cursor-pointer"
-            >
-              <Heart size={12} fill="currentColor" /> Deixar meu Feedback
-            </button>
-          </div>
-        </section>
-
-        {/* FINAL SIGNATURE PHRASE BLOCK */}
-        <section className="mb-6 md:mb-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center select-none pt-4">
-          <div className="flex items-center justify-center w-full max-w-xs mb-6 gap-3">
-            <div className="h-[1px] flex-1 border-t border-dashed border-[#cca062]/35"></div>
-            <Heart size={14} strokeWidth={1.5} className="text-[#cca062]" />
-            <div className="h-[1px] flex-1 border-t border-dashed border-[#cca062]/35"></div>
-          </div>
-          <p className="text-3xl sm:text-4xl md:text-5xl font-cursive text-[#6d5443] leading-tight max-w-3xl px-2">
-            Feito à mão, com amor e único propósito.
+      {/* PRODUTOS (VITRINE DIRETA DE PRODUTOS PREMIUM COM MAPEAMENTO DE ATELIÊS) */}
+      <section id="produtos" className="scroll-mt-24 py-16 px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062]">Vitrina de Destaques</span>
+          <h2 className="text-2xl font-poppins font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Artigos Selecionados</h2>
+          <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3.5 mb-3"></div>
+          <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
+            Navegue pelos produtos mais queridos de nossas marcas e monte um acervo de memórias marcantes.
           </p>
-        </section>
+        </div>
+        
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {featuredProducts.map((prod) => {
+            const companyDetails = getCompanyLabelAndColor(prod.company);
+            const targetRoute = prod.company === 'pallyra' ? '/lapallyra' 
+                              : prod.company === 'guennita' ? '/comamorguennita' 
+                              : prod.company === 'mimada' ? '/mimadasim' 
+                              : '/tuttymimo';
+            return (
+              <div 
+                key={prod.id} 
+                onClick={() => navigate(`${targetRoute}?product=${prod.id}`)}
+                className="flex flex-col border border-[#e8dcc8]/50 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:border-[#cca062]/55 transition-all duration-500 group"
+                title={`Ver ${prod.product_name} no Ateliê`}
+              >
+                <div className="w-full aspect-square bg-[#faf8f5] overflow-hidden relative">
+                  <ImageWithFallback 
+                    src={prod.image} 
+                    alt={prod.product_name} 
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103" 
+                    isThumbnail={true}
+                  />
+                  
+                  {/* Chic Company Logo Overlay on hover */}
+                  <div className="absolute inset-0 bg-[#3A312D]/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="bg-white/95 text-[#6d5443] hover:text-[#cca062] rounded-full p-2.5 shadow-md flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-bold">
+                      <Eye size={11} /> Visualizar
+                    </span>
+                  </div>
 
+                  <div className="absolute top-2.5 right-2.5">
+                    <span className={`text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-2xs border border-[#e8dcc8]/20 ${companyDetails.bg} ${companyDetails.text}`}>
+                      {companyDetails.label}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center text-center p-3.5">
+                  <span className="text-[8px] uppercase tracking-widest text-[#6d5443]/60 mb-0.5 font-bold font-poppins">
+                    {companyDetails.label}
+                  </span>
+                  <h3 className="font-poppins font-medium text-[11px] sm:text-xs text-[#3A312D] truncate w-full group-hover:text-[#cca062] transition-colors mb-1">
+                    {prod.product_name}
+                  </h3>
+                  <span className="text-[10px] sm:text-xs tracking-wider text-[#cca062] font-semibold">
+                    R$ {prod.current_price?.toFixed(2).replace('.', ',')}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+      
+      {/* FINAL EMOTIONAL TRUST BANNER */}
+      <section className="bg-[#faf8f5] border-y border-[#e8dcc8]/40 py-12 px-6">
+        <div className="max-w-3xl mx-auto text-center select-none">
+          <Heart size={20} className="text-[#c96b71] mx-auto mb-4 animate-pulse" />
+          <p className="font-cursive text-2xl sm:text-3xl text-[#3A312D] leading-snug mb-3 max-w-xl mx-auto">
+            "Buscamos encantar detalhes, valorizando instantes felizes e cultivando laços eternos."
+          </p>
+          <span className="text-[8.5px] font-bold uppercase tracking-[0.25em] text-[#6d5443]/60 font-poppins block">
+            Padrão de Qualidade Vitrine Ateliê
+          </span>
+        </div>
+      </section>
 
-      </main>
-
-      {/* FOOTER */}
-      <footer className="bg-[#faf8f5] border-t border-[#e8dcc8] pt-16 pb-8 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12 mb-12">
-          {/* Col 1 */}
+      {/* PREMIUM CHIC FOOTER */}
+      <footer className="bg-white border-t border-[#e8dcc8]/40 pt-16 pb-10 px-6 sm:px-12 font-sans overflow-hidden">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12 mb-10">
           <div className="md:w-1/3 flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="mb-4 flex flex-col items-center md:items-start cursor-pointer text-center" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <div className="mb-4 flex flex-col items-center md:items-start cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
               <LogoAndSignature small={true} />
             </div>
-            <p className="text-[13px] text-[#6d5443] mb-6 max-w-[200px] leading-relaxed font-medium">
-              Três ateliês, um só propósito: transformar o momento em lembranças eternas.
+            <p className="text-[11px] text-[#6d5443]/90 mb-6 max-w-[220px] leading-relaxed font-medium">
+              Kits afetivos luxuosos e presentes exclusivos sob medida para demonstrar carinho em momentos memoráveis.
             </p>
-            <div className="flex gap-4 text-[#cca062]">
-              <a href="#" className="hover:text-[#c36266] transition-colors"><Info size={16} /></a>
-              <a href={`https://wa.me/${config.whatsapp_number.replace(/\D/g, '')}`} className="hover:text-[#c36266] transition-colors"><Mail size={16} /></a>
-              <a href="#" className="hover:text-[#c36266] transition-colors"><Search size={16} /></a>
-              <a href="#" className="hover:text-[#c36266] transition-colors"><User size={16} /></a>
+            <div className="flex gap-4.5 text-[#cca062]">
+              <a href="#ateliers" className="hover:text-[#6d5443] transition-colors" title="Nossos ateliês"><Info size={16} /></a>
+              <a href={`https://wa.me/${config.whatsapp_number.replace(/\D/g, '')}`} className="hover:text-[#6d5443] transition-colors" title="Fale pelo Whatsapp"><Mail size={16} /></a>
+              <button onClick={() => navigate('/document')} className="hover:text-[#6d5443] transition-colors outline-none cursor-pointer" title="Verificar documentos"><Search size={16} /></button>
+              <button onClick={() => navigate('/admin')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer" title="Entrar no Painel"><User size={16} /></button>
             </div>
           </div>
           
-          {/* Col 2 */}
-          <div className="md:w-1/3">
-             <h6 className="text-[11px] font-bold tracking-widest text-[#6d5443] uppercase mb-6">Menu</h6>
-             <ul className="space-y-4 text-[12px] text-gray-500">
-               <li><a href="#atelies" className="hover:text-[#cca062] transition-colors">Ateliês</a></li>
-               <li><a href="#colecoes" className="hover:text-[#cca062] transition-colors">Coleções</a></li>
-               <li><a href="#produtos" className="hover:text-[#cca062] transition-colors">Personalizados</a></li>
-               <li><a href="#como-funciona" className="hover:text-[#cca062] transition-colors">Como funciona</a></li>
-               <li><a href="#institucional" className="hover:text-[#cca062] transition-colors">Sobre nós</a></li>
-               <li><a href="#contato" className="hover:text-[#cca062] transition-colors">Contato</a></li>
+          <div className="md:w-1/4">
+             <h4 className="text-[10px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">Ateliês</h4>
+             <ul className="space-y-3.5 text-[11px] font-medium text-[#6d5443]/80">
+               {ateliers.map((a) => (
+                 <li key={a.id}><button onClick={() => navigate(a.route)} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">{a.name}</button></li>
+               ))}
+             </ul>
+          </div>
+
+          <div className="md:w-1/4">
+             <h4 className="text-[10px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">Navegação</h4>
+             <ul className="space-y-3.5 text-[11px] font-medium text-[#6d5443]/80">
+               <li><a href="#kits" className="hover:text-[#cca062] transition-colors">Kits Prontos</a></li>
+               <li><button onClick={() => navigate('/kit-meukit')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Monte seu Kit</button></li>
+               <li><a href="#produtos" className="hover:text-[#cca062] transition-colors">Produtos</a></li>
+               <li><button onClick={() => navigate('/listadepresentes-info')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Lista de Presentes</button></li>
              </ul>
           </div>
           
-          {/* Col 3 */}
-          <div className="md:w-1/3">
-             <h6 className="text-[11px] font-bold tracking-widest text-[#6d5443] uppercase mb-6">Ajuda</h6>
-             <ul className="space-y-4 text-[12px] text-gray-500">
-               <li><a href="#" className="hover:text-[#cca062] transition-colors">Perguntas frequentes</a></li>
-               <li><a href="#" className="hover:text-[#cca062] transition-colors">Prazos e entregas</a></li>
+          <div className="md:w-1/4">
+             <h4 className="text-[10px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins font-semibold">Suporte</h4>
+             <ul className="space-y-3.5 text-[11px] font-medium text-[#6d5443]/80">
+               <li><button onClick={() => navigate('/rastreamento')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer">Rastreamento de Pedido</button></li>
+               <li><a href="#" className="hover:text-[#cca062] transition-colors">Prazos e Entregas</a></li>
                <li><a href="#" className="hover:text-[#cca062] transition-colors">Trocas e devoluções</a></li>
-               <li><a href="#" className="hover:text-[#cca062] transition-colors">Políticas</a></li>
-               <li><button onClick={() => navigate('/rastreamento')} className="hover:text-[#cca062] transition-colors uppercase cursor-pointer outline-none bg-transparent border-none p-0 inline-block">Rastreamento</button></li>
              </ul>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto border-t border-[#e8dcc8] pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-gray-500 font-medium">
-          <p>
-            © 2025 Presentes Personalizados by Julia Aleixo. Todos os direitos reservados.
+        <div className="max-w-7xl mx-auto border-t border-[#e8dcc8]/30 pt-6.5 flex flex-col lg:flex-row justify-between items-center gap-5 text-[9px] text-[#6d5443]/70 font-semibold uppercase tracking-wider">
+          <p className="text-center lg:text-left font-sans">
+            © {new Date().getFullYear()} Presentes Personalizados by Julia Aleixo. Todos os direitos reservados. CNPJ {config.store_cnpj || "Sob Consulta"}.
           </p>
-          <div className="flex items-center gap-2">
-            <Package size={12} className="text-[#cca062]" /> <span className="font-bold tracking-widest uppercase text-[#6d5443]">Compra 100% Segura</span>
+          
+          <div className="flex items-center gap-2 text-xs">
+            <Package size={11} className="text-[#cca062]" /> 
+            <span className="font-poppins font-bold tracking-widest text-[#3A312D] text-[9px] uppercase">Artesanato 100% Seguro</span>
           </div>
-          <div className="flex items-center gap-3 bg-white/40 border border-[#e8dcc8] py-1 px-2.5 rounded-lg">
+
+          <div className="flex items-center gap-3 bg-[#faf8f5] border border-[#e8dcc8]/60 py-1.5 px-3.5 rounded-2xl">
              <img 
                src="https://upload.wikimedia.org/wikipedia/commons/2/29/Mercado_Pago_logo_auxiliar.svg" 
                alt="Mercado Pago" 
-               className="h-5 md:h-6 object-contain" 
+               className="h-3.5 object-contain" 
                onError={(e) => {
                  e.currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Mercado_Pago.png";
                }}
              />
-             <div className="flex flex-col items-start leading-[1.1] border-l border-[#e8dcc8] pl-2">
-               <span className="text-[8px] tracking-wider text-[#A09898] font-bold uppercase">Pagamento Processado por</span>
-               <span className="text-[9px] font-black text-[#00a6e0] tracking-wider uppercase">Mercado Pago</span>
+             <div className="flex flex-col items-start leading-tight border-l border-[#e8dcc8]/60 pl-2">
+               <span className="text-[6.5px] tracking-widest font-bold">Processado por</span>
+               <span className="text-[7.5px] font-extrabold text-[#00a6e0] tracking-widest uppercase">Mercado Pago</span>
              </div>
           </div>
         </div>
       </footer>
       
-      {/* ADMIN SECRET BUTTON */}
       {!isAdmin && (
         <button 
            onClick={() => navigate('/admin')}
-           className="fixed bottom-4 right-4 w-10 h-10 flex items-center justify-center opacity-0 hover:opacity-30 transition-opacity z-[999] text-[#6d5443]"
+           className="fixed bottom-4 right-4 w-9 h-9 flex items-center justify-center opacity-0 hover:opacity-100 text-[#6d5443] transition-opacity z-[999]"
+           title="Painel Administrativo"
         >
-          <Info size={14} />
+          <Info size={13} />
         </button>
       )}
 
-      {/* SUGGESTION BOX FORM */}
-      <SuggestionBox 
-        companyId="pallyra" 
-        hideTrigger={true} 
-        isOpenExternal={isSuggestOpen} 
-        onCloseExternal={() => setIsSuggestOpen(false)} 
-      />
-
-      {/* FEEDBACK OVERLAY MODAL */}
-      <AnimatePresence>
-        {isFeedbackOpen && (
-          <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsFeedbackOpen(false)}
-              className="absolute inset-x-0 inset-y-0 bg-black/50 backdrop-blur-xs cursor-pointer"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-sm bg-white rounded-3xl border border-[#e8dcc8] shadow-2xl p-6 overflow-hidden z-10"
-            >
-              <button 
-                type="button"
-                onClick={() => setIsFeedbackOpen(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer outline-none"
-              >
-                <X size={16} />
-              </button>
-
-              {fbSuccess ? (
-                <div className="py-8 text-center animate-in zoom-in-95 duration-300">
-                  <div className="w-12 h-12 bg-emerald-500/15 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
-                    <CheckSquare size={20} />
-                  </div>
-                  <h4 className="text-xs font-black uppercase tracking-widest text-[#6d5443]">Muito Obrigado!</h4>
-                  <p className="text-[11px] text-gray-500 mt-2 font-medium leading-relaxed">Seu feedback foi compartilhado com sucesso.</p>
-                </div>
-              ) : (
-                <div className="text-[#6d5443]">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Heart size={16} fill="currentColor" className="text-[#cca062]" />
-                    <h4 className="text-xs font-black uppercase tracking-widest">Enviar Feedback</h4>
-                  </div>
-                  <p className="text-[11px] text-gray-400 mb-6 uppercase font-bold tracking-wider leading-relaxed">
-                    Sua avaliação aparecerá em nossa parede de amor.
-                  </p>
-                  
-                  <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">Seu Nome</label>
-                      <input
-                        type="text"
-                        value={fbName}
-                        onChange={(e) => setFbName(e.target.value)}
-                        placeholder="Ex: Ana Maria..."
-                        className="w-full bg-[#faf8f5] border border-[#e8dcc8]/70 text-[#6d5443] rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-1 focus:ring-[#cca062] transition-all placeholder:text-gray-400 font-sans"
-                        required
-                        maxLength={100}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">Nota</label>
-                      <div className="flex gap-1.5 text-gray-300">
-                        {[1, 2, 3, 4, 5].map((starValue) => (
-                          <button
-                            key={starValue}
-                            type="button"
-                            onClick={() => setFbStars(starValue)}
-                            className="p-0.5 outline-none transition-all active:scale-90"
-                          >
-                            <Star 
-                              size={20} 
-                              fill={starValue <= fbStars ? "#cca062" : "none"} 
-                              className={starValue <= fbStars ? "text-[#cca062]" : "text-gray-300"} 
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">Sua Mensagem</label>
-                      <textarea
-                        value={fbText}
-                        onChange={(e) => setFbText(e.target.value)}
-                        placeholder="Escreva sua experiência maravilhosa aqui..."
-                        className="w-full bg-[#faf8f5] border border-[#e8dcc8]/70 text-[#6d5443] text-xs font-bold rounded-xl px-3 py-2 outline-none h-24 resize-none focus:ring-1 focus:ring-[#cca062] transition-all placeholder:text-gray-400 font-sans"
-                        required
-                        maxLength={500}
-                      />
-                    </div>
-
-                    <button
-                      disabled={fbSubmitting}
-                      type="submit"
-                      className="w-full py-3 bg-[#cca062] hover:bg-[#c36266] text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-50"
-                    >
-                      {fbSubmitting ? 'ENVIANDO...' : 'ENVIAR AVALIAÇÃO'}
-                    </button>
-                  </form>
-                </div>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
