@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Great+Vibes&family=Imperial+Script&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Great+Vibes&family=Imperial+Script&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@300;400;500;600;700;800&family=Parisienne&family=Allura&display=swap');
 
 @font-face {
   font-family: 'Sofia Carolyn';
@@ -21,6 +21,8 @@ html {
   --font-elegant: "Pinyon Script", cursive;
   --font-sofia: "Sofia Carolyn", cursive;
   --font-imperial: "Imperial Script", cursive;
+  --font-parisienne: "Parisienne", cursive;
+  --font-allura: "Allura", cursive;
   --font-number: "Tahoma", sans-serif;
   --color-gold: #C6A664;
   --color-gold-deep: #B39254;
@@ -44,6 +46,16 @@ html {
   }
   .font-signature {
     font-family: var(--font-imperial);
+  }
+  .font-parisienne {
+    font-family: var(--font-parisienne);
+  }
+  .font-allura {
+    font-family: var(--font-allura);
+  }
+  .font-cormorant-italic {
+    font-family: var(--font-serif);
+    font-style: italic;
   }
   .font-tahoma {
     font-family: "Tahoma", sans-serif;

@@ -5,6 +5,7 @@ import { useAuth } from './AuthProvider';
 import { subscribeToAllSettings } from '../services/firebaseService';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './ImageWithFallback';
+import { HomeProductCard } from './HomeProductCard';
 
 interface EntryViewProps {
   config: AppConfig;
@@ -57,7 +58,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
   };
 
   const LogoAndSignature = ({ small = false }: { small?: boolean }) => (
-    <div className={`relative inline-flex flex-col items-center justify-center select-none py-2 px-3 font-poppins ${
+    <div className={`relative inline-flex flex-col items-center justify-center select-none py-2 px-3 ${
       small 
         ? "min-w-[140px] sm:min-w-[160px]" 
         : "min-w-[280px] sm:min-w-[420px]"
@@ -76,18 +77,20 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       <div className={`absolute inset-0 flex items-center justify-center pointer-events-none select-none ${
         small ? "pt-1" : "pt-2 sm:pt-4"
       }`}>
-        <span className={`font-cursive text-[#3A312D] tracking-wide relative whitespace-nowrap ${
-          small ? "text-[15px] sm:text-[17px]" : "text-3xl sm:text-4xl"
+        <span className={`font-parisienne text-[#3A312D] tracking-wide relative whitespace-nowrap ${
+          small ? "text-[16px] sm:text-[18px]" : "text-3xl sm:text-4xl"
         }`}>
           personalizados
         </span>
       </div>
 
-      {/* Assinatura: BY JULIA ALEIXO */}
-      <div className={`absolute right-1 bottom-[0px] font-sans uppercase tracking-[0.25em] font-bold text-[#6d5443]/85 select-none ${
-        small ? "text-[4.5px] sm:text-[5.5px]" : "text-[8px] sm:text-[9px]"
+      {/* Assinatura: by Julia Aleixo (handwritten font class) */}
+      <div className={`absolute select-none font-allura text-[#6d5443] font-medium leading-none rotate-[-4deg] ${
+        small 
+          ? "right-2.5 bottom-[5px] text-[11px] sm:text-[12px]" 
+          : "right-4 bottom-[4px] text-[20px] sm:text-[23px]"
       }`}>
-        BY JULIA ALEIXO
+        by Julia Aleixo
       </div>
     </div>
   );
@@ -202,41 +205,100 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         </div>
       </header>
 
-      {/* EDITORIAL HERO BANNER - DYNAMIC DESKTOP/MOBILE HERO */}
-      <section className="relative w-full overflow-hidden bg-gradient-to-b from-[#faf8f5] to-[#fffdfa] pt-12 pb-16 sm:py-20 border-b border-[#e8dcc8]/20">
+      {/* EDITORIAL HERO BANNER - BOUTIQUE PREMIUM HERO */}
+      <section className="relative w-full min-h-[80vh] lg:min-h-[90vh] overflow-hidden bg-gradient-to-b from-[#faf8f5] to-[#fffdfa] flex items-center border-b border-[#e8dcc8]/20 py-12 lg:py-0">
         {/* Soft Decorative Elements */}
         <div className="absolute top-1/2 left-5 w-44 h-44 rounded-full bg-[#cca062]/4 blur-2xl pointer-events-none -translate-y-1/2" />
         <div className="absolute top-10 right-10 w-64 h-64 rounded-full bg-[#c96b71]/3 blur-3xl pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-center text-center">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 border border-[#e8dcc8]/40 mb-5 shadow-2xs">
-            <Sparkles size={11} className="text-[#cca062]" /> 
-            <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-[#6d5443]/70 font-poppins">Curadorias Afetivas Feitas à Mão</span>
-          </div>
-          
-          <h1 className="font-poppins font-semibold text-3xl sm:text-5xl lg:text-6xl text-[#3A312D] tracking-tight leading-[1.1] max-w-3xl mb-6">
-            Onde o afeto se transforma em <span className="text-[#cca062] relative inline-block">presente perfeito</span>
-          </h1>
-          
-          <p className="text-xs sm:text-sm font-light text-[#6d5443]/80 max-w-xl leading-relaxed mb-8">
-            Kits exclusivos e lembranças personalizadas tecidas à mão por artesãs especialistas, pensados para abraçar memórias e surpreender quem você ama.
-          </p>
-          
-          {/* Elegantly Proportioned CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md">
-            <button
-              onClick={() => navigate('/kit-meukit')}
-              className="w-full sm:w-auto bg-[#3A312D] text-white hover:bg-[#6d5443] px-8 py-3.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] hover:shadow-md transition-all active:scale-98 font-poppins shadow-xs cursor-pointer flex items-center justify-center gap-2"
-            >
-              <Gift size={13} className="text-[#e8dcc8]" />
-              Monte seu Kit
-            </button>
-            <a
-              href="#kits"
-              className="w-full sm:w-auto border border-[#e8dcc8] text-[#3A312D] bg-white/40 hover:bg-white hover:border-[#cca062] px-8 py-3.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-all font-poppins cursor-pointer flex items-center justify-center"
-            >
-              Ver Kits Exclusivos
-            </a>
+
+        <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            
+            {/* LEFT COLUMN: DESKTOP ONLY/ADAPTIVE FOR BOTH */}
+            <div className="hidden lg:flex flex-col justify-center items-start text-left max-w-[500px] py-12">
+              {/* Elemento 1 — Assinatura emocional */}
+              <span className="font-allura text-[#cca062] font-semibold tracking-wide text-[36px] lg:text-[42px] leading-none mb-2 block select-none">
+                by Julia Aleixo
+              </span>
+              
+              {/* Elemento 2 — Título principal */}
+              <h1 className="font-poppins font-extrabold text-[65px] lg:text-[75px] text-[#3A312D] tracking-[0.14em] leading-none mb-6">
+                PRESENTES
+              </h1>
+              
+              {/* Elemento 3 — Texto institucional */}
+              <p className="font-tahoma text-[16px] lg:text-[18px] text-[#3a312d]/75 font-light leading-relaxed mb-9">
+                Quatro ateliês, um só propósito: transformar momentos em lembranças eternas.
+              </p>
+              
+              {/* Botões lado a lado */}
+              <div className="flex items-center gap-4 w-full">
+                {/* Botão principal */}
+                <button
+                  onClick={() => navigate('/kit-meukit')}
+                  className="h-[52px] px-8 rounded-full bg-[#3A312D] text-white font-semibold text-xs uppercase tracking-[0.14em] hover:scale-102 hover:shadow-[0_8px_20px_rgba(58,49,45,0.25)] hover:bg-[#4d423e] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Gift size={13} className="text-[#e8dcc8]" />
+                  Escolher meu presente
+                </button>
+                
+                {/* Botão secundário */}
+                <a
+                  href="#ateliers"
+                  className="h-[52px] px-8 rounded-full bg-transparent border border-[#cca062] text-[#cca062] font-semibold text-xs uppercase tracking-[0.14em] hover:bg-[#cca062] hover:text-[#3A312D] transition-all duration-300 cursor-pointer flex items-center justify-center"
+                >
+                  Conhecer os ateliês
+                </a>
+              </div>
+            </div>
+
+            {/* MOBILE ONLY HERO: Emocional & Centralizado (No Copying Desktop) */}
+            <div className="flex lg:hidden flex-col items-center text-center py-6 w-full">
+              {/* Assinatura emocional */}
+              <span className="font-allura text-[#cca062] font-semibold text-[32px] sm:text-[38px] leading-none mb-1 select-none">
+                by Julia Aleixo
+              </span>
+              
+              {/* Título principal */}
+              <h1 className="font-poppins font-extrabold text-[44px] sm:text-[56px] text-[#3A312D] tracking-[0.1em] leading-none mb-5">
+                PRESENTES
+              </h1>
+              
+              {/* Texto institucional */}
+              <p className="font-tahoma text-[14px] sm:text-[16px] text-[#3a312d]/75 font-light leading-relaxed mb-8 max-w-sm">
+                Quatro ateliês, um só propósito: transformar momentos em lembranças eternas.
+              </p>
+              
+              {/* Botões empilhados ocupando quase toda largura */}
+              <div className="flex flex-col gap-3 w-full max-w-xs sm:max-w-sm">
+                <button
+                  onClick={() => navigate('/kit-meukit')}
+                  className="h-[52px] w-full rounded-full bg-[#3A312D] text-white font-semibold text-[11px] uppercase tracking-[0.12em] transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+                >
+                  <Gift size={13} className="text-[#e8dcc8]" />
+                  Escolher meu presente
+                </button>
+                
+                <a
+                  href="#ateliers"
+                  className="h-[52px] w-full rounded-full bg-transparent border border-[#cca062] text-[#cca062] font-semibold text-[11px] uppercase tracking-[0.12em] transition-all active:scale-98 cursor-pointer flex items-center justify-center"
+                >
+                  Conhecer os ateliês
+                </a>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: PRESERVED SOPHISTICATED HERO VISUAL */}
+            <div className="hidden lg:block relative w-full h-[480px] lg:h-[540px] rounded-[32px] overflow-hidden shadow-[0_12px_32px_rgba(109,84,67,0.06)] border border-[#e8dcc8]/45 bg-[#faf8f5]">
+              <ImageWithFallback
+                src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=1200&auto=format&fit=crop"
+                alt="Ateliê de Presentes Finos"
+                className="w-full h-full object-cover"
+                isThumbnail={false}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/10 to-transparent" />
+            </div>
+
           </div>
         </div>
       </section>
@@ -244,9 +306,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       {/* BOUTIQUE ATELIERS HUB (INTERACTIVE VITRINE DE LUXO) */}
       <section id="ateliers" className="scroll-mt-24 py-16 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-10">
-          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062]">Navegação Boutique</span>
-          <h2 className="text-2xl font-poppins font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Conheça Nossos Ateliês</h2>
-          <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3.5 mb-3"></div>
+          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Navegação Boutique</span>
+          <h2 className="text-2xl sm:text-3xl font-poppins font-bold text-[#3A312D] tracking-tight mt-1 mb-2">Conheça Nossos Ateliês</h2>
+          <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
+          <p className="font-allura text-base text-[#cca062] lowercase mb-1 block">pequenos detalhes de imenso afeto</p>
           <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
             Cada marca possui uma curadoria especializada com artigos confeccionados inteiramente de forma manual.
           </p>
@@ -282,7 +345,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               </div>
 
               <div className="pt-2 border-t border-[#faf8f5] mt-2 flex items-center justify-between">
-                <span className="font-cursive text-lg text-[#cca062]">
+                <span className="font-cormorant-italic italic text-sm text-[#cca062]">
                   &ldquo;{atelier.tagline}&rdquo;
                 </span>
                 <span className="w-7 h-7 rounded-full bg-[#faf8f5] border border-[#e8dcc8]/40 flex items-center justify-center text-[#cca062] group-hover:bg-[#cca062] group-hover:text-white transition-all">
@@ -298,9 +361,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       <section id="kits" className="scroll-mt-24 py-16 bg-[#faf8f5]/80 border-y border-[#e8dcc8]/15 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
-            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062]">Prontos para Presentear</span>
-            <h2 className="text-2xl font-poppins font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Kits Únicos Selecionados</h2>
-            <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3.5 mb-3"></div>
+            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Prontos para Presentear</span>
+            <h2 className="text-2xl sm:text-3xl font-poppins font-bold text-[#3A312D] tracking-tight mt-1 mb-2">Kits Únicos Selecionados</h2>
+            <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
+            <p className="font-allura text-base text-[#cca062] lowercase mb-1 block">detalhes prontos para encantar</p>
             <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
               Combinações primorosas de produtos embalados com afeto, prontos para encantar em datas históricas.
             </p>
@@ -312,42 +376,15 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 Nenhum kit disponível no momento.
               </p>
             ) : (
-              kits.map((kit) => {
-                const badge = getCompanyLabelAndColor(kit.company);
-                return (
-                  <div                
-                    key={kit.id}
-                    onClick={() => navigate('/kits')}
-                    className="flex flex-col border border-[#e8dcc8]/50 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:border-transparent transition-all duration-500 group"
-                  >
-                    <div className="w-full aspect-square bg-[#faf8f5] overflow-hidden relative">
-                      <ImageWithFallback 
-                        src={kit.image} 
-                        alt={kit.product_name} 
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103" 
-                        isThumbnail={true}
-                      />
-                      <div className="absolute top-2.5 left-2.5">
-                        <span className={`text-[8.5px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${badge.bg} ${badge.text}`}>
-                          Kit Especial
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="p-3.5 flex flex-col items-center text-center">
-                        <span className="text-[8px] uppercase tracking-[0.1em] text-[#6d5443]/60 mb-0.5 font-bold">
-                          {badge.label}
-                        </span>
-                        <h3 className="font-poppins font-semibold text-[11px] sm:text-xs text-[#3A312D] truncate w-full mb-1 group-hover:text-[#cca062] transition-colors">
-                          {kit.product_name}
-                        </h3>
-                        <span className="text-[10px] sm:text-xs tracking-wider text-[#cca062] font-semibold">
-                          R$ {kit.current_price?.toFixed(2).replace('.', ',')}
-                        </span>
-                    </div>
-                  </div>
-                );
-              })
+              kits.map((kit) => (
+                <HomeProductCard
+                  key={kit.id}
+                  product={kit}
+                  variant="premium"
+                  onClick={() => navigate('/kits')}
+                  getCompanyLabelAndColor={getCompanyLabelAndColor}
+                />
+              ))
             )}
           </div>
         </div>
@@ -361,9 +398,9 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           <div className="max-w-xl text-center lg:text-left relative z-10">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#cca062]/10 mb-3.5 border border-[#cca062]/10">
               <Sparkles size={10} className="text-[#cca062]" />
-              <span className="text-[8px] font-bold uppercase tracking-widest text-[#cca062]">Customização Avançada</span>
+              <span className="text-[8px] font-bold uppercase tracking-widest text-[#cca062] font-poppins">Customização Avançada</span>
             </div>
-            <h3 className="text-xl sm:text-2xl font-poppins font-semibold text-[#3A312D] tracking-tight mb-2">
+            <h3 className="text-xl sm:text-2xl font-poppins font-bold text-[#3A312D] tracking-tight mb-2">
               Monte o Seu Próprio Kit de Afeto
             </h3>
             <p className="text-[11px] sm:text-xs text-[#6d5443]/85 leading-relaxed font-light mb-4">
@@ -388,7 +425,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           <div className="shrink-0 relative z-10">
             <button
               onClick={() => navigate('/kit-meukit')}
-              className="bg-[#cca062] hover:bg-[#b88c52] text-white px-8 py-3.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-xs hover:shadow-md transition-all ease-out cursor-pointer inline-flex items-center gap-2"
+              className="bg-[#cca062] hover:bg-[#b88c52] text-white px-8 py-3.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-xs hover:shadow-md transition-all ease-out cursor-pointer inline-flex items-center gap-2 font-poppins"
             >
               Iniciar Construtor <ArrowRight size={12} strokeWidth={2.5} />
             </button>
@@ -399,9 +436,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       {/* PRODUTOS (VITRINE DIRETA DE PRODUTOS PREMIUM COM MAPEAMENTO DE ATELIÊS) */}
       <section id="produtos" className="scroll-mt-24 py-16 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-10">
-          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062]">Vitrina de Destaques</span>
-          <h2 className="text-2xl font-poppins font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Artigos Selecionados</h2>
-          <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3.5 mb-3"></div>
+          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Vitrine de Destaques</span>
+          <h2 className="text-2xl sm:text-3xl font-poppins font-bold text-[#3A312D] tracking-tight mt-1 mb-2">Artigos Selecionados</h2>
+          <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
+          <p className="font-allura text-base text-[#cca062] lowercase mb-1 block">mimos e afetos para sua escolha</p>
           <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
             Navegue pelos produtos mais queridos de nossas marcas e monte um acervo de memórias marcantes.
           </p>
@@ -409,53 +447,80 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {featuredProducts.map((prod) => {
-            const companyDetails = getCompanyLabelAndColor(prod.company);
             const targetRoute = prod.company === 'pallyra' ? '/lapallyra' 
                               : prod.company === 'guennita' ? '/comamorguennita' 
                               : prod.company === 'mimada' ? '/mimadasim' 
                               : '/tuttymimo';
             return (
-              <div 
-                key={prod.id} 
+              <HomeProductCard
+                key={prod.id}
+                product={prod}
+                variant="promotion"
                 onClick={() => navigate(`${targetRoute}?product=${prod.id}`)}
-                className="flex flex-col border border-[#e8dcc8]/50 bg-white rounded-2xl overflow-hidden cursor-pointer hover:shadow-md hover:border-[#cca062]/55 transition-all duration-500 group"
-                title={`Ver ${prod.product_name} no Ateliê`}
-              >
-                <div className="w-full aspect-square bg-[#faf8f5] overflow-hidden relative">
-                  <ImageWithFallback 
-                    src={prod.image} 
-                    alt={prod.product_name} 
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103" 
-                    isThumbnail={true}
-                  />
-                  
-                  {/* Chic Company Logo Overlay on hover */}
-                  <div className="absolute inset-0 bg-[#3A312D]/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="bg-white/95 text-[#6d5443] hover:text-[#cca062] rounded-full p-2.5 shadow-md flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-bold">
-                      <Eye size={11} /> Visualizar
-                    </span>
-                  </div>
-
-                  <div className="absolute top-2.5 right-2.5">
-                    <span className={`text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-2xs border border-[#e8dcc8]/20 ${companyDetails.bg} ${companyDetails.text}`}>
-                      {companyDetails.label}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-col items-center text-center p-3.5">
-                  <span className="text-[8px] uppercase tracking-widest text-[#6d5443]/60 mb-0.5 font-bold font-poppins">
-                    {companyDetails.label}
-                  </span>
-                  <h3 className="font-poppins font-medium text-[11px] sm:text-xs text-[#3A312D] truncate w-full group-hover:text-[#cca062] transition-colors mb-1">
-                    {prod.product_name}
-                  </h3>
-                  <span className="text-[10px] sm:text-xs tracking-wider text-[#cca062] font-semibold">
-                    R$ {prod.current_price?.toFixed(2).replace('.', ',')}
-                  </span>
-                </div>
-              </div>
+                getCompanyLabelAndColor={getCompanyLabelAndColor}
+              />
             );
           })}
+        </div>
+      </section>
+
+      {/* FEEDBACK QUE AMAMOS (EDITORIAL SOCIAL PROOF WITH HANDWRITTEN ACCENTS) */}
+      <section className="py-16 bg-white border-t border-[#e8dcc8]/20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Depoimentos Reais</span>
+            <h2 className="text-2xl sm:text-3xl font-poppins font-bold text-[#3A312D] tracking-tight mt-1 mb-2">Feedback que Amamos</h2>
+            <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
+            <p className="font-allura text-base text-[#cca062] lowercase mb-1 block">frases de carinho e afeto</p>
+            <p className="text-xs text-[#6d5443]/70 font-light max-w-sm mx-auto leading-relaxed">
+              Mensagens espontâneas enviadas por clientes que receberam um pedaço do nosso coração.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Feedback items */}
+            <div className="bg-[#faf8f5]/60 border border-[#e8dcc8]/30 rounded-[22px] p-6.5 hover:shadow-[0_8px_20px_rgba(109,84,67,0.03)] hover:border-[#cca062]/30 transition-all duration-300">
+              <div className="flex items-center gap-1 text-[#cca062] mb-3">
+                <span className="text-[11px] font-bold mr-1 text-[#cca062]/80 font-poppins">5.0</span>
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              </div>
+              <p className="text-[11.5px] font-tahoma font-light text-[#6d5443] leading-relaxed italic mb-4">
+                "O kit maternidade da Tutty Mimo superou todas as minhas expectativas. O enxoval possui uma maciez indescritível e cada pequeno ponto transborda amor. Ficou lindo demais!"
+              </p>
+              <div className="flex items-center justify-between pt-3.5 border-t border-[#e8dcc8]/20">
+                <span className="font-poppins font-semibold text-xs text-[#3A312D]">Mariana Santana</span>
+                <span className="text-[8px] uppercase tracking-widest font-bold bg-[#d4bda1]/15 text-[#a88258] px-2 py-0.5 rounded-full font-poppins">para Tutty Mimo</span>
+              </div>
+            </div>
+
+            <div className="bg-[#faf8f5]/60 border border-[#e8dcc8]/30 rounded-[22px] p-6.5 hover:shadow-[0_8px_20px_rgba(109,84,67,0.03)] hover:border-[#cca062]/30 transition-all duration-300">
+              <div className="flex items-center gap-1 text-[#cca062] mb-3">
+                <span className="text-[11px] font-bold mr-1 text-[#cca062]/80 font-poppins">5.0</span>
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              </div>
+              <p className="text-[11.5px] font-tahoma font-light text-[#6d5443] leading-relaxed italic mb-4">
+                "Encomendei os cadernos e agendas da La Pallyra para presentear minhas madrinhas de casamento. O acabamento artesanal em cartonagem é o legítimo luxo com afeto."
+              </p>
+              <div className="flex items-center justify-between pt-3.5 border-t border-[#e8dcc8]/20">
+                <span className="font-poppins font-semibold text-xs text-[#3A312D]">Beatriz Figueiredo</span>
+                <span className="text-[8px] uppercase tracking-widest font-bold bg-[#cca062]/15 text-[#b08447] px-2 py-0.5 rounded-full font-poppins">para La Pallyra</span>
+              </div>
+            </div>
+
+            <div className="bg-[#faf8f5]/60 border border-[#e8dcc8]/30 rounded-[22px] p-6.5 hover:shadow-[0_8px_20px_rgba(109,84,67,0.03)] hover:border-[#cca062]/30 transition-all duration-300">
+              <div className="flex items-center gap-1 text-[#cca062] mb-3">
+                <span className="text-[11px] font-bold mr-1 text-[#cca062]/80 font-poppins">5.0</span>
+                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+              </div>
+              <p className="text-[11.5px] font-tahoma font-light text-[#6d5443] leading-relaxed italic mb-4">
+                "As rosas de cetim da com amor, Guennita parecem reais. O capricho nas embalagens e o carinho com que as flores são moldadas me fez chorar quando peguei o pacote."
+              </p>
+              <div className="flex items-center justify-between pt-3.5 border-t border-[#e8dcc8]/20">
+                <span className="font-poppins font-semibold text-xs text-[#3A312D]">Camila Resende</span>
+                 <span className="text-[8px] uppercase tracking-widest font-bold bg-[#5b2122]/10 text-[#5b2122] px-2 py-0.5 rounded-full font-poppins">para Guennita</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
       
@@ -463,7 +528,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       <section className="bg-[#faf8f5] border-y border-[#e8dcc8]/40 py-12 px-6">
         <div className="max-w-3xl mx-auto text-center select-none">
           <Heart size={20} className="text-[#c96b71] mx-auto mb-4 animate-pulse" />
-          <p className="font-cursive text-2xl sm:text-3xl text-[#3A312D] leading-snug mb-3 max-w-xl mx-auto">
+          <p className="font-parisienne text-2xl sm:text-3xl text-[#3A312D] leading-snug mb-3 max-w-xl mx-auto">
             "Buscamos encantar detalhes, valorizando instantes felizes e cultivando laços eternos."
           </p>
           <span className="text-[8.5px] font-bold uppercase tracking-[0.25em] text-[#6d5443]/60 font-poppins block">
