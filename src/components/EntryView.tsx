@@ -190,25 +190,27 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </a>
             
-            {/* Elegant Brown Pill-shaped Button (monte seu kit) */}
             <button 
               onClick={() => navigate('/kit-meukit')} 
-              className="bg-[#3A312D] text-[#fffdfa] hover:bg-[#cca062] hover:scale-102 px-5 py-2 rounded-full uppercase font-bold tracking-[0.12em] text-[10px] sm:text-[11px] cursor-pointer outline-none transition-all duration-300 focus:outline-none shrink-0"
+              className="hover:text-[#cca062] transition-colors uppercase font-semibold tracking-[0.14em] text-[11px] sm:text-[12px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block relative group py-1 font-poppins"
             >
               monte seu kit
+              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </button>
             
             <a href="#sobre-julia" className="hover:text-[#cca062] transition-colors relative group py-1">
               sobre nós
               <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </a>
+            
             <a href="#feedbacks" className="hover:text-[#cca062] transition-colors relative group py-1">
               feedback
               <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </a>
+            
             <button 
               onClick={() => navigate('/listadepresentes-info')} 
-              className="hover:text-[#cca062] transition-colors uppercase font-bold tracking-[0.12em] text-[10px] sm:text-[11px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block relative group py-1"
+              className="hover:text-[#cca062] transition-colors uppercase font-semibold tracking-[0.14em] text-[11px] sm:text-[12px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block relative group py-1 font-poppins"
             >
               lista de presentes
               <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
@@ -248,14 +250,14 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
       {/* BOUTIQUE ATELIERS VERTICAL CAPSULE CARDS */}
       <section id="ateliers" className="scroll-mt-24 pb-16 px-6 max-w-6xl mx-auto w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 max-w-5xl mx-auto font-poppins">
           
           {/* Card 1: La Pallyra */}
           <div 
             onClick={() => navigate('/lapallyra')}
             className="flex flex-col items-center group cursor-pointer"
           >
-            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(204,160,98,0.25)] hover:border-[#cca062] relative overflow-hidden flex flex-col justify-between">
+            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(204,160,98,0.15)] hover:border-[#cca062] relative overflow-hidden flex flex-col justify-between hover:-translate-y-1">
               <div className="w-full h-full rounded-t-full rounded-b-[18px] overflow-hidden relative bg-[#FAF8F5]">
                 <ImageWithFallback
                   src="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop"
@@ -266,7 +268,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/20 via-transparent to-transparent pointer-events-none rounded-t-full" />
                 
                 {/* Active Hover Cover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/95 backdrop-blur-xs select-none">
+                <div className="absolute inset-2 sm:inset-2.5 rounded-t-full rounded-b-[16px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/90 backdrop-blur-[4px] select-none">
                   <span className="font-poppins font-semibold tracking-[0.2em] text-[8px] text-[#cca062] uppercase mb-2">Ateliê de Cartonagem</span>
                   <h4 className="font-serif font-light text-xl mb-1 text-white">La Pallyra</h4>
                   <p className="font-hello-olivia text-base text-[#e8dcc8] mb-2">Papelaria de Afeto</p>
@@ -277,18 +279,14 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                     ✦ Ver Ateliê
                   </span>
                 </div>
-                
-                {/* Fallback Icon badge in center bottom */}
-                <div className="absolute bottom-5 inset-x-4 text-center flex flex-col items-center pointer-events-none group-hover:opacity-0 transition-opacity duration-300">
-                  <span className="w-8 h-8 rounded-full bg-white/95 backdrop-blur-md shadow-3xs flex items-center justify-center text-xs select-none">
-                    📓
-                  </span>
-                </div>
               </div>
             </div>
-            <span className="font-playfair text-2xl sm:text-3xl text-[#3A312D] text-center mt-3 block group-hover:text-[#cca062] transition-colors duration-300">
+            <h3 className="font-playfair text-lg sm:text-xl font-medium tracking-wide text-[#3A312D] text-center mt-3 block group-hover:text-[#cca062] transition-colors duration-300">
               La Pallyra
-            </span>
+            </h3>
+            <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
+              Cartonagem & Papelaria Fina
+            </p>
           </div>
 
           {/* Card 2: com amor, Guennita */}
@@ -296,7 +294,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             onClick={() => navigate('/comamorguennita')}
             className="flex flex-col items-center group cursor-pointer"
           >
-            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(91,33,34,0.25)] hover:border-[#5b2122] relative overflow-hidden flex flex-col justify-between">
+            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(91,33,34,0.15)] hover:border-[#5b2122] relative overflow-hidden flex flex-col justify-between hover:-translate-y-1">
               <div className="w-full h-full rounded-t-full rounded-b-[18px] overflow-hidden relative bg-[#FAF8F5]">
                 <ImageWithFallback
                   src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop"
@@ -307,9 +305,9 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/20 via-transparent to-transparent pointer-events-none rounded-t-full" />
                 
                 {/* Active Hover Cover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/95 backdrop-blur-xs select-none">
+                <div className="absolute inset-2 sm:inset-2.5 rounded-t-full rounded-b-[16px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/90 backdrop-blur-[4px] select-none font-sans">
                   <span className="font-poppins font-semibold tracking-[0.2em] text-[8px] text-[#d4bda1] uppercase mb-2">Ateliê de Flores</span>
-                  <h4 className="font-serif font-light text-xl mb-1 text-white">com amor, Guennita</h4>
+                  <h4 className="font-serif font-light text-xl mb-1 text-white font-serif">com amor, Guennita</h4>
                   <p className="font-hello-olivia text-base text-[#e8dcc8] mb-2">Flores de Cetim</p>
                   <p className="text-[10px] tracking-wide leading-relaxed font-light line-clamp-3 max-w-[170px] opacity-90 font-sans">
                     Rosas eternas tecidas pétala por pétala com acabamento impecável de alta costura.
@@ -318,18 +316,14 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                     ✦ Ver Ateliê
                   </span>
                 </div>
-                
-                {/* Fallback Icon badge in center bottom */}
-                <div className="absolute bottom-5 inset-x-4 text-center flex flex-col items-center pointer-events-none group-hover:opacity-0 transition-opacity duration-300">
-                  <span className="w-8 h-8 rounded-full bg-white/95 backdrop-blur-md shadow-3xs flex items-center justify-center text-xs select-none">
-                    👑
-                  </span>
-                </div>
               </div>
             </div>
-            <span className="font-playfair text-2xl sm:text-3xl text-[#3A312D] text-center mt-3 block group-hover:text-[#5b2122] transition-colors duration-300">
+            <h3 className="font-playfair text-lg sm:text-xl font-medium tracking-wide text-[#3A312D] text-center mt-3 block group-hover:text-[#5b2122] transition-colors duration-300">
               com amor, Guennita
-            </span>
+            </h3>
+            <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
+              Flores de Cetim Perfumadas
+            </p>
           </div>
 
           {/* Card 3: Mimada Sim */}
@@ -337,7 +331,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             onClick={() => navigate('/mimadasim')}
             className="flex flex-col items-center group cursor-pointer"
           >
-            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(217,75,95,0.25)] hover:border-[#d94b5f] relative overflow-hidden flex flex-col justify-between">
+            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(217,75,95,0.15)] hover:border-[#d94b5f] relative overflow-hidden flex flex-col justify-between hover:-translate-y-1">
               <div className="w-full h-full rounded-t-full rounded-b-[18px] overflow-hidden relative bg-[#FAF8F5]">
                 <ImageWithFallback
                   src="https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=600&auto=format&fit=crop"
@@ -348,9 +342,9 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/20 via-transparent to-transparent pointer-events-none rounded-t-full" />
                 
                 {/* Active Hover Cover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/95 backdrop-blur-xs select-none">
+                <div className="absolute inset-2 sm:inset-2.5 rounded-t-full rounded-b-[16px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/90 backdrop-blur-[4px] select-none font-sans">
                   <span className="font-poppins font-semibold tracking-[0.2em] text-[8px] text-[#c96b71] uppercase mb-2">Ateliê de Lembranças</span>
-                  <h4 className="font-serif font-light text-xl mb-1 text-white">Mimada Sim</h4>
+                  <h4 className="font-serif font-light text-xl mb-1 text-white font-serif">Mimada Sim</h4>
                   <p className="font-hello-olivia text-base text-[#e8dcc8] mb-2">Mimos Premium</p>
                   <p className="text-[10px] tracking-wide leading-relaxed font-light line-clamp-3 max-w-[170px] opacity-90 font-sans">
                     Lembranças repletas de criatividade e alma para celebrações inesquecíveis e refinadas.
@@ -359,18 +353,14 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                     ✦ Ver Ateliê
                   </span>
                 </div>
-                
-                {/* Fallback Icon badge in center bottom */}
-                <div className="absolute bottom-5 inset-x-4 text-center flex flex-col items-center pointer-events-none group-hover:opacity-0 transition-opacity duration-300">
-                  <span className="w-8 h-8 rounded-full bg-white/95 backdrop-blur-md shadow-3xs flex items-center justify-center text-xs select-none">
-                    💅
-                  </span>
-                </div>
               </div>
             </div>
-            <span className="font-playfair text-2xl sm:text-3xl text-[#3A312D] text-center mt-3 block group-hover:text-[#d94b5f] transition-colors duration-300">
+            <h3 className="font-playfair text-lg sm:text-xl font-medium tracking-wide text-[#3A312D] text-center mt-3 block group-hover:text-[#d94b5f] transition-colors duration-300">
               Mimada Sim
-            </span>
+            </h3>
+            <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
+              Mimos & Ideias com Afeto
+            </p>
           </div>
 
           {/* Card 4: Tutty Mimo */}
@@ -378,7 +368,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             onClick={() => navigate('/tuttymimo')}
             className="flex flex-col items-center group cursor-pointer"
           >
-            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(212,189,161,0.25)] hover:border-[#d4bda1] relative overflow-hidden flex flex-col justify-between">
+            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(212,189,161,0.15)] hover:border-[#d4bda1] relative overflow-hidden flex flex-col justify-between hover:-translate-y-1">
               <div className="w-full h-full rounded-t-full rounded-b-[18px] overflow-hidden relative bg-[#FAF8F5]">
                 <ImageWithFallback
                   src="https://images.unsplash.com/photo-1440288736878-766ab35473ef?q=80&w=600&auto=format&fit=crop"
@@ -389,9 +379,9 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/20 via-transparent to-transparent pointer-events-none rounded-t-full" />
                 
                 {/* Active Hover Cover */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/95 backdrop-blur-xs select-none">
+                <div className="absolute inset-2 sm:inset-2.5 rounded-t-full rounded-b-[16px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/90 backdrop-blur-[4px] select-none font-sans font-sans">
                   <span className="font-poppins font-semibold tracking-[0.2em] text-[8px] text-[#cca062] uppercase mb-2">Ateliê do Bebê</span>
-                  <h4 className="font-serif font-light text-xl mb-1 text-white">Tutty Mimo</h4>
+                  <h4 className="font-serif font-light text-xl mb-1 text-white font-serif">Tutty Mimo</h4>
                   <p className="font-hello-olivia text-base text-[#e8dcc8] mb-2">Maternidade & Infância</p>
                   <p className="text-[10px] tracking-wide leading-relaxed font-light line-clamp-3 max-w-[170px] opacity-90 font-sans">
                     Enxoval de bebê macio em algodão nobre com costura acolhedora e acabamento primoroso.
@@ -400,18 +390,14 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                     ✦ Ver Ateliê
                   </span>
                 </div>
-                
-                {/* Fallback Icon badge in center bottom */}
-                <div className="absolute bottom-5 inset-x-4 text-center flex flex-col items-center pointer-events-none group-hover:opacity-0 transition-opacity duration-300">
-                  <span className="w-8 h-8 rounded-full bg-white/95 backdrop-blur-md shadow-3xs flex items-center justify-center text-xs select-none">
-                    🍼
-                  </span>
-                </div>
               </div>
             </div>
-            <span className="font-playfair text-2xl sm:text-3xl text-[#3A312D] text-center mt-3 block group-hover:text-[#d4bda1] transition-colors duration-300">
+            <h3 className="font-playfair text-lg sm:text-xl font-medium tracking-wide text-[#3A312D] text-center mt-3 block group-hover:text-[#d4bda1] transition-colors duration-300">
               Tutty Mimo
-            </span>
+            </h3>
+            <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
+              Enxoval & Maternidade
+            </p>
           </div>
 
         </div>
@@ -428,78 +414,62 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         </div>
 
         {/* 4 HORIZONTAL LOGICAL STEP CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-4">
           
           {/* STEP 1 */}
-          <div className="flex bg-white border border-[#e8dcc8]/45 rounded-[20px] shadow-3xs hover:border-[#cca062]/40 transition-all duration-300 overflow-hidden h-28 select-none">
-            {/* Tag block */}
-            <div className="w-20 sm:w-24 bg-[#fffdfa] border-r border-[#e8dcc8]/30 flex flex-col justify-center items-center text-[#cca062] shrink-0 text-center px-2">
-              <span className="text-3xl sm:text-4xl font-serif font-light leading-none mb-1">01</span>
-              <span className="text-[8px] font-poppins font-semibold tracking-widest text-[#6d5443]/40 uppercase">Passo</span>
-            </div>
-            {/* Context block */}
-            <div className="flex flex-col justify-center p-5 overflow-hidden">
-              <h4 className="font-poppins font-bold text-xs uppercase tracking-wider text-[#3A312D] mb-1">
-                Escolha o Ateliê
-              </h4>
-              <p className="text-[10px] sm:text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[340px]">
-                Navegue pelas boutiques e selecione a joia de cetim, papelaria fina ou enxoval que falará ao coração.
-              </p>
-            </div>
+          <div className="text-center group p-6 bg-white border border-[#e8dcc8]/30 rounded-[28px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
+            <span className="font-playfair text-4xl sm:text-5xl font-medium text-[#cca062] mb-2">
+              01
+            </span>
+            <span className="text-[8.5px] font-bold tracking-[0.25em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#cca062]/20 pb-1.5 w-10">Passo</span>
+            <h4 className="font-poppins font-semibold text-xs uppercase tracking-wider text-[#3A312D] mb-2">
+              Escolha o Ateliê
+            </h4>
+            <p className="text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
+              Navegue pelas boutiques e selecione a joia de cetim, papelaria fina ou enxoval que falará ao coração.
+            </p>
           </div>
 
           {/* STEP 2 */}
-          <div className="flex bg-white border border-[#e8dcc8]/45 rounded-[20px] shadow-3xs hover:border-[#cca062]/40 transition-all duration-300 overflow-hidden h-28 select-none">
-            {/* Tag block */}
-            <div className="w-20 sm:w-24 bg-[#fffdfa] border-r border-[#e8dcc8]/30 flex flex-col justify-center items-center text-[#cca062] shrink-0 text-center px-2">
-              <span className="text-3xl sm:text-4xl font-serif font-light leading-none mb-1">02</span>
-              <span className="text-[8px] font-poppins font-semibold tracking-widest text-[#6d5443]/40 uppercase">Passo</span>
-            </div>
-            {/* Context block */}
-            <div className="flex flex-col justify-center p-5 overflow-hidden">
-              <h4 className="font-poppins font-bold text-xs uppercase tracking-wider text-[#3A312D] mb-1">
-                Monte Seu Kit
-              </h4>
-              <p className="text-[10px] sm:text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[340px]">
-                Adicione mimos complementares artesanais de nossos ateliês, elegendo a caixa clássica ideal.
-              </p>
-            </div>
+          <div className="text-center group p-6 bg-white border border-[#e8dcc8]/30 rounded-[28px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
+            <span className="font-playfair text-4xl sm:text-5xl font-medium text-[#cca062] mb-2">
+              02
+            </span>
+            <span className="text-[8.5px] font-bold tracking-[0.25em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#cca062]/20 pb-1.5 w-10">Passo</span>
+            <h4 className="font-poppins font-semibold text-xs uppercase tracking-wider text-[#3A312D] mb-2">
+              Monte Seu Kit
+            </h4>
+            <p className="text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
+              Adicione mimos complementares artesanais de nossos ateliês, elegendo a caixa clássica ideal.
+            </p>
           </div>
 
           {/* STEP 3 */}
-          <div className="flex bg-white border border-[#e8dcc8]/45 rounded-[20px] shadow-3xs hover:border-[#cca062]/40 transition-all duration-300 overflow-hidden h-28 select-none">
-            {/* Tag block */}
-            <div className="w-20 sm:w-24 bg-[#fffdfa] border-r border-[#e8dcc8]/30 flex flex-col justify-center items-center text-[#cca062] shrink-0 text-center px-2">
-              <span className="text-3xl sm:text-4xl font-serif font-light leading-none mb-1">03</span>
-              <span className="text-[8px] font-poppins font-semibold tracking-widest text-[#6d5443]/40 uppercase">Passo</span>
-            </div>
-            {/* Context block */}
-            <div className="flex flex-col justify-center p-5 overflow-hidden">
-              <h4 className="font-poppins font-bold text-xs uppercase tracking-wider text-[#3A312D] mb-1">
-                Personalize
-              </h4>
-              <p className="text-[10px] sm:text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[340px]">
-                Escreva palavras afetivas que serão gravadas em papel nobre para o encanto final.
-              </p>
-            </div>
+          <div className="text-center group p-6 bg-white border border-[#e8dcc8]/30 rounded-[28px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
+            <span className="font-playfair text-4xl sm:text-5xl font-medium text-[#cca062] mb-2">
+              03
+            </span>
+            <span className="text-[8.5px] font-bold tracking-[0.25em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#cca062]/20 pb-1.5 w-10">Passo</span>
+            <h4 className="font-poppins font-semibold text-xs uppercase tracking-wider text-[#3A312D] mb-2">
+              Personalize
+            </h4>
+            <p className="text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
+              Escreva palavras afetivas que serão gravadas em papel nobre para o encanto final.
+            </p>
           </div>
 
           {/* STEP 4 */}
-          <div className="flex bg-white border border-[#e8dcc8]/45 rounded-[20px] shadow-3xs hover:border-[#cca062]/40 transition-all duration-300 overflow-hidden h-28 select-none">
-            {/* Tag block */}
-            <div className="w-20 sm:w-24 bg-[#fffdfa] border-r border-[#e8dcc8]/30 flex flex-col justify-center items-center text-[#cca062] shrink-0 text-center px-2">
-              <span className="text-3xl sm:text-4xl font-serif font-light leading-none mb-1">04</span>
-              <span className="text-[8px] font-poppins font-semibold tracking-widest text-[#6d5443]/40 uppercase">Passo</span>
-            </div>
-            {/* Context block */}
-            <div className="flex flex-col justify-center p-5 overflow-hidden">
-              <h4 className="font-poppins font-bold text-xs uppercase tracking-wider text-[#3A312D] mb-1">
-                Envio Perfumado
-              </h4>
-              <p className="text-[10px] sm:text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[340px]">
-                Finalizamos a montagem à mão com as mais belas essências e entregamos com carinho.
-              </p>
-            </div>
+          <div className="text-center group p-6 bg-white border border-[#e8dcc8]/30 rounded-[28px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
+            <span className="font-playfair text-4xl sm:text-5xl font-medium text-[#cca062] mb-2">
+              04
+            </span>
+            <span className="text-[8.5px] font-bold tracking-[0.25em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#cca062]/20 pb-1.5 w-10">Passo</span>
+            <h4 className="font-poppins font-semibold text-xs uppercase tracking-wider text-[#3A312D] mb-2">
+              Envio Perfumado
+            </h4>
+            <p className="text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
+              Finalizamos a montagem à mão com as mais belas essências e entregamos com carinho.
+            </p>
           </div>
 
         </div>
@@ -785,19 +755,16 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             <p className="text-[11px] sm:text-xs text-[#6d5443]/85 leading-relaxed font-light mb-4">
               Crie uma combinação personalizada escolhendo a caixa ideal, adicionando os mimos artesanais preferidos e inserindo um cartão com mensagem gravada. Rápido, objetivo e acolhedor!
             </p>
-            <div className="grid grid-cols-3 gap-3 text-center text-[#6d5443]/70 font-semibold text-[8px] tracking-wider uppercase font-poppins pt-2 border-t border-[#e8dcc8]/20">
-              <div className="flex flex-col items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-white border border-[#cca062]/35 text-[#cca062] flex items-center justify-center font-bold font-sans">1</span>
-                <span>Escolha a Caixa</span>
-              </div>
-              <div className="flex flex-col items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-white border border-[#cca062]/35 text-[#cca062] flex items-center justify-center font-bold font-sans">2</span>
-                <span>Adicione Mimos</span>
-              </div>
-              <div className="flex flex-col items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-white border border-[#cca062]/35 text-[#cca062] flex items-center justify-center font-bold font-sans">3</span>
-                <span>Escolha o Cartão</span>
-              </div>
+            <div className="flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-2 text-[#6d5443]/70 font-semibold text-[9px] tracking-[0.16em] uppercase font-poppins pt-3 border-t border-[#e8dcc8]/20 select-none">
+              <span className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#cca062]" /> I. Escolha a Caixa
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#cca062]" /> II. Adicione Mimos
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#cca062]" /> III. Escolha o Cartão
+              </span>
             </div>
           </div>
           
