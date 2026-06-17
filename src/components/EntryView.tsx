@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Heart, Info, Package, Mail, User, Sparkles, ArrowRight, ArrowRightLeft, Gift, ShoppingBag, Eye, Star } from 'lucide-react';
+import { Search, Heart, Info, Package, Mail, User, Sparkles, ArrowRight, ArrowRightLeft, Gift, ShoppingBag, Eye, Star, ChevronDown } from 'lucide-react';
 import { AppConfig, Product, SiteSettings, CompanyId } from '../types';
 import { useAuth } from './AuthProvider';
 import { subscribeToAllSettings } from '../services/firebaseService';
@@ -17,11 +17,24 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
   const { isAdmin } = useAuth();
   const [customSettings, setCustomSettings] = useState<Record<string, SiteSettings | null>>({});
   const [searchCode, setSearchCode] = useState('');
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
 
   useEffect(() => {
     return subscribeToAllSettings((results) => {
       setCustomSettings(results);
     });
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 40) {
+        setShowScrollIndicator(false);
+      } else {
+        setShowScrollIndicator(true);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const featuredProducts = React.useMemo(() => {
@@ -139,7 +152,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
   ];
 
   return (
-    <div className="bg-[#fffdfa] min-h-[100dvh] w-full relative font-tahoma text-[#6d5443] selection:bg-[#e8dcc8] selection:text-[#3A312D] overflow-x-hidden antialiased">
+    <div className="home-root bg-[#fffdfa] min-h-[100dvh] w-full relative font-tahoma text-[#6d5443] selection:bg-[#e8dcc8] selection:text-[#3A312D] overflow-x-hidden antialiased">
       
       {/* LUXURY NAVIGATION HEADER */}
       <header className="w-full bg-white/85 backdrop-blur-md border-b border-[#e8dcc8]/30 py-3.5 px-4 sm:px-6 sticky top-0 z-50 transition-all shadow-xs">
@@ -206,101 +219,146 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </header>
 
       {/* EDITORIAL HERO BANNER - BOUTIQUE PREMIUM HERO */}
-      <section className="relative w-full min-h-[80vh] lg:min-h-[90vh] overflow-hidden bg-gradient-to-b from-[#faf8f5] to-[#fffdfa] flex items-center border-b border-[#e8dcc8]/20 py-12 lg:py-0">
+      <section className="relative w-full min-h-[85vh] lg:min-h-[90vh] overflow-hidden bg-gradient-to-b from-[#faf8f5] to-[#fffdfa] flex items-center border-b border-[#e8dcc8]/20 py-12 lg:py-0">
         {/* Soft Decorative Elements */}
         <div className="absolute top-1/2 left-5 w-44 h-44 rounded-full bg-[#cca062]/4 blur-2xl pointer-events-none -translate-y-1/2" />
         <div className="absolute top-10 right-10 w-64 h-64 rounded-full bg-[#c96b71]/3 blur-3xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          
+          {/* DESKTOP ONLY HERO: Double column layout */}
+          <div className="hidden lg:grid grid-cols-2 gap-16 lg:gap-20 items-center w-full">
             
-            {/* LEFT COLUMN: DESKTOP ONLY/ADAPTIVE FOR BOTH */}
-            <div className="hidden lg:flex flex-col justify-center items-start text-left max-w-[500px] py-12">
+            {/* LEFT COLUMN: Text content & Buttons */}
+            <div className="flex flex-col justify-center items-start text-left max-w-[500px] py-12 pr-4">
               {/* Elemento 1 — Assinatura emocional */}
-              <span className="font-allura text-[#cca062] font-semibold tracking-wide text-[36px] lg:text-[42px] leading-none mb-2 block select-none">
-                by Julia Aleixo
+              <span className="font-parisienne text-[#cca062] font-normal tracking-wide text-[36px] lg:text-[42px] leading-none mb-3 block select-none">
+                Por Júlia Aleixo
               </span>
               
               {/* Elemento 2 — Título principal */}
-              <h1 className="font-poppins font-extrabold text-[65px] lg:text-[75px] text-[#3A312D] tracking-[0.14em] leading-none mb-6">
-                PRESENTES
+              <h1 className="font-serif font-light text-[56px] lg:text-[68px] text-[#3A312D] tracking-tight leading-[1.12] mb-6">
+                Presentes que contam histórias
               </h1>
               
               {/* Elemento 3 — Texto institucional */}
-              <p className="font-tahoma text-[16px] lg:text-[18px] text-[#3a312d]/75 font-light leading-relaxed mb-9">
+              <p className="font-tahoma text-[16px] lg:text-[18px] text-[#3a312d]/75 font-light leading-relaxed mb-8">
                 Quatro ateliês, um só propósito: transformar momentos em lembranças eternas.
               </p>
               
               {/* Botões lado a lado */}
               <div className="flex items-center gap-4 w-full">
                 {/* Botão principal */}
-                <button
-                  onClick={() => navigate('/kit-meukit')}
-                  className="h-[52px] px-8 rounded-full bg-[#3A312D] text-white font-semibold text-xs uppercase tracking-[0.14em] hover:scale-102 hover:shadow-[0_8px_20px_rgba(58,49,45,0.25)] hover:bg-[#4d423e] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
+                <a
+                  href="#ateliers"
+                  className="h-[52px] px-8 rounded-full bg-[#3A312D] text-[#cca062] font-tahoma font-bold text-xs uppercase tracking-[0.1em] transition-all duration-300 hover:bg-[#cca062] hover:text-[#3A312D] hover:-translate-y-0.5 hover:shadow-md flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
                 >
-                  <Gift size={13} className="text-[#e8dcc8]" />
-                  Escolher meu presente
-                </button>
+                  Conhecer os ateliês
+                </a>
                 
                 {/* Botão secundário */}
-                <a
-                  href="#ateliers"
-                  className="h-[52px] px-8 rounded-full bg-transparent border border-[#cca062] text-[#cca062] font-semibold text-xs uppercase tracking-[0.14em] hover:bg-[#cca062] hover:text-[#3A312D] transition-all duration-300 cursor-pointer flex items-center justify-center"
-                >
-                  Conhecer os ateliês
-                </a>
-              </div>
-            </div>
-
-            {/* MOBILE ONLY HERO: Emocional & Centralizado (No Copying Desktop) */}
-            <div className="flex lg:hidden flex-col items-center text-center py-6 w-full">
-              {/* Assinatura emocional */}
-              <span className="font-allura text-[#cca062] font-semibold text-[32px] sm:text-[38px] leading-none mb-1 select-none">
-                by Julia Aleixo
-              </span>
-              
-              {/* Título principal */}
-              <h1 className="font-poppins font-extrabold text-[44px] sm:text-[56px] text-[#3A312D] tracking-[0.1em] leading-none mb-5">
-                PRESENTES
-              </h1>
-              
-              {/* Texto institucional */}
-              <p className="font-tahoma text-[14px] sm:text-[16px] text-[#3a312d]/75 font-light leading-relaxed mb-8 max-w-sm">
-                Quatro ateliês, um só propósito: transformar momentos em lembranças eternas.
-              </p>
-              
-              {/* Botões empilhados ocupando quase toda largura */}
-              <div className="flex flex-col gap-3 w-full max-w-xs sm:max-w-sm">
                 <button
                   onClick={() => navigate('/kit-meukit')}
-                  className="h-[52px] w-full rounded-full bg-[#3A312D] text-white font-semibold text-[11px] uppercase tracking-[0.12em] transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+                  className="h-[52px] px-8 rounded-full bg-transparent border border-[#cca062] text-[#3A312D] font-tahoma font-bold text-xs uppercase tracking-[0.1em] transition-all duration-300 hover:bg-[#cca062]/10 hover:-translate-y-0.5 flex items-center justify-center whitespace-nowrap cursor-pointer"
                 >
-                  <Gift size={13} className="text-[#e8dcc8]" />
                   Escolher meu presente
                 </button>
-                
-                <a
-                  href="#ateliers"
-                  className="h-[52px] w-full rounded-full bg-transparent border border-[#cca062] text-[#cca062] font-semibold text-[11px] uppercase tracking-[0.12em] transition-all active:scale-98 cursor-pointer flex items-center justify-center"
-                >
-                  Conhecer os ateliês
-                </a>
               </div>
             </div>
 
-            {/* RIGHT COLUMN: PRESERVED SOPHISTICATED HERO VISUAL */}
-            <div className="hidden lg:block relative w-full h-[480px] lg:h-[540px] rounded-[32px] overflow-hidden shadow-[0_12px_32px_rgba(109,84,67,0.06)] border border-[#e8dcc8]/45 bg-[#faf8f5]">
-              <ImageWithFallback
-                src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=1200&auto=format&fit=crop"
-                alt="Ateliê de Presentes Finos"
-                className="w-full h-full object-cover"
-                isThumbnail={false}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/10 to-transparent" />
+            {/* RIGHT COLUMN: The editorial visual aspect, plenty of white space */}
+            <div className="relative w-full h-[525px] rounded-[32px] overflow-hidden shadow-[0_16px_40px_rgba(109,84,67,0.06)] border border-[#e8dcc8]/45 bg-[#faf8f5] p-2.5">
+              <div className="w-full h-full rounded-[24px] overflow-hidden">
+                <ImageWithFallback
+                  src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=1200&auto=format&fit=crop"
+                  alt="Ateliê de Presentes Finos"
+                  className="w-full h-full object-cover rounded-[22px] hover:scale-103 transition-transform duration-[1200ms] ease-out"
+                  isThumbnail={false}
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/12 to-transparent pointer-events-none rounded-[32px]" />
             </div>
 
           </div>
+
+          {/* MOBILE ONLY HERO: Centralized & Ordered logically (No copy of desktop layout) */}
+          <div className="flex lg:hidden flex-col items-center text-center py-6 w-full gap-8">
+            
+            {/* 1. Imagem em destaque */}
+            <div className="relative w-full max-w-sm aspect-[4/3] rounded-[24px] overflow-hidden shadow-[0_12px_28px_rgba(109,84,67,0.06)] border border-[#e8dcc8]/40 bg-[#faf8f5] p-2">
+              <div className="w-full h-full rounded-[18px] overflow-hidden">
+                <ImageWithFallback
+                  src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=1200&auto=format&fit=crop"
+                  alt="Ateliê de Presentes Finos"
+                  className="w-full h-full object-cover rounded-[16px]"
+                  isThumbnail={false}
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/10 to-transparent pointer-events-none rounded-[24px]" />
+            </div>
+
+            {/* Content Group (2. Assinatura, 3. Título, 4. Texto) */}
+            <div className="flex flex-col items-center text-center gap-3.5 max-w-xs sm:max-w-sm">
+              {/* 2. Assinatura manuscrita */}
+              <span className="font-parisienne text-[#cca062] font-normal text-[32px] sm:text-[36px] leading-none select-none">
+                Por Júlia Aleixo
+              </span>
+              
+              {/* 3. Título principal */}
+              <h1 className="font-serif font-light text-[38px] sm:text-[44px] text-[#3A312D] leading-[1.12] tracking-tight">
+                Presentes que contam histórias
+              </h1>
+              
+              {/* 4. Texto de leitura */}
+              <p className="font-tahoma text-[15px] sm:text-[16px] text-[#3a312d]/75 font-light leading-relaxed max-w-xs">
+                Quatro ateliês, um só propósito: transformar momentos em lembranças eternas.
+              </p>
+            </div>
+
+            {/* 5. Botões em coluna com 100% de largura */}
+            <div className="flex flex-col gap-3.5 w-full max-w-xs px-4">
+              {/* Botão principal */}
+              <a
+                href="#ateliers"
+                className="h-[52px] w-full rounded-full bg-[#3A312D] text-[#cca062] font-tahoma font-bold text-xs uppercase tracking-[0.1em] shadow-sm flex items-center justify-center cursor-pointer transition-all active:scale-98"
+              >
+                Conhecer os ateliês
+              </a>
+              
+              {/* Botão secundário */}
+              <button
+                onClick={() => navigate('/kit-meukit')}
+                className="h-[52px] w-full rounded-full bg-transparent border border-[#cca062] text-[#3A312D] font-tahoma font-bold text-xs uppercase tracking-[0.1em] flex items-center justify-center cursor-pointer transition-all active:scale-98"
+              >
+                Escolher meu presente
+              </button>
+            </div>
+
+          </div>
+
         </div>
+
+        {/* ELEGANT INDICATOR OF CONTINUITY - LUXURY DESIGN */}
+        <div 
+          onClick={() => {
+            const nextSection = document.getElementById('ateliers');
+            if (nextSection) {
+              nextSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
+          className={`absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer z-30 transition-all duration-700 ease-in-out select-none ${
+            showScrollIndicator ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
+          }`}
+          title="Role para descobrir"
+        >
+          <span className="text-[9px] tracking-[0.25em] font-medium text-[#cca062]/80 uppercase font-poppins font-semibold">
+            Descubra o afeto
+          </span>
+          <div className="w-8 h-8 rounded-full border border-[#cca062]/25 flex items-center justify-center bg-white/50 backdrop-blur-xs shadow-3xs animate-gentle-float hover:border-[#cca062]/60 hover:bg-white transition-colors duration-300">
+            <ChevronDown size={14} className="text-[#cca062] stroke-1" />
+          </div>
+        </div>
+
       </section>
 
       {/* BOUTIQUE ATELIERS HUB (INTERACTIVE VITRINE DE LUXO) */}

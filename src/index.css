@@ -12,7 +12,7 @@ html {
 }
 
 @theme {
-  --font-sans: "Tahoma", "Inter", "Verdana", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-poppins: "Poppins", "Inter", sans-serif;
   --font-serif: "Cormorant Garamond", "Playfair Display", "Georgia", serif;
   --font-cursive: "Great Vibes", cursive;
@@ -85,6 +85,29 @@ html {
 }
 
 @layer base {
+  .home-root {
+    --font-sans: "Tahoma", "Inter", "Verdana", ui-sans-serif, system-ui, sans-serif;
+    --font-poppins: "Poppins", "Inter", sans-serif;
+  }
+
+  .home-root .animate-gentle-float {
+    animation: home-gentle-float 3.5s ease-in-out infinite;
+  }
+
+  @keyframes home-gentle-float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(6px);
+    }
+  }
+
+  .vitrine-root {
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-poppins: "Poppins", sans-serif;
+  }
+
   html, body {
     width: 100%;
     min-height: 100dvh;
