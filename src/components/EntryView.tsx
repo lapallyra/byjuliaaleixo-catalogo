@@ -977,41 +977,42 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
              </ul>
           </div>
           
-          <div className="md:w-1/4 flex flex-col items-center md:items-end text-center md:text-right">
+          <div className="md:w-1/4">
              <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">Suporte</h4>
-             <ul className="space-y-3 text-[11px] font-light text-[#6d5443]/80 font-tahoma mb-8">
-               <li><button onClick={() => navigate('/rastreamento')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer">Rastreamento de Pedido</button></li>
-               <li><a href="#" className="hover:text-[#cca062] transition-colors">Prazos e Entregas</a></li>
-               <li><a href="#" className="hover:text-[#cca062] transition-colors">Trocas e devoluções</a></li>
+             <ul className="space-y-3 text-[11px] font-light text-[#6d5443]/80 font-tahoma">
+                <li><button onClick={() => navigate('/rastreamento')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer">Rastreamento de Pedido</button></li>
+                <li><a href="#" className="hover:text-[#cca062] transition-colors">Prazos e Entregas</a></li>
+                <li><a href="#" className="hover:text-[#cca062] transition-colors">Trocas e devoluções</a></li>
              </ul>
-             
-             {/* Payment Methods - Right-aligned, horizontal on md+ and stacked on mobile */}
-             <div className="flex flex-col items-center md:items-end select-none">
-               <span className="text-[9px] font-bold tracking-[0.18em] text-[#3A312D] uppercase mb-3 font-poppins">
-                 Métodos de pagamento
-               </span>
-               <div className="flex flex-col sm:flex-row md:flex-row items-center gap-3">
-                 {/* InfinitePay Logo/Badge */}
-                 <div className="flex items-center gap-1.5 bg-[#faf8f5]/90 border border-[#e8dcc8]/45 px-2.5 py-1 rounded-lg h-[26px] max-h-[26px] transition-all duration-300 hover:border-[#cca062]/20 select-none">
-                   <svg viewBox="0 0 24 12" className="h-2.5 text-[#00E575] fill-current" xmlns="http://www.w3.org/2000/svg">
-                     <path d="M6 1c-1.5 0-3 1-4 2.5a4 4 0 000 5c1 1.5 2.5 2.5 4 2.5s3-1 4-2.5l2-3 2 3c1 1.5 2.5 2.5 4 2.5s3-1 4-2.5a4 4 0 000-5c-1-1.5-2.5-2.5-4-2.5s-3 1-4 2.5l-2 3-2-3c-1-1.5-2.5-2.5-4-2.5zm0 2c1 0 2 .5 2.5 1.5l2 3-2 3c-.5 1-1.5 1.5-2.5 1.5s-2-.5-2.5-1.5a2 2 0 010-2.5C4 4.5 5 4 6 4zm12 0c1 0 2 .5 2.5 1.5a2 2 0 010 2.5c-.5 1-1.5 1.5-2.5 1.5s-2-.5-2.5-1.5l-2-3 2-3c.5-1 1.5-1.5 2.5-1.5z"/>
-                   </svg>
-                   <span className="text-[11px] font-black tracking-tight text-[#3A312D] font-sans leading-none">InfinitePay</span>
-                 </div>
-                 
-                 {/* Mercado Pago Logo/Badge */}
-                 <div className="flex items-center bg-[#faf8f5]/90 border border-[#e8dcc8]/45 px-3 py-1 rounded-lg h-[26px] max-h-[26px] transition-all duration-300 hover:border-[#cca062]/20 select-none">
-                   <img 
-                     src="https://upload.wikimedia.org/wikipedia/commons/2/29/Mercado_Pago_logo_auxiliar.svg" 
-                     alt="Mercado Pago" 
-                     className="h-3 max-h-[12px] object-contain" 
-                     onError={(e) => {
-                       e.currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Mercado_Pago.png";
-                     }}
-                   />
-                 </div>
-               </div>
-             </div>
+          </div>
+        </div>
+
+        {/* PAYMENT METHODS */}
+        <div className="max-w-7xl mx-auto border-t border-[#e8dcc8]/15 pt-8 pb-3 flex flex-col items-center justify-center select-none text-center">
+          <span className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">
+            Métodos de pagamento aceitos
+          </span>
+          <div className="flex flex-row flex-wrap items-center justify-center gap-6">
+            {/* InfinitePay Badge */}
+            <div className="flex items-center gap-2 bg-[#faf8f5]/80 border border-[#e8dcc8]/35 py-1.5 px-3.5 rounded-xl hover:border-[#cca062]/20 transition-all duration-300">
+              <span className="text-[8px] font-bold tracking-[0.15em] text-[#6d5443]/50 uppercase font-sans">Powered by</span>
+              <span className="text-[11.5px] font-extrabold text-[#00E575] tracking-widest uppercase font-sans">InfinitePay</span>
+            </div>
+            
+            {/* Mercado Pago Badge */}
+            <div className="flex items-center gap-2.5 bg-[#faf8f5]/80 border border-[#e8dcc8]/35 py-1.5 px-3.5 rounded-xl hover:border-[#cca062]/20 transition-all duration-300">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/2/29/Mercado_Pago_logo_auxiliar.svg" 
+                alt="Mercado Pago" 
+                className="h-3.5 object-contain" 
+                onError={(e) => {
+                  e.currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Mercado_Pago.png";
+                }}
+              />
+              <span className="text-[9.5px] font-bold text-[#00a6e0] tracking-widest uppercase font-poppins border-l border-[#e8dcc8]/60 pl-2.5">
+                Mercado Pago
+              </span>
+            </div>
           </div>
         </div>
 

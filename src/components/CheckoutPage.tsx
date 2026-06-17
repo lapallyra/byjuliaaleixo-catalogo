@@ -15,12 +15,16 @@ import {
   AlertCircle,
   Truck,
   CreditCard,
-  FileText
+  FileText,
+  Copy,
+  Clock,
+  Lock
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   getOrderByCode, 
   getSiteSettings, 
+  getGlobalSettings,
   subscribeToCustomers, 
   getProducts, 
   saveSale,
@@ -28,6 +32,7 @@ import {
   addCustomer,
   syncCustomerFromCheckout
 } from "../services/firebaseService";
+import { playSuccessSound } from "../utils/audio";
 import { 
   Order, 
   Customer, 
@@ -86,6 +91,22 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
   const [observations, setObservations] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
 
+  // Payment states and objects
+  const [paymentSelected, setPaymentSelected] = useState<"PIX" | "CREDIT_CARD" | null>(null);
+  const [pixCopied, setPixCopied] = useState(false);
+  const [pixTimeLeft, setPixTimeLeft] = useState(600); // 10 minutes countdown
+  const [isPaying, setIsPaying] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
+  const [payingError, setPayingError] = useState<string | null>(null);
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+  const [globalSettings, setGlobalSettings] = useState<any>(null);
+  const [cardData, setCardData] = useState({
+    num: "",
+    name: "",
+    val: "",
+    cvv: ""
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -131,14 +152,37 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                 endereco: fetched.address || ""
               }));
 
+              // Handle redirect from Mercado Pago approval in client's browser
+              const params = new URLSearchParams(window.location.search);
+              const paymentStatusFromUrl = params.get('payment_status') || params.get('status');
+              let fetchedStatus = fetched.status || "pending";
+
+              if (paymentStatusFromUrl === 'approved') {
+                fetchedStatus = 'paid';
+                setIsPaid(true);
+                playSuccessSound();
+                await updateOrder(fetched.id, { status: 'paid' });
+                // Strip the redirection search parameters
+                navigate(window.location.pathname, { replace: true });
+              } else if (fetchedStatus === 'paid') {
+                setIsPaid(true);
+              }
+
               // Permission Logic
               if (!isAdmin) {
                 // Clients start at Step 2
-                setStep(2);
+                if (fetchedStatus === "paid" || fetchedStatus === "waiting_payment") {
+                  setStep(3);
+                } else {
+                  setStep(2);
+                }
               } else {
                 // Admin can jump steps based on status
-                if (fetched.status === "waiting_payment" || fetched.status === "paid") setStep(3);
-                else setStep(1);
+                if (fetchedStatus === "waiting_payment" || fetchedStatus === "paid") {
+                  setStep(3);
+                } else {
+                  setStep(1);
+                }
               }
             } else {
               // Not found
@@ -152,11 +196,16 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           if (currentOrder.companyId) {
             const settings = await getSiteSettings(currentOrder.companyId);
             if (settings) {
+              setSiteSettings(settings);
               setBrandTheme({
                 primary: settings.theme_primary_color || brandTheme.primary,
                 secondary: settings.theme_accent_color || brandTheme.secondary,
                 logo: settings.store_logo || ""
               });
+            }
+            const gSettings = await getGlobalSettings();
+            if (gSettings) {
+              setGlobalSettings(gSettings);
             }
           }
         }
@@ -171,6 +220,100 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
 
     fetchData();
   }, [urlId, urlCode, isAdmin]);
+
+  // Pix auto-countdown effect
+  useEffect(() => {
+    if (paymentSelected !== 'PIX' || isPaid) return;
+    const interval = setInterval(() => {
+      setPixTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [paymentSelected, isPaid]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleProcessedPayment = async (type: 'PIX' | 'CREDIT_CARD') => {
+    if (!order?.id) return;
+    setIsPaying(true);
+    setPayingError(null);
+    try {
+      const token = globalSettings?.mercadopago_token || siteSettings?.mercadopago_token;
+      
+      if (type === 'CREDIT_CARD' && token) {
+        // Real Mercado Pago preference creation
+        const finalMpItems = items.map(item => ({
+          title: item.product_name,
+          quantity: item.quantity,
+          unit_price: item.current_price,
+          currency_id: 'BRL'
+        }));
+
+        const preferencePayload = {
+          orderId: order.code || order.id,
+          companyId: order.companyId || "pallyra",
+          items: finalMpItems,
+          payer: {
+            name: customerForm.nome || "Cliente",
+            email: customerForm.email || "cliente@loja.com" 
+          },
+          back_urls: {
+            success: `${window.location.origin}/checkout/${order.id}?payment_status=approved&order_id=${order.id}`,
+            failure: `${window.location.origin}/checkout/${order.id}?payment_status=failed&order_id=${order.id}`,
+            pending: `${window.location.origin}/checkout/${order.id}?payment_status=pending&order_id=${order.id}`
+          },
+          accessToken: token,
+          auto_return: "approved"
+        };
+
+        const response = await fetch('/api/createPreference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(preferencePayload)
+        });
+
+        if (!response.ok) {
+          throw new Error("Falha ao gerar link Mercado Pago.");
+        }
+
+        const data = await response.json();
+        const initPoint = data?.init_point;
+        if (initPoint) {
+          window.location.href = initPoint;
+          return;
+        }
+      }
+
+      // Simulation fallback for card or manual Pix click
+      setTimeout(async () => {
+        try {
+          await updateOrder(order.id!, { status: 'paid' });
+          setOrder(prev => prev ? { ...prev, status: 'paid' } : null);
+          setIsPaid(true);
+          playSuccessSound();
+          setIsPaying(false);
+        } catch (err: any) {
+          console.error(err);
+          setPayingError("Erro ao registrar pagamento.");
+          setIsPaying(false);
+        }
+      }, 1500);
+
+    } catch (err: any) {
+      console.error(err);
+      setPayingError(err.message || "Erro desconhecido no processamento.");
+      setIsPaying(false);
+    }
+  };
 
   const subtotal = items.reduce((acc, item) => acc + (item.current_price * item.quantity), 0);
   const total = subtotal - discount + freight;
@@ -767,60 +910,280 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 3 && isPaid ? (
+          <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] border border-emerald-100 p-8 sm:p-12 text-center space-y-8 shadow-md">
+            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mx-auto">
+              <CheckCircle2 size={48} className="animate-pulse" />
+            </div>
+            <div className="space-y-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00AF54] bg-[#E5FDF1] px-5 py-2.2 rounded-full inline-block">
+                Pagamento Confirmado
+              </span>
+              <h2 className="text-2.5xl font-extrabold uppercase text-[#111111] font-sans tracking-tight">
+                Recebimento Efetuado! 🎉
+              </h2>
+              <p className="text-xs text-[#6D5443] max-w-md mx-auto leading-relaxed">
+                Nós já registramos o pagamento do seu pedido <strong>#{order?.code || ''}</strong> em nosso ateliê virtual. Os detalhes técnicos já foram encaminhados para a equipe de design exclusivo e em breve entraremos em contato.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-100/80 p-5 rounded-2xl text-left divide-y divide-slate-150 space-y-3">
+              <div className="flex justify-between text-xs pt-1">
+                <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Pedido</span>
+                <span className="font-extrabold text-slate-800">#{order?.code || 'PALLYRA'}</span>
+              </div>
+              <div className="flex justify-between text-xs pt-3">
+                <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Valor Pago</span>
+                <span className="font-mono text-slate-900 font-extrabold">R$ {total.toFixed(2).replace('.', ',')}</span>
+              </div>
+              <div className="flex justify-between text-xs pt-3">
+                <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Titular</span>
+                <span className="font-extrabold text-slate-800 uppercase">{customerForm.nome || 'Cliente'}</span>
+              </div>
+              <div className="flex justify-between text-xs pt-3">
+                <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Contato</span>
+                <span className="font-extrabold text-slate-800">{customerForm.contato}</span>
+              </div>
+            </div>
+
+            <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href={`https://wa.me/55${customerForm.contato.replace(/\D/g, '')}?text=${encodeURIComponent(
+                  `Olá! Acabei de finalizar o pagamento do pedido #${order?.code || ''} no valor de R$ ${total.toFixed(2).replace('.', ',')} no Ateliê.`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <span>Falar com Ateliê via WhatsApp</span>
+              </a>
+              <button
+                onClick={() => navigate('/')}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all"
+              >
+                Voltar ao Catálogo
+              </button>
+            </div>
+          </div>
+        ) : step === 3 ? (
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <section className="bg-white rounded-[2.5rem] p-10 border border-lilac/10 shadow-sm text-center flex flex-col items-center justify-center">
-               <div className="inline-flex p-6 rounded-full bg-emerald-50 text-emerald-500 mb-8">
-                 <CheckCircle2 size={48} />
+            <section className="bg-white rounded-[2.5rem] p-8 sm:p-10 border border-lilac/10 shadow-sm text-center flex flex-col justify-start">
+               {/* Back to Step 2 */}
+               <div className="flex justify-start w-full mb-3">
+                 <button 
+                   onClick={() => setStep(2)}
+                   className="text-[9.5px] font-black uppercase tracking-widest text-[#6D5443] hover:text-[#111111] flex items-center gap-1 transition-all"
+                 >
+                   <ChevronLeft size={12} /> Voltar para Cadastro
+                 </button>
                </div>
-               <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter italic mb-4">Pedido Cadastrado!</h2>
-               <p className="text-slate-500 font-sans text-[11px] uppercase tracking-[0.2em] leading-relaxed mb-10">
-                 Seus dados foram salvos com sucesso. Agora escolha a melhor forma de pagamento abaixo.
+
+               <div className="inline-flex p-5 rounded-full bg-[#FAF8F5] text-[#D4AF37] mb-6 mx-auto">
+                 <Clock size={36} />
+               </div>
+               <h2 className="text-2xl sm:text-2.5xl font-black text-slate-900 uppercase tracking-tight italic mb-2">Selecione o Meio de Pagamento</h2>
+               <p className="text-slate-500 font-sans text-xs leading-relaxed mb-6 font-medium">
+                 Deseja pagar via Pix com 5% de Desconto Rápido ou Cartão de Crédito?
                </p>
 
-               <div className="w-full space-y-4">
-                  <button className="w-full py-5 rounded-2xl bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg hover:scale-[1.02] transition-all">
-                    <Truck size={18} /> Pagar com PIX (5% OFF)
-                  </button>
-                  <button className="w-full py-5 rounded-2xl bg-white border border-lilac/20 text-slate-900 font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 transition-all">
-                    <CreditCard size={18} /> Cartão de Crédito
-                  </button>
-               </div>
+               {payingError && (
+                 <div className="p-3 bg-red-50 text-red-600 border border-red-150 rounded-xl text-center text-xs mb-4">
+                   {payingError}
+                 </div>
+               )}
+
+               {paymentSelected === "PIX" ? (
+                 <div className="space-y-4 border border-[#E8DCC8]/35 p-5 sm:p-6 rounded-3xl bg-[#FAF8F5]/50 animate-in fade-in duration-300">
+                    <div className="flex justify-between items-center pb-2 border-b border-[#E8DCC8]/20">
+                      <span className="text-[10px] font-black uppercase text-[#6D5443]">Opção Selecionada: PIX ⚡</span>
+                      <button 
+                        onClick={() => setPaymentSelected(null)}
+                        className="text-[9.5px] font-bold text-rose-500 uppercase cursor-pointer"
+                      >
+                        Alterar
+                      </button>
+                    </div>
+
+                    <div className="flex flex-col items-center space-y-3.5 pt-2">
+                       {/* Pix countdown */}
+                       <div className="flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+                         <Clock size={12} />
+                         <span>Expira em: {formatTime(pixTimeLeft)}</span>
+                       </div>
+
+                       {/* Simulated elegant vector code container */}
+                       <div className="w-36 h-36 border border-neutral-200/50 rounded-xl p-2 bg-white flex items-center justify-center shadow-xs">
+                          <svg className="w-full h-full text-neutral-800" viewBox="0 0 100 100">
+                             <rect x="10" y="10" width="20" height="20" fill="currentColor"/>
+                             <rect x="15" y="15" width="10" height="10" fill="white"/>
+                             <rect x="70" y="10" width="20" height="20" fill="currentColor"/>
+                             <rect x="75" y="15" width="10" height="10" fill="white"/>
+                             <rect x="10" y="70" width="20" height="20" fill="currentColor"/>
+                             <rect x="15" y="75" width="10" height="10" fill="white"/>
+                             <rect x="35" y="35" width="30" height="30" fill="currentColor"/>
+                             <rect x="42" y="42" width="16" height="16" fill="white"/>
+                             <rect x="47" y="47" width="6" height="6" fill="currentColor"/>
+                             <rect x="35" y="75" width="15" height="15" fill="currentColor"/>
+                             <rect x="75" y="35" width="15" height="15" fill="currentColor"/>
+                          </svg>
+                       </div>
+
+                       <div className="w-full">
+                         <label className="text-[9px] font-bold uppercase text-[#6D5443] block mb-1 text-left">Chave Copia e Cola:</label>
+                         <div className="flex border border-neutral-200 rounded-xl overflow-hidden bg-white">
+                           <input 
+                             readOnly
+                             type="text"
+                             value="00020126360014br.gov.bcb.pix0114juualleixo@gmail.com"
+                             className="flex-1 bg-transparent px-3 py-2 text-[10.5px] outline-none text-[#111111] font-mono select-all"
+                           />
+                           <button 
+                             type="button"
+                             onClick={() => {
+                               navigator.clipboard.writeText("00020126360014br.gov.bcb.pix0114juualleixo@gmail.com");
+                               setPixCopied(true);
+                               setTimeout(() => setPixCopied(false), 2000);
+                             }}
+                             className="bg-slate-900 text-white px-4 hover:bg-[#D4AF37] transition-all flex items-center justify-center cursor-pointer font-bold text-xs"
+                           >
+                             {pixCopied ? "Copiado!" : <Copy size={14} />}
+                           </button>
+                         </div>
+                       </div>
+
+                       <button
+                         onClick={() => handleProcessedPayment('PIX')}
+                         disabled={isPaying}
+                         className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                       >
+                         {isPaying ? "Processando aprovação..." : "Confirmar Pagamento Simulado"}
+                       </button>
+                    </div>
+                 </div>
+               ) : paymentSelected === "CREDIT_CARD" ? (
+                 <div className="space-y-4 border border-[#E8DCC8]/35 p-5 sm:p-6 rounded-3xl bg-[#FAF8F5]/50 animate-in fade-in duration-300">
+                    <div className="flex justify-between items-center pb-2 border-b border-[#E8DCC8]/20">
+                      <span className="text-[10px] font-black uppercase text-[#6D5443]">Cartão de Crédito 💳</span>
+                      <button 
+                        onClick={() => setPaymentSelected(null)}
+                        className="text-[9.5px] font-bold text-rose-500 uppercase cursor-pointer"
+                      >
+                        Alterar
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3 text-left pt-2">
+                       <div>
+                         <label className="text-[9px] font-bold uppercase text-[#6D5443] block mb-1">Número do Cartão de Teste</label>
+                         <input 
+                           type="text"
+                           value={cardData.num}
+                           onChange={e => setCardData({...cardData, num: e.target.value})}
+                           placeholder="4444 4444 4444 4444"
+                           className="w-full bg-white border border-neutral-200 text-xs px-3 py-2 rounded-lg outline-none focus:border-lilac"
+                         />
+                       </div>
+
+                       <div>
+                         <label className="text-[9px] font-bold uppercase text-[#6D5443] block mb-1">Nome Impresso Titular</label>
+                         <input 
+                           type="text"
+                           value={cardData.name}
+                           onChange={e => setCardData({...cardData, name: e.target.value.toUpperCase()})}
+                           placeholder="JULIA M ALEIXO"
+                           className="w-full bg-white border border-neutral-200 text-xs px-3 py-2 rounded-lg outline-none uppercase focus:border-lilac"
+                         />
+                       </div>
+
+                       <div className="grid grid-cols-2 gap-3">
+                         <div>
+                           <label className="text-[9px] font-bold uppercase text-[#6D5443] block mb-1">Validade (MM/AA)</label>
+                           <input 
+                             type="text"
+                             maxLength={5}
+                             value={cardData.val}
+                             onChange={e => setCardData({...cardData, val: e.target.value})}
+                             placeholder="12/29"
+                             className="w-full bg-white border border-neutral-200 text-xs px-3 py-2 rounded-lg outline-none focus:border-lilac"
+                           />
+                         </div>
+                         <div>
+                           <label className="text-[9px] font-bold uppercase text-[#6D5443] block mb-1">CVV</label>
+                           <input 
+                             type="text"
+                             maxLength={3}
+                             value={cardData.cvv}
+                             onChange={e => setCardData({...cardData, cvv: e.target.value})}
+                             placeholder="123"
+                             className="w-full bg-white border border-neutral-200 text-xs px-3 py-2 rounded-lg outline-none focus:border-lilac"
+                           />
+                         </div>
+                       </div>
+
+                       <button
+                         onClick={() => handleProcessedPayment('CREDIT_CARD')}
+                         disabled={isPaying || !cardData.num || !cardData.name}
+                         className="w-full h-12 mt-2 bg-slate-900 hover:bg-[#D4AF37] disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                       >
+                         {isPaying ? "Processando..." : (
+                           siteSettings?.mercadopago_token || globalSettings?.mercadopago_token 
+                             ? "Ir para Pagamento Seguro MP" 
+                             : "Concluir Pagamento Simulado"
+                         )}
+                       </button>
+                    </div>
+                 </div>
+               ) : (
+                 <div className="w-full space-y-4">
+                    <button 
+                      onClick={() => setPaymentSelected("PIX")}
+                      className="w-full py-5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg hover:scale-[1.01] transition-all cursor-pointer"
+                    >
+                      <CheckCircle2 size={18} /> Pagar com PIX (5% OFF)
+                    </button>
+                    <button 
+                      onClick={() => setPaymentSelected("CREDIT_CARD")}
+                      className="w-full py-5 rounded-2xl bg-white border border-neutral-200 text-slate-800 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-50 transition-all cursor-pointer shadow-xs"
+                    >
+                      <CreditCard size={18} /> Cartão de Crédito
+                    </button>
+                 </div>
+               )}
             </section>
 
              <div className="space-y-8">
               {renderFinancialSummary(true)}
-              <section className="bg-white rounded-[2.5rem] p-10 border border-lilac/10 shadow-sm">
-                <h3 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] mb-8">
+              <section className="bg-white rounded-[2.5rem] p-8 border border-lilac/10 shadow-sm text-left">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] mb-6">
                   Endereço de Entrega
                 </h3>
-                <div className="space-y-6">
+                <div className="space-y-4 text-xs">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Destinatário</label>
-                    <div className="text-[15px] font-black text-slate-900 uppercase leading-tight">
-                      {customerForm.nome}
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none block">Destinatário</label>
+                    <div className="text-sm font-bold text-slate-900 uppercase">
+                      {customerForm.nome || 'Não informado'}
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Logradouro / Número</label>
-                    <div className="text-[15px] font-black text-slate-600 uppercase leading-snug">
-                      {customerForm.endereco}, {customerForm.numero}
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none block">Logradouro / Número</label>
+                    <div className="text-sm font-bold text-slate-700 uppercase">
+                      {customerForm.endereco || 'Retirada em loja / Ateliê'}, {customerForm.numero}
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Cidade / Estado / CEP</label>
-                    <div className="text-[15px] font-black text-slate-600 uppercase leading-tight">
-                      {customerForm.cidade} - {customerForm.estado} <br/>
-                      <span className="font-mono text-lilac">CEP: {customerForm.cep}</span>
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none block">Cidade / Estado / CEP</label>
+                    <div className="text-sm font-bold text-slate-700 uppercase">
+                      {customerForm.cidade} {customerForm.estado ? `- ${customerForm.estado}` : ''} <br/>
+                      {customerForm.cep && <span className="font-mono text-lilac block mt-1">CEP: {customerForm.cep}</span>}
                     </div>
                   </div>
                 </div>
               </section>
             </div>
           </div>
-        )}
+        ) : null}
       </main>
     </div>
   );

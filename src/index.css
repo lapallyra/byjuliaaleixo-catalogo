@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Gloock&family=Monsieur+La+Doulaise&display=swap');
 @import "tailwindcss";
 
 html {
@@ -29,6 +30,8 @@ html {
   --color-lilac-baby: #F5EBFF;
   --color-deep-black: #050505;
   --font-pinyon: "Pinyon Script", cursive;
+  --font-gloock: "Gloock", serif;
+  --font-monsieur: "Monsieur La Doulaise", cursive;
 }
 
 @layer utilities {
@@ -74,6 +77,18 @@ html {
   }
   .font-number {
     font-family: var(--font-number);
+  }
+  .presentes {
+    font-family: var(--font-gloock);
+    letter-spacing: 1px;
+  }
+  .personalizados {
+    font-family: var(--font-monsieur);
+  }
+  .signature {
+    font-family: sans-serif; /* Needs to be a generic simple font for the symbol */
+    font-size: 0.75rem;
+    color: #C6A664;
   }
 }
 

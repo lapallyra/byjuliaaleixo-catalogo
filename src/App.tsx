@@ -25,10 +25,28 @@ import { INITIAL_CONFIG, PRODUCTS } from './constants';
 import { AppConfig, CompanyId, CartItem, Product } from './types';
 import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
 
+import { VitrinePage } from './components/VitrinePage';
 import { PrizeRouletteModal } from './components/PrizeRouletteModal';
 import { sendNotifications } from './services/notificationService';
 import { updateOrder } from './services/firebaseService';
 import { playSuccessSound } from './utils/audio';
+
+// Vitrine V2 Isolated Imports
+import { VitrineCartProvider } from './vitrine-v2/hooks/useCart';
+import { VitrineIndexPage } from './vitrine-v2/pages/index';
+import { VitrineCatalogoPage } from './vitrine-v2/pages/catalogo';
+import { VitrineProdutoDetailPage } from './vitrine-v2/pages/produto';
+import { VitrineCheckoutPage } from './vitrine-v2/pages/checkout';
+import { VitrineCarrinhoPage } from './vitrine-v2/pages/carrinho';
+
+// Vitrine V3 Isolated Imports
+import { VitrineCartV3Provider } from './vitrine-v3/core/cart/useCart';
+import { VitrineIndexPage as VitrineIndexPageV3 } from './vitrine-v3/pages/index';
+import { VitrineCatalogoPage as VitrineCatalogoPageV3 } from './vitrine-v3/pages/catalogo';
+import { VitrineProdutoDetailPage as VitrineProdutoDetailPageV3 } from './vitrine-v3/pages/produto';
+import { VitrineCarrinhoPage as VitrineCarrinhoPageV3 } from './vitrine-v3/pages/carrinho';
+import { VitrineCheckoutPage as VitrineCheckoutPageV3 } from './vitrine-v3/pages/checkout';
+import { VitrinePedidoConfirmadoPage as VitrinePedidoConfirmadoPageV3 } from './vitrine-v3/pages/pedido-confirmado';
 
 function SparklesContainer({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -313,6 +331,7 @@ function MainApp() {
       <TopAnnouncementBar />
       <Routes>
         <Route path="/" element={<EntryView config={config} allProducts={allProducts} />} />
+        <Route path="/vitrine" element={<VitrinePage />} />
         
         <Route path="/atelies" element={<AteliersPresentationView />} />
         <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />
@@ -377,6 +396,65 @@ function MainApp() {
         
         {/* Gift List View */}
         <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setUnifiedCart} config={config} />} />
+
+        {/* Vitrine V2 - Fully Isolated Storefront Module */}
+        <Route path="/vitrine-v2" element={
+          <VitrineCartProvider>
+            <VitrineIndexPage />
+          </VitrineCartProvider>
+        } />
+        <Route path="/vitrine-v2/catalogo" element={
+          <VitrineCartProvider>
+            <VitrineCatalogoPage />
+          </VitrineCartProvider>
+        } />
+        <Route path="/vitrine-v2/produto/:id" element={
+          <VitrineCartProvider>
+            <VitrineProdutoDetailPage />
+          </VitrineCartProvider>
+        } />
+        <Route path="/vitrine-v2/carrinho" element={
+          <VitrineCartProvider>
+            <VitrineCarrinhoPage />
+          </VitrineCartProvider>
+        } />
+        <Route path="/vitrine-v2/checkout" element={
+          <VitrineCartProvider>
+            <VitrineCheckoutPage />
+          </VitrineCartProvider>
+        } />
+
+        {/* Vitrine V3 - Isolated e-commerce complete group */}
+        <Route path="/vitrine-v3" element={
+          <VitrineCartV3Provider>
+            <VitrineIndexPageV3 />
+          </VitrineCartV3Provider>
+        } />
+        <Route path="/vitrine-v3/catalogo" element={
+          <VitrineCartV3Provider>
+            <VitrineCatalogoPageV3 />
+          </VitrineCartV3Provider>
+        } />
+        <Route path="/vitrine-v3/produto/:id" element={
+          <VitrineCartV3Provider>
+            <VitrineProdutoDetailPageV3 />
+          </VitrineCartV3Provider>
+        } />
+        <Route path="/vitrine-v3/carrinho" element={
+          <VitrineCartV3Provider>
+            <VitrineCarrinhoPageV3 />
+          </VitrineCartV3Provider>
+        } />
+        <Route path="/vitrine-v3/checkout" element={
+          <VitrineCartV3Provider>
+            <VitrineCheckoutPageV3 />
+          </VitrineCartV3Provider>
+        } />
+        <Route path="/vitrine-v3/pedido-confirmado" element={
+          <VitrineCartV3Provider>
+            <VitrinePedidoConfirmadoPageV3 />
+          </VitrineCartV3Provider>
+        } />
       </Routes>
     </SparklesContainer>
   );
