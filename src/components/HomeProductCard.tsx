@@ -92,10 +92,10 @@ export const HomeProductCard: React.FC<HomeProductCardProps> = ({
   return (
     <div
       onClick={onClick}
-      className="group relative flex flex-col justify-between bg-white border border-[#e8dcc8]/40 rounded-[20px] shadow-[0_4px_16px_rgba(109,84,67,0.01)] sm:hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(109,84,67,0.04)] hover:border-[#cca062]/35 transition-all duration-300 cursor-pointer overflow-hidden pb-3"
+      className="group relative flex flex-col justify-between bg-white border border-[#e8dcc8]/35 rounded-[16px] shadow-[0_2px_10px_rgba(109,84,67,0.01)] hover:-translate-y-1 hover:shadow-[0_8px_20px_rgba(109,84,67,0.05)] hover:border-[#cca062]/40 transition-all duration-300 cursor-pointer overflow-hidden pb-2"
     >
-      {/* Dynamic cover section (60-70% ratio) */}
-      <div className="w-full aspect-[4/3] sm:aspect-square bg-[#faf8f5] overflow-hidden relative">
+      {/* Dynamic cover section (highly premium landscape aspect ratio to show more gracefully) */}
+      <div className="w-full aspect-[4/3] bg-[#faf8f5] overflow-hidden relative">
         <ImageWithFallback
           src={product.image}
           alt={product.product_name}
@@ -103,68 +103,68 @@ export const HomeProductCard: React.FC<HomeProductCardProps> = ({
           isThumbnail={true}
         />
         
-        {/* Subtle, beautiful visual overlay on hover */}
+        {/* Subtle visual overlay on hover */}
         <div className="absolute inset-0 bg-[#3a312d]/3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <span className="bg-white/95 text-[#6d5443] font-poppins font-medium rounded-full shadow-2xs py-1.5 px-3.5 flex items-center gap-1.5 text-[9px] uppercase tracking-wider">
-            <Eye size={12} className="text-[#cca062]" /> Visualizar
+          <span className="bg-white/95 text-[#6d5443] font-poppins font-medium rounded-full shadow-3xs py-1 px-2.5 flex items-center gap-1 text-[8px] uppercase tracking-wider">
+            <Eye size={10} className="text-[#cca062]" /> Detalhes
           </span>
         </div>
 
         {/* Brand label pill */}
-        <div className="absolute top-2.5 right-2.5">
-          <span className="text-[7px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-widest shadow-3xs border border-[#cca062]/10 bg-white/95 text-[#cca062] font-poppins backdrop-blur-xs">
+        <div className="absolute top-2 right-2">
+          <span className="text-[6.5px] px-1.5 py-0.5 rounded-full font-semibold uppercase tracking-widest bg-white/95 text-[#cca062] border border-[#cca062]/10 font-poppins">
             {brand.label}
           </span>
         </div>
 
-        {/* Elegantly styled discount percentage - never looks cheap */}
+        {/* Elegantly styled discount percentage */}
         {discountAmount > 0 && (
-          <div className="absolute top-2.5 left-2.5">
-            <span className="text-[7.5px] px-2 py-0.5 bg-[#c96b71]/10 text-[#c96b71] font-semibold rounded-full font-poppins border border-[#c96b71]/10">
+          <div className="absolute top-2 left-2">
+            <span className="text-[6.5px] px-1.5 py-0.5 bg-[#c96b71]/10 text-[#c96b71] font-semibold rounded-full font-poppins border border-[#c96b71]/10">
               {discountAmount}% OFF
             </span>
           </div>
         )}
       </div>
 
-      {/* Structured Content Area */}
-      <div className="p-3 flex flex-col items-center text-center flex-grow justify-between">
+      {/* Structured Content Area with very balanced spacing */}
+      <div className="p-2 sm:p-2.5 flex flex-col items-center text-center flex-grow justify-between gap-1.5">
         <div className="w-full">
-          <span className="text-[7.5px] uppercase tracking-[0.15em] text-[#cca062] font-semibold block mb-0.5 font-poppins">
+          <span className="text-[7.5px] uppercase tracking-[0.12em] text-[#cca062] font-semibold block mb-0.5 font-poppins">
             {brand.label}
           </span>
-          <h3 className="font-poppins font-medium text-[10.5px] sm:text-[11.5px] leading-snug text-[#3A312D] line-clamp-1 group-hover:text-[#cca062] transition-colors mb-2">
+          <h3 className="font-poppins font-medium text-[10px] sm:text-[11px] leading-snug text-[#3A312D] line-clamp-1 group-hover:text-[#cca062] transition-colors">
             {product.product_name}
           </h3>
         </div>
 
-        {/* Pricing & CTA Button area */}
+        {/* Pricing area */}
         <div className="w-full mt-auto">
-          <div className="flex flex-col items-center justify-center min-h-[30px]">
+          <div className="flex flex-col items-center justify-center">
             {product.original_price && product.original_price > product.current_price ? (
-              <>
-                <span className="text-[9px] line-through text-[#6d5443]/40 tracking-wider">
+              <div className="flex items-center gap-1 leading-none">
+                <span className="text-[8px] line-through text-[#6d5443]/40 tracking-wider">
                   R$ {product.original_price.toFixed(2).replace('.', ',')}
                 </span>
-                <span className="text-[11.5px] sm:text-[12.5px] text-[#3A312D] font-semibold tracking-wide font-poppins">
+                <span className="text-[10px] sm:text-[11px] text-[#3A312D] font-bold tracking-wide font-poppins">
                   R$ {product.current_price?.toFixed(2).replace('.', ',')}
                 </span>
-              </>
+              </div>
             ) : (
-              <span className="text-[11.5px] sm:text-[12.5px] text-[#3A312D] font-semibold tracking-wide font-poppins">
+              <span className="text-[10px] sm:text-[11px] text-[#3A312D] font-bold tracking-wide font-poppins">
                 R$ {product.current_price?.toFixed(2).replace('.', ',')}
               </span>
             )}
           </div>
           
-          {/* Subtle CTA Button - Visível sem dominar */}
-          <div className="mt-3 pt-2 w-full border-t border-[#faf8f5] flex items-center justify-between">
-            <span className="text-[8.5px] uppercase tracking-[0.12em] font-semibold text-[#6d5443]/60 group-hover:text-[#cca062] transition-colors font-poppins flex items-center gap-1">
+          {/* Extremely compact clean bottom line */}
+          <div className="mt-2 pt-1.5 border-t border-[#faf8f5] flex items-center justify-between">
+            <span className="text-[8px] uppercase tracking-[0.1em] font-medium text-[#6d5443]/60 group-hover:text-[#cca062] transition-colors font-poppins">
               Ver Opções
             </span>
-            <button className="w-6.5 h-6.5 rounded-full bg-[#faf8f5] border border-[#e8dcc8]/30 group-hover:bg-[#3A312D] group-hover:text-white transition-all flex items-center justify-center text-[#cca062] shadow-3xs cursor-pointer">
-              <ShoppingBag size={10} strokeWidth={2.5} />
-            </button>
+            <span className="w-5 h-5 rounded-full bg-[#faf8f5] border border-[#e8dcc8]/20 group-hover:bg-[#3A312D] group-hover:text-white transition-all flex items-center justify-center text-[#cca062] shadow-3xs">
+              <ShoppingBag size={8} strokeWidth={2.5} />
+            </span>
           </div>
         </div>
       </div>

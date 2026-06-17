@@ -184,36 +184,40 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
           
           {/* Centered navigation links */}
-          <nav className="flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-10 gap-y-2.5 text-[#6d5443]/90 tracking-[0.14em] font-semibold text-[11px] sm:text-[12px] uppercase select-none font-poppins">
-            <a href="#ateliers" className="hover:text-[#cca062] transition-colors relative group py-1">
+          <nav className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 gap-y-2 text-[#3A312D] tracking-[0.1em] font-semibold text-[11px] sm:text-[12px] uppercase select-none font-poppins">
+            <a 
+              href="#ateliers" 
+              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[#3A312D] hover:bg-[#3A312D] hover:text-[#cca062] transition-all duration-300 ease-in-out font-medium tracking-[0.1em] font-poppins"
+            >
               ateliês
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </a>
             
             <button 
               onClick={() => navigate('/kit-meukit')} 
-              className="hover:text-[#cca062] transition-colors uppercase font-semibold tracking-[0.14em] text-[11px] sm:text-[12px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block relative group py-1 font-poppins"
+              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[#3A312D] hover:bg-[#3A312D] hover:text-[#cca062] transition-all duration-300 ease-in-out cursor-pointer outline-none uppercase font-semibold tracking-[0.12em] text-[11px] sm:text-[12px] font-poppins"
             >
               monte seu kit
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </button>
             
-            <a href="#sobre-julia" className="hover:text-[#cca062] transition-colors relative group py-1">
+            <a 
+              href="#sobre-julia" 
+              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[#3A312D] hover:bg-[#3A312D] hover:text-[#cca062] transition-all duration-300 ease-in-out font-medium tracking-[0.1em] font-poppins"
+            >
               sobre nós
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </a>
             
-            <a href="#feedbacks" className="hover:text-[#cca062] transition-colors relative group py-1">
+            <a 
+              href="#feedbacks" 
+              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[#3A312D] hover:bg-[#3A312D] hover:text-[#cca062] transition-all duration-300 ease-in-out font-medium tracking-[0.1em] font-poppins"
+            >
               feedback
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </a>
             
             <button 
               onClick={() => navigate('/listadepresentes-info')} 
-              className="hover:text-[#cca062] transition-colors uppercase font-semibold tracking-[0.14em] text-[11px] sm:text-[12px] cursor-pointer outline-none bg-transparent border-none p-0 inline-block relative group py-1 font-poppins"
+              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[#3A312D] hover:bg-[#3A312D] hover:text-[#cca062] transition-all duration-300 ease-in-out cursor-pointer outline-none uppercase font-semibold tracking-[0.12em] text-[11px] sm:text-[12px] font-poppins"
             >
               lista de presentes
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#cca062] group-hover:w-full transition-all duration-300"></span>
             </button>
           </nav>
 
@@ -577,135 +581,6 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         </div>
       </section>
 
-      <DelicateFlourish />
-
-      {/* SEÇÃO EDITORIAL: CONEXÃO COM A MARCA / POR TRÁS DE CADA DETALHE */}
-      <section id="sobre-julia" className="py-20 lg:py-28 bg-gradient-to-b from-[#fffdfa] to-[#faf8f5] px-6 relative overflow-hidden border-t border-[#e8dcc8]/20">
-        {/* Soft elegant background decorations */}
-        <div className="absolute -bottom-10 left-1/3 w-72 h-72 rounded-full bg-[#cca062]/3 blur-[120px] pointer-events-none" />
-        
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
-            
-            {/* LADO ESQUERDO: Portrait Editorial Photograph */}
-            <div className="lg:col-span-5 flex justify-center w-full">
-              <div className="relative w-full max-w-[380px] rounded-[32px] overflow-hidden shadow-[0_16px_40px_rgba(109,84,67,0.06)] border border-[#e8dcc8]/45 bg-[#faf8f5] p-2.5 transition-transform duration-700 hover:scale-[1.01]">
-                <div className="w-full h-full rounded-[24px] overflow-hidden aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5]">
-                  <ImageWithFallback
-                    src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1000&auto=format&fit=crop"
-                    alt="Júlia Aleixo no Ateliê"
-                    className="w-full h-full object-cover rounded-[22px]"
-                    isThumbnail={false}
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/12 to-transparent pointer-events-none rounded-[32px]" />
-              </div>
-            </div>
-
-            {/* LADO DIREITO: Emotional Narrative */}
-            <div className="lg:col-span-7 flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
-              {/* Over title */}
-              <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-[#cca062] font-poppins block mb-3.5">
-                Nossa Essência
-              </span>
-              
-              {/* Title */}
-              <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-serif font-light text-[#3A312D] tracking-tight leading-[1.15] mb-6">
-                Por trás de cada detalhe
-              </h2>
-              
-              {/* Decorative separator */}
-              <div className="h-[1px] w-12 bg-[#cca062]/40 mb-6 block lg:hidden"></div>
-
-              {/* Text content in Tahoma */}
-              <div className="space-y-4 max-w-xl">
-                <p className="font-tahoma text-[15px] sm:text-[16px] text-[#3a312d]/75 font-light leading-relaxed">
-                  Acredito que os momentos mais valiosos da vida não são medidos pelo tempo, mas pelo afeto que neles depositamos. No ateliê, cada detalhe é desenhado para ser uma extensão desse sentimento: desde a curadoria sensível das matérias-primas até o toque feito inteiramente à mão.
-                </p>
-                <p className="font-tahoma text-[15px] sm:text-[16px] text-[#3a312d]/75 font-light leading-relaxed">
-                  Cada presente aberto é o começo de uma nova história, e cada embalagem concluída carrega o peso de palavras que merecem durar. Criar com intenção é o meu propósito, unindo a sutileza das pequenas coisas à eternidade daquilo que permanece no coração.
-                </p>
-              </div>
-
-              {/* Signature block */}
-              <div className="mt-8 mb-8 flex flex-col items-center lg:items-start gap-1 select-none">
-                <span className="font-hello-olivia text-[#cca062] text-[28px] lg:text-[34px] leading-tight font-normal">
-                  Com carinho,
-                </span>
-                <span className="font-hello-olivia text-[#3A312D] text-[34px] lg:text-[40px] leading-none font-normal -mt-1 lg:pl-4">
-                  Júlia Aleixo
-                </span>
-              </div>
-
-              {/* Minimalist Button */}
-              <button
-                onClick={() => setIsStoryOpen(true)}
-                className="h-[46px] px-7 rounded-full border border-[#cca062]/50 bg-transparent text-[#3A312D] font-tahoma font-bold text-[11px] uppercase tracking-[0.1em] transition-all duration-300 hover:bg-[#3A312D] hover:text-[#cca062] hover:border-[#3A312D] hover:-translate-y-0.5 cursor-pointer flex items-center justify-center whitespace-nowrap"
-              >
-                Conheça minha história
-              </button>
-
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* STORY MODAL DIALOG - EXCLUSIVELY STYLED */}
-      {isStoryOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Overlay fade background */}
-          <div 
-            onClick={() => setIsStoryOpen(false)}
-            className="absolute inset-0 bg-[#3A312D]/40 backdrop-blur-sm transition-opacity duration-500 ease-out" 
-          />
-          
-          {/* Modal container with subtle upscale reveal animation */}
-          <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 border border-[#e8dcc8]/50 p-6 sm:p-10 shadow-xl scrollbar-thin animate-fade-in">
-            {/* Close button */}
-            <button 
-              onClick={() => setIsStoryOpen(false)}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full border border-[#e8dcc8]/60 bg-white flex items-center justify-center text-[#cca062] hover:bg-[#3A312D] hover:text-[#cca062] hover:border-[#3A312D] transition-colors cursor-pointer"
-            >
-              <X size={15} />
-            </button>
-
-            {/* Scrollable Story content */}
-            <div className="flex flex-col items-center text-center mt-4">
-              <span className="font-hello-olivia text-[#cca062] text-[38px] leading-none select-none mb-1">
-                Júlia Aleixo
-              </span>
-              <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-[#cca062] font-poppins block mb-6">
-                A Arte das Pequenas Intenções
-              </span>
-
-              <div className="space-y-5 font-tahoma text-sm text-[#6d5443]/85 font-light leading-relaxed max-w-xl text-justify px-2">
-                <p>
-                  O Ateliê Júlia Aleixo nasceu do desejo profundo de resgatar o valor do tempo e do afeto no ato de presentear. Em um mundo onde tudo caminha de forma apressada, escolhi ir na direção oposta: a do fazer manual, do respiro cuidadoso e da presença em cada laço de fita.
-                </p>
-                <p>
-                  Formada com a paixão pela estética clássica e pela sofisticação dos papéis e fragrâncias europeias, reuni sob este teto quatro vertentes que dão vida às minhas maiores aspirações de criação.
-                </p>
-                <p>
-                  Na <strong>Pallyra</strong>, criamos o aroma da lembrança através de sabonetes e velas com blends delicate que permanecem no ambiente. Na <strong>Guennita</strong>, celebramos a delicada sofisticação de joias e relicários para guardar segredos dourados. Com a <strong>Mimada</strong>, levamos mimos atenciosos para a intimidade do dia a dia, e na <strong>Tutty Mimo</strong> expressamos o afeto no ambiente de forma pura.
-                </p>
-                <p>
-                  Minha maior recompensa é saber que cada peça que sai de nossas mãos torna-se parte de um momento inesquecível na vida de alguém. Entrar aqui é um convite para desacelerar, respirar e presentear quem você ama com a mais sincera e bela das intenções.
-                </p>
-              </div>
-
-              {/* Floral tiny emblem/signature representation */}
-              <div className="mt-10 mb-2 font-hello-olivia text-[#cca062] text-[32px] leading-none select-none">
-                Júlia Aleixo
-              </div>
-              <span className="text-[10px] tracking-widest text-[#cca062]/50 font-poppins uppercase">
-                Ateliê de Presentes Finos
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* KITS EXCLUSIVOS */}
       <section id="kits" className="scroll-mt-24 py-16 bg-[#faf8f5]/80 border-y border-[#e8dcc8]/15 px-6">
         <div className="max-w-7xl mx-auto">
@@ -771,7 +646,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           <div className="shrink-0 relative z-10">
             <button
                onClick={() => navigate('/kit-meukit')}
-               className="bg-[#3A312D] hover:bg-[#cca062] text-white hover:text-[#3A312D] px-8 py-3.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest shadow-xs hover:shadow-md transition-all duration-300 ease-out cursor-pointer inline-flex items-center gap-2 font-poppins"
+               className="h-[46px] px-8 rounded-full bg-[#3A312D] hover:bg-[#cca062] text-[#fffdfa] hover:text-[#3A312D] border border-transparent hover:border-[#cca062]/20 text-[11px] font-semibold uppercase tracking-[0.14em] shadow-3xs hover:shadow-xs transition-all duration-300 cursor-pointer inline-flex items-center gap-2 font-poppins"
             >
               Iniciar Construtor <ArrowRight size={12} strokeWidth={2.5} />
             </button>
@@ -782,8 +657,8 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       {/* PRODUTOS (VITRINE DIRETA DE PRODUTOS PREMIUM COM MAPEAMENTO DE ATELIÊS) */}
       <section id="produtos" className="scroll-mt-24 py-16 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-10">
-          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Vitrine de Destaques</span>
-          <h2 className="text-2xl sm:text-3xl font-playfair font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Artigos Selecionados</h2>
+          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Curadoria Sensível</span>
+          <h2 className="text-2xl sm:text-3xl font-playfair font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Vitrine de Destaques</h2>
           <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
           <p className="font-hello-olivia text-base text-[#cca062] lowercase mb-1 block">mimos e afetos para sua escolha</p>
           <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
@@ -791,7 +666,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           </p>
         </div>
         
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 max-w-6xl mx-auto px-2">
           {featuredProducts.map((prod) => {
             const targetRoute = prod.company === 'pallyra' ? '/lapallyra' 
                               : prod.company === 'guennita' ? '/comamorguennita' 
@@ -811,7 +686,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </section>
 
       {/* FEEDBACK QUE AMAMOS (EDITORIAL SOCIAL PROOF WITH HANDWRITTEN ACCENTS) */}
-      <section className="py-16 bg-white border-t border-[#e8dcc8]/20 px-6">
+      <section id="feedbacks" className="scroll-mt-24 py-16 bg-white border-t border-[#e8dcc8]/20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Depoimentos Reais</span>
@@ -869,6 +744,135 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           </div>
         </div>
       </section>
+
+      <DelicateFlourish />
+
+      {/* SEÇÃO EDITORIAL: CONEXÃO COM A MARCA / POR TRÁS DE CADA DETALHE (POSICIONADO COMO ANTEPENÚLTIMO BLOCO DA HOME) */}
+      <section id="sobre-julia" className="scroll-mt-24 py-20 lg:py-28 bg-gradient-to-b from-[#fffdfa] to-[#faf8f5] px-6 relative overflow-hidden border-t sm:border-b border-[#e8dcc8]/20">
+        {/* Soft elegant background decorations */}
+        <div className="absolute -bottom-10 left-1/3 w-72 h-72 rounded-full bg-[#cca062]/3 blur-[120px] pointer-events-none" />
+        
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
+            
+            {/* LADO ESQUERDO: Portrait Editorial Photograph */}
+            <div className="lg:col-span-5 flex justify-center w-full">
+              <div className="relative w-full max-w-[380px] rounded-[32px] overflow-hidden shadow-[0_16px_40px_rgba(109,84,67,0.06)] border border-[#e8dcc8]/45 bg-[#faf8f5] p-2.5 transition-transform duration-700 hover:scale-[1.01]">
+                <div className="w-full h-full rounded-[24px] overflow-hidden aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5]">
+                  <ImageWithFallback
+                    src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1000&auto=format&fit=crop"
+                    alt="Júlia Aleixo no Ateliê"
+                    className="w-full h-full object-cover rounded-[22px]"
+                    isThumbnail={false}
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/12 to-transparent pointer-events-none rounded-[32px]" />
+              </div>
+            </div>
+
+            {/* LADO DIREITO: Emotional Narrative */}
+            <div className="lg:col-span-7 flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
+              {/* Over title */}
+              <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-[#cca062] font-poppins block mb-3.5">
+                Nossa Essência
+              </span>
+              
+              {/* Title */}
+              <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-serif font-light text-[#3A312D] tracking-tight leading-[1.15] mb-6">
+                Por trás de cada detalhe
+              </h2>
+              
+              {/* Decorative separator */}
+              <div className="h-[1px] w-12 bg-[#cca062]/40 mb-6 block lg:hidden"></div>
+
+              {/* Text content in Tahoma */}
+              <div className="space-y-4 max-w-xl">
+                <p className="font-tahoma text-[15px] sm:text-[16px] text-[#3a312d]/75 font-light leading-relaxed">
+                  Acredito que os momentos mais valiosos da vida não são medidos pelo tempo, mas pelo afeto que neles depositamos. No ateliê, cada detalhe é desenhado para ser uma extensão desse sentimento: desde a curadoria sensível das matérias-primas até o toque feito inteiramente à mão.
+                </p>
+                <p className="font-tahoma text-[15px] sm:text-[16px] text-[#3a312d]/75 font-light leading-relaxed">
+                  Cada presente aberto é o começo de uma nova história, e cada embalagem concluída carrega o peso de palavras que merecem durar. Criar com intenção é o meu propósito, unindo a sutileza das pequenas coisas à eternidade daquilo que permanece no coração.
+                </p>
+              </div>
+
+              {/* Signature block */}
+              <div className="mt-8 mb-8 flex flex-col items-center lg:items-start gap-1 select-none">
+                <span className="font-hello-olivia text-[#cca062] text-[28px] lg:text-[34px] leading-tight font-normal">
+                  Com carinho,
+                </span>
+                <span className="font-hello-olivia text-[#3A312D] text-[34px] lg:text-[40px] leading-none font-normal -mt-1 lg:pl-4">
+                  Júlia Aleixo
+                </span>
+              </div>
+
+              {/* Premium Button Re-branding */}
+              <button
+                onClick={() => setIsStoryOpen(true)}
+                className="h-[46px] px-8 rounded-full border border-[#cca062]/40 bg-transparent text-[#3A312D] font-poppins font-semibold text-[11.5px] uppercase tracking-[0.14em] transition-all duration-300 hover:bg-[#3A312D] hover:text-[#cca062] hover:border-[#3A312D] hover:shadow-xs cursor-pointer flex items-center justify-center whitespace-nowrap"
+              >
+                Conheça minha história
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* STORY MODAL DIALOG - EXCLUSIVELY STYLED */}
+      {isStoryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Overlay fade background */}
+          <div 
+            onClick={() => setIsStoryOpen(false)}
+            className="absolute inset-0 bg-[#3A312D]/40 backdrop-blur-sm transition-opacity duration-500 ease-out" 
+          />
+          
+          {/* Modal container with subtle upscale reveal animation */}
+          <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 border border-[#e8dcc8]/50 p-6 sm:p-10 shadow-xl scrollbar-thin animate-fade-in">
+            {/* Close button */}
+            <button 
+              onClick={() => setIsStoryOpen(false)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full border border-[#e8dcc8]/60 bg-white flex items-center justify-center text-[#cca062] hover:bg-[#3A312D] hover:text-[#cca062] hover:border-[#3A312D] transition-colors cursor-pointer"
+            >
+              <X size={15} />
+            </button>
+
+            {/* Scrollable Story content */}
+            <div className="flex flex-col items-center text-center mt-4">
+              <span className="font-hello-olivia text-[#cca062] text-[38px] leading-none select-none mb-1">
+                Júlia Aleixo
+              </span>
+              <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-[#cca062] font-poppins block mb-6">
+                A Arte das Pequenas Intenções
+              </span>
+
+              <div className="space-y-5 font-tahoma text-sm text-[#6d5443]/85 font-light leading-relaxed max-w-xl text-justify px-2">
+                <p>
+                  O Ateliê Júlia Aleixo nasceu do desejo profundo de resgatar o valor do tempo e do afeto no ato de presentear. Em um mundo onde tudo caminha de forma apressada, escolhi ir na direção oposta: a do fazer manual, do respiro cuidadoso e da presença em cada laço de fita.
+                </p>
+                <p>
+                  Formada com a paixão pela estética clássica e pela sofisticação dos papéis e fragrâncias europeias, reuni sob este teto quatro vertentes que dão vida às minhas maiores aspirações de criação.
+                </p>
+                <p>
+                  Na <strong>Pallyra</strong>, criamos o aroma da lembrança através de sabonetes e velas com blends delicate que permanecem no ambiente. Na <strong>Guennita</strong>, celebramos a delicada sofisticação de joias e relicários para guardar segredos dourados. Com a <strong>Mimada</strong>, levamos mimos atenciosos para a intimidade do dia a dia, e na <strong>Tutty Mimo</strong> expressamos o afeto no ambiente de forma pura.
+                </p>
+                <p>
+                  Minha maior recompensa é saber que cada peça que sai de nossas mãos torna-se parte de um momento inesquecível na vida de alguém. Entrar aqui é um convite para desacelerar, respirar e presentear quem você ama com a mais sincera e bela das intenções.
+                </p>
+              </div>
+
+              {/* Floral tiny emblem/signature representation */}
+              <div className="mt-10 mb-2 font-hello-olivia text-[#cca062] text-[32px] leading-none select-none">
+                Júlia Aleixo
+              </div>
+              <span className="text-[10px] tracking-widest text-[#cca062]/50 font-poppins uppercase">
+                Ateliê de Presentes Finos
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* FINAL EMOTIONAL TRUST BANNER */}
       <section className="bg-[#faf8f5] border-y border-[#e8dcc8]/40 py-12 px-6">
