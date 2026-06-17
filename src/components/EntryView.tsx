@@ -26,11 +26,115 @@ const DelicateFlourish = () => (
 
 export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }) => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [customSettings, setCustomSettings] = useState<Record<string, SiteSettings | null>>({});
   const [searchCode, setSearchCode] = useState('');
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const [isStoryOpen, setIsStoryOpen] = useState(false);
+  const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
+
+  // Anti-printscreen & Ctrl+P prevention effect
+  useEffect(() => {
+    const isUserAdmin = isAdmin || (user as any)?.role === "admin";
+    if (isUserAdmin) return;
+
+    // Prevent Ctrl + P and Meta / Cmd + P
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key?.toLowerCase() === 'p') {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+      
+      // Disrupt general PrintScreen key if possible
+      if (e.key === 'PrintScreen') {
+        e.preventDefault();
+        navigator.clipboard.writeText('');
+        return false;
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'PrintScreen') {
+        e.preventDefault();
+        navigator.clipboard.writeText('');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keyup', handleKeyUp, true);
+
+    // Apply print media styles to hide contents when print is triggered
+    const styleEl = document.createElement('style');
+    styleEl.type = 'text/css';
+    styleEl.id = 'print-prevention-styles';
+    styleEl.innerHTML = `
+      @media print {
+        body, html, #root {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+        }
+      }
+    `;
+    document.head.appendChild(styleEl);
+
+    // Add browser fallback listeners
+    const handleBeforePrint = () => {
+      document.body.style.display = 'none';
+    };
+    const handleAfterPrint = () => {
+      document.body.style.display = 'block';
+    };
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('keyup', handleKeyUp, true);
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+      const injectedStyle = document.getElementById('print-prevention-styles');
+      if (injectedStyle && document.head.contains(injectedStyle)) {
+        document.head.removeChild(injectedStyle);
+      }
+    };
+  }, [isAdmin, user]);
+
+  const feedbacksDynamic = React.useMemo(() => [
+    {
+      stars: 5,
+      text: '"O kit maternidade da Tutty Mimo superou todas as minhas expectativas. O enxoval possui uma maciez indescritível e cada pequeno ponto transborda amor. Ficou lindo demais!"',
+      author: 'Mariana Santana',
+      atelier: 'para Tutty Mimo',
+      colorTagBg: 'bg-[#d4bda1]/15',
+      colorTagText: 'text-[#a88258]'
+    },
+    {
+      stars: 5,
+      text: '"Encomendei os cadernos e agendas da La Pallyra para presentear minhas madrinhas de casamento. O acabamento artesanal em cartonagem é o legítimo luxo com afeto."',
+      author: 'Beatriz Figueiredo',
+      atelier: 'para La Pallyra',
+      colorTagBg: 'bg-[#cca062]/15',
+      colorTagText: 'text-[#cca062]'
+    },
+    {
+      stars: 5,
+      text: '"As rosas de cetim da com amor, Guennita parecem reais. O capricho nas embalagens e o carinho com que as flores são moldadas me fez chorar quando peguei o pacote."',
+      author: 'Camila Resende',
+      atelier: 'para Guennita',
+      colorTagBg: 'bg-[#5b2122]/10',
+      colorTagText: 'text-[#5b2122]'
+    }
+  ], []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveFeedbackIndex((prev) => (prev + 1) % feedbacksDynamic.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [feedbacksDynamic.length]);
 
   useEffect(() => {
     return subscribeToAllSettings((results) => {
@@ -111,10 +215,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </div>
 
       {/* Assinatura: by Julia Aleixo (handwritten font class) */}
-      <div className={`absolute select-none font-hello-olivia text-[#6d5443] font-medium leading-none rotate-[-4deg] ${
+      <div className={`absolute select-none pinyon-script-regular text-[#6d5443] font-normal leading-none rotate-[-4deg] ${
         small 
-          ? "right-2.5 bottom-[5px] text-[11px] sm:text-[12px]" 
-          : "right-4 bottom-[4px] text-[20px] sm:text-[23px]"
+          ? "right-2.5 bottom-[5px] text-[13px] sm:text-[14px]" 
+          : "right-4 bottom-[4px] text-[24px] sm:text-[27px]"
       }`}>
         by Julia Aleixo
       </div>
@@ -248,8 +352,8 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </div>
 
       {/* BOUTIQUE ATELIERS VERTICAL CAPSULE CARDS */}
-      <section id="ateliers" className="scroll-mt-24 pb-16 px-4 sm:px-5 max-w-7xl mx-auto w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto font-poppins">
+      <section id="ateliers" className="scroll-mt-24 pb-16 px-4 sm:px-5 max-w-[1440px] mx-auto w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-11 max-w-[1360px] mx-auto font-poppins lg:scale-105 transition-transform duration-500">
           
           {/* Card 1: La Pallyra */}
           <div 
@@ -283,9 +387,6 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             <h3 className="font-mea-culpa text-3xl sm:text-4xl font-normal text-[#3A312D] text-center mt-2 block group-hover:text-[#cca062] transition-colors duration-300">
               La Pallyra
             </h3>
-            <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
-              Cartonagem & Papelaria Fina
-            </p>
           </div>
 
           {/* Card 2: com amor, Guennita */}
@@ -320,9 +421,6 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             <h3 className="font-mea-culpa text-3xl sm:text-4xl font-normal text-[#3A312D] text-center mt-2 block group-hover:text-[#5b2122] transition-colors duration-300">
               com amor, Guennita
             </h3>
-            <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
-              Flores de Cetim Perfumadas
-            </p>
           </div>
 
           {/* Card 3: Mimada Sim */}
@@ -357,9 +455,6 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             <h3 className="font-mea-culpa text-3xl sm:text-4xl font-normal text-[#3A312D] text-center mt-2 block group-hover:text-[#d94b5f] transition-colors duration-300">
               Mimada Sim
             </h3>
-            <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
-              Mimos & Ideias com Afeto
-            </p>
           </div>
 
           {/* Card 4: Tutty Mimo */}
@@ -394,9 +489,6 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             <h3 className="font-mea-culpa text-3xl sm:text-4xl font-normal text-[#3A312D] text-center mt-2 block group-hover:text-[#d4bda1] transition-colors duration-300">
               Tutty Mimo
             </h3>
-            <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
-              Enxoval & Maternidade
-            </p>
           </div>
 
         </div>
@@ -620,20 +712,9 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             <h3 className="text-2xl sm:text-[32px] font-parisienne font-normal text-[#3A312D] tracking-normal mb-2 leading-tight">
               Monte o Seu Próprio Kit de Afeto
             </h3>
-            <p className="text-[11px] sm:text-xs text-[#6d5443]/85 leading-relaxed font-light mb-4">
+            <p className="text-[11.5px] sm:text-xs text-[#6d5443]/85 leading-relaxed font-light">
               Crie uma combinação personalizada escolhendo a caixa ideal, adicionando os mimos artesanais preferidos e inserindo um cartão com mensagem gravada. Rápido, objetivo e acolhedor!
             </p>
-            <div className="flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-2 text-[#6d5443]/70 font-semibold text-[9px] tracking-[0.16em] uppercase font-poppins pt-3 border-t border-[#e8dcc8]/20 select-none">
-              <span className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#cca062]" /> I. Escolha a Caixa
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#cca062]" /> II. Adicione Mimos
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#cca062]" /> III. Escolha o Cartão
-              </span>
-            </div>
           </div>
           
           <div className="shrink-0 relative z-10">
@@ -653,7 +734,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           <h2 className="text-3xl sm:text-[42px] font-parisienne font-normal text-[#3A312D] tracking-normal mt-1 mb-2">Vitrine de Destaques</h2>
           <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
           <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
-            Navegue pelos produtos mais queridos de nossas marcas e monte um acervo de memórias marcantes.
+            Navegue pelos produtos mais queridos e monte o melhor acervo de memórias marcantes.
           </p>
         </div>
         
@@ -682,53 +763,41 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-[42px] font-parisienne font-normal text-[#3A312D] tracking-normal mt-1 mb-2">Feedback que Amamos</h2>
             <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
-            <p className="text-xs text-[#6d5443]/70 font-light max-w-sm mx-auto leading-relaxed">
+            <p className="text-xs text-[#6d5443]/70 font-light max-w-sm mx-auto leading-relaxed mb-6">
               Mensagens espontâneas enviadas por clientes que receberam um pedaço do nosso coração.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
-            {/* Feedback items */}
-            <div className="bg-[#faf8f5]/60 border border-[#e8dcc8]/30 rounded-[22px] p-6.5 hover:shadow-[0_8px_20px_rgba(109,84,67,0.03)] hover:border-[#cca062]/30 transition-all duration-300">
-              <div className="flex items-center gap-1 text-[#cca062] mb-3">
+          {/* AUTOMATED CAROUSEL DEPOIMENTOS */}
+          <div className="max-w-2xl mx-auto relative px-4 text-center select-none min-h-[200px] flex flex-col justify-between">
+            <div className="bg-[#faf8f5]/60 border border-[#e8dcc8]/30 rounded-[22px] p-6.2 sm:p-8 hover:shadow-[0_8px_20px_rgba(109,84,67,0.03)] hover:border-[#cca062]/30 transition-all duration-500">
+              <div className="flex items-center justify-center gap-1 text-[#cca062] mb-3.5">
                 <span className="text-[11px] font-bold mr-1 text-[#cca062]/80 font-poppins">5.0</span>
                 <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
               </div>
-              <p className="text-[11.5px] font-tahoma font-light text-[#6d5443] leading-relaxed italic mb-4">
-                "O kit maternidade da Tutty Mimo superou todas as minhas expectativas. O enxoval possui uma maciez indescritível e cada pequeno ponto transborda amor. Ficou lindo demais!"
+              <p className="text-[13px] sm:text-[14.5px] font-tahoma font-light text-[#6d5443] leading-relaxed italic mb-5">
+                {feedbacksDynamic[activeFeedbackIndex].text}
               </p>
-              <div className="flex items-center justify-between pt-3.5 border-t border-[#e8dcc8]/20">
-                <span className="font-poppins font-semibold text-xs text-[#3A312D]">Mariana Santana</span>
-                <span className="text-[8px] uppercase tracking-widest font-bold bg-[#d4bda1]/15 text-[#a88258] px-2 py-0.5 rounded-full font-poppins">para Tutty Mimo</span>
+              <div className="flex items-center justify-between pt-4 border-t border-[#e8dcc8]/20">
+                <span className="font-poppins font-semibold text-xs sm:text-sm text-[#3A312D]">{feedbacksDynamic[activeFeedbackIndex].author}</span>
+                <span className={`text-[8px] sm:text-[9px] uppercase tracking-widest font-bold ${feedbacksDynamic[activeFeedbackIndex].colorTagBg} ${feedbacksDynamic[activeFeedbackIndex].colorTagText} px-2.5 py-0.5 rounded-full font-poppins`}>
+                  {feedbacksDynamic[activeFeedbackIndex].atelier}
+                </span>
               </div>
             </div>
 
-            <div className="bg-[#faf8f5]/60 border border-[#e8dcc8]/30 rounded-[22px] p-6.5 hover:shadow-[0_8px_20px_rgba(109,84,67,0.03)] hover:border-[#cca062]/30 transition-all duration-300">
-              <div className="flex items-center gap-1 text-[#cca062] mb-3">
-                <span className="text-[11px] font-bold mr-1 text-[#cca062]/80 font-poppins">5.0</span>
-                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-              </div>
-              <p className="text-[11.5px] font-tahoma font-light text-[#6d5443] leading-relaxed italic mb-4">
-                "Encomendei os cadernos e agendas da La Pallyra para presentear minhas madrinhas de casamento. O acabamento artesanal em cartonagem é o legítimo luxo com afeto."
-              </p>
-              <div className="flex items-center justify-between pt-3.5 border-t border-[#e8dcc8]/20">
-                <span className="font-poppins font-semibold text-xs text-[#3A312D]">Beatriz Figueiredo</span>
-                <span className="text-[8px] uppercase tracking-widest font-bold bg-[#cca062]/15 text-[#b08447] px-2 py-0.5 rounded-full font-poppins">para La Pallyra</span>
-              </div>
-            </div>
-
-            <div className="bg-[#faf8f5]/60 border border-[#e8dcc8]/30 rounded-[22px] p-6.5 hover:shadow-[0_8px_20px_rgba(109,84,67,0.03)] hover:border-[#cca062]/30 transition-all duration-300">
-              <div className="flex items-center gap-1 text-[#cca062] mb-3">
-                <span className="text-[11px] font-bold mr-1 text-[#cca062]/80 font-poppins">5.0</span>
-                <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-              </div>
-              <p className="text-[11.5px] font-tahoma font-light text-[#6d5443] leading-relaxed italic mb-4">
-                "As rosas de cetim da com amor, Guennita parecem reais. O capricho nas embalagens e o carinho com que as flores são moldadas me fez chorar quando peguei o pacote."
-              </p>
-              <div className="flex items-center justify-between pt-3.5 border-t border-[#e8dcc8]/20">
-                <span className="font-poppins font-semibold text-xs text-[#3A312D]">Camila Resende</span>
-                 <span className="text-[8px] uppercase tracking-widest font-bold bg-[#5b2122]/10 text-[#5b2122] px-2 py-0.5 rounded-full font-poppins">para Guennita</span>
-              </div>
+            {/* CAROUSEL BUTTON DOTS */}
+            <div className="flex justify-center items-center gap-2 mt-5">
+              {feedbacksDynamic.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveFeedbackIndex(idx)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 outline-none cursor-pointer ${
+                    idx === activeFeedbackIndex ? "bg-[#cca062] w-5" : "bg-[#cca062]/20 hover:bg-[#cca062]/45"
+                  }`}
+                  aria-label={`Visualizar depoimento ${idx + 1}`}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -771,10 +840,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
               {/* Text content in Tahoma */}
               <div className="space-y-4 max-w-xl">
-                <p className="font-tahoma text-[15.5px] sm:text-[17px] text-[#3A312D]/95 font-normal leading-loose">
+                <p className="font-sans text-[15.5px] sm:text-[17.5px] text-[#2c2420] font-normal leading-[1.75]">
                   Acredito que os momentos mais valiosos da vida não são medidos pelo tempo, mas pelo afeto que neles depositamos. No ateliê, cada detalhe é desenhado para ser uma extensão desse sentimento: desde a curadoria sensível das matérias-primas até o toque feito inteiramente à mão.
                 </p>
-                <p className="font-tahoma text-[15.5px] sm:text-[17px] text-[#3A312D]/95 font-normal leading-loose">
+                <p className="font-sans text-[15.5px] sm:text-[17.5px] text-[#2c2420] font-normal leading-[1.75]">
                   Cada presente aberto é o começo de uma nova história, e cada embalagem concluída carrega o peso de palavras que merecem durar. Criar com intenção é o meu propósito, unindo a sutileza das pequenas coisas à eternidade daquilo que permanece no coração.
                 </p>
               </div>
@@ -863,7 +932,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         <div className="max-w-3xl mx-auto text-center select-none">
           <Heart size={20} className="text-[#c96b71] mx-auto mb-4 animate-pulse" />
           <p className="font-parisienne text-2.5xl sm:text-3.5xl text-[#3A312D] leading-snug mb-3 max-w-xl mx-auto font-normal">
-            "Buscamos encantar detalhes, valorizando instantes felizes e cultivando laços eternos."
+            "Quatro ateliês, feito cada detalhe à mãos com um só propósito: transformar o momento em único, feliz e eterno."
           </p>
           <span className="text-[8.5px] font-bold uppercase tracking-[0.25em] text-[#6d5443]/60 font-poppins block">
             Padrão de Qualidade Vitrine Ateliê
@@ -908,48 +977,47 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
              </ul>
           </div>
           
-          <div className="md:w-1/4">
+          <div className="md:w-1/4 flex flex-col items-center md:items-end text-center md:text-right">
              <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">Suporte</h4>
-             <ul className="space-y-3 text-[11px] font-light text-[#6d5443]/80 font-tahoma">
+             <ul className="space-y-3 text-[11px] font-light text-[#6d5443]/80 font-tahoma mb-8">
                <li><button onClick={() => navigate('/rastreamento')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer">Rastreamento de Pedido</button></li>
                <li><a href="#" className="hover:text-[#cca062] transition-colors">Prazos e Entregas</a></li>
                <li><a href="#" className="hover:text-[#cca062] transition-colors">Trocas e devoluções</a></li>
              </ul>
-          </div>
-        </div>
-
-        {/* PAYMENT METHODS */}
-        <div className="max-w-7xl mx-auto border-t border-[#e8dcc8]/15 pt-8 pb-3 flex flex-col items-center justify-center select-none text-center">
-          <span className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">
-            Formas de pagamento
-          </span>
-          <div className="flex flex-row flex-wrap items-center justify-center gap-6">
-            {/* InfinitePay Badge */}
-            <div className="flex items-center gap-2 bg-[#faf8f5]/80 border border-[#e8dcc8]/35 py-1.5 px-3.5 rounded-xl hover:border-[#cca062]/20 transition-all duration-300">
-              <span className="text-[8px] font-bold tracking-[0.15em] text-[#6d5443]/50 uppercase font-sans">Powered by</span>
-              <span className="text-[11.5px] font-extrabold text-[#00E575] tracking-widest uppercase font-sans">InfinitePay</span>
-            </div>
-            
-            {/* Mercado Pago Badge */}
-            <div className="flex items-center gap-2.5 bg-[#faf8f5]/80 border border-[#e8dcc8]/35 py-1.5 px-3.5 rounded-xl hover:border-[#cca062]/20 transition-all duration-300">
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/2/29/Mercado_Pago_logo_auxiliar.svg" 
-                alt="Mercado Pago" 
-                className="h-3.5 object-contain" 
-                onError={(e) => {
-                  e.currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Mercado_Pago.png";
-                }}
-              />
-              <span className="text-[9.5px] font-bold text-[#00a6e0] tracking-widest uppercase font-poppins border-l border-[#e8dcc8]/60 pl-2.5">
-                Mercado Pago
-              </span>
-            </div>
+             
+             {/* Payment Methods - Right-aligned, horizontal on md+ and stacked on mobile */}
+             <div className="flex flex-col items-center md:items-end select-none">
+               <span className="text-[9px] font-bold tracking-[0.18em] text-[#3A312D] uppercase mb-3 font-poppins">
+                 Métodos de pagamento
+               </span>
+               <div className="flex flex-col sm:flex-row md:flex-row items-center gap-3">
+                 {/* InfinitePay Logo/Badge */}
+                 <div className="flex items-center gap-1.5 bg-[#faf8f5]/90 border border-[#e8dcc8]/45 px-2.5 py-1 rounded-lg h-[26px] max-h-[26px] transition-all duration-300 hover:border-[#cca062]/20 select-none">
+                   <svg viewBox="0 0 24 12" className="h-2.5 text-[#00E575] fill-current" xmlns="http://www.w3.org/2000/svg">
+                     <path d="M6 1c-1.5 0-3 1-4 2.5a4 4 0 000 5c1 1.5 2.5 2.5 4 2.5s3-1 4-2.5l2-3 2 3c1 1.5 2.5 2.5 4 2.5s3-1 4-2.5a4 4 0 000-5c-1-1.5-2.5-2.5-4-2.5s-3 1-4 2.5l-2 3-2-3c-1-1.5-2.5-2.5-4-2.5zm0 2c1 0 2 .5 2.5 1.5l2 3-2 3c-.5 1-1.5 1.5-2.5 1.5s-2-.5-2.5-1.5a2 2 0 010-2.5C4 4.5 5 4 6 4zm12 0c1 0 2 .5 2.5 1.5a2 2 0 010 2.5c-.5 1-1.5 1.5-2.5 1.5s-2-.5-2.5-1.5l-2-3 2-3c.5-1 1.5-1.5 2.5-1.5z"/>
+                   </svg>
+                   <span className="text-[11px] font-black tracking-tight text-[#3A312D] font-sans leading-none">InfinitePay</span>
+                 </div>
+                 
+                 {/* Mercado Pago Logo/Badge */}
+                 <div className="flex items-center bg-[#faf8f5]/90 border border-[#e8dcc8]/45 px-3 py-1 rounded-lg h-[26px] max-h-[26px] transition-all duration-300 hover:border-[#cca062]/20 select-none">
+                   <img 
+                     src="https://upload.wikimedia.org/wikipedia/commons/2/29/Mercado_Pago_logo_auxiliar.svg" 
+                     alt="Mercado Pago" 
+                     className="h-3 max-h-[12px] object-contain" 
+                     onError={(e) => {
+                       e.currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Mercado_Pago.png";
+                     }}
+                   />
+                 </div>
+               </div>
+             </div>
           </div>
         </div>
 
         {/* FINAL LEGAL FOOTER */}
-        <div className="max-w-7xl mx-auto border-t border-[#e8dcc8]/20 pt-6 mt-4 text-center">
-          <p className="font-sans text-[12px] sm:text-[13px] text-[#6d5443]/60 tracking-normal font-normal">
+        <div className="max-w-7xl mx-auto border-t border-[#e8dcc8]/20 pt-6 mt-6 text-center select-none">
+          <p className="font-sans text-[11px] sm:text-[12px] text-[#6d5443]/75 tracking-normal font-normal leading-relaxed">
             © 2025 Presentes Personalizados by Julia Aleixo. Todos os direitos reservados. CNPJ 63.348.579/0001-06
           </p>
         </div>
