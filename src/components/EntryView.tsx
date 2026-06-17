@@ -167,11 +167,6 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
   return (
     <div className="home-root bg-[#fffdfa] min-h-[100dvh] w-full relative font-tahoma text-[#6d5443] selection:bg-[#e8dcc8] selection:text-[#3A312D] overflow-x-hidden antialiased">
       
-      {/* TOPMOST BRAND BANNER */}
-      <div className="w-full bg-[#3A312D] text-[#cca062] py-2 text-center text-[9px] md:text-[10px] sm:letter-spacing-[0.2em] font-sans tracking-[0.2em] font-medium uppercase select-none border-b border-[#cca062]/10">
-        Acima de R$300,00 você ganha brinde exclusivo.
-      </div>
-
       {/* HUGE CENTERED LOGO */}
       <div className="w-full bg-white py-5 flex justify-center items-center border-b border-[#e8dcc8]/10">
         <div onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="cursor-pointer hover:opacity-90 transition-all duration-300">
@@ -253,8 +248,8 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </div>
 
       {/* BOUTIQUE ATELIERS VERTICAL CAPSULE CARDS */}
-      <section id="ateliers" className="scroll-mt-24 pb-16 px-6 max-w-6xl mx-auto w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 max-w-5xl mx-auto font-poppins">
+      <section id="ateliers" className="scroll-mt-24 pb-16 px-4 sm:px-5 max-w-7xl mx-auto w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-6xl mx-auto font-poppins">
           
           {/* Card 1: La Pallyra */}
           <div 
@@ -410,68 +405,68 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       <DelicateFlourish />
 
       {/* COMO FUNCIONA SESSÃO */}
-      <section className="scroll-mt-24 py-8 px-6 max-w-6xl mx-auto w-full">
-        <div className="text-center mb-10">
-          <h2 className="font-playfair text-[#3A312D] text-3xl sm:text-[38px] leading-tight font-semibold tracking-wide">
+      <section className="scroll-mt-24 py-4 px-4 sm:px-5 max-w-7xl mx-auto w-full">
+        <div className="text-center mb-6">
+          <h2 className="font-playfair text-[#3A312D] text-2xl sm:text-[32px] leading-tight font-semibold tracking-wide">
             Como funciona
           </h2>
         </div>
 
         {/* 4 HORIZONTAL LOGICAL STEP CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-2">
           
           {/* STEP 1 */}
-          <div className="text-center group p-6 bg-white border border-[#e8dcc8]/30 rounded-[28px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-playfair text-4xl sm:text-5xl font-medium text-[#cca062] mb-2">
+          <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
+            <span className="font-playfair text-3xl font-medium text-[#cca062] mb-1">
               01
             </span>
-            <span className="text-[8.5px] font-bold tracking-[0.25em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#cca062]/20 pb-1.5 w-10">Passo</span>
-            <h4 className="font-poppins font-semibold text-xs uppercase tracking-wider text-[#3A312D] mb-2">
+            <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
+            <h4 className="font-poppins font-semibold text-[11px] uppercase tracking-wider text-[#3A312D] mb-1.5">
               Escolha o Ateliê
             </h4>
-            <p className="text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
+            <p className="text-[10.5px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
               Navegue pelas boutiques e selecione a joia de cetim, papelaria fina ou enxoval que falará ao coração.
             </p>
           </div>
 
           {/* STEP 2 */}
-          <div className="text-center group p-6 bg-white border border-[#e8dcc8]/30 rounded-[28px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-playfair text-4xl sm:text-5xl font-medium text-[#cca062] mb-2">
+          <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
+            <span className="font-playfair text-3xl font-medium text-[#cca062] mb-1">
               02
             </span>
-            <span className="text-[8.5px] font-bold tracking-[0.25em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#cca062]/20 pb-1.5 w-10">Passo</span>
-            <h4 className="font-poppins font-semibold text-xs uppercase tracking-wider text-[#3A312D] mb-2">
+            <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
+            <h4 className="font-poppins font-semibold text-[11px] uppercase tracking-wider text-[#3A312D] mb-1.5">
               Monte Seu Kit
             </h4>
-            <p className="text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
+            <p className="text-[10.5px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
               Adicione mimos complementares artesanais de nossos ateliês, elegendo a caixa clássica ideal.
             </p>
           </div>
 
           {/* STEP 3 */}
-          <div className="text-center group p-6 bg-white border border-[#e8dcc8]/30 rounded-[28px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-playfair text-4xl sm:text-5xl font-medium text-[#cca062] mb-2">
+          <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
+            <span className="font-playfair text-3xl font-medium text-[#cca062] mb-1">
               03
             </span>
-            <span className="text-[8.5px] font-bold tracking-[0.25em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#cca062]/20 pb-1.5 w-10">Passo</span>
-            <h4 className="font-poppins font-semibold text-xs uppercase tracking-wider text-[#3A312D] mb-2">
+            <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
+            <h4 className="font-poppins font-semibold text-[11px] uppercase tracking-wider text-[#3A312D] mb-1.5">
               Personalize
             </h4>
-            <p className="text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
+            <p className="text-[10.5px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
               Escreva palavras afetivas que serão gravadas em papel nobre para o encanto final.
             </p>
           </div>
 
           {/* STEP 4 */}
-          <div className="text-center group p-6 bg-white border border-[#e8dcc8]/30 rounded-[28px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-playfair text-4xl sm:text-5xl font-medium text-[#cca062] mb-2">
+          <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
+            <span className="font-playfair text-3xl font-medium text-[#cca062] mb-1">
               04
             </span>
-            <span className="text-[8.5px] font-bold tracking-[0.25em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#cca062]/20 pb-1.5 w-10">Passo</span>
-            <h4 className="font-poppins font-semibold text-xs uppercase tracking-wider text-[#3A312D] mb-2">
+            <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
+            <h4 className="font-poppins font-semibold text-[11px] uppercase tracking-wider text-[#3A312D] mb-1.5">
               Envio Perfumado
             </h4>
-            <p className="text-[11px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
+            <p className="text-[10.5px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
               Finalizamos a montagem à mão com as mais belas essências e entregamos com carinho.
             </p>
           </div>
@@ -482,17 +477,17 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       <DelicateFlourish />
 
       {/* KIT PRONTOS SECTION */}
-      <section id="kits" className="scroll-mt-24 py-8 bg-[#fffbf7]/70 px-6 w-full">
+      <section id="kits" className="scroll-mt-24 py-8 bg-[#fffbf7]/70 px-4 sm:px-5 w-full">
         <div className="max-w-7xl mx-auto w-full">
           {/* TITLE */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="font-playfair text-[#3A312D] text-3xl sm:text-[38px] leading-tight font-semibold tracking-wide">
               Kit Prontos
             </h2>
           </div>
 
           {/* BEAUTIFUL ROUNDED CARDS RENDER */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-6xl mx-auto mb-8">
             {kits.length > 0 ? (
               kits.map((kit) => (
                 <div 
@@ -582,19 +577,17 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </section>
 
       {/* KITS EXCLUSIVOS */}
-      <section id="kits" className="scroll-mt-24 py-16 bg-[#faf8f5]/80 border-y border-[#e8dcc8]/15 px-6">
+      <section id="kits" className="scroll-mt-24 py-12 bg-[#faf8f5]/80 border-y border-[#e8dcc8]/15 px-4 sm:px-5">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Prontos para Presentear</span>
+          <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-playfair font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Kits Únicos Selecionados</h2>
             <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
-            <p className="font-hello-olivia text-base text-[#cca062] lowercase mb-1 block">detalhes prontos para encantar</p>
             <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
               Combinações primorosas de produtos embalados com afeto, prontos para encantar em datas históricas.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto px-2">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-7xl mx-auto px-2">
             {kits.length === 0 ? (
               <p className="col-span-full text-center text-xs uppercase font-bold tracking-widest text-[#cca062]/60 py-12">
                 Nenhum kit disponível no momento.
@@ -615,14 +608,14 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </section>
       
       {/* MONTE SEU KIT EXPLAINER (OBJECTIVE COMMERCIAL BANNER) */}
-      <section className="my-16 max-w-5xl mx-auto px-6">
+      <section className="my-12 max-w-6xl mx-auto px-4 sm:px-5">
         <div className="bg-[#fffdfa] border-2 border-[#cca062]/25 rounded-[32px] p-6 sm:p-10 shadow-[0_12px_40px_rgba(204,160,98,0.06)] flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-32 h-32 bg-[#cca062]/3 rounded-br-full blur-md pointer-events-none" />
          
           <div className="max-w-xl text-center lg:text-left relative z-10">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#cca062]/15 mb-3.5 border border-[#cca062]/10">
               <Sparkles size={10} className="text-[#cca062]" />
-              <span className="text-[8px] font-bold uppercase tracking-widest text-[#cca062] font-poppins">Customização Avançada</span>
+              <span className="text-[8px] font-bold uppercase tracking-widest text-[#cca062] font-poppins">Amor Personalizado</span>
             </div>
             <h3 className="text-xl sm:text-2xl font-playfair font-medium text-[#3A312D] tracking-tight mb-2">
               Monte o Seu Próprio Kit de Afeto
@@ -648,25 +641,23 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                onClick={() => navigate('/kit-meukit')}
                className="h-[46px] px-8 rounded-full bg-[#3A312D] hover:bg-[#cca062] text-[#fffdfa] hover:text-[#3A312D] border border-transparent hover:border-[#cca062]/20 text-[11px] font-semibold uppercase tracking-[0.14em] shadow-3xs hover:shadow-xs transition-all duration-300 cursor-pointer inline-flex items-center gap-2 font-poppins"
             >
-              Iniciar Construtor <ArrowRight size={12} strokeWidth={2.5} />
+              CRIAR MEU KIT <ArrowRight size={12} strokeWidth={2.5} />
             </button>
           </div>
         </div>
       </section>
 
       {/* PRODUTOS (VITRINE DIRETA DE PRODUTOS PREMIUM COM MAPEAMENTO DE ATELIÊS) */}
-      <section id="produtos" className="scroll-mt-24 py-16 px-6 max-w-7xl mx-auto">
+      <section id="produtos" className="scroll-mt-24 py-12 px-4 sm:px-5 max-w-[1440px] mx-auto">
         <div className="text-center mb-10">
-          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Curadoria Sensível</span>
-          <h2 className="text-2xl sm:text-3xl font-playfair font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Vitrine de Destaques</h2>
+          <h2 className="text-2xl sm:text-3xl font-playfair font-medium text-[#3A312D] tracking-tight mt-1 mb-2">Vitrine de Destaques</h2>
           <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
-          <p className="font-hello-olivia text-base text-[#cca062] lowercase mb-1 block">mimos e afetos para sua escolha</p>
           <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
             Navegue pelos produtos mais queridos de nossas marcas e monte um acervo de memórias marcantes.
           </p>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 max-w-6xl mx-auto px-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 max-w-7xl mx-auto px-2">
           {featuredProducts.map((prod) => {
             const targetRoute = prod.company === 'pallyra' ? '/lapallyra' 
                               : prod.company === 'guennita' ? '/comamorguennita' 
@@ -686,19 +677,17 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </section>
 
       {/* FEEDBACK QUE AMAMOS (EDITORIAL SOCIAL PROOF WITH HANDWRITTEN ACCENTS) */}
-      <section id="feedbacks" className="scroll-mt-24 py-16 bg-white border-t border-[#e8dcc8]/20 px-6">
+      <section id="feedbacks" className="scroll-mt-24 py-12 bg-white border-t border-[#e8dcc8]/20 px-4 sm:px-5">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Depoimentos Reais</span>
+          <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-playfair font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Feedback que Amamos</h2>
             <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
-            <p className="font-hello-olivia text-base text-[#cca062] lowercase mb-1 block">frases de carinho e afeto</p>
             <p className="text-xs text-[#6d5443]/70 font-light max-w-sm mx-auto leading-relaxed">
               Mensagens espontâneas enviadas por clientes que receberam um pedaço do nosso coração.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto">
             {/* Feedback items */}
             <div className="bg-[#faf8f5]/60 border border-[#e8dcc8]/30 rounded-[22px] p-6.5 hover:shadow-[0_8px_20px_rgba(109,84,67,0.03)] hover:border-[#cca062]/30 transition-all duration-300">
               <div className="flex items-center gap-1 text-[#cca062] mb-3">
@@ -748,11 +737,11 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       <DelicateFlourish />
 
       {/* SEÇÃO EDITORIAL: CONEXÃO COM A MARCA / POR TRÁS DE CADA DETALHE (POSICIONADO COMO ANTEPENÚLTIMO BLOCO DA HOME) */}
-      <section id="sobre-julia" className="scroll-mt-24 py-20 lg:py-28 bg-gradient-to-b from-[#fffdfa] to-[#faf8f5] px-6 relative overflow-hidden border-t sm:border-b border-[#e8dcc8]/20">
+      <section id="sobre-julia" className="scroll-mt-24 py-16 lg:py-20 bg-gradient-to-b from-[#fffdfa] to-[#faf8f5] px-4 sm:px-5 relative overflow-hidden border-t sm:border-b border-[#e8dcc8]/20">
         {/* Soft elegant background decorations */}
         <div className="absolute -bottom-10 left-1/3 w-72 h-72 rounded-full bg-[#cca062]/3 blur-[120px] pointer-events-none" />
         
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
             
             {/* LADO ESQUERDO: Portrait Editorial Photograph */}
@@ -772,11 +761,6 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
             {/* LADO DIREITO: Emotional Narrative */}
             <div className="lg:col-span-7 flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
-              {/* Over title */}
-              <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-[#cca062] font-poppins block mb-3.5">
-                Nossa Essência
-              </span>
-              
               {/* Title */}
               <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-serif font-light text-[#3A312D] tracking-tight leading-[1.15] mb-6">
                 Por trás de cada detalhe
