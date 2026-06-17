@@ -7,6 +7,12 @@
   font-display: block;
 }
 
+@font-face {
+  font-family: 'Hello Olivia';
+  src: url('https://db.onlinewebfonts.com/t/2af94cc13b306b99482ca2e6cbe5ec7f.woff2') format('woff2');
+  font-display: swap;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -14,16 +20,19 @@ html {
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-poppins: "Poppins", "Inter", sans-serif;
-  --font-serif: "Cormorant Garamond", "Playfair Display", "Georgia", serif;
-  --font-cursive: "Great Vibes", cursive;
-  --font-hand: "Great Vibes", cursive;
-  --font-atelier: "Great Vibes", cursive;
+  --font-serif: "Playfair Display", "Cormorant Garamond", "Georgia", serif;
+  --font-playfair: "Playfair Display", serif;
+  --font-hello-olivia: "Hello Olivia", "Sofia Carolyn", "Parisienne", cursive;
+  --font-cursive: "Hello Olivia", "Sofia Carolyn", "Parisienne", cursive;
+  --font-hand: "Hello Olivia", "Sofia Carolyn", cursive;
+  --font-atelier: "Hello Olivia", "Sofia Carolyn", cursive;
   --font-elegant: "Pinyon Script", cursive;
   --font-sofia: "Sofia Carolyn", cursive;
   --font-imperial: "Imperial Script", cursive;
   --font-parisienne: "Parisienne", cursive;
   --font-allura: "Allura", cursive;
   --font-number: "Tahoma", sans-serif;
+  --font-tahoma: "Tahoma", sans-serif;
   --color-gold: #C6A664;
   --color-gold-deep: #B39254;
   --color-charcoal: #161616;
@@ -37,21 +46,27 @@ html {
   .font-poppins {
     font-family: var(--font-poppins);
   }
+  .font-playfair {
+    font-family: var(--font-playfair);
+  }
+  .font-hello-olivia {
+    font-family: var(--font-hello-olivia);
+  }
   .font-fancy {
-    font-family: var(--font-hand);
+    font-family: var(--font-hello-olivia);
     font-weight: 400;
   }
   .font-beauty {
-    font-family: var(--font-atelier);
+    font-family: var(--font-hello-olivia);
   }
   .font-signature {
-    font-family: var(--font-imperial);
+    font-family: var(--font-hello-olivia);
   }
   .font-parisienne {
-    font-family: var(--font-parisienne);
+    font-family: var(--font-hello-olivia);
   }
   .font-allura {
-    font-family: var(--font-allura);
+    font-family: var(--font-hello-olivia);
   }
   .font-cormorant-italic {
     font-family: var(--font-serif);
