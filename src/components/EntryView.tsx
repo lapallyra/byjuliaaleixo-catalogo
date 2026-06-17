@@ -771,10 +771,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
               {/* Text content in Tahoma */}
               <div className="space-y-4 max-w-xl">
-                <p className="font-tahoma text-[15px] sm:text-[16px] text-[#3a312d]/75 font-light leading-relaxed">
+                <p className="font-tahoma text-[15.5px] sm:text-[17px] text-[#3A312D]/95 font-normal leading-loose">
                   Acredito que os momentos mais valiosos da vida não são medidos pelo tempo, mas pelo afeto que neles depositamos. No ateliê, cada detalhe é desenhado para ser uma extensão desse sentimento: desde a curadoria sensível das matérias-primas até o toque feito inteiramente à mão.
                 </p>
-                <p className="font-tahoma text-[15px] sm:text-[16px] text-[#3a312d]/75 font-light leading-relaxed">
+                <p className="font-tahoma text-[15.5px] sm:text-[17px] text-[#3A312D]/95 font-normal leading-loose">
                   Cada presente aberto é o começo de uma nova história, e cada embalagem concluída carrega o peso de palavras que merecem durar. Criar com intenção é o meu propósito, unindo a sutileza das pequenas coisas à eternidade daquilo que permanece no coração.
                 </p>
               </div>
@@ -918,30 +918,40 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto border-t border-[#e8dcc8]/20 pt-6.5 flex flex-col lg:flex-row justify-between items-center gap-5 text-[8.5px] text-[#6d5443]/65 font-semibold uppercase tracking-widest leading-loose">
-          <p className="text-center lg:text-left font-sans">
-            © {new Date().getFullYear()} Presentes Personalizados by Julia Aleixo. Todos os direitos reservados. CNPJ {config.store_cnpj || "Sob Consulta"}.
-          </p>
-          
-          <div className="flex items-center gap-2 text-xs">
-            <Package size={11} className="text-[#cca062]" /> 
-            <span className="font-poppins font-semibold tracking-widest text-[#3A312D] text-[8.5px] uppercase">Artesanato 100% Seguro</span>
+        {/* PAYMENT METHODS */}
+        <div className="max-w-7xl mx-auto border-t border-[#e8dcc8]/15 pt-8 pb-3 flex flex-col items-center justify-center select-none text-center">
+          <span className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">
+            Formas de pagamento
+          </span>
+          <div className="flex flex-row flex-wrap items-center justify-center gap-6">
+            {/* InfinitePay Badge */}
+            <div className="flex items-center gap-2 bg-[#faf8f5]/80 border border-[#e8dcc8]/35 py-1.5 px-3.5 rounded-xl hover:border-[#cca062]/20 transition-all duration-300">
+              <span className="text-[8px] font-bold tracking-[0.15em] text-[#6d5443]/50 uppercase font-sans">Powered by</span>
+              <span className="text-[11.5px] font-extrabold text-[#00E575] tracking-widest uppercase font-sans">InfinitePay</span>
+            </div>
+            
+            {/* Mercado Pago Badge */}
+            <div className="flex items-center gap-2.5 bg-[#faf8f5]/80 border border-[#e8dcc8]/35 py-1.5 px-3.5 rounded-xl hover:border-[#cca062]/20 transition-all duration-300">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/2/29/Mercado_Pago_logo_auxiliar.svg" 
+                alt="Mercado Pago" 
+                className="h-3.5 object-contain" 
+                onError={(e) => {
+                  e.currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Mercado_Pago.png";
+                }}
+              />
+              <span className="text-[9.5px] font-bold text-[#00a6e0] tracking-widest uppercase font-poppins border-l border-[#e8dcc8]/60 pl-2.5">
+                Mercado Pago
+              </span>
+            </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-3 bg-[#faf8f5]/60 border border-[#e8dcc8]/40 py-1 px-3 rounded-xl scale-95 origin-center">
-             <img 
-               src="https://upload.wikimedia.org/wikipedia/commons/2/29/Mercado_Pago_logo_auxiliar.svg" 
-               alt="Mercado Pago" 
-               className="h-3 object-contain" 
-               onError={(e) => {
-                 e.currentTarget.src = "https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_Mercado_Pago.png";
-               }}
-             />
-             <div className="flex flex-col items-start leading-tight border-l border-[#e8dcc8]/60 pl-2">
-               <span className="text-[6px] tracking-widest font-semibold text-[#6d5443]/50 uppercase">Processado por</span>
-               <span className="text-[7px] font-extrabold text-[#00a6e0] tracking-widest uppercase font-poppins">Mercado Pago</span>
-             </div>
-          </div>
+        {/* FINAL LEGAL FOOTER */}
+        <div className="max-w-7xl mx-auto border-t border-[#e8dcc8]/20 pt-6 mt-4 text-center">
+          <p className="font-sans text-[12px] sm:text-[13px] text-[#6d5443]/60 tracking-normal font-normal">
+            © 2025 Presentes Personalizados by Julia Aleixo. Todos os direitos reservados. CNPJ 63.348.579/0001-06
+          </p>
         </div>
       </footer>
       
