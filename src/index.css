@@ -1,38 +1,26 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Great+Vibes&family=Imperial+Script&family=Pinyon+Script&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@300;400;500;600;700;800&family=Parisienne&family=Allura&display=swap');
-
-@font-face {
-  font-family: 'Sofia Carolyn';
-  src: url('https://fonts.cdnfonts.com/s/72856/SofiaCarolyn.woff') format('woff');
-  font-display: block;
-}
-
-@font-face {
-  font-family: 'Hello Olivia';
-  src: url('https://db.onlinewebfonts.com/t/2af94cc13b306b99482ca2e6cbe5ec7f.woff2') format('woff2');
-  font-display: swap;
-}
 
 html {
   scroll-behavior: smooth;
 }
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-poppins: "Poppins", "Inter", sans-serif;
-  --font-serif: "Playfair Display", "Cormorant Garamond", "Georgia", serif;
-  --font-playfair: "Playfair Display", serif;
-  --font-hello-olivia: "Hello Olivia", "Sofia Carolyn", "Parisienne", cursive;
-  --font-cursive: "Hello Olivia", "Sofia Carolyn", "Parisienne", cursive;
-  --font-hand: "Hello Olivia", "Sofia Carolyn", cursive;
-  --font-atelier: "Hello Olivia", "Sofia Carolyn", cursive;
-  --font-elegant: "Pinyon Script", cursive;
-  --font-sofia: "Sofia Carolyn", cursive;
-  --font-imperial: "Imperial Script", cursive;
+  --font-sans: "DM Sans", sans-serif;
+  --font-poppins: "DM Sans", sans-serif;
+  --font-serif: "Parisienne", cursive;
+  --font-playfair: "Parisienne", cursive;
+  --font-hello-olivia: "Parisienne", cursive;
+  --font-cursive: "Parisienne", cursive;
+  --font-hand: "Parisienne", cursive;
+  --font-atelier: "Mea Culpa", cursive;
+  --font-elegant: "Parisienne", cursive;
+  --font-sofia: "Parisienne", cursive;
+  --font-imperial: "Parisienne", cursive;
   --font-parisienne: "Parisienne", cursive;
-  --font-allura: "Allura", cursive;
-  --font-number: "Tahoma", sans-serif;
-  --font-tahoma: "Tahoma", sans-serif;
+  --font-allura: "Parisienne", cursive;
+  --font-mea-culpa: "Mea Culpa", cursive;
+  --font-number: "DM Sans", sans-serif;
+  --font-tahoma: "DM Sans", sans-serif;
   --color-gold: #C6A664;
   --color-gold-deep: #B39254;
   --color-charcoal: #161616;
@@ -53,27 +41,30 @@ html {
     font-family: var(--font-hello-olivia);
   }
   .font-fancy {
-    font-family: var(--font-hello-olivia);
+    font-family: var(--font-parisienne);
     font-weight: 400;
   }
   .font-beauty {
-    font-family: var(--font-hello-olivia);
+    font-family: var(--font-parisienne);
   }
   .font-signature {
-    font-family: var(--font-hello-olivia);
+    font-family: var(--font-parisienne);
   }
   .font-parisienne {
-    font-family: var(--font-hello-olivia);
+    font-family: var(--font-parisienne);
+  }
+  .font-mea-culpa {
+    font-family: var(--font-mea-culpa);
   }
   .font-allura {
-    font-family: var(--font-hello-olivia);
+    font-family: var(--font-parisienne);
   }
   .font-cormorant-italic {
-    font-family: var(--font-serif);
+    font-family: var(--font-parisienne);
     font-style: italic;
   }
   .font-tahoma {
-    font-family: "Tahoma", sans-serif;
+    font-family: var(--font-tahoma);
   }
   .font-number {
     font-family: var(--font-number);
@@ -101,8 +92,8 @@ html {
 
 @layer base {
   .home-root {
-    --font-sans: "Tahoma", "Inter", "Verdana", ui-sans-serif, system-ui, sans-serif;
-    --font-poppins: "Poppins", "Inter", sans-serif;
+    --font-sans: "DM Sans", sans-serif;
+    --font-poppins: "DM Sans", sans-serif;
   }
 
   .home-root .animate-gentle-float {
@@ -119,8 +110,8 @@ html {
   }
 
   .vitrine-root {
-    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-    --font-poppins: "Poppins", sans-serif;
+    --font-sans: "DM Sans", sans-serif;
+    --font-poppins: "DM Sans", sans-serif;
   }
 
   html, body {

@@ -242,7 +242,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
       {/* BEAUTIFUL ROMANTIC CENTRAL TITLE */}
       <div className="text-center py-10 md:py-12 px-4 animate-fade-in bg-gradient-to-b from-[#fffdfa] to-white select-none">
-        <h2 className="font-playfair text-2.5xl sm:text-3.5xl md:text-[38px] text-[#3A312D] font-medium leading-tight tracking-wide max-w-4xl mx-auto px-4">
+        <h2 className="font-parisienne text-3xl sm:text-4xl md:text-[45px] text-[#3A312D] font-normal leading-tight tracking-normal max-w-4xl mx-auto px-4">
           Encontre o presente perfeito para o seu momento
         </h2>
       </div>
@@ -269,8 +269,8 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 {/* Active Hover Cover */}
                 <div className="absolute inset-2 sm:inset-2.5 rounded-t-full rounded-b-[16px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/90 backdrop-blur-[4px] select-none">
                   <span className="font-poppins font-semibold tracking-[0.2em] text-[8px] text-[#cca062] uppercase mb-2">Ateliê de Cartonagem</span>
-                  <h4 className="font-serif font-light text-xl mb-1 text-white">La Pallyra</h4>
-                  <p className="font-hello-olivia text-base text-[#e8dcc8] mb-2">Papelaria de Afeto</p>
+                  <h4 className="font-mea-culpa text-3xl mb-1 text-white font-normal">La Pallyra</h4>
+                  <p className="font-parisienne text-base text-[#e8dcc8] mb-2 font-normal">Papelaria de Afeto</p>
                   <p className="text-[10px] tracking-wide leading-relaxed font-light line-clamp-3 max-w-[170px] opacity-90 font-sans">
                     Agendas, planners e mimos de papelaria fina feitos inteiramente à mão com materiais nobres.
                   </p>
@@ -280,7 +280,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 </div>
               </div>
             </div>
-            <h3 className="font-playfair text-lg sm:text-xl font-medium tracking-wide text-[#3A312D] text-center mt-3 block group-hover:text-[#cca062] transition-colors duration-300">
+            <h3 className="font-mea-culpa text-3xl sm:text-4xl font-normal text-[#3A312D] text-center mt-2 block group-hover:text-[#cca062] transition-colors duration-300">
               La Pallyra
             </h3>
             <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
@@ -306,8 +306,8 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 {/* Active Hover Cover */}
                 <div className="absolute inset-2 sm:inset-2.5 rounded-t-full rounded-b-[16px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/90 backdrop-blur-[4px] select-none font-sans">
                   <span className="font-poppins font-semibold tracking-[0.2em] text-[8px] text-[#d4bda1] uppercase mb-2">Ateliê de Flores</span>
-                  <h4 className="font-serif font-light text-xl mb-1 text-white font-serif">com amor, Guennita</h4>
-                  <p className="font-hello-olivia text-base text-[#e8dcc8] mb-2">Flores de Cetim</p>
+                  <h4 className="font-mea-culpa text-3xl mb-1 text-white font-normal">com amor, Guennita</h4>
+                  <p className="font-parisienne text-base text-[#e8dcc8] mb-2 font-normal">Flores de Cetim</p>
                   <p className="text-[10px] tracking-wide leading-relaxed font-light line-clamp-3 max-w-[170px] opacity-90 font-sans">
                     Rosas eternas tecidas pétala por pétala com acabamento impecável de alta costura.
                   </p>
@@ -317,7 +317,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 </div>
               </div>
             </div>
-            <h3 className="font-playfair text-lg sm:text-xl font-medium tracking-wide text-[#3A312D] text-center mt-3 block group-hover:text-[#5b2122] transition-colors duration-300">
+            <h3 className="font-mea-culpa text-3xl sm:text-4xl font-normal text-[#3A312D] text-center mt-2 block group-hover:text-[#5b2122] transition-colors duration-300">
               com amor, Guennita
             </h3>
             <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
@@ -343,8 +343,8 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 {/* Active Hover Cover */}
                 <div className="absolute inset-2 sm:inset-2.5 rounded-t-full rounded-b-[16px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/90 backdrop-blur-[4px] select-none font-sans">
                   <span className="font-poppins font-semibold tracking-[0.2em] text-[8px] text-[#c96b71] uppercase mb-2">Ateliê de Lembranças</span>
-                  <h4 className="font-serif font-light text-xl mb-1 text-white font-serif">Mimada Sim</h4>
-                  <p className="font-hello-olivia text-base text-[#e8dcc8] mb-2">Mimos Premium</p>
+                  <h4 className="font-mea-culpa text-3xl mb-1 text-white font-normal">Mimada Sim</h4>
+                  <p className="font-parisienne text-base text-[#e8dcc8] mb-2 font-normal">Mimos Premium</p>
                   <p className="text-[10px] tracking-wide leading-relaxed font-light line-clamp-3 max-w-[170px] opacity-90 font-sans">
                     Lembranças repletas de criatividade e alma para celebrações inesquecíveis e refinadas.
                   </p>
@@ -354,7 +354,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 </div>
               </div>
             </div>
-            <h3 className="font-playfair text-lg sm:text-xl font-medium tracking-wide text-[#3A312D] text-center mt-3 block group-hover:text-[#d94b5f] transition-colors duration-300">
+            <h3 className="font-mea-culpa text-3xl sm:text-4xl font-normal text-[#3A312D] text-center mt-2 block group-hover:text-[#d94b5f] transition-colors duration-300">
               Mimada Sim
             </h3>
             <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
@@ -378,10 +378,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/20 via-transparent to-transparent pointer-events-none rounded-t-full" />
                 
                 {/* Active Hover Cover */}
-                <div className="absolute inset-2 sm:inset-2.5 rounded-t-full rounded-b-[16px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/90 backdrop-blur-[4px] select-none font-sans font-sans">
+                <div className="absolute inset-2 sm:inset-2.5 rounded-t-full rounded-b-[16px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-center items-center p-5 text-center text-white bg-[#3A312D]/90 backdrop-blur-[4px] select-none font-sans">
                   <span className="font-poppins font-semibold tracking-[0.2em] text-[8px] text-[#cca062] uppercase mb-2">Ateliê do Bebê</span>
-                  <h4 className="font-serif font-light text-xl mb-1 text-white font-serif">Tutty Mimo</h4>
-                  <p className="font-hello-olivia text-base text-[#e8dcc8] mb-2">Maternidade & Infância</p>
+                  <h4 className="font-mea-culpa text-3xl mb-1 text-white font-normal">Tutty Mimo</h4>
+                  <p className="font-parisienne text-base text-[#e8dcc8] mb-2 font-normal">Maternidade & Infância</p>
                   <p className="text-[10px] tracking-wide leading-relaxed font-light line-clamp-3 max-w-[170px] opacity-90 font-sans">
                     Enxoval de bebê macio em algodão nobre com costura acolhedora e acabamento primoroso.
                   </p>
@@ -391,7 +391,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 </div>
               </div>
             </div>
-            <h3 className="font-playfair text-lg sm:text-xl font-medium tracking-wide text-[#3A312D] text-center mt-3 block group-hover:text-[#d4bda1] transition-colors duration-300">
+            <h3 className="font-mea-culpa text-3xl sm:text-4xl font-normal text-[#3A312D] text-center mt-2 block group-hover:text-[#d4bda1] transition-colors duration-300">
               Tutty Mimo
             </h3>
             <p className="text-[10px] tracking-[0.14em] text-[#cca062] uppercase font-poppins font-medium text-center mt-1 group-hover:text-[#3A312D]/80 transition-colors duration-300">
@@ -407,7 +407,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       {/* COMO FUNCIONA SESSÃO */}
       <section className="scroll-mt-24 py-4 px-4 sm:px-5 max-w-7xl mx-auto w-full">
         <div className="text-center mb-6">
-          <h2 className="font-playfair text-[#3A312D] text-2xl sm:text-[32px] leading-tight font-semibold tracking-wide">
+          <h2 className="font-parisienne text-[#3A312D] text-3xl sm:text-[42px] leading-tight font-normal tracking-normal">
             Como funciona
           </h2>
         </div>
@@ -417,7 +417,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           
           {/* STEP 1 */}
           <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-playfair text-3xl font-medium text-[#cca062] mb-1">
+            <span className="font-poppins text-3xl font-medium text-[#cca062] mb-1">
               01
             </span>
             <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
@@ -431,7 +431,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
           {/* STEP 2 */}
           <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-playfair text-3xl font-medium text-[#cca062] mb-1">
+            <span className="font-poppins text-3xl font-medium text-[#cca062] mb-1">
               02
             </span>
             <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
@@ -445,7 +445,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
           {/* STEP 3 */}
           <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-playfair text-3xl font-medium text-[#cca062] mb-1">
+            <span className="font-poppins text-3xl font-medium text-[#cca062] mb-1">
               03
             </span>
             <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
@@ -459,7 +459,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
           {/* STEP 4 */}
           <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-playfair text-3xl font-medium text-[#cca062] mb-1">
+            <span className="font-poppins text-3xl font-medium text-[#cca062] mb-1">
               04
             </span>
             <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
@@ -481,7 +481,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         <div className="max-w-7xl mx-auto w-full">
           {/* TITLE */}
           <div className="text-center mb-8">
-            <h2 className="font-playfair text-[#3A312D] text-3xl sm:text-[38px] leading-tight font-semibold tracking-wide">
+            <h2 className="font-parisienne text-[#3A312D] text-3xl sm:text-[44px] leading-tight font-normal tracking-normal">
               Kit Prontos
             </h2>
           </div>
@@ -580,7 +580,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       <section id="kits" className="scroll-mt-24 py-12 bg-[#faf8f5]/80 border-y border-[#e8dcc8]/15 px-4 sm:px-5">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-playfair font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Kits Únicos Selecionados</h2>
+            <h2 className="text-3xl sm:text-[42px] font-parisienne font-normal text-[#3A312D] tracking-normal mt-1 mb-2">Kits Únicos Selecionados</h2>
             <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
             <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
               Combinações primorosas de produtos embalados com afeto, prontos para encantar em datas históricas.
@@ -611,13 +611,13 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       <section className="my-12 max-w-6xl mx-auto px-4 sm:px-5">
         <div className="bg-[#fffdfa] border-2 border-[#cca062]/25 rounded-[32px] p-6 sm:p-10 shadow-[0_12px_40px_rgba(204,160,98,0.06)] flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-32 h-32 bg-[#cca062]/3 rounded-br-full blur-md pointer-events-none" />
-         
+          
           <div className="max-w-xl text-center lg:text-left relative z-10">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#cca062]/15 mb-3.5 border border-[#cca062]/10">
               <Sparkles size={10} className="text-[#cca062]" />
               <span className="text-[8px] font-bold uppercase tracking-widest text-[#cca062] font-poppins">Amor Personalizado</span>
             </div>
-            <h3 className="text-xl sm:text-2xl font-playfair font-medium text-[#3A312D] tracking-tight mb-2">
+            <h3 className="text-2xl sm:text-[32px] font-parisienne font-normal text-[#3A312D] tracking-normal mb-2 leading-tight">
               Monte o Seu Próprio Kit de Afeto
             </h3>
             <p className="text-[11px] sm:text-xs text-[#6d5443]/85 leading-relaxed font-light mb-4">
@@ -650,7 +650,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       {/* PRODUTOS (VITRINE DIRETA DE PRODUTOS PREMIUM COM MAPEAMENTO DE ATELIÊS) */}
       <section id="produtos" className="scroll-mt-24 py-12 px-4 sm:px-5 max-w-[1440px] mx-auto">
         <div className="text-center mb-10">
-          <h2 className="text-2xl sm:text-3xl font-playfair font-medium text-[#3A312D] tracking-tight mt-1 mb-2">Vitrine de Destaques</h2>
+          <h2 className="text-3xl sm:text-[42px] font-parisienne font-normal text-[#3A312D] tracking-normal mt-1 mb-2">Vitrine de Destaques</h2>
           <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
           <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
             Navegue pelos produtos mais queridos de nossas marcas e monte um acervo de memórias marcantes.
@@ -680,7 +680,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       <section id="feedbacks" className="scroll-mt-24 py-12 bg-white border-t border-[#e8dcc8]/20 px-4 sm:px-5">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-playfair font-semibold text-[#3A312D] tracking-tight mt-1 mb-2">Feedback que Amamos</h2>
+            <h2 className="text-3xl sm:text-[42px] font-parisienne font-normal text-[#3A312D] tracking-normal mt-1 mb-2">Feedback que Amamos</h2>
             <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
             <p className="text-xs text-[#6d5443]/70 font-light max-w-sm mx-auto leading-relaxed">
               Mensagens espontâneas enviadas por clientes que receberam um pedaço do nosso coração.
@@ -762,7 +762,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             {/* LADO DIREITO: Emotional Narrative */}
             <div className="lg:col-span-7 flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
               {/* Title */}
-              <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-serif font-light text-[#3A312D] tracking-tight leading-[1.15] mb-6">
+              <h2 className="text-3.5xl sm:text-4.5xl lg:text-[46px] font-parisienne font-normal text-[#3A312D] tracking-normal leading-[1.15] mb-6">
                 Por trás de cada detalhe
               </h2>
               
@@ -781,10 +781,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
               {/* Signature block */}
               <div className="mt-8 mb-8 flex flex-col items-center lg:items-start gap-1 select-none">
-                <span className="font-hello-olivia text-[#cca062] text-[28px] lg:text-[34px] leading-tight font-normal">
+                <span className="font-parisienne text-[#cca062] text-[28px] lg:text-[34px] leading-tight font-normal">
                   Com carinho,
                 </span>
-                <span className="font-hello-olivia text-[#3A312D] text-[34px] lg:text-[40px] leading-none font-normal -mt-1 lg:pl-4">
+                <span className="font-parisienne text-[#3A312D] text-[34px] lg:text-[40px] leading-none font-normal -mt-1 lg:pl-4">
                   Júlia Aleixo
                 </span>
               </div>
@@ -822,9 +822,9 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               <X size={15} />
             </button>
 
-            {/* Scrollable Story content */}
+            {/* Scrollable Story story content */}
             <div className="flex flex-col items-center text-center mt-4">
-              <span className="font-hello-olivia text-[#cca062] text-[38px] leading-none select-none mb-1">
+              <span className="font-parisienne text-[#cca062] text-[38px] leading-none select-none mb-1">
                 Júlia Aleixo
               </span>
               <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-[#cca062] font-poppins block mb-6">
@@ -847,7 +847,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               </div>
 
               {/* Floral tiny emblem/signature representation */}
-              <div className="mt-10 mb-2 font-hello-olivia text-[#cca062] text-[32px] leading-none select-none">
+              <div className="mt-10 mb-2 font-parisienne text-[#cca062] text-[32px] leading-none select-none">
                 Júlia Aleixo
               </div>
               <span className="text-[10px] tracking-widest text-[#cca062]/50 font-poppins uppercase">
@@ -862,7 +862,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       <section className="bg-[#faf8f5] border-y border-[#e8dcc8]/40 py-12 px-6">
         <div className="max-w-3xl mx-auto text-center select-none">
           <Heart size={20} className="text-[#c96b71] mx-auto mb-4 animate-pulse" />
-          <p className="font-hello-olivia text-2xl sm:text-3xl text-[#3A312D] leading-snug mb-3 max-w-xl mx-auto">
+          <p className="font-parisienne text-2.5xl sm:text-3.5xl text-[#3A312D] leading-snug mb-3 max-w-xl mx-auto font-normal">
             "Buscamos encantar detalhes, valorizando instantes felizes e cultivando laços eternos."
           </p>
           <span className="text-[8.5px] font-bold uppercase tracking-[0.25em] text-[#6d5443]/60 font-poppins block">
