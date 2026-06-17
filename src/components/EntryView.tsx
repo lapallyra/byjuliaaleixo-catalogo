@@ -354,7 +354,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           <span className="text-[9px] tracking-[0.25em] font-medium text-[#cca062]/80 uppercase font-poppins font-semibold">
             Descubra o afeto
           </span>
-          <div className="w-8 h-8 rounded-full border border-[#cca062]/25 flex items-center justify-center bg-white/50 backdrop-blur-xs shadow-3xs animate-gentle-float hover:border-[#cca062]/60 hover:bg-white transition-colors duration-300">
+          <div className="w-8 h-8 rounded-full border border-[#cca062]/25 flex items-center justify-center bg-white/50 backdrop-blur-sm shadow-sm animate-gentle-float hover:border-[#cca062]/60 hover:bg-white transition-colors duration-300">
             <ChevronDown size={14} className="text-[#cca062] stroke-1" />
           </div>
         </div>
@@ -362,56 +362,82 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </section>
 
       {/* BOUTIQUE ATELIERS HUB (INTERACTIVE VITRINE DE LUXO) */}
-      <section id="ateliers" className="scroll-mt-24 py-16 px-6 max-w-7xl mx-auto">
-        <div className="text-center mb-10">
-          <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#cca062] font-poppins">Navegação Boutique</span>
-          <h2 className="text-2xl sm:text-3xl font-poppins font-bold text-[#3A312D] tracking-tight mt-1 mb-2">Conheça Nossos Ateliês</h2>
-          <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
-          <p className="font-allura text-base text-[#cca062] lowercase mb-1 block">pequenos detalhes de imenso afeto</p>
-          <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
-            Cada marca possui uma curadoria especializada com artigos confeccionados inteiramente de forma manual.
+      <section id="ateliers" className="scroll-mt-24 py-20 px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-16 max-w-2xl mx-auto animate-fade-in">
+          <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-[#cca062] font-poppins block mb-3">
+            Explorar Universos
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-serif font-light text-[#3A312D] tracking-tight mb-4">
+            Escolha o seu universo
+          </h2>
+          <div className="h-[1px] w-12 bg-[#cca062]/40 mx-auto mb-4"></div>
+          <p className="font-tahoma text-xs sm:text-sm text-[#6d5443]/75 font-light leading-relaxed">
+            Cada marca possui uma identidade própria e uma forma única de transformar simples momentos em lembranças eternas.
           </p>
         </div>
 
-        {/* MOBILE: Editorial scroll-carousel; DESKTOP: Wide Grid */}
-        <div className="flex overflow-x-auto gap-5 pb-6 scrollbar-hide snap-x px-4 -mx-6 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-6">
-          {ateliers.map((atelier) => (
-            <div
-              key={atelier.id}
-              onClick={() => navigate(atelier.route)}
-              className="snap-center shrink-0 w-[275px] sm:w-auto flex flex-col justify-between border border-[#e8dcc8]/50 bg-white rounded-3xl p-6 shadow-2xs hover:shadow-md hover:border-[#cca062]/60 transition-all duration-500 cursor-pointer group relative overflow-hidden"
-            >
-              {/* Card visual details */}
-              <div className="absolute top-0 right-0 w-24 h-24 bg-[#cca062]/3 rounded-bl-full blur-xs pointer-events-none group-hover:bg-[#cca062]/6 transition-colors" />
-              
-              <div>
-                <div className="w-12 h-12 rounded-full border border-[#e8dcc8]/40 bg-[#faf8f5] flex items-center justify-center text-xl shadow-3xs mb-4 select-none group-hover:scale-105 transition-transform duration-300">
-                  {atelier.emoji}
-                </div>
-                
-                <h3 className="font-poppins font-semibold text-base text-[#3A312D] leading-snug mb-0.5 group-hover:text-[#cca062] transition-colors">
-                  {atelier.name}
-                </h3>
-                
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6d5443]/65 block mb-3 font-poppins">
-                  {atelier.subtitle}
-                </span>
-                
-                <p className="text-[11px] text-[#6d5443]/80 leading-relaxed font-light mb-4">
-                  {atelier.details}
-                </p>
-              </div>
+        {/* PREMIUM EDITORIAL CARDS GRID - NO HORIZONTAL SCROLL AT ALL */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 max-w-6xl mx-auto px-2">
+          {ateliers.map((atelier) => {
+            const atelierImages: Record<string, string> = {
+              pallyra: "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop",
+              guennita: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop",
+              mimada: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=600&auto=format&fit=crop",
+              tuttymimo: "https://images.unsplash.com/photo-1440288736878-766ab35473ef?q=80&w=600&auto=format&fit=crop"
+            };
+            const imageUrl = atelierImages[atelier.id] || "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=600&auto=format&fit=crop";
 
-              <div className="pt-2 border-t border-[#faf8f5] mt-2 flex items-center justify-between">
-                <span className="font-cormorant-italic italic text-sm text-[#cca062]">
-                  &ldquo;{atelier.tagline}&rdquo;
-                </span>
-                <span className="w-7 h-7 rounded-full bg-[#faf8f5] border border-[#e8dcc8]/40 flex items-center justify-center text-[#cca062] group-hover:bg-[#cca062] group-hover:text-white transition-all">
-                  <ArrowRight size={12} strokeWidth={2.5} />
-                </span>
+            return (
+              <div
+                key={atelier.id}
+                onClick={() => navigate(atelier.route)}
+                className="group flex flex-col justify-between border border-[#e8dcc8]/45 bg-white rounded-[32px] p-5 sm:p-6 shadow-xs hover:shadow-md hover:-translate-y-1.5 hover:border-[#cca062]/50 transition-all duration-500 cursor-pointer overflow-hidden relative"
+              >
+                {/* Visual Editorial Header of Card (large elegant portrait image) */}
+                <div className="w-full aspect-[4/5] rounded-[24px] overflow-hidden bg-[#faf8f5] mb-5 relative">
+                  <ImageWithFallback
+                    src={imageUrl}
+                    alt={atelier.name}
+                    className="w-full h-full object-cover rounded-[24px] group-hover:scale-104 transition-transform duration-[1200ms] ease-out"
+                    isThumbnail={false}
+                  />
+                  {/* Absolute soft elegant badge for identity */}
+                  <div className="absolute top-3.5 left-3.5 w-10 h-10 rounded-full bg-white/95 backdrop-blur-md border border-[#e8dcc8]/30 flex items-center justify-center text-sm shadow-3xs select-none">
+                    {atelier.emoji}
+                  </div>
+                  {/* Overlay elegant vignette */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/15 via-transparent to-transparent opacity-60 pointer-events-none rounded-[24px]" />
+                </div>
+
+                {/* Content Area */}
+                <div className="flex flex-col flex-grow text-center items-center px-2">
+                  <h3 className="font-serif font-light text-xl text-[#3A312D] tracking-tight mb-2 group-hover:text-[#cca062] transition-colors duration-300">
+                    {atelier.name}
+                  </h3>
+                  
+                  <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#cca062] mb-3.5 font-poppins h-8 flex items-center justify-center line-clamp-2 leading-tight">
+                    {atelier.subtitle}
+                  </span>
+                  
+                  <p className="text-xs text-[#6d5443]/70 font-light leading-relaxed mb-6 flex-grow line-clamp-3">
+                    {atelier.details}
+                  </p>
+
+                  <p className="font-serif italic text-xs text-[#cca062] mb-6 line-clamp-1 block px-1">
+                    &ldquo;{atelier.tagline}&rdquo;
+                  </p>
+                </div>
+
+                {/* Button bottom wrapper */}
+                <div className="w-full pt-4 border-t border-[#faf8f5] flex justify-center mt-auto">
+                  <div className="h-[44px] w-full max-w-[200px] rounded-full border border-[#cca062]/40 text-[#3A312D] font-tahoma font-bold text-[11px] uppercase tracking-[0.1em] flex items-center justify-center gap-1.5 transition-all duration-300 group-hover:bg-[#3A312D] group-hover:text-white group-hover:border-[#3A312D] bg-transparent">
+                    <span>Entrar no universo</span>
+                    <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
