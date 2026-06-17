@@ -72,7 +72,7 @@ export const HomeProductCard: React.FC<HomeProductCardProps> = ({
             </h3>
             
             {/* Elegant luxury subtitle/description instead of a massive price block */}
-            <p className="text-[9.5px] text-[#6d5443]/65 font-light leading-relaxed mt-1 mb-2 max-w-[190px] mx-auto truncate font-tahoma">
+            <p className="text-[9.5px] text-[#6d5443]/65 font-light leading-relaxed mt-1 mb-2 max-w-[190px] mx-auto truncate font-sans">
               {product.description || "Criado com afeto e materiais premium."}
             </p>
           </div>

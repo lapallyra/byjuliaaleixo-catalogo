@@ -360,7 +360,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             onClick={() => navigate('/lapallyra')}
             className="flex flex-col items-center group cursor-pointer"
           >
-            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(204,160,98,0.15)] hover:border-[#cca062] relative overflow-hidden flex flex-col justify-between hover:-translate-y-1">
+            <div className="w-full aspect-[4/5] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] px-3 py-1.5 sm:px-4 sm:py-2 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(204,160,98,0.15)] hover:border-[#cca062] relative overflow-hidden flex flex-col justify-between hover:-translate-y-0.5">
               <div className="w-full h-full rounded-t-full rounded-b-[18px] overflow-hidden relative bg-[#FAF8F5]">
                 <ImageWithFallback
                   src="https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=600&auto=format&fit=crop"
@@ -394,7 +394,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             onClick={() => navigate('/comamorguennita')}
             className="flex flex-col items-center group cursor-pointer"
           >
-            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(91,33,34,0.15)] hover:border-[#5b2122] relative overflow-hidden flex flex-col justify-between hover:-translate-y-1">
+            <div className="w-full aspect-[4/5] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] px-3 py-1.5 sm:px-4 sm:py-2 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(91,33,34,0.15)] hover:border-[#5b2122] relative overflow-hidden flex flex-col justify-between hover:-translate-y-0.5">
               <div className="w-full h-full rounded-t-full rounded-b-[18px] overflow-hidden relative bg-[#FAF8F5]">
                 <ImageWithFallback
                   src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop"
@@ -428,7 +428,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             onClick={() => navigate('/mimadasim')}
             className="flex flex-col items-center group cursor-pointer"
           >
-            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(217,75,95,0.15)] hover:border-[#d94b5f] relative overflow-hidden flex flex-col justify-between hover:-translate-y-1">
+            <div className="w-full aspect-[4/5] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] px-3 py-1.5 sm:px-4 sm:py-2 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(217,75,95,0.15)] hover:border-[#d94b5f] relative overflow-hidden flex flex-col justify-between hover:-translate-y-0.5">
               <div className="w-full h-full rounded-t-full rounded-b-[18px] overflow-hidden relative bg-[#FAF8F5]">
                 <ImageWithFallback
                   src="https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=600&auto=format&fit=crop"
@@ -462,7 +462,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             onClick={() => navigate('/tuttymimo')}
             className="flex flex-col items-center group cursor-pointer"
           >
-            <div className="w-full aspect-[11/16] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] p-2 sm:p-2.5 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(212,189,161,0.15)] hover:border-[#d4bda1] relative overflow-hidden flex flex-col justify-between hover:-translate-y-1">
+            <div className="w-full aspect-[4/5] rounded-t-full rounded-b-[24px] border border-[#e8dcc8]/40 bg-[#fffbf7] px-3 py-1.5 sm:px-4 sm:py-2 shadow-[0_4px_20px_rgba(109,84,67,0.01)] transition-all duration-700 hover:shadow-[0_12px_32px_rgba(212,189,161,0.15)] hover:border-[#d4bda1] relative overflow-hidden flex flex-col justify-between hover:-translate-y-0.5">
               <div className="w-full h-full rounded-t-full rounded-b-[18px] overflow-hidden relative bg-[#FAF8F5]">
                 <ImageWithFallback
                   src="https://images.unsplash.com/photo-1440288736878-766ab35473ef?q=80&w=600&auto=format&fit=crop"
