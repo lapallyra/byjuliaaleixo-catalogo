@@ -38,35 +38,35 @@ export function ProductCard({ product, theme, onAddToCart, onAddToGiftList, onCl
           {product.product_name}
         </h3>
 
-        <div className="mb-4">
+        <div className="flex flex-col gap-0.5 mb-4">
           {product.original_price && product.original_price > product.current_price && (
-            <p className="text-xs text-neutral-500 line-through">
-              de: R$ {product.original_price.toFixed(2)}
-            </p>
+            <span className="text-xs text-neutral-400 line-through">
+              R$ {product.original_price.toFixed(2)}
+            </span>
           )}
-          <span className="text-lg font-black text-gray-900">
+          <span className="text-base font-black text-[#1a1a1a]">
             R$ {product.current_price.toFixed(2)}
           </span>
           {product.wholesale_price && (
-            <p className="text-xs text-emerald-600 font-medium">
+            <span className="text-[10px] text-emerald-700 font-bold">
               Atacado: R$ {product.wholesale_price.toFixed(2)}
-            </p>
+            </span>
           )}
         </div>
 
-        <div className="mt-auto grid grid-cols-2 gap-2">
+        <div className="mt-auto flex flex-col gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); onAddToCart(product); }}
-            className={`text-xs font-semibold py-2 rounded-lg transition-colors ${theme.btnPrimary}`}
+            className={`text-xs font-bold py-3 rounded-xl transition-all shadow-md active:scale-[0.98] ${theme.btnPrimary}`}
           >
-            Carrinho
+            Adicionar ao Carrinho
           </button>
           {onAddToGiftList && (
             <button
               onClick={(e) => { e.stopPropagation(); onAddToGiftList(product); }}
-              className={`text-xs font-semibold py-2 rounded-lg border transition-colors ${theme.btnSecondary}`}
+              className={`text-xs font-bold py-2.5 rounded-xl border transition-all hover:bg-neutral-50 active:scale-[0.98] ${theme.btnSecondary}`}
             >
-              Lista
+              Salvar na Lista
             </button>
           )}
         </div>
