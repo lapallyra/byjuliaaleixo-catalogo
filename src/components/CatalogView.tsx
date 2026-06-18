@@ -40,7 +40,10 @@ import { SuggestionBox } from './SuggestionBox';
 import { ProductDetailPage } from './ProductDetailPage';
 
 
+import { CatalogEditorialHeader } from './Catalog/Widgets/CatalogEditorialHeader';
+import { CatalogListSearchOverlay } from './Catalog/Widgets/CatalogListSearchOverlay';
 import { CatalogHeader } from './Catalog/CatalogHeader';
+import { CatalogCategories } from './Catalog/CatalogCategories';
 import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
@@ -663,7 +666,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     >
        <CatalogHeader 
         companyName={companyName}
-        logoUrl={siteSettings?.store_logo || defaultLogo || null}
         theme={theme}
         onCartClick={() => setIsCartOpen(true)}
         cartCount={cart.reduce((sum, i) => sum + i.quantity, 0)}
@@ -671,8 +673,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         onGoBack={onGoBack}
         onGiftListClick={() => setIsSearchingList(true)}
         giftListCount={giftList.length} 
-        companyId={companyId}
-        onLogoClick={handleHiddenAdminClick}
       />
       
       <div className="flex-1 flex overflow-hidden">
@@ -704,160 +704,24 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           </div>
         ) : (
           <>
-            {/* Vertical Collapsible Category Sidebar */}
-            <aside 
-              className={`${isSidebarCollapsed ? 'w-16' : 'w-64'} hidden md:flex flex-col border-r transition-all duration-500 bg-white/60 backdrop-blur-md sticky top-0 h-full overflow-hidden shrink-0`}
-              style={{ borderColor: `${theme.accentColor}12` }}
-            >
-              <div 
-                className="p-4 flex items-center justify-between"
-                style={{ borderBottom: `1px solid ${theme.accentColor}12` }}
-              >
-                {!isSidebarCollapsed && (
-                  <span className="text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: theme.accentColor }}>Categorias</span>
-                )}
-                <button 
-                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
-                  className="p-2 rounded-lg text-[#cca062] transition-colors hover:bg-black/[0.02]"
-                  style={{ color: theme.accentColor }}
-                >
-                   {isSidebarCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 space-y-2 scrollbar-none">
-                <button
-                  onClick={() => handleCategoryClick(null)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${!selectedCategory ? 'text-white font-extrabold shadow-[0_4px_12px_rgba(0,0,0,0.06),_inset_0_1.5px_0_rgba(255,255,255,0.25),_inset_0_-2px_0_rgba(0,0,0,0.12)]' : 'text-[#6d5443] hover:scale-[1.01] border border-transparent'}`}
-                  style={{ 
-                    backgroundColor: !selectedCategory ? theme.accentColor : 'transparent',
-                    borderColor: !selectedCategory ? `${theme.accentColor}40` : 'transparent',
-                    borderWidth: '1px'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedCategory) {
-                      e.currentTarget.style.backgroundColor = `${theme.accentColor}0e`;
-                      e.currentTarget.style.borderColor = `${theme.accentColor}18`;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedCategory) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.borderColor = 'transparent';
-                    }
-                  }}
-                >
-                  <LayoutGrid size={16} />
-                  {!isSidebarCollapsed && <span className="text-xs font-semibold tracking-wider whitespace-nowrap">Tudo</span>}
-                </button>
-                
-                {categories.map((category) => {
-                  const isActive = selectedCategory === category;
-                  return (
-                    <button
-                      key={`side-${category}`}
-                      onClick={() => handleCategoryClick(category)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive ? 'text-white font-extrabold shadow-[0_4px_12px_rgba(0,0,0,0.06),_inset_0_1.5px_0_rgba(255,255,255,0.25),_inset_0_-2px_0_rgba(0,0,0,0.12)]' : 'text-[#5c4a3d]/85 hover:scale-[1.01] border border-transparent'}`}
-                      style={{ 
-                        backgroundColor: isActive ? theme.accentColor : 'transparent',
-                        borderColor: isActive ? `${theme.accentColor}40` : 'transparent',
-                        borderWidth: '1px'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = `${theme.accentColor}0e`;
-                          e.currentTarget.style.borderColor = `${theme.accentColor}18`;
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                          e.currentTarget.style.borderColor = 'transparent';
-                        }
-                      }}
-                    >
-                      {getCategoryIcon(category)}
-                      {!isSidebarCollapsed && <span className="text-xs font-semibold tracking-wider whitespace-nowrap line-clamp-1">{category}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </aside>
+            <CatalogCategories 
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelectCategory={handleCategoryClick}
+              theme={theme}
+              getCategoryIcon={getCategoryIcon}
+              isSidebarCollapsed={isSidebarCollapsed}
+              setIsSidebarCollapsed={setIsSidebarCollapsed}
+            />
 
             {/* Content Area */}
             <div className="flex-1 flex flex-col min-h-0 bg-[#FAF9F6] overflow-y-auto scrollbar-none">
-              <div className="pt-0"> 
-
-              </div>
-
+              
               {/* Main Scroll Content */}
               <main className="p-4 md:p-8 relative">
                 <div className="max-w-[1400px] mx-auto h-full flex flex-col pt-4">
                   
-                  {/* Horizontal Category Pill Menu for Mobile */}
-                  <div className="md:hidden flex overflow-x-auto gap-2 pb-6 scrollbar-none snap-x">
-                    <button
-                      onClick={() => handleCategoryClick(null)}
-                      className={`px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-[0.16em] whitespace-nowrap transition-all duration-300 ${!selectedCategory ? 'text-white shadow-[0_4px_10px_rgba(0,0,0,0.1),_inset_0_1px_0_rgba(255,255,255,0.25),_inset_0_-2px_0_rgba(0,0,0,0.12)]' : 'bg-white text-[#6d5443]'}`}
-                      style={{ 
-                        backgroundColor: !selectedCategory ? theme.accentColor : '#ffffff',
-                        borderColor: !selectedCategory ? `${theme.accentColor}30` : `${theme.accentColor}12`,
-                        borderWidth: '1px'
-                      }}
-                    >
-                      Tudo
-                    </button>
-                    {categories.map((category) => {
-                      const isActive = selectedCategory === category;
-                      return (
-                        <button
-                          key={`pill-${category}`}
-                          onClick={() => handleCategoryClick(category)}
-                          className={`px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-[0.16em] whitespace-nowrap transition-all duration-300 ${isActive ? 'text-white shadow-[0_4px_10px_rgba(0,0,0,0.1),_inset_0_1px_0_rgba(255,255,255,0.25),_inset_0_-2px_0_rgba(0,0,0,0.12)]' : 'bg-white text-[#5c4a3d]'}`}
-                          style={{ 
-                            backgroundColor: isActive ? theme.accentColor : '#ffffff',
-                            borderColor: isActive ? `${theme.accentColor}30` : `${theme.accentColor}12`,
-                            borderWidth: '1px'
-                          }}
-                        >
-                          {category}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  
-                  {/* Welcome Editorial Header - Vitrine de Presentes Personalizados */}
-                  <div className="text-center mb-16 mt-6 px-4">
-                    <div 
-                      className="inline-flex items-center gap-2 px-4 py-2 border rounded-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.6)] mb-6 transition-transform hover:scale-105"
-                      style={{ 
-                        backgroundColor: `${theme.accentColor}0e`,
-                        borderColor: `${theme.accentColor}30`,
-                        color: theme.accentColor
-                      }}
-                    >
-                      <Sparkle size={13} className="animate-spin-slow" />
-                      <span className="text-[9px] font-black uppercase tracking-[0.25em] font-sans">
-                        Vitrine de Presentes Personalizados
-                      </span>
-                    </div>
-                    
-                    <h1 className={`font-serif text-3xl md:text-5xl lg:text-6xl tracking-tight mt-1 mb-5 italic font-extrabold leading-tight max-w-4xl mx-auto ${theme.textPrimary}`}>
-                      Encante com Afeto & Exclusividade
-                    </h1>
-                    
-                    <p 
-                      className="font-sans text-[10px] md:text-xs uppercase tracking-[0.28em] font-bold mb-6"
-                      style={{ color: theme.accentColor }}
-                    >
-                      Presentes sob medida que transformam momentos em memórias afetivas
-                    </p>
-                    
-                    <div className="w-16 h-[1.5px] mx-auto my-6 rounded-full" style={{ backgroundColor: `${theme.accentColor}30` }}></div>
-                    
-                    <p className={`text-sm max-w-2xl mx-auto leading-relaxed font-sans font-medium ${theme.textSecondary} opacity-85`}>
-                      Nossos mimos são desenhados individualmente com todo carinho, cuidado e rigor artesanal do ateliê. Uma verdadeira curadoria de peças selecionadas para celebrar conexões reais.
-                    </p>
-                  </div>
+                  <CatalogEditorialHeader theme={theme} companyName={companyName} />
 
               {/* Loading Overlay between Filters */}
               <AnimatePresence mode="wait">
@@ -881,7 +745,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     {/* Grid - Premium Vertical Cards Showcase */}
                     {filteredProducts.length > 0 ? (
                       <>
-                      <div id="catalog-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8 pb-32">
+                      <div id="catalog-grid" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-20">
                         {paginatedProducts.map((product, idx) => {
                           const today = new Date();
                           const createdAtDate = product.createdAt?.toMillis ? new Date(product.createdAt.toMillis()) : product.createdAt instanceof Date ? product.createdAt : new Date();
@@ -1161,62 +1025,15 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
            onCloseExternal={() => setIsSuggestionOpen(false)} 
         />
         
-        {/* List Search Overlay */}
-        {isSearchingList && (
-           <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsSearchingList(false)}
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1100]"
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm ${theme.cardBg} p-8 rounded-3xl z-[1101] shadow-2xl overflow-hidden`}
-              >
-                  <div className="absolute top-0 right-0 w-32 h-32 blur-[60px] opacity-10 pointer-events-none rounded-full" style={{ backgroundColor: theme.accentColor }} />
-                  
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-black uppercase tracking-widest text-[#161616]">Buscar Lista</h3>
-                    <button onClick={() => setIsSearchingList(false)} className="p-2 hover:bg-black/5 rounded-full transition-colors">
-                      <X size={20} />
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-4 relative z-10">
-                    <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-black/40 ml-2">Código da Lista</label>
-                       <input 
-                         type="text"
-                         placeholder="Ex: L12345P"
-                         value={listSearchCode}
-                         onChange={(e) => setListSearchCode(e.target.value.toUpperCase())}
-                         className={`w-full ${theme.searchBg} border ${theme.borderLine} rounded-2xl px-5 py-4 text-sm font-bold uppercase tracking-widest focus:ring-4 transition-all focus:bg-white ${theme.textPrimary}`}
-                         style={{ '--tw-ring-color': `${theme.accentColor}22` } as any}
-                         onKeyDown={(e) => e.key === 'Enter' && handleListSearch()}
-                       />
-                    </div>
-                    
-                    <button 
-                      onClick={handleListSearch}
-                      disabled={isSearchingLoading || !listSearchCode}
-                      className="w-full py-5 rounded-2xl text-white text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl disabled:opacity-50"
-                      style={{ backgroundColor: theme.accentColor, boxShadow: `0 10px 30px -10px ${theme.accentColor}` }}
-                    >
-                      {isSearchingLoading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} strokeWidth={2.5} />}
-                      Buscar Agora
-                    </button>
-                    
-                    <p className="text-[9px] text-center font-bold text-black/40 uppercase tracking-tight px-4">
-                      Insira o código gerado pelo criador da lista para visualizar os produtos.
-                    </p>
-                  </div>
-              </motion.div>
-           </>
-        )}
+                <CatalogListSearchOverlay 
+          isOpen={isSearchingList}
+          onClose={() => setIsSearchingList(false)}
+          theme={theme}
+          listSearchCode={listSearchCode}
+          setListSearchCode={setListSearchCode}
+          handleListSearch={handleListSearch}
+          isSearchingLoading={isSearchingLoading}
+        />
 
 
 
