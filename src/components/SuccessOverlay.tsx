@@ -24,11 +24,26 @@ export const SuccessOverlay: React.FC<SuccessOverlayProps> = ({ onContinue }) =>
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.8 }}
-          className="space-y-6 text-center"
+          className="space-y-8 text-center"
         >
-          <p className="text-base font-semibold text-slate-800 leading-relaxed tracking-wide whitespace-pre-line max-w-[340px] mx-auto font-sans">
-            {"Agradeço por permitir que nosso ateliê\nfaça parte desse momento tão especial.\nSerá uma honra receber você novamente\nsempre que quiser um presente personalizado,\nvolte 🤍"}
-          </p>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Pedido recebido com sucesso</h2>
+            <p className="text-sm text-neutral-600 leading-relaxed max-w-[340px] mx-auto">
+              Recebemos seu pedido e ele já está em nosso sistema. Nossa equipe realizará a conferência das informações enviadas e entrará em contato pelo canal informado para seguir com os próximos passos.
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-neutral-100">
+            <div className="flex items-center justify-center gap-2 text-xs font-medium text-neutral-700">
+              <Check size={14} className="text-emerald-600" /> <span>Pedido registrado</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-xs font-medium text-neutral-700">
+              <Check size={14} className="text-emerald-600" /> <span>Dados recebidos com sucesso</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-xs font-medium text-neutral-700">
+              <Check size={14} className="text-emerald-600" /> <span>Atendimento disponível para dúvidas</span>
+            </div>
+          </div>
         </motion.div>
 
         <motion.button
@@ -36,9 +51,9 @@ export const SuccessOverlay: React.FC<SuccessOverlayProps> = ({ onContinue }) =>
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.8, duration: 0.8 }}
           onClick={onContinue}
-          className="mt-12 w-full py-4 px-8 bg-slate-900 text-white font-sans font-bold text-[10px] rounded-2xl uppercase tracking-widest shadow-lg hover:shadow-xl hover:bg-black transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="mt-12 w-full py-4 px-8 bg-neutral-900 text-white font-bold text-xs rounded-xl uppercase tracking-widest shadow-md hover:bg-neutral-800 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
-          Retornar ao Catálogo
+          Continuar comprando
         </motion.button>
       </div>
     </div>

@@ -36,10 +36,12 @@ export interface Product {
     translateY?: number;
     rotate?: number;
   };
+  emotionalScore?: number;
   isKit?: boolean;
   kitType?: 'kit_pronto' | 'monte_seu_kit';
   kitItems?: { type: 'product' | 'insumo' | 'addon'; id: string; quantity: number }[];
   kitDiscountPercentage?: number;
+  price?: number;
 }
 
 export interface Variation {
@@ -266,6 +268,10 @@ export interface AppConfig {
   telegram_chat_id: string;
   email_para_pedidos: string;
   
+  site_title?: string;
+  site_subtitle?: string;
+  site_name?: string;
+
   global_fixed_costs?: number;
   global_labor_cost_per_hour?: number;
   global_tax_rate?: number;

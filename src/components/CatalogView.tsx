@@ -38,6 +38,7 @@ import { CheckoutModal } from './CheckoutModal';
 import { GiftListSidebar } from './GiftListSidebar';
 import { SuggestionBox } from './SuggestionBox';
 import { ProductDetailPage } from './ProductDetailPage';
+import { ColecoesView } from './ColecoesView';
 
 
 import { CatalogEditorialHeader } from './Catalog/Widgets/CatalogEditorialHeader';
@@ -102,6 +103,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [globalSettings, setGlobalSettings] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [view, setView] = useState<'catalog' | 'collections'>('catalog');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltering, setIsFiltering] = useState(false);
 
@@ -672,7 +674,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         onSearch={handleSearch}
         onGoBack={onGoBack}
         onGiftListClick={() => setIsSearchingList(true)}
-        giftListCount={giftList.length} 
+        giftListCount={giftList.length}
+        onViewAll={() => { handleCategoryClick(null); setView('catalog'); }}
+        onViewCollections={() => setView('collections')}
+        onViewNews={() => highlightsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })}
+        onViewContact={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
       />
       
       <div className="flex-1 flex overflow-hidden">
@@ -702,6 +708,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               companyId={companyId}
             />
           </div>
+        ) : view === 'collections' ? (
+          <ColecoesView allProducts={allProducts} />
         ) : (
           <>
             <CatalogCategories 
@@ -745,173 +753,59 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     {/* Grid - Premium Vertical Cards Showcase */}
                     {filteredProducts.length > 0 ? (
                       <>
-                      <div id="catalog-grid" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-20">
+                      <div id="catalog-grid" className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6 pb-20 px-4 md:px-0">
                         {paginatedProducts.map((product, idx) => {
                           const today = new Date();
                           const createdAtDate = product.createdAt?.toMillis ? new Date(product.createdAt.toMillis()) : product.createdAt instanceof Date ? product.createdAt : new Date();
-                          const diffDays = Math.floor((today.getTime() - createdAtDate.getTime()) / (1000 * 60 * 60 * 24));
-                          const isNew = diffDays <= 7;
-
+                          
                           return (
                             <motion.div
                               key={`prod-${product.id}-${idx}`}
                               initial={{ opacity: 0, y: 30 }}
                               whileInView={{ opacity: 1, y: 0 }}
                               viewport={{ once: true, margin: "-100px" }}
-                              transition={{ duration: 0.8, delay: (idx % 3) * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                              transition={{ duration: 0.5, delay: (idx % 3) * 0.05, ease: [0.16, 1, 0.3, 1] }}
                               onClick={() => setSelectedProduct(product)}
-                              className="group relative flex flex-col justify-between overflow-hidden bg-white rounded-[2rem] border transition-all duration-500 cursor-pointer shadow-[0_6px_20px_rgba(109,84,67,0.03)] hover:shadow-[0_12px_36px_rgba(109,84,67,0.08)] hover:-translate-y-1.5"
-                              style={{ borderColor: `${theme.accentColor}18` }}
-                            >
-                              {/* Top Aspect Square Image Area */}
-                              <div className="aspect-square w-full relative overflow-hidden bg-neutral-50/50 border-b border-neutral-100">
+                              className="group relative flex flex-col md:flex-row overflow-hidden bg-white rounded-[12px] border transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md p-3 items-center"
+                              style={{ borderColor: `${theme.accentColor}18` }}>
+                               {/* Product Image */}
+                              <div className="w-full h-[160px] md:w-[160px] md:h-full relative overflow-hidden bg-neutral-50/50 rounded-[8px] mb-3 md:mb-0 md:mr-4 shrink-0">
                                 <ImageWithFallback 
                                   src={product.image || ''} 
                                   alt="Product"
-                                  className={`w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 ${product.image_hover ? 'group-hover:opacity-0' : ''}`}
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                   containerClassName="w-full h-full absolute inset-0"
                                 />
-                                {product.image_hover && (
-                                  <ImageWithFallback 
-                                    src={product.image_hover || ''} 
-                                    alt="Product Hover"
-                                    className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-1000 group-hover:scale-105"
-                                    containerClassName="w-full h-full absolute inset-0"
-                                  />
-                                )}
-
-                                {/* Category Badge and Labels */}
-                                <div className="absolute top-4 left-4 flex flex-col gap-1.5 pointer-events-none z-10">
-                                  <span 
-                                    className="backdrop-blur-md text-[7.5px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.02)] border"
-                                    style={{
-                                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                      borderColor: `${theme.accentColor}25`,
-                                      color: theme.accentColor
-                                    }}
-                                  >
-                                    {product.category || 'exclusivo'}
-                                  </span>
-                                  {isNew && (
-                                    <span 
-                                      className="inline-flex items-center gap-1 border text-[7.5px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.02)] backdrop-blur-md"
-                                      style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                        borderColor: `${theme.accentColor}35`,
-                                        color: theme.accentColor
-                                      }}
-                                    >
-                                      <Sparkles size={8} className="animate-pulse shrink-0" style={{ color: theme.accentColor }} />
-                                      Novidade
-                                    </span>
-                                  )}
-                                  {product.isFeatured && (
-                                    <span 
-                                      className="inline-flex items-center gap-1 border text-[7.5px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.02)] backdrop-blur-md"
-                                      style={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                                        borderColor: `${theme.accentColor}35`,
-                                        color: theme.accentColor
-                                      }}
-                                    >
-                                      <Sparkles size={8} className="animate-pulse shrink-0" style={{ color: theme.accentColor }} />
-                                      Best Seller
-                                    </span>
-                                  )}
-                                </div>
-                                
-                                {/* Glassmorphic Hover Overlay */}
-                                <div className="absolute inset-0 bg-[#3a322c]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none flex items-center justify-center">
-                                  <div 
-                                    className="bg-white/95 text-[9px] font-bold uppercase tracking-[0.2em] px-5 py-2.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.05)] border backdrop-blur-sm -translate-y-2 group-hover:translate-y-0 transition-all duration-500"
-                                    style={{ 
-                                      borderColor: `${theme.accentColor}25`,
-                                      color: theme.accentColor
-                                    }}
-                                  >
-                                    ver detalhes
-                                  </div>
-                                </div>
                               </div>
 
-                              {/* Card Info Content */}
-                              <div className="p-6 flex flex-col flex-1 justify-between gap-5">
-                                <div className="space-y-2.5">
-                                  <p 
-                                    className="text-[8.5px] font-bold uppercase tracking-[0.25em] font-sans flex items-center gap-1"
-                                    style={{ color: theme.accentColor }}
-                                  >
-                                    <span>✦</span> Ateliê {companyName}
-                                  </p>
-                                  <h3 className={`font-serif text-base md:text-lg font-bold leading-tight transition-colors duration-300 truncate ${theme.textPrimary}`}>
+                              {/* Card Content */}
+                              <div className="flex flex-col flex-1 justify-between w-full gap-2">
+                                <div className="space-y-1">
+                                  <h3 className={`font-sans text-[16px] font-semibold leading-tight ${theme.textPrimary} line-clamp-1`}>
                                     {product.product_name}
                                   </h3>
-                                  <p className={`text-[11px] leading-relaxed line-clamp-2 min-h-[2.2rem] ${theme.textSecondary} opacity-80 font-sans`}>
-                                    {product.description || 'Um presente personalizado maravilhoso e inesquecível feito sob medida com todo carinho.'}
+                                  <p className={`text-[12px] leading-tight line-clamp-2 ${theme.textSecondary} opacity-80 font-sans`}>
+                                    {product.description || 'Um presente personalizado maravilhoso.'}
                                   </p>
+                                  <span className={`text-[14px] font-semibold font-sans block pt-1 ${theme.textPrimary}`}>
+                                      {formatCurrency(product.retail_price || 0)}
+                                  </span>
                                 </div>
-
-                                {/* Prices and Premium 3D Action Section */}
-                                <div 
-                                  className="pt-4 border-t flex flex-col gap-4 transition-colors"
-                                  style={{ borderColor: `${theme.accentColor}12` }}
+                                
+                                {/* CTA */}
+                                <button 
+                                  onClick={(e) => { 
+                                    e.stopPropagation();
+                                    onAddToCart(product, 1); 
+                                    setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
+                                  }}
+                                  className="mt-2 w-full h-[40px] rounded-[10px] text-white font-bold uppercase tracking-widest text-[11px] transition-all duration-200 flex items-center justify-center shadow-sm hover:opacity-90 active:scale-[0.98] border border-transparent shadow-neutral-200/50"
+                                  style={{ 
+                                    backgroundColor: theme.accentColor
+                                  }}
                                 >
-                                  <div className="flex justify-between items-center">
-                                    <div className="flex flex-col">
-                                      <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-widest leading-none">Valor Especial</span>
-                                      <div className="flex items-baseline gap-1.5 mt-1">
-                                        <p className="text-[10px] text-neutral-400/70 line-through font-sans">
-                                          {formatCurrency(product.current_price || product.original_price || (product.retail_price * 1.25))}
-                                        </p>
-                                        <span className={`text-lg font-black font-sans leading-none ${theme.textPrimary}`}>
-                                          {formatCurrency(product.retail_price || 0)}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    
-                                    {product.isWholesaleEnabled && product.wholesale_price && (
-                                      <div className="text-right">
-                                        <span className="text-[7.5px] font-bold text-neutral-400 uppercase tracking-widest leading-none block">No Atacado</span>
-                                        <span className={`text-xs font-semibold font-sans mt-0.5 block`} style={{ color: theme.accentColor }}>{formatCurrency(product.wholesale_price)}</span>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Action Buttons: 3D Soft Touch Styling */}
-                                  <div className="flex items-center gap-2">
-                                    <button 
-                                      onClick={(e) => { 
-                                        e.stopPropagation();
-                                        onAddToCart(product, 1); 
-                                        setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
-                                      }}
-                                      className="flex-1 py-3 px-4 rounded-xl text-white font-extrabold uppercase tracking-[0.16em] text-[9.5px] transition-all duration-200 flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.08),_inset_0_1.5px_0_rgba(255,255,255,0.35),_inset_0_-2.5px_0_rgba(0,0,0,0.15)] hover:shadow-[0_6px_18px_rgba(0,0,0,0.12),_inset_0_1.5px_0_rgba(255,255,255,0.38),_inset_0_-2.5px_0_rgba(0,0,0,0.15)] hover:-translate-y-[1px] active:translate-y-[1.5px] active:shadow-[0_2px_4px_rgba(0,0,0,0.05),_inset_0_1px_0_rgba(255,255,255,0.2)]"
-                                      style={{ 
-                                        background: `linear-gradient(135deg, ${theme.accentColor}d9, ${theme.accentColor})`,
-                                        borderColor: `${theme.accentColor}25`
-                                      }}
-                                    >
-                                      <ShoppingCart size={11} className="stroke-[2.5]" />
-                                      Adicionar
-                                    </button>
-                                    <button 
-                                      onClick={(e) => { 
-                                          e.stopPropagation();
-                                          onAddToGiftList?.(product);
-                                          setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
-                                      }}
-                                      className="p-3 rounded-xl border flex items-center justify-center shrink-0 transition-all duration-200 shadow-[0_4px_10px_rgba(0,0,0,0.02),_inset_0_1px_0_rgba(255,255,255,0.8),_inset_0_-1.5px_0_rgba(0,0,0,0.05)] hover:shadow-[0_6px_14px_rgba(0,0,0,0.04),_inset_0_1px_0_rgba(255,255,255,0.8)] active:translate-y-[1.5px] cursor-pointer"
-                                      style={{ 
-                                        backgroundColor: `${theme.accentColor}0e`, 
-                                        borderColor: `${theme.accentColor}25`,
-                                        color: theme.accentColor
-                                      }}
-                                      title="Adicionar à Lista de Presentes"
-                                    >
-                                      <Gift size={11} className="stroke-[2.5]" />
-                                    </button>
-                                  </div>
-                                </div>
+                                  Quero este
+                                </button>
                               </div>
                             </motion.div>
                           )})}

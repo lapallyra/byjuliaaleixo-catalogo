@@ -7,7 +7,6 @@ import { CatalogView } from './components/CatalogView';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminLoginView } from './components/AdminLoginView';
 import { SuccessOverlay } from './components/SuccessOverlay';
-import { SalesNotificationPortal } from './components/SalesNotificationPortal';
 import { AuthProvider } from './components/AuthProvider';
 import { DocumentSearch } from './components/DocumentSearch';
 import { KitsView } from './components/KitsView';
@@ -20,11 +19,11 @@ import { ColecoesView } from './components/ColecoesView';
 import { TrackingView } from './components/TrackingView';
 import { CheckoutPage } from './components/CheckoutPage';
 import { TopAnnouncementBar } from './components/TopAnnouncementBar';
-import { CookieBanner } from './components/CookieBanner';
-import { INITIAL_CONFIG, PRODUCTS } from './constants';
+import { INITIAL_CONFIG } from './constants';
 import { AppConfig, CompanyId, CartItem, Product } from './types';
-import { subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
+import { useVitrine } from './hooks/useVitrine';
 
+import { MaintenancePage } from './components/MaintenancePage';
 import { VitrinePage } from './components/VitrinePage';
 import { PrizeRouletteModal } from './components/PrizeRouletteModal';
 import { sendNotifications } from './services/notificationService';
@@ -38,15 +37,6 @@ import { VitrineCatalogoPage } from './vitrine-v2/pages/catalogo';
 import { VitrineProdutoDetailPage } from './vitrine-v2/pages/produto';
 import { VitrineCheckoutPage } from './vitrine-v2/pages/checkout';
 import { VitrineCarrinhoPage } from './vitrine-v2/pages/carrinho';
-
-// Vitrine V3 Isolated Imports
-import { VitrineCartV3Provider } from './vitrine-v3/core/cart/useCart';
-import { VitrineIndexPage as VitrineIndexPageV3 } from './vitrine-v3/pages/index';
-import { VitrineCatalogoPage as VitrineCatalogoPageV3 } from './vitrine-v3/pages/catalogo';
-import { VitrineProdutoDetailPage as VitrineProdutoDetailPageV3 } from './vitrine-v3/pages/produto';
-import { VitrineCarrinhoPage as VitrineCarrinhoPageV3 } from './vitrine-v3/pages/carrinho';
-import { VitrineCheckoutPage as VitrineCheckoutPageV3 } from './vitrine-v3/pages/checkout';
-import { VitrinePedidoConfirmadoPage as VitrinePedidoConfirmadoPageV3 } from './vitrine-v3/pages/pedido-confirmado';
 
 function SparklesContainer({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -245,30 +235,16 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
 }
 
 function MainApp() {
-  const [config, setConfig] = useState<AppConfig>(INITIAL_CONFIG);
-  const [allProducts, setAllProducts] = useState<Product[]>(PRODUCTS); // Start with static, then sync
-  
+  const IS_MAINTENANCE_MODE = true; // Toggle for maintenance
+  if (IS_MAINTENANCE_MODE) return <MaintenancePage />;
+
+  const { config, allProducts } = useVitrine();
+  const effectiveConfig = config || INITIAL_CONFIG;
   const location = useLocation();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
-
-  useEffect(() => {
-    const unsubConfig = subscribeToAppConfig((newConfig) => {
-      setConfig(prev => ({ ...prev, ...newConfig }));
-    });
-    
-    // Subscribe to all products once at app level
-    const unsubProducts = subscribeToProducts((loaded) => {
-      if (loaded.length > 0) setAllProducts(loaded);
-    });
-
-    return () => {
-      unsubConfig();
-      unsubProducts();
-    };
-  }, []);
 
   const [unifiedCart, setUnifiedCart] = useState<CartItem[]>(() => {
     try {
@@ -330,7 +306,7 @@ function MainApp() {
     <SparklesContainer>
       <TopAnnouncementBar />
       <Routes>
-        <Route path="/" element={<EntryView config={config} allProducts={allProducts} />} />
+        <Route path="/" element={<EntryView config={effectiveConfig} allProducts={allProducts} />} />
         <Route path="/vitrine" element={<VitrinePage />} />
         
         <Route path="/atelies" element={<AteliersPresentationView />} />
@@ -340,16 +316,16 @@ function MainApp() {
         <Route path="/sobrenos" element={<AboutMeView />} />
         <Route path="/listadepresentes-info" element={<GiftListInfoView />} />
         
-        <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="pallyra" config={config} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
+        <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="pallyra" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
         <Route path="/lapallyra/admin" element={<Navigate to="/admin" replace />} />
         
-        <Route path="/comamorguennita" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="guennita" config={config} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
+        <Route path="/comamorguennita" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="guennita" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
         <Route path="/comamorguennita/admin" element={<Navigate to="/admin" replace />} />
         
-        <Route path="/mimadasim" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="mimada" config={config} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
+        <Route path="/mimadasim" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="mimada" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
         <Route path="/mimadasim/admin" element={<Navigate to="/admin" replace />} />
         
-        <Route path="/tuttymimo" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="tuttymimo" config={config} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
+        <Route path="/tuttymimo" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="tuttymimo" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
         <Route path="/tuttymimo/admin" element={<Navigate to="/admin" replace />} />
 
         {/* Short Aliases */}
@@ -359,8 +335,8 @@ function MainApp() {
         <Route path="/tutty" element={<Navigate to="/tuttymimo" replace />} />
 
         {/* Checkout Flow */}
-        <Route path="/checkout/:id" element={<CheckoutPage config={config} />} />
-        <Route path="/ped-:code" element={<CheckoutPage config={config} />} />
+        <Route path="/checkout/:id" element={<CheckoutPage config={effectiveConfig} />} />
+        <Route path="/ped-:code" element={<CheckoutPage config={effectiveConfig} />} />
 
         {/* Global Admin */}
         <Route path="/admin/login" element={<AdminLoginView />} />
@@ -395,7 +371,7 @@ function MainApp() {
         <Route path="/rastreamento" element={<TrackingView onBack={() => window.history.back()} />} />
         
         {/* Gift List View */}
-        <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setUnifiedCart} config={config} />} />
+        <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setUnifiedCart} config={effectiveConfig} />} />
 
         {/* Vitrine V2 - Fully Isolated Storefront Module */}
         <Route path="/vitrine-v2" element={
@@ -422,38 +398,6 @@ function MainApp() {
           <VitrineCartProvider>
             <VitrineCheckoutPage />
           </VitrineCartProvider>
-        } />
-
-        {/* Vitrine V3 - Isolated e-commerce complete group */}
-        <Route path="/vitrine-v3" element={
-          <VitrineCartV3Provider>
-            <VitrineIndexPageV3 />
-          </VitrineCartV3Provider>
-        } />
-        <Route path="/vitrine-v3/catalogo" element={
-          <VitrineCartV3Provider>
-            <VitrineCatalogoPageV3 />
-          </VitrineCartV3Provider>
-        } />
-        <Route path="/vitrine-v3/produto/:id" element={
-          <VitrineCartV3Provider>
-            <VitrineProdutoDetailPageV3 />
-          </VitrineCartV3Provider>
-        } />
-        <Route path="/vitrine-v3/carrinho" element={
-          <VitrineCartV3Provider>
-            <VitrineCarrinhoPageV3 />
-          </VitrineCartV3Provider>
-        } />
-        <Route path="/vitrine-v3/checkout" element={
-          <VitrineCartV3Provider>
-            <VitrineCheckoutPageV3 />
-          </VitrineCartV3Provider>
-        } />
-        <Route path="/vitrine-v3/pedido-confirmado" element={
-          <VitrineCartV3Provider>
-            <VitrinePedidoConfirmadoPageV3 />
-          </VitrineCartV3Provider>
         } />
       </Routes>
     </SparklesContainer>
