@@ -18,11 +18,13 @@ import {
   Heart
 } from 'lucide-react';
 import { Product, CompanyId, CartItem } from '../types';
-import { themes } from '../lib/theme';
+import { themes, getTheme } from '../lib/theme';
 import { formatCurrency } from '../lib/currencyUtils';
 import { ImageWithFallback } from './ImageWithFallback';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { uploadImage, compressImage } from '../services/firebaseStorageService';
+import { ReviewList } from './Reviews/ReviewList';
+import { ReviewForm } from './Reviews/ReviewForm';
 
 import { validateProductStock } from '../utils/stockValidation';
 
@@ -43,7 +45,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   allProducts,
   companyId
 }) => {
-  const theme = themes[companyId] || themes.pallyra;
+  const theme = getTheme(companyId);
   const accentColor = theme.accentColor;
   
   const [imageIndex, setImageIndex] = useState(0);
@@ -127,8 +129,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       };
 
       onAddToCart(packedProduct, quantity);
-      setShowToast('Adicionado ao carrinho!');
-      setTimeout(() => setShowToast(null), 3000);
     } catch (e) {
       console.error(e);
       alert('Erro ao validar estoque.');
@@ -288,15 +288,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 type="button"
                 onClick={handleAddToCart}
                 disabled={isUploading}
-                className="py-5 rounded-2xl text-[11px] uppercase tracking-[0.2em] font-black transition-all duration-300 flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+                className="py-5 rounded-2xl text-[11px] uppercase tracking-[0.2em] font-black transition-all duration-300 flex items-center justify-center gap-2 border-2 bg-white text-slate-800 hover:bg-[#fdfaf6] disabled:opacity-50"
                 style={{
-                  background: `linear-gradient(135deg, ${accentColor}dd, ${accentColor}ff)`,
-                  color: '#fff',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderColor: `${accentColor}44`,
                 }}
               >
-                <ShoppingCart size={16} />
-                <span>Carrinho</span>
+                <ShoppingCart size={16} style={{ color: accentColor }} />
+                <span>Adicionar ao Carrinho</span>
               </button>
 
               {onAddToGiftList && (
@@ -314,6 +312,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             <p className="text-[9px] text-center text-slate-400 uppercase tracking-widest font-bold">
               Personalizado à mão com exclusividade para você.
             </p>
+          </div>
+
+          <div className="pt-8 border-t border-slate-100">
+             <ReviewList productId={product.id} />
+             <ReviewForm productId={product.id} />
           </div>
         </div>
        </div>

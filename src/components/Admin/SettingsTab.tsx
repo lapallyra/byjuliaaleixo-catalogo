@@ -387,6 +387,19 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                         </div>
                         <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
                           <ImageUpload
+                            label="Isotipo"
+                            path={`catalogos/${atl.id}/isotipo`}
+                            currentUrl={atlSettings.store_isotipo}
+                            onUploadComplete={(url) =>
+                              updateMultiField(atl.id, "store_isotipo", url)
+                            }
+                            onRemove={() =>
+                              updateMultiField(atl.id, "store_isotipo", "")
+                            }
+                          />
+                        </div>
+                        <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                          <ImageUpload
                             label="Banner Topo Checkout"
                             path={`catalogos/${atl.id}/banner`}
                             currentUrl={atlSettings.checkout_banner}

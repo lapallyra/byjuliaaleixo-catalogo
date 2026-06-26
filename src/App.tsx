@@ -17,65 +17,19 @@ import { AboutMeView } from './components/AboutMeView';
 import { GiftListInfoView } from './components/GiftListInfoView';
 import { ColecoesView } from './components/ColecoesView';
 import { TrackingView } from './components/TrackingView';
+import { MinhaExperienciaPage } from './components/cliente/MinhaExperienciaPage';
 import { CheckoutPage } from './components/CheckoutPage';
+import { Footer } from './components/Footer';
 import { TopAnnouncementBar } from './components/TopAnnouncementBar';
-import { INITIAL_CONFIG } from './constants';
+import { INITIAL_CONFIG, PRODUCTS } from './constants';
 import { AppConfig, CompanyId, CartItem, Product } from './types';
-import { useVitrine } from './hooks/useVitrine';
 
-import { MaintenancePage } from './components/MaintenancePage';
 import { VitrinePage } from './components/VitrinePage';
 import { PrizeRouletteModal } from './components/PrizeRouletteModal';
 import { sendNotifications } from './services/notificationService';
-import { updateOrder } from './services/firebaseService';
+import { updateOrder, subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
 import { playSuccessSound } from './utils/audio';
-
-// Vitrine V2 Isolated Imports
-import { VitrineCartProvider } from './vitrine-v2/hooks/useCart';
-import { VitrineIndexPage } from './vitrine-v2/pages/index';
-import { VitrineCatalogoPage } from './vitrine-v2/pages/catalogo';
-import { VitrineProdutoDetailPage } from './vitrine-v2/pages/produto';
-import { VitrineCheckoutPage } from './vitrine-v2/pages/checkout';
-import { VitrineCarrinhoPage } from './vitrine-v2/pages/carrinho';
-
-function SparklesContainer({ children }: { children: React.ReactNode }) {
-  const location = useLocation();
-
-  const createSparkles = (e: React.MouseEvent) => {
-    if (location.pathname.includes('/admin')) return;
-
-    // Soft glow element that follows cursor exactly (throttled)
-    const glow = document.createElement('div');
-    glow.className = 'cursor-glow';
-    glow.style.left = `${e.clientX}px`;
-    glow.style.top = `${e.clientY}px`;
-    document.body.appendChild(glow);
-    setTimeout(() => glow.remove(), 400);
-
-    // Denser sparkles
-    for(let i = 0; i < 8; i++) {
-        if (Math.random() > 0.3) continue;
-        const sparkle = document.createElement('div');
-        sparkle.className = 'sparkle';
-        
-        const offsetX = (Math.random() - 0.5) * 80;
-        const offsetY = (Math.random() - 0.5) * 80;
-        
-        sparkle.style.left = `${e.clientX + offsetX}px`;
-        sparkle.style.top = `${e.clientY + offsetY}px`;
-        
-        const scale = Math.random() * 0.7 + 0.3;
-        sparkle.style.transform = `translate(-50%, -50%) scale(${scale})`;
-        
-        document.body.appendChild(sparkle);
-        setTimeout(() => sparkle.remove(), 800);
-    }
-  };
-
-  return <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen" onMouseMove={createSparkles}>
-    {children}
-  </div>;
-}
+import { StudioPage } from './studiomockup/pages/StudioPage';
 
 // Wrapper to handle company paths
 function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, setGiftList, allProducts }: { companyId: CompanyId, config: AppConfig, cart: CartItem[], setCart: any, giftList: Product[], setGiftList: any, allProducts: Product[] }) {
@@ -235,12 +189,25 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
 }
 
 function MainApp() {
-  const IS_MAINTENANCE_MODE = true; // Toggle for maintenance
-  if (IS_MAINTENANCE_MODE) return <MaintenancePage />;
-
-  const { config, allProducts } = useVitrine();
+  const [config, setConfig] = useState<AppConfig>(INITIAL_CONFIG);
+  const [allProducts, setAllProducts] = useState<Product[]>(PRODUCTS);
   const effectiveConfig = config || INITIAL_CONFIG;
   const location = useLocation();
+
+  useEffect(() => {
+    const unsubConfig = subscribeToAppConfig((newConfig) => {
+      setConfig(prev => ({ ...prev, ...newConfig }));
+    });
+    
+    const unsubProducts = subscribeToProducts((loaded) => {
+      if (loaded.length > 0) setAllProducts(loaded);
+    });
+
+    return () => {
+      unsubConfig();
+      unsubProducts();
+    };
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -303,104 +270,76 @@ function MainApp() {
   }, []);
 
   return (
-    <SparklesContainer>
+    <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen">
       <TopAnnouncementBar />
-      <Routes>
-        <Route path="/" element={<EntryView config={effectiveConfig} allProducts={allProducts} />} />
-        <Route path="/vitrine" element={<VitrinePage />} />
-        
-        <Route path="/atelies" element={<AteliersPresentationView />} />
-        <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />
-        <Route path="/kits" element={<KitsView allProducts={allProducts} />} />
-        <Route path="/kit-meukit" element={<KitConstructor allProducts={allProducts} />} />
-        <Route path="/sobrenos" element={<AboutMeView />} />
-        <Route path="/listadepresentes-info" element={<GiftListInfoView />} />
-        
-        <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="pallyra" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
-        <Route path="/lapallyra/admin" element={<Navigate to="/admin" replace />} />
-        
-        <Route path="/comamorguennita" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="guennita" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
-        <Route path="/comamorguennita/admin" element={<Navigate to="/admin" replace />} />
-        
-        <Route path="/mimadasim" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="mimada" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
-        <Route path="/mimadasim/admin" element={<Navigate to="/admin" replace />} />
-        
-        <Route path="/tuttymimo" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="tuttymimo" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
-        <Route path="/tuttymimo/admin" element={<Navigate to="/admin" replace />} />
-
-        {/* Short Aliases */}
-        <Route path="/mimada" element={<Navigate to="/mimadasim" replace />} />
-        <Route path="/guennita" element={<Navigate to="/comamorguennita" replace />} />
-        <Route path="/pallyra" element={<Navigate to="/lapallyra" replace />} />
-        <Route path="/tutty" element={<Navigate to="/tuttymimo" replace />} />
-
-        {/* Checkout Flow */}
-        <Route path="/checkout/:id" element={<CheckoutPage config={effectiveConfig} />} />
-        <Route path="/ped-:code" element={<CheckoutPage config={effectiveConfig} />} />
-
-        {/* Global Admin */}
-        <Route path="/admin/login" element={<AdminLoginView />} />
-        <Route path="/admin" element={
-          <ProtectedRoute>
-            <ErrorBoundary fallback={
-              <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-20 h-20 bg-rose-500/10 rounded-[2rem] flex items-center justify-center mb-6 border border-rose-500/20">
-                  <span className="text-4xl">⚠️</span>
+      <div className="flex-grow flex flex-col">
+        <Routes>
+          {/* SITE ROUTES */}
+          <Route path="/" element={<EntryView config={effectiveConfig} allProducts={allProducts} />} />
+          <Route path="/vitrine" element={<VitrinePage />} />
+          
+          <Route path="/atelies" element={<AteliersPresentationView />} />
+          <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />
+          <Route path="/kits" element={<KitsView allProducts={allProducts} />} />
+          <Route path="/kit-meukit" element={<KitConstructor allProducts={allProducts} />} />
+          <Route path="/sobrenos" element={<AboutMeView />} />
+          <Route path="/listadepresentes-info" element={<GiftListInfoView />} />
+          <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setUnifiedCart} config={effectiveConfig} />} />
+          
+          <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="pallyra" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
+          <Route path="/comamorguennita" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="guennita" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
+          <Route path="/mimadasim" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="mimada" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
+          <Route path="/tuttymimo" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="tuttymimo" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} />} />
+          
+          {/* Short Aliases */}
+          <Route path="/mimada" element={<Navigate to="/mimadasim" replace />} />
+          <Route path="/guennita" element={<Navigate to="/comamorguennita" replace />} />
+          <Route path="/pallyra" element={<Navigate to="/lapallyra" replace />} />
+          <Route path="/tutty" element={<Navigate to="/tuttymimo" replace />} />
+          
+          {/* Checkout Flow */}
+          <Route path="/checkout/:id" element={<CheckoutPage config={effectiveConfig} />} />
+          <Route path="/ped-:code" element={<CheckoutPage config={effectiveConfig} />} />
+          
+           {/* Tracking */}
+          <Route path="/rastreamento" element={<TrackingView onBack={() => window.history.back()} />} />
+          
+          {/* Minha Experiência */}
+          <Route path="/minha-experiencia/*" element={<MinhaExperienciaPage />} />
+  
+          {/* ADMIN ROUTES */}
+          <Route path="/admin/login" element={<AdminLoginView />} />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <ErrorBoundary fallback={
+                <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
+                  <div className="w-20 h-20 bg-rose-500/10 rounded-[2rem] flex items-center justify-center mb-6 border border-rose-500/20">
+                    <span className="text-4xl">⚠️</span>
+                  </div>
+                  <h1 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter italic">Erro no Painel</h1>
+                  <p className="text-slate-400 mb-8 max-w-sm font-sans text-xs uppercase tracking-widest leading-loose">
+                    Ocorreu um erro crítico ao carregar o painel administrativo. Por favor, recarregue a página.
+                  </p>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="bg-white text-black font-bold py-4 px-10 rounded-2xl hover:scale-105 transition-all uppercase tracking-widest text-[10px]"
+                  >
+                    Recarregar Página
+                  </button>
                 </div>
-                <h1 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter italic">Erro no Painel</h1>
-                <p className="text-slate-400 mb-8 max-w-sm font-sans text-xs uppercase tracking-widest leading-loose">
-                  Ocorreu um erro crítico ao carregar o painel administrativo. Por favor, recarregue a página.
-                </p>
-                <button 
-                  onClick={() => window.location.reload()}
-                  className="bg-white text-black font-bold py-4 px-10 rounded-2xl hover:scale-105 transition-all uppercase tracking-widest text-[10px]"
-                >
-                  Recarregar Página
-                </button>
-              </div>
-            }>
-              <AdminDashboard onGoBack={() => window.history.back()} />
-            </ErrorBoundary>
-          </ProtectedRoute>
-        } />
-
-        {/* Document Search */}
-        <Route path="/document" element={<DocumentSearch onGoBack={() => window.history.back()} />} />
-        
-        {/* Tracking */}
-        <Route path="/rastreamento" element={<TrackingView onBack={() => window.history.back()} />} />
-        
-        {/* Gift List View */}
-        <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setUnifiedCart} config={effectiveConfig} />} />
-
-        {/* Vitrine V2 - Fully Isolated Storefront Module */}
-        <Route path="/vitrine-v2" element={
-          <VitrineCartProvider>
-            <VitrineIndexPage />
-          </VitrineCartProvider>
-        } />
-        <Route path="/vitrine-v2/catalogo" element={
-          <VitrineCartProvider>
-            <VitrineCatalogoPage />
-          </VitrineCartProvider>
-        } />
-        <Route path="/vitrine-v2/produto/:id" element={
-          <VitrineCartProvider>
-            <VitrineProdutoDetailPage />
-          </VitrineCartProvider>
-        } />
-        <Route path="/vitrine-v2/carrinho" element={
-          <VitrineCartProvider>
-            <VitrineCarrinhoPage />
-          </VitrineCartProvider>
-        } />
-        <Route path="/vitrine-v2/checkout" element={
-          <VitrineCartProvider>
-            <VitrineCheckoutPage />
-          </VitrineCartProvider>
-        } />
-      </Routes>
-    </SparklesContainer>
+              }>
+                <AdminDashboard onGoBack={() => window.history.back()} />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
+          <Route path="/document" element={<DocumentSearch onGoBack={() => window.history.back()} />} />
+          <Route path="/studiomockup" element={<StudioPage />} />
+  
+        </Routes>
+      </div>
+      {!location.pathname.startsWith('/admin') && <Footer config={effectiveConfig} />}
+    </div>
   );
 }
 

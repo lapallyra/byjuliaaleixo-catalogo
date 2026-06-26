@@ -1,11 +1,11 @@
 import express from "express";
-import path from "path";
-import { createServer as createViteServer } from "vite";
+import path from "node:path";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
+  console.log("Starting server process...");
 
   // Add JSON body parsing middleware
   app.use(express.json());
@@ -77,15 +77,18 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
+    const { createServer } = await import("vite");
+    const vite = await createServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
+    console.log("Vite dev server created.");
     app.use(vite.middlewares);
   } else {
     // Production static serving
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
+    // In Express 5, use *all for the final catch-all
     app.get('*all', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });

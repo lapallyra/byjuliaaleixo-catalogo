@@ -1,6 +1,17 @@
-import { getSystemNotificationsConfig } from './firebaseService';
 import { db } from '../lib/firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+
+const getSystemNotificationsConfig = async (): Promise<any> => {
+  try {
+    const docSnap = await getDoc(doc(db, 'system_notifications', 'settings'));
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+  } catch (e) {
+    console.error('Error fetching system notifications config in telegramService:', e);
+  }
+  return null;
+};
 
 const decryptHex = (str: string) => {
   try {

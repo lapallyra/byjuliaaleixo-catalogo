@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MessageSquare, Send, X, CheckCircle2, ChevronUp, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CompanyId } from '../types';
-import { themes } from '../lib/theme';
+import { themes, getTheme } from '../lib/theme';
 import { addSuggestion } from '../services/firebaseService';
 
 interface SuggestionBoxProps {
@@ -45,7 +45,7 @@ export const SuggestionBox: React.FC<SuggestionBoxProps> = ({ companyId, hideTri
     }
   };
 
-  const theme = themes[companyId as keyof typeof themes] || themes.mimada;
+  const theme = getTheme(companyId);
 
   return (
     <div className="fixed bottom-[154px] md:bottom-[180px] right-6 md:right-10 z-[1000] flex flex-col items-end gap-4">

@@ -30,7 +30,8 @@ import {
   MessageCircle,
   MessageSquare,
   Wand2,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react';
 import { CompanyId, AppConfig, Product, CartItem, SiteSettings } from '../types';
 import { CartSidebar } from './CartSidebar';
@@ -39,12 +40,12 @@ import { GiftListSidebar } from './GiftListSidebar';
 import { SuggestionBox } from './SuggestionBox';
 import { ProductDetailPage } from './ProductDetailPage';
 import { ColecoesView } from './ColecoesView';
+import { CategoryPillMenu } from './Catalog/CategoryPillMenu';
+import { FestiveBanner } from './Catalog/FestiveBanner';
+import { CatalogProductCard } from './Catalog/CatalogProductCard';
 
 
-import { CatalogEditorialHeader } from './Catalog/Widgets/CatalogEditorialHeader';
-import { CatalogListSearchOverlay } from './Catalog/Widgets/CatalogListSearchOverlay';
 import { CatalogHeader } from './Catalog/CatalogHeader';
-import { CatalogCategories } from './Catalog/CatalogCategories';
 import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
@@ -57,7 +58,7 @@ import { PRODUCTS, INITIAL_CONFIG } from '../constants';
 import { useAuth } from './AuthProvider';
 import { login } from '../lib/firebase';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { themes } from '../lib/theme';
+import { themes, getTheme } from '../lib/theme';
 import { formatCurrency } from '../lib/currencyUtils';
 import { ImageWithFallback } from './ImageWithFallback';
 
@@ -97,8 +98,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const rawTheme = themes[companyId] || themes['pallyra'];
-  const theme = useMemo(() => rawTheme, [companyId, rawTheme]);
+  const theme = useMemo(() => getTheme(companyId), [companyId]);
 
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [globalSettings, setGlobalSettings] = useState<any>(null);
@@ -679,6 +679,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         onViewCollections={() => setView('collections')}
         onViewNews={() => highlightsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })}
         onViewContact={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
+        logoUrl={defaultLogo}
+        companyId={companyId}
       />
       
       <div className="flex-1 flex overflow-hidden">
@@ -697,12 +699,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {
                   onAddToCart(prod, qty);
-                  setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
                 }
               }}
               onAddToGiftList={isReadOnlyProduct ? undefined : (prod) => {
                 onAddToGiftList?.(prod);
-                setToast({ message: 'Adicionado à Lista de Presentes', type: 'gift' });
               }}
               allProducts={allProducts}
               companyId={companyId}
@@ -712,24 +712,25 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           <ColecoesView allProducts={allProducts} />
         ) : (
           <>
-            <CatalogCategories 
-              categories={categories}
-              selectedCategory={selectedCategory}
-              onSelectCategory={handleCategoryClick}
-              theme={theme}
-              getCategoryIcon={getCategoryIcon}
-              isSidebarCollapsed={isSidebarCollapsed}
-              setIsSidebarCollapsed={setIsSidebarCollapsed}
-            />
-
             {/* Content Area */}
             <div className="flex-1 flex flex-col min-h-0 bg-[#FAF9F6] overflow-y-auto scrollbar-none">
               
+              <FestiveBanner companyId={companyId} />
+              
+              <CategoryPillMenu 
+                categories={categories}
+                selectedCategory={selectedCategory}
+                onSelectCategory={handleCategoryClick}
+              />
+              
               {/* Main Scroll Content */}
-              <main className="p-4 md:p-8 relative">
+              <main className="p-2 md:p-4 relative">
+
                 <div className="max-w-[1400px] mx-auto h-full flex flex-col pt-4">
                   
-                  <CatalogEditorialHeader theme={theme} companyName={companyName} />
+                  <div className="mb-6 py-2 border-b border-[#e8dcc8]/15 select-none flex flex-col sm:flex-row items-center justify-between gap-4">
+
+                  </div>
 
               {/* Loading Overlay between Filters */}
               <AnimatePresence mode="wait">
@@ -759,55 +760,18 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           const createdAtDate = product.createdAt?.toMillis ? new Date(product.createdAt.toMillis()) : product.createdAt instanceof Date ? product.createdAt : new Date();
                           
                           return (
-                            <motion.div
+                            <CatalogProductCard 
                               key={`prod-${product.id}-${idx}`}
-                              initial={{ opacity: 0, y: 30 }}
-                              whileInView={{ opacity: 1, y: 0 }}
-                              viewport={{ once: true, margin: "-100px" }}
-                              transition={{ duration: 0.5, delay: (idx % 3) * 0.05, ease: [0.16, 1, 0.3, 1] }}
+                              product={product}
+                              theme={theme}
+                              onAddToCart={(prod, qty) => {
+                                onAddToCart(prod, qty);
+                              }}
+                              onAddToGiftList={(prod) => {
+                                onAddToGiftList?.(prod);
+                              }}
                               onClick={() => setSelectedProduct(product)}
-                              className="group relative flex flex-col md:flex-row overflow-hidden bg-white rounded-[12px] border transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md p-3 items-center"
-                              style={{ borderColor: `${theme.accentColor}18` }}>
-                               {/* Product Image */}
-                              <div className="w-full h-[160px] md:w-[160px] md:h-full relative overflow-hidden bg-neutral-50/50 rounded-[8px] mb-3 md:mb-0 md:mr-4 shrink-0">
-                                <ImageWithFallback 
-                                  src={product.image || ''} 
-                                  alt="Product"
-                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                  containerClassName="w-full h-full absolute inset-0"
-                                />
-                              </div>
-
-                              {/* Card Content */}
-                              <div className="flex flex-col flex-1 justify-between w-full gap-2">
-                                <div className="space-y-1">
-                                  <h3 className={`font-sans text-[16px] font-semibold leading-tight ${theme.textPrimary} line-clamp-1`}>
-                                    {product.product_name}
-                                  </h3>
-                                  <p className={`text-[12px] leading-tight line-clamp-2 ${theme.textSecondary} opacity-80 font-sans`}>
-                                    {product.description || 'Um presente personalizado maravilhoso.'}
-                                  </p>
-                                  <span className={`text-[14px] font-semibold font-sans block pt-1 ${theme.textPrimary}`}>
-                                      {formatCurrency(product.retail_price || 0)}
-                                  </span>
-                                </div>
-                                
-                                {/* CTA */}
-                                <button 
-                                  onClick={(e) => { 
-                                    e.stopPropagation();
-                                    onAddToCart(product, 1); 
-                                    setToast({ message: 'Adicionado ao Carrinho', type: 'success' });
-                                  }}
-                                  className="mt-2 w-full h-[40px] rounded-[10px] text-white font-bold uppercase tracking-widest text-[11px] transition-all duration-200 flex items-center justify-center shadow-sm hover:opacity-90 active:scale-[0.98] border border-transparent shadow-neutral-200/50"
-                                  style={{ 
-                                    backgroundColor: theme.accentColor
-                                  }}
-                                >
-                                  Quero este
-                                </button>
-                              </div>
-                            </motion.div>
+                            />
                           )})}
                       </div>
                       
@@ -919,15 +883,47 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
            onCloseExternal={() => setIsSuggestionOpen(false)} 
         />
         
-                <CatalogListSearchOverlay 
-          isOpen={isSearchingList}
-          onClose={() => setIsSearchingList(false)}
-          theme={theme}
-          listSearchCode={listSearchCode}
-          setListSearchCode={setListSearchCode}
-          handleListSearch={handleListSearch}
-          isSearchingLoading={isSearchingLoading}
-        />
+        {isSearchingList && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none">
+            {/* Backdrop style */}
+            <div 
+              onClick={() => setIsSearchingList(false)}
+              className="absolute inset-0 bg-[#3A312D]/40 backdrop-blur-sm transition-opacity"
+            />
+            {/* Modal Body */}
+            <div className="bg-white rounded-[24px] w-full max-w-sm border border-[#e8dcc8]/50 p-6 shadow-xl relative z-10 animate-fade-in text-center font-sans">
+              <h3 className="text-xl font-parisienne text-[#3A312D] mb-1 font-normal">Buscar Lista</h3>
+              <p className="text-[10.5px] text-[#6d5443]/70 font-light mb-4">Insira o código de 5 dígitos para encontrar a lista de presentes</p>
+              
+              <input 
+                type="text"
+                maxLength={5}
+                value={listSearchCode}
+                onChange={(e) => setListSearchCode(e.target.value.toUpperCase())}
+                placeholder="Ex: LUISA"
+                className="w-full text-center tracking-[0.15em] font-semibold text-sm uppercase px-4 py-2.5 bg-[#faf8f5] border border-[#e8dcc8]/40 rounded-xl focus:outline-none focus:border-[#cca062] mb-4 text-[#3A312D] font-poppins"
+              />
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsSearchingList(false)}
+                  className="flex-1 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider font-poppins border border-[#e8dcc8]/60 text-[#3A312D] hover:bg-[#3A312D]/5 transition-all outline-none cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleListSearch}
+                  disabled={isSearchingLoading || listSearchCode.length < 5}
+                  className="flex-1 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider font-poppins bg-[#3A312D] text-white hover:bg-[#cca062] hover:text-[#3A312D] transition-all disabled:opacity-50 disabled:pointer-events-none outline-none cursor-pointer"
+                >
+                  {isSearchingLoading ? 'Buscando...' : 'Buscar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
 
 
@@ -996,7 +992,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             </button>
 
             <a 
-              href={`https://wa.me/${config.whatsapp_number.replace(/\D/g, '')}`}
+              href={`https://wa.me/${(config.whatsapp_number || "").replace(/\D/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm active:scale-95 transition-all border`}
@@ -1006,12 +1002,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               <MessageCircle size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
             </a>
         </motion.div>
-        {toast && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] px-6 py-3 rounded-full bg-black text-white shadow-xl flex items-center gap-3">
-            {toast.type === 'success' ? <ShoppingCart size={16} /> : <Gift size={16} />}
-            <span className="text-[10px] uppercase font-bold tracking-widest">{toast.message}</span>
-          </div>
-        )}
+        
     </div>
   );
 };

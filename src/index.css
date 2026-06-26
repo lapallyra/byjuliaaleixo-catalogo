@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Gloock&family=Monsieur+La+Doulaise&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mea+Culpa&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Pinyon+Script&family=Rouge+Script&family=Monsieur+La+Doulaise&family=Bowlby+One+SC&family=Playfair+Display:wght@700;900&display=swap');
 @import "tailwindcss";
 
 html {
@@ -8,17 +8,17 @@ html {
 @theme {
   --font-sans: "DM Sans", sans-serif;
   --font-poppins: "DM Sans", sans-serif;
-  --font-serif: "Parisienne", cursive;
-  --font-playfair: "Parisienne", cursive;
-  --font-hello-olivia: "Parisienne", cursive;
-  --font-cursive: "Parisienne", cursive;
-  --font-hand: "Parisienne", cursive;
+  --font-serif: "Playfair Display", serif;
+  --font-playfair: "Playfair Display", serif;
+  --font-hello-olivia: "Rouge Script", cursive;
+  --font-cursive: "Rouge Script", cursive;
+  --font-hand: "Rouge Script", cursive;
   --font-atelier: "Mea Culpa", cursive;
-  --font-elegant: "Parisienne", cursive;
-  --font-sofia: "Parisienne", cursive;
-  --font-imperial: "Parisienne", cursive;
-  --font-parisienne: "Parisienne", cursive;
-  --font-allura: "Parisienne", cursive;
+  --font-elegant: "Rouge Script", cursive;
+  --font-sofia: "Rouge Script", cursive;
+  --font-imperial: "Rouge Script", cursive;
+  --font-parisienne: "Rouge Script", cursive;
+  --font-allura: "Rouge Script", cursive;
   --font-mea-culpa: "Mea Culpa", cursive;
   --font-number: "DM Sans", sans-serif;
   --font-tahoma: "DM Sans", sans-serif;
@@ -32,11 +32,39 @@ html {
   --font-pinyon: "Pinyon Script", cursive;
   --font-gloock: "Gloock", serif;
   --font-monsieur: "Monsieur La Doulaise", cursive;
+  --font-bowlby: "Bowlby One SC", sans-serif;
+  --font-rouge: "Rouge Script", cursive;
 }
 
 @layer utilities {
+  .mea-culpa-regular {
+    font-family: "Mea Culpa", cursive;
+    font-weight: 400;
+    font-style: normal;
+  }
+  .dm-sans-regular {
+    font-family: "DM Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+  }
   .pinyon-script-regular {
     font-family: "Pinyon Script", cursive;
+    font-weight: 400;
+    font-style: normal;
+  }
+  .rouge-script-regular {
+    font-family: "Rouge Script", cursive;
+    font-weight: 400;
+    font-style: normal;
+  }
+  .monsieur-la-doulaise-regular {
+    font-family: "Monsieur La Doulaise", cursive;
+    font-weight: 400;
+    font-style: normal;
+  }
+  .bowlby-one-sc-regular {
+    font-family: "Bowlby One SC", sans-serif;
     font-weight: 400;
     font-style: normal;
   }
@@ -50,26 +78,35 @@ html {
     font-family: var(--font-hello-olivia);
   }
   .font-fancy {
-    font-family: var(--font-parisienne);
+    font-family: var(--font-rouge);
     font-weight: 400;
   }
   .font-beauty {
-    font-family: var(--font-parisienne);
+    font-family: var(--font-rouge);
   }
   .font-signature {
-    font-family: var(--font-parisienne);
+    font-family: var(--font-rouge);
   }
   .font-parisienne {
-    font-family: var(--font-parisienne);
+    font-family: var(--font-rouge);
+  }
+  .font-rouge-script {
+    font-family: var(--font-rouge);
+  }
+  .font-bowlby {
+    font-family: var(--font-bowlby);
+  }
+  .font-monsieur {
+    font-family: var(--font-monsieur);
   }
   .font-mea-culpa {
     font-family: var(--font-mea-culpa);
   }
   .font-allura {
-    font-family: var(--font-parisienne);
+    font-family: var(--font-rouge);
   }
   .font-cormorant-italic {
-    font-family: var(--font-parisienne);
+    font-family: var(--font-rouge);
     font-style: italic;
   }
   .font-tahoma {
@@ -573,8 +610,16 @@ html {
     color: #333333;
   }
 
-  .brand-badge {
-    @apply w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white shrink-0;
+  /* Neumorphism Buttons */
+  .btn-neumorph {
+    @apply p-4 rounded-3xl bg-[#f0f0f3] transition-all;
+    box-shadow: 4px 4px 8px #d1d1d1, -4px -4px 8px #ffffff;
+  }
+  .btn-neumorph:active {
+    box-shadow: inset 2px 2px 4px #d1d1d1, inset -2px -2px 4px #ffffff;
+  }
+  .btn-neumorph svg {
+    @apply text-[#b762cc]; /* Cor roxa indicada na imagem */
   }
 }
 

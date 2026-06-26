@@ -135,6 +135,17 @@ export interface Customer {
   companyId: CompanyId;
 }
 
+export interface Review {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  adminReply?: string;
+  createdAt: any;
+}
+
 export interface FinanceEntry {
   id: string;
   type: 'revenue' | 'expense';
@@ -182,6 +193,7 @@ export interface SiteSettings {
 
   // Additional fields for branding and config
   store_logo?: string;
+  store_isotipo?: string;
   store_logo_scale?: number;
   store_logo_rotate?: number;
   store_logo_x?: number;
@@ -352,3 +364,54 @@ export interface CommemorativeDate {
   createdAt: any;
   updatedAt: any;
 }
+
+export interface ProductAsset {
+  id: string;
+  name: string;
+  type: 'front_art' | 'back_art' | 'cut_file' | 'mask' | 'template' | 'pdf_print' | 'auxiliary' | 'font' | 'assembly_instruction';
+  url: string;
+  thumbnailUrl?: string;
+  uploadedAt: string;
+  lastModifiedAt: string;
+  observations?: string;
+}
+
+export interface CustomField {
+  id: string;
+  name: string;
+  label: string;
+  type: 'text' | 'image' | 'date';
+  value: string;
+  font: string;
+  fontSize: number;
+  color: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  scale: number;
+  isBold?: boolean;
+  isItalic?: boolean;
+  isUnderline?: boolean;
+  textAlign?: 'left' | 'center' | 'right';
+  limitCharacters?: number;
+  uppercase?: boolean;
+}
+
+export interface ProductLayer {
+  id: string;
+  name: string;
+  isVisible: boolean;
+  isLocked: boolean;
+  index: number;
+}
+
+export interface ProductModel extends Product {
+  assets: ProductAsset[];
+  fields: CustomField[];
+  layers: ProductLayer[];
+  canvasWidth: number;
+  canvasHeight: number;
+}
+

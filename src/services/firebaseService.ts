@@ -45,7 +45,7 @@ interface FirestoreErrorInfo {
   }
 }
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, shouldThrow: boolean = true) {
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, shouldThrow: boolean = false) {
   // Ignore abort errors from the browser/SDK
   if (error instanceof Error && (error.name === 'AbortError' || error.message.toLowerCase().includes('abort'))) {
     console.warn('Firestore request was aborted (normal behavior):', path);
@@ -69,13 +69,11 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   }
   
-  if (!shouldThrow) {
-    console.warn(`Firestore Subscription/Async Error for [${operationType}] at [${path}] (gracefully handled):`, JSON.stringify(errInfo));
-    return;
-  }
-
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+
+  if (shouldThrow) {
+    throw new Error(JSON.stringify(errInfo));
+  }
 }
 
 /**
@@ -83,41 +81,56 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
  * Useful for cleaning data before sending to Firestore.
  */
 function sanitize(data: any): any {
-  if (data === undefined) return undefined;
-  if (data === null) return null;
+  try {
+    if (data === undefined) return undefined;
+    if (data === null) return null;
 
-  if (Array.isArray(data)) {
-    return data
-      .map((item) => sanitize(item))
-      .filter((item) => item !== undefined);
-  }
+    if (Array.isArray(data)) {
+      return data
+        .map((item) => sanitize(item))
+        .filter((item) => item !== undefined);
+    }
 
-  // Check if it's a plain object. This prevents recursing into 
-  // Firestore special types like Timestamp, FieldValue, etc.
-  if (typeof data === 'object') {
-    // If it's a Firestore Timestamp or FieldValue, don't recurse
-    if (data.constructor?.name === 'Timestamp' || 
+    if (typeof data === 'object') {
+      // Keep Dates
+      if (data instanceof Date || Object.prototype.toString.call(data) === '[object Date]') {
+        return data;
+      }
+      
+      // Handle Firestore types (Timestamp, FieldValue) safely
+      // We check for common properties as constructor names might change or be mangled
+      if (
+        data.constructor?.name === 'Timestamp' || 
         data.constructor?.name === 'FieldValueImpl' ||
-        data instanceof Date) {
-      return data;
-    }
+        data.constructor?.name === 'FieldValue' ||
+        (typeof data.seconds === 'number' && typeof data.nanoseconds === 'number') ||
+        (typeof data.toMillis === 'function')
+      ) {
+        return data;
+      }
 
-    // Only recurse into plain objects
-    if (Object.prototype.toString.call(data) === '[object Object]') {
-      const cleaned: any = {};
-      let hasVisibleProps = false;
-      Object.keys(data).forEach((key) => {
-        const value = sanitize(data[key]);
-        if (value !== undefined) {
-          cleaned[key] = value;
-          hasVisibleProps = true;
+      // Only recurse into plain objects
+      if (Object.prototype.toString.call(data) === '[object Object]') {
+        const cleaned: any = {};
+        let hasProps = false;
+        for (const key in data) {
+          if (Object.prototype.hasOwnProperty.call(data, key)) {
+            const val = sanitize(data[key]);
+            if (val !== undefined) {
+              cleaned[key] = val;
+              hasProps = true;
+            }
+          }
         }
-      });
-      return hasVisibleProps ? cleaned : {};
+        return hasProps ? cleaned : {};
+      }
     }
-  }
 
-  return data;
+    return data;
+  } catch (e) {
+    console.error('Sanitize error:', e);
+    return data;
+  }
 }
 
 export const getProducts = async (companyId?: CompanyId): Promise<Product[]> => {
@@ -764,7 +777,7 @@ export const getGlobalSettings = async (): Promise<any> => {
 
 export const saveGlobalSettings = async (data: any) => {
   try {
-    await setDoc(doc(db, 'settings', 'global'), data, { merge: true });
+    await setDoc(doc(db, 'settings', 'global'), sanitize(data), { merge: true });
   } catch (error) {
     console.error('Error saving global settings:', error);
   }
@@ -772,7 +785,7 @@ export const saveGlobalSettings = async (data: any) => {
 
 export const saveSiteSettings = async (companyId: CompanyId, data: Partial<SiteSettings>) => {
   try {
-    await setDoc(doc(db, 'settings', companyId), data, { merge: true });
+    await setDoc(doc(db, 'settings', companyId), sanitize(data), { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `settings/${companyId}`);
   }
@@ -802,10 +815,10 @@ export const getSystemNotificationsConfig = async (): Promise<any> => {
 export const saveSystemNotificationsConfig = async (data: any) => {
   try {
     const docRef = doc(db, 'system_notifications', 'settings');
-    const updateData = {
+    const updateData = sanitize({
       ...data,
       updated_at: new Date().toISOString()
-    };
+    });
     if (!data.created_at) {
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) {
@@ -840,7 +853,7 @@ export const subscribeToAllSettings = (callback: (settings: Record<string, SiteS
 export const saveAppConfig = async (data: Partial<AppConfig>) => {
   const path = 'appConfig/main';
   try {
-    await setDoc(doc(db, 'appConfig', 'main'), data, { merge: true });
+    await setDoc(doc(db, 'appConfig', 'main'), sanitize(data), { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
@@ -1028,7 +1041,7 @@ export const subscribeToSales = (callback: (sales: any[]) => void, companyId?: C
     onSnapshot(fallbackQ, (fallbackSnap) => {
       callback(fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     }, (fallbackError) => {
-      handleFirestoreError(fallbackError, OperationType.LIST, path);
+      handleFirestoreError(fallbackError, OperationType.LIST, path, false);
     });
   });
 };

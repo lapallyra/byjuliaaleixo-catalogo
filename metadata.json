@@ -1,6 +1,6 @@
 {
   "name": "Ateliê dos Personalizados",
-  "description": "Uma plataforma elegante para catálogos de produtos personalizados para ateliês.",
+  "description": "Vitrine de presentes personalizados feitos exclusivamente por Julia Aleixo.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -1,8 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { PRODUCTS } from '../constants';
 import { Product } from '../types';
+import { CatalogProductCard } from './Catalog/CatalogProductCard';
+import { themes } from '../lib/theme';
+import { useNavigate } from 'react-router-dom';
 
 export function VitrinePage() {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
 
   const categories = useMemo(() => {
@@ -67,15 +71,25 @@ export function VitrinePage() {
         <section>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {filteredProducts.map(p => (
-              <div key={p.id} className="bg-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition">
-                <div className="text-6xl mb-4 text-center">{p.image}</div>
-                <h3 className="text-lg font-medium mb-1">{p.product_name}</h3>
-                <p className="text-gray-500 text-sm mb-4">{p.category}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-semibold">R$ {p.current_price.toFixed(2)}</span>
-                  <button className="text-sm border border-gray-900 px-4 py-2 rounded-full hover:bg-gray-900 hover:text-white transition">Detalhes</button>
-                </div>
-              </div>
+              <CatalogProductCard 
+                key={p.id}
+                product={p}
+                theme={themes[p.company || 'pallyra']}
+                onAddToCart={(prod) => {
+                  const targetRoute = prod.company === 'pallyra' ? '/lapallyra' 
+                                    : prod.company === 'guennita' ? '/comamorguennita' 
+                                    : prod.company === 'mimada' ? '/mimadasim' 
+                                    : '/tuttymimo';
+                  navigate(`${targetRoute}?product=${prod.id}`);
+                }}
+                onClick={(prod) => {
+                  const targetRoute = prod.company === 'pallyra' ? '/lapallyra' 
+                                    : prod.company === 'guennita' ? '/comamorguennita' 
+                                    : prod.company === 'mimada' ? '/mimadasim' 
+                                    : '/tuttymimo';
+                  navigate(`${targetRoute}?product=${prod.id}`);
+                }}
+              />
             ))}
           </div>
         </section>

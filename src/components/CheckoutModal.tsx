@@ -2,12 +2,13 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Lock, Check, ChevronRight, UploadCloud, MapPin, Search, ShieldCheck, HeartHandshake, Box, UserCheck, Gift, Truck, Clock, Calendar } from 'lucide-react';
 import { CartItem, CompanyId } from '../types';
-import { themes } from '../lib/theme';
+import { themes, getTheme } from '../lib/theme';
 import { logCheckoutEvent, getSiteSettings, getGlobalSettings, getCustomerByCpf } from '../services/firebaseService';
 import { SiteSettings } from '../types';
 import { useAuth } from './AuthProvider';
 import { ImageWithFallback } from './ImageWithFallback';
 import { formatPhone, formatCPFOrCNPJ } from '../utils/masks';
+import { formatMoney } from '../lib/formatUtils';
 
 
 interface CheckoutModalProps {
@@ -30,7 +31,7 @@ export function CheckoutModal({
   isSubmitting
 }: CheckoutModalProps) {
   const [step, setStep] = useState(1);
-  const theme = themes[companyId] || themes.pallyra;
+  const theme = getTheme(companyId);
   const [siteSettings, setSiteSettings] = useState<Partial<SiteSettings> | null>(null);
   const [globalSettings, setGlobalSettings] = useState<any>(null);
   const { isAdmin } = useAuth();
@@ -515,7 +516,7 @@ export function CheckoutModal({
             {discount > 0 && (
               <div className="flex justify-between text-sm text-[#E96A8D]">
                 <span>Desconto</span>
-                <span className="font-medium">- R$ {discount.toFixed(2).replace('.', ',')}</span>
+                <span className="font-medium">- R$ {formatMoney(discount)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm text-gray-500">
@@ -525,13 +526,13 @@ export function CheckoutModal({
               <span className="font-medium">
                 {cep.replace(/\D/g, '').length < 8 ? 'Informe o CEP' : 
                  delivery === 0 && (globalSettings?.shipping_rules?.some((r: any) => r.active) || siteSettings?.shipping_rules?.some(r => r.active)) ? 'Sob Consulta' : 
-                 `R$ ${delivery.toFixed(2).replace('.', ',')}`}
+                 `R$ ${formatMoney(delivery)}`}
               </span>
             </div>
             
             <div className="flex justify-between text-xl font-bold pt-5 border-t border-gray-100 mt-2" style={{ color: theme.accentColor }}>
               <span>Total</span>
-              <span>R$ {total.toFixed(2).replace('.', ',')}</span>
+              <span>R$ {formatMoney(total)}</span>
             </div>
           </div>
        </div>
@@ -556,8 +557,8 @@ export function CheckoutModal({
                   <div className="flex-1">
                     <p className="text-[11px] font-semibold text-gray-800 mb-1 leading-tight">{upsell.name}</p>
                     <div className="flex items-center gap-2">
-                       <span className="text-[10px] text-gray-400 line-through">R$ {upsell.oldPrice.toFixed(2).replace('.', ',')}</span>
-                       <span className="text-xs font-bold" style={{ color: theme.accentColor }}>R$ {upsell.price.toFixed(2).replace('.', ',')}</span>
+                       <span className="text-[10px] text-gray-400 line-through">R$ {formatMoney(upsell.oldPrice)}</span>
+                       <span className="text-xs font-bold" style={{ color: theme.accentColor }}>R$ {formatMoney(upsell.price)}</span>
                     </div>
                   </div>
                   <button 
@@ -932,7 +933,7 @@ export function CheckoutModal({
                       <div className="space-y-3 pt-2">
                         <div className="flex justify-between text-sm text-gray-500">
                           <span>Subtotal ({cart.length} itens)</span>
-                          <span className="font-medium text-gray-700">R$ {subtotal.toFixed(2).replace('.', ',')}</span>
+                          <span className="font-medium text-gray-700">R$ {formatMoney(subtotal)}</span>
                         </div>
                         <div className="flex justify-between text-sm text-gray-500">
                           <span className="flex items-center gap-1">

@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Product, CartItem } from '../types';
 import { CatalogHeader } from './Catalog/CatalogHeader';
+import { CatalogProductCard } from './Catalog/CatalogProductCard';
+import { themes } from '../lib/theme';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
 
@@ -18,17 +20,15 @@ export const KitsView: React.FC<KitsViewProps> = ({ allProducts }) => {
       {kits.length === 0 ? (
         <p className="text-neutral-500">Nenhum kit pronto disponível no momento.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {kits.map(kit => (
-             <div key={kit.id} className="bg-white p-6 rounded-3xl border border-[#cca062]/20 shadow-lg text-left">
-                <img src={kit.image} alt={kit.product_name} className="w-full h-48 object-cover rounded-2xl mb-4" />
-                <h3 className="font-bold text-lg text-[#6d5443]">{kit.product_name}</h3>
-                <p className="text-sm text-[#6d5443]/70 mb-4">{kit.description}</p>
-                <div className="flex justify-between items-center">
-                    <span className="font-black text-xl text-[#6d5443]">R$ {kit.retail_price.toFixed(2)}</span>
-                    <button className="bg-[#cca062] text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider">Ver</button>
-                </div>
-             </div>
+            <CatalogProductCard 
+              key={kit.id}
+              product={kit}
+              theme={themes[kit.company || 'pallyra']}
+              onAddToCart={() => navigate(`/kits?product=${kit.id}`)}
+              onClick={() => navigate(`/kits?product=${kit.id}`)}
+            />
           ))}
         </div>
       )}

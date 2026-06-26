@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, ShoppingBag } from 'lucide-react';
-import { themes } from '../../lib/theme';
+import { themes, getTheme } from '../../lib/theme';
 import { useLocation } from 'react-router-dom';
 
 const MOCK_PURCHASES = [
@@ -14,11 +14,14 @@ export function PurchaseAlert() {
   const [currentAlert, setCurrentAlert] = useState<number | null>(null);
   const location = useLocation();
 
-  let companyId: 'pallyra' | 'guennita' | 'mimada' = 'pallyra';
-  if (location.pathname.includes('comamorguennita')) companyId = 'guennita';
-  else if (location.pathname.includes('mimadasim')) companyId = 'mimada';
-  
-  const theme = themes[companyId] || themes.pallyra;
+  const theme = React.useMemo(() => {
+    let id: string = 'pallyra';
+    if (location.pathname.includes('comamorguennita')) id = 'comAmorGuennita';
+    else if (location.pathname.includes('mimadasim')) id = 'mimadaSim';
+    else if (location.pathname.includes('tuttyMimo')) id = 'tuttyMimo';
+    else if (location.pathname.includes('lapallyra')) id = 'laPallyra';
+    return getTheme(id);
+  }, [location.pathname]);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Minus, Plus, Share2, ShoppingCart, Gift } from 'lucide-react';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { Product, CompanyId } from '../types';
-import { themes } from '../lib/theme';
+import { themes, getTheme } from '../lib/theme';
 import { formatCurrency } from '../lib/currencyUtils';
 import { ImageWithFallback } from './ImageWithFallback';
 
@@ -24,8 +24,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onAddToGiftList,
   companyId
 }) => {
-  const theme = themes[companyId] || themes.pallyra;
-  const accentColor = theme.accentColor;
+  const theme = getTheme(companyId);
+  const accentColor = theme.accentColor || '#000000';
   const isMimada = companyId === 'mimada';
 
   const [quantity, setQuantity] = useState(1);
@@ -255,10 +255,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         setShowToast(true);
                         setTimeout(() => setShowToast(false), 2000);
                     }}
-                    className={`py-5 rounded-2xl text-[10px] uppercase tracking-normal font-black transition-all duration-700 flex items-center justify-center gap-2 shadow-lg ${theme.btnPrimary}`}
+                    className={`py-5 rounded-2xl text-[10px] uppercase tracking-[0.2em] font-black transition-all duration-500 flex items-center justify-center gap-2 border-2 ${
+                      (theme.btnPrimary || '').includes('bg-white') 
+                        ? theme.btnPrimary 
+                        : 'bg-white border-black/5 text-slate-800 hover:border-[var(--accent-color)] hover:bg-[#fdfaf6]'
+                    }`}
+                    style={{ '--accent-color': accentColor } as React.CSSProperties}
                   >
                     <ShoppingCart size={16} strokeWidth={2} />
-                    Adicionar
+                    Adicionar ao Carrinho
                   </motion.button>
                   
                   {onAddToGiftList && (

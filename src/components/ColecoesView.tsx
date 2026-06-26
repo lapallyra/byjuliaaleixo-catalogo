@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Sparkles } from 'lucide-react';
 import { Product } from '../types';
 import { ImageWithFallback } from './ImageWithFallback';
+import { CatalogProductCard } from './Catalog/CatalogProductCard';
+import { themes, getTheme } from '../lib/theme';
 import { subscribeToAllSettings } from '../services/firebaseService';
 
 const AtelierCarousel = ({ 
@@ -157,30 +159,13 @@ const AtelierCarousel = ({
             ))
           ) : (
             products.map((prod) => (
-              <div 
-                key={prod.id} 
-                onClick={() => onNavigate()}
-                className="min-w-[210px] sm:min-w-[250px] max-w-[250px] flex flex-col border border-[#e8dcc8]/60 bg-white rounded-2xl overflow-hidden cursor-pointer hover:border-transparent hover:shadow-md transition-all shrink-0"
-              >
-                <div className="w-full aspect-[5/4] bg-[#faf8f5] overflow-hidden">
-                  <ImageWithFallback 
-                    src={prod.image} 
-                    alt={prod.product_name} 
-                    className="w-full h-full object-cover transition-transform hover:scale-105 duration-[1.5s]" 
-                    isThumbnail={true}
-                  />
-                </div>
-                <div className="flex flex-col items-center text-center p-4">
-                  <span className="text-[9px] font-bold tracking-widest uppercase mb-1" style={{ color: accent }}>
-                    {prod.category}
-                  </span>
-                  <h5 className="font-serif text-sm tracking-wide text-[#6d5443] truncate w-full mb-1">
-                    {prod.product_name}
-                  </h5>
-                  <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">
-                    A PARTIR DE R$ {prod.current_price?.toFixed(2).replace('.', ',')}
-                  </span>
-                </div>
+              <div key={prod.id} className="min-w-[280px] shrink-0">
+                <CatalogProductCard 
+                  product={prod}
+                  theme={getTheme(prod.company)}
+                  onAddToCart={() => onNavigate()}
+                  onClick={() => onNavigate()}
+                />
               </div>
             ))
           )}

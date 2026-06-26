@@ -16,8 +16,11 @@ export const AteliersPresentationView: React.FC = () => {
   }, []);
 
   const getAtelierLogo = (id: string) => {
+    const customIsotipo = customSettings[id]?.store_isotipo;
+    if (customIsotipo) return customIsotipo;
     const customLogo = customSettings[id]?.store_logo;
     if (customLogo) return customLogo;
+    
     if (id === 'pallyra') return '📓';
     if (id === 'guennita') return '👑';
     if (id === 'tuttymimo') return '🍼';

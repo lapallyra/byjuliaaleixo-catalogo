@@ -13,18 +13,25 @@ export const safeFormat = (date: any, formatStr: string, options?: any) => {
   }
 };
 
-export const safeFormatISO = (dateStr: string, formatStr: string, options?: any) => {
+export const safeFormatISO = (dateStr: any, formatStr: string, options?: any) => {
   try {
     if (!dateStr) return '---';
     
     let d: Date;
-    if (dateStr.includes('/')) {
-        // Handle dd/mm/yyyy
-        const [day, month, year] = dateStr.split('/');
-        d = new Date(`${year}-${month}-${day}T12:00:00`);
+    if (dateStr instanceof Date) {
+      d = dateStr;
+    } else if (typeof dateStr === 'object' && typeof (dateStr as any).toDate === 'function') {
+      d = (dateStr as any).toDate();
     } else {
-        // Append time if only date is provided to avoid timezone shifts
-        d = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T12:00:00`);
+      const str = String(dateStr);
+      if (str.includes('/')) {
+          // Handle dd/mm/yyyy
+          const [day, month, year] = str.split('/');
+          d = new Date(`${year}-${month}-${day}T12:00:00`);
+      } else {
+          // Append time if only date is provided to avoid timezone shifts
+          d = new Date(str.includes('T') ? str : `${str}T12:00:00`);
+      }
     }
 
     if (isNaN(d.getTime())) return '---';

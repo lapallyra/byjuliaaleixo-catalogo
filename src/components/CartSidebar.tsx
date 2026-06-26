@@ -5,7 +5,7 @@ import { SafeImage } from './ui/SafeImage';
 import { CartItem, CompanyId } from '../types';
 import { formatCurrency } from '../lib/currencyUtils';
 import { ImageWithFallback } from './ImageWithFallback';
-import { themes } from '../lib/theme';
+import { themes, getTheme } from '../lib/theme';
 
 interface CartSidebarProps {
   cart: CartItem[];
@@ -59,7 +59,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   isCheckoutLoading,
   companyId
 }) => {
-  const theme = themes[companyId] || themes.pallyra;
+  const theme = getTheme(companyId);
   const isMimada = companyId === 'mimada';
 
   const [coupon, setCoupon] = useState('');

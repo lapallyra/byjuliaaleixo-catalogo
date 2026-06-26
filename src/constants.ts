@@ -25,6 +25,13 @@ export const INITIAL_CONFIG: AppConfig = {
   email_para_pedidos: ""
 };
 
+export const ATELIERS = [
+  { id: 'pallyra', name: 'Ateliê La Pallyra', route: '/lapallyra', icon: '✨' },
+  { id: 'guennita', name: 'Ateliê Com Amor Guennita', route: '/comamorguennita', icon: '💝' },
+  { id: 'mimada', name: 'Ateliê Mimada Sim', route: '/mimadasim', icon: '🎀' },
+  { id: 'tuttymimo', name: 'Ateliê Tutty Mimo', route: '/tuttymimo', icon: '🧸' }
+];
+
 export const PRODUCTS: Product[] = [
   // La Pallyra
   { 

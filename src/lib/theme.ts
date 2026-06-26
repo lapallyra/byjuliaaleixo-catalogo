@@ -135,6 +135,39 @@ export const themes: Record<string, Theme> = {
     neonBorder: 'border-[#FF007F]/40 shadow-md',
     neonPulse: 'shadow-none'
   },
+  tuttymimo: {
+    bg: 'bg-[#FFFFFF]',
+    primaryColor: '#FFFFFF',
+    accentColor: '#C8A2C8',
+    accentGlow: 'rgba(200, 162, 200, 0.3)',
+    textPrimary: 'text-[#333333]',
+    textSecondary: 'text-[#333333]/70',
+    textMuted: 'text-[#333333]/40',
+    textVeryMuted: 'text-[#333333]/20',
+    borderLine: 'border-gray-200',
+    cardBg: 'bg-white',
+    cardHover: 'hover:border-[#C8A2C8]/50 hover:shadow-lg',
+    searchBg: 'bg-gray-50',
+    inputPlaceholder: 'placeholder:text-gray-400',
+    sidebarBg: 'bg-white',
+    btnPrimary: 'bg-[#C8A2C8] text-white hover:bg-[#C8A2C8]/80',
+    btnSecondary: 'bg-white border-[#F4C2C2] text-[#333333] hover:bg-[#F4C2C2]/10',
+    btnSecondaryText: 'text-[#333333]/70 hover:text-[#333333]',
+    categoryActive: 'text-[#C8A2C8] bg-[#C8A2C8]/20',
+    categoryInactive: 'text-gray-500 hover:text-[#C8A2C8]',
+    specialText: 'text-[#F4C2C2]',
+    specialHighlight: 'text-[#C8A2C8]',
+    specialBg: 'bg-[#C8A2C8]/10',
+    specialBorder: 'border-[#F4C2C2]',
+    specialBtn: 'bg-[#F4C2C2] text-white hover:bg-[#F4C2C2]/90',
+    specialAddBtn: 'bg-[#C8A2C8] text-white hover:bg-[#C8A2C8]/90',
+    cartBadge: 'bg-[#C8A2C8] text-white',
+    gradientText: 'text-[#C8A2C8]',
+    cartBtn: 'bg-[#F4C2C2] text-white shadow-lg',
+    cartIcon: 'text-white',
+    neonBorder: 'border-[#F4C2C2]/50',
+    neonPulse: 'shadow-none'
+  },
   tuttyMimo: {
     bg: 'bg-[#FFFFFF]',
     primaryColor: '#FFFFFF',
@@ -268,4 +301,9 @@ export const themes: Record<string, Theme> = {
     neonPulse: 'shadow-none'
   }
 
+};
+
+export const getTheme = (companyId?: string): Theme => {
+  if (!companyId) return themes.pallyra;
+  return themes[companyId] || themes.pallyra;
 };

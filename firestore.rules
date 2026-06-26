@@ -10,8 +10,7 @@ service cloud.firestore {
     }
     
     function isAdmin() { 
-      return request.auth != null && 
-             request.auth.token.email_verified == true && (
+      return request.auth != null && (
                request.auth.token.email == 'juualleixo@gmail.com' ||
                request.auth.token.email == 'lapallyra@gmail.com'
              );
@@ -26,6 +25,19 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /{document=**} {
       allow read, write: if false;
+    }
+
+    // ----------------------------------------------------
+    // SYSTEM NOTIFICATIONS
+    // ----------------------------------------------------
+    match /system_notifications/{configId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /telegram_logs/{logId} {
+      allow create: if true;
+      allow get, list, update, delete: if isAdmin();
     }
 
     // ----------------------------------------------------
@@ -127,6 +139,11 @@ service cloud.firestore {
       allow create, delete: if isAdmin();
     }
 
+    match /insumo_movements/{movementId} {
+      allow create: if true;
+      allow get, list, update, delete: if isAdmin();
+    }
+
     // ----------------------------------------------------
     // FINANCE
     // ----------------------------------------------------
@@ -173,6 +190,27 @@ service cloud.firestore {
       allow list, get: if true;
       allow create: if isAdmin() && isValidId(dateId) && isValidCommemorativeDate(incoming());
       allow update: if isAdmin() && isValidCommemorativeDate(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // REVIEWS
+    // ----------------------------------------------------
+    match /reviews/{reviewId} {
+      function isValidReview(data) {
+        return data.keys().hasAll(['productId', 'userId', 'userName', 'rating', 'createdAt']) &&
+               data.productId is string && data.productId.size() <= 128 &&
+               data.userId is string && data.userId.size() <= 128 &&
+               data.userName is string && data.userName.size() <= 128 &&
+               data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+               data.createdAt == request.time &&
+               (data.comment is string && data.comment.size() <= 1000) &&
+               (data.adminReply == null || data.adminReply is string && data.adminReply.size() <= 1000);
+      }
+
+      allow list, get: if true;
+      allow create: if isSignedIn() && isValidId(reviewId) && isValidReview(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['adminReply', 'updatedAt']);
       allow delete: if isAdmin();
     }
 

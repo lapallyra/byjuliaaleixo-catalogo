@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import { Product } from '../../types';
 import { ImageWithFallback } from '../ImageWithFallback';
+import { FeaturedProductCard } from './FeaturedProductCard';
 
 interface FeaturedProductsCarouselProps {
   products: Product[];
@@ -47,32 +48,17 @@ export const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> =
         className="flex overflow-x-auto gap-6 pb-10 scrollbar-none scroll-smooth snap-x"
       >
         {products.map((product, idx) => (
-          <motion.div
-            key={`featured-${product.id}-${idx}`}
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            onClick={() => onSelectProduct(product)}
-            className="flex-shrink-0 w-32 md:w-40 cursor-pointer group flex flex-col gap-3 snap-start"
-          >
-            {/* Imagem em formato miniatura */}
-            <div className="aspect-square rounded-2xl bg-white border border-neutral-100 flex items-center justify-center relative overflow-hidden transition-all duration-500 group-hover:shadow-lg group-hover:-translate-y-1">
-                <ImageWithFallback 
-                  src={product.image || ''}
-                  alt={product.product_name}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" 
-                  style={{
-                    transform: product.imageSettings ? `scale(${product.imageSettings.scale ?? 1}) translate(${product.imageSettings.translateX ?? 0}px, ${product.imageSettings.translateY ?? 0}px) rotate(${product.imageSettings.rotate ?? 0}deg)` : undefined
-                  }}
-                />
-            </div>
-            {/* Informações mínimas */}
-            <div className="px-1 text-center">
-              <h3 className={`font-bold text-[9px] uppercase tracking-widest line-clamp-1 ${theme.textSecondary}`}>{product.product_name}</h3>
-            </div>
-          </motion.div>
+          <div key={`featured-${product.id}-${idx}`} className="flex-shrink-0 w-[280px] snap-start">
+            <FeaturedProductCard 
+              product={product}
+              theme={theme}
+              onAddToCart={(prod) => onSelectProduct(prod)}
+              onClick={() => onSelectProduct(product)}
+            />
+          </div>
         ))}
       </div>
     </div>
   );
 };
+

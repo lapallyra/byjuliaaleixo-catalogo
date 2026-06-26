@@ -203,6 +203,22 @@
         "companyId": { "type": "string" }
       },
       "required": ["name", "weight", "companyId"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Product review",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "productId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "adminReply": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productId", "userId", "userName", "rating", "createdAt"]
     }
   },
   "firestore": {
@@ -253,6 +269,10 @@
     "/prizes/{prizeId}": {
       "schema": "Prize",
       "description": "Roulette prizes"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Product reviews"
     }
   }
 }
