@@ -78,26 +78,28 @@ export const AteliersPresentationView: React.FC = () => {
     <div className="bg-[#fffdfa] min-h-screen text-[#6d5443] font-sans selection:bg-[#e8dcc8] selection:text-[#3A312D] py-12 px-6 md:px-12 select-none overflow-x-hidden">
       <div className="max-w-5xl mx-auto">
         
-        {/* VOLTAR & HERO */}
-        <div className="mb-12 flex flex-col items-center md:items-start">
+        {/* BREADCRUMB STRIP */}
+        <div className="mb-12 inline-flex items-center gap-3 px-6 py-2.5 bg-white border border-[#e8dcc8]/40 rounded-full shadow-sm text-[9px] font-bold tracking-[0.2em] uppercase">
           <button 
             onClick={() => navigate('/')}
-            className="group flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-[#cca062] hover:text-[#c36266] transition-colors mb-8 outline-none cursor-pointer"
+            className="text-[#8e8e93] hover:text-[#cca062] transition-colors cursor-pointer"
           >
-            <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            Voltar ao Início
+            HOME
           </button>
-          
-          <div className="text-center w-full">
-            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl uppercase tracking-[0.2em] text-[#6d5443] mb-4">
-              Nossos Ateliês
-            </h1>
-            <p className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-[#cca062] max-w-xl mx-auto mb-1 flex items-center justify-center gap-3">
-              <span className="h-[1px] w-8 bg-[#cca062]/40" />
-              Artesanato por Trás de Cada Detalhe
-              <span className="h-[1px] w-8 bg-[#cca062]/40" />
-            </p>
-          </div>
+          <span className="text-[#cca062] opacity-30 select-none">/</span>
+          <span className="text-[#cca062]">atelies</span>
+        </div>
+
+        {/* HERO */}
+        <div className="mb-16 text-center">
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl uppercase tracking-[0.2em] text-[#6d5443] mb-4">
+            Nossos Ateliês
+          </h1>
+          <p className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-[#cca062] max-w-xl mx-auto mb-1 flex items-center justify-center gap-3">
+            <span className="h-[1px] w-8 bg-[#cca062]/40" />
+            Artesanato por Trás de Cada Detalhe
+            <span className="h-[1px] w-8 bg-[#cca062]/40" />
+          </p>
         </div>
 
         {/* ATELIERS LIST */}

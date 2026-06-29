@@ -41,6 +41,7 @@ import {
   Sparkles,
   Gift,
   ChevronRight,
+  ChevronDown,
   Star,
   Heart,
   TrendingUp,
@@ -51,6 +52,7 @@ import {
   UploadCloud,
   Megaphone,
   Tag,
+  Truck,
 } from "lucide-react";
 import { playSuccessSound } from "../utils/audio";
 import { useAuth } from "./AuthProvider";
@@ -77,6 +79,9 @@ import { CollectionsTab } from "./Admin/CollectionsTab";
 import { MediaCenterTab } from "./Admin/MediaCenterTab";
 import { CampaignsTab } from "./Admin/CampaignsTab";
 import { CouponsTab } from "./Admin/CouponsTab";
+import { ExpeditionTab } from "./Admin/ExpeditionTab";
+import { IntegrationsTab } from "./Admin/IntegrationsTab";
+import { NotificationsTab } from "./Admin/NotificationsTab";
 
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
@@ -93,6 +98,7 @@ type TabType =
   | "clients"
   | "finance"
   | "auditoria"
+  | "expedition"
   | "gift-lists"
   | "commemorative-dates"
   | "reports"
@@ -105,6 +111,8 @@ type TabType =
   | "collections"
   | "media-center"
   | "campaigns"
+  | "integrations"
+  | "notifications"
   | "coupons";
 
 interface AdminDashboardProps {
@@ -145,7 +153,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   const [isSuggestionsModalOpen, setIsSuggestionsModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(() => {
+    return localStorage.getItem("admin_sidebar_expanded") || "Operação";
+  });
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+
+  // Sync expanded group to local storage
+  useEffect(() => {
+    if (expandedGroup) {
+      localStorage.setItem("admin_sidebar_expanded", expandedGroup);
+    }
+  }, [expandedGroup]);
 
   useEffect(() => {
     if (!isAdmin || !user) return;
@@ -229,28 +247,52 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     );
   }
 
-  const menuItems: { id: TabType; label: string; icon: any; category: string }[] = [
-    { id: "dashboard", label: "Dashboard", category: "PAINEL", icon: LayoutDashboard },
-    { id: "orders", label: "Pedidos", category: "OPERAÇÃO", icon: ShoppingBag },
-    { id: "clients", label: "Clientes", category: "OPERAÇÃO", icon: User },
-    { id: "products", label: "Produtos", category: "OPERAÇÃO", icon: Box },
-    { id: "collections", label: "Coleções", category: "OPERAÇÃO", icon: Layers },
-    { id: "campaigns", label: "Campanhas", category: "OPERAÇÃO", icon: Megaphone },
-    { id: "coupons", label: "Cupons", category: "OPERAÇÃO", icon: Tag },
-    { id: "gift-lists", label: "Lista de Presentes", category: "OPERAÇÃO", icon: Gift },
-    { id: "media-center", label: "Central de Mídia", category: "OPERAÇÃO", icon: UploadCloud },
-    { id: "kits", label: "Kits", category: "OPERAÇÃO", icon: PackagePlus },
-    { id: "inventory", label: "Estoque", category: "OPERAÇÃO", icon: Archive },
-    { id: "finance", label: "Financeiro", category: "FINANCEIRO", icon: DollarSign },
-    { id: "auditoria", label: "Auditoria", category: "FINANCEIRO", icon: FileCheck },
-    { id: "reports", label: "Relatórios", category: "FINANCEIRO", icon: BarChart3 },
-    { id: "settings", label: "Configurações", category: "SISTEMA", icon: Settings },
-    { id: "activity-logs", label: "Atividades", category: "SISTEMA", icon: Activity },
+  const menuItems: { id: TabType; label: string; icon: any; group: string }[] = [
+    { id: "dashboard", label: "Resumo Geral", group: "Dashboard", icon: LayoutDashboard },
+    
+    // Operação
+    { id: "orders", label: "Pedidos", group: "Operação", icon: ShoppingBag },
+    { id: "products", label: "Produtos", group: "Operação", icon: Box },
+    { id: "clients", label: "Clientes", group: "Operação", icon: User },
+    { id: "gift-lists", label: "Lista de Presentes", group: "Operação", icon: Gift },
+    
+    // Produção
+    { id: "inventory", label: "Produção", group: "Produção", icon: Archive },
+    { id: "expedition", label: "Expedição", group: "Produção", icon: Truck },
+    { id: "auditoria", label: "Engenharia & Custos", group: "Produção", icon: FileCheck },
+    { id: "kits", label: "Kits & Combos", group: "Produção", icon: PackagePlus },
+
+    // Financeiro
+    { id: "finance", label: "Financeiro", group: "Financeiro", icon: DollarSign },
+    { id: "funnel", label: "Checkout & Pagamentos", group: "Financeiro", icon: TrendingUp },
+    { id: "reports", label: "Relatórios", group: "Financeiro", icon: BarChart3 },
+
+    // Marketing
+    { id: "campaigns", label: "Campanhas", group: "Marketing", icon: Megaphone },
+    { id: "collections", label: "Coleções", group: "Marketing", icon: Layers },
+    { id: "feedbacks", label: "Avaliações", group: "Marketing", icon: Star },
+    { id: "coupons", label: "Cupons", group: "Marketing", icon: Tag },
+
+    // Sistema
+    { id: "settings", label: "Configurações", group: "Sistema", icon: Settings },
+    { id: "notifications", label: "Notificações", group: "Sistema", icon: Bell },
+    { id: "integrations", label: "Integrações", group: "Sistema", icon: Sparkles },
+    { id: "addons", label: "Adicionais", group: "Sistema", icon: Star },
+    { id: "activity-logs", label: "Atividades", group: "Sistema", icon: Activity },
+  ];
+
+  const menuGroups = [
+    "Dashboard",
+    "Operação",
+    "Produção",
+    "Financeiro",
+    "Marketing",
+    "Sistema"
   ];
 
   const groupedMenu = menuItems.reduce((acc, item) => {
-    if (!acc[item.category]) acc[item.category] = [];
-    acc[item.category].push(item);
+    if (!acc[item.group]) acc[item.group] = [];
+    acc[item.group].push(item);
     return acc;
   }, {} as Record<string, typeof menuItems>);
 
@@ -295,50 +337,103 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
           </div>
 
           <div className="flex-1 overflow-y-auto scrollbar-hide px-0 py-2">
-            <nav className="space-y-8 pb-10">
-              {Object.entries(groupedMenu).map(([category, items]) => (
-                <div key={category}>
-                  {!isSidebarCollapsed && (
-                    <h3 className="text-[10px] font-medium uppercase text-[#8E8E93] tracking-widest pl-4 mb-3">{category}</h3>
-                  )}
-                  <div className="space-y-1">
-                    {items.map((item) => {
-                      const isActive = activeTab === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => setActiveTab(item.id)}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all relative group overflow-hidden ${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93] hover:text-[#1C1C1E]"}`}
+            <nav className="space-y-3 pb-10">
+              {menuGroups.map((groupName) => {
+                const items = groupedMenu[groupName] || [];
+                const isExpanded = expandedGroup === groupName || isSidebarCollapsed;
+                const isDashboard = groupName === "Dashboard";
+
+                if (isDashboard && items.length > 0) {
+                  const item = items[0];
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative group overflow-hidden mb-6 ${isActive ? "text-[#1C1C1E] bg-white shadow-[0_8px_20px_rgba(0,0,0,0.04)] border border-white/80" : "text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white/40"}`}
+                    >
+                      {isActive && (
+                        <div className="absolute left-0 w-1 h-6 bg-[#1C1C1E] rounded-r-full shadow-[0_0_10px_#1C1C1E]" />
+                      )}
+                      <div className="relative z-10 flex items-center justify-center w-5 h-5">
+                         <item.icon
+                           size={18}
+                           strokeWidth={isActive ? 2.5 : 2}
+                           className={`${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93] group-hover:text-[#1C1C1E]"} transition-colors duration-300`}
+                         />
+                      </div>
+                      {!isSidebarCollapsed && (
+                        <span className={`text-[11px] font-bold uppercase tracking-[0.15em] relative z-10 ${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93]"}`}>
+                          {groupName}
+                        </span>
+                      )}
+                    </button>
+                  );
+                }
+
+                return (
+                  <div key={groupName} className="space-y-1.5">
+                    <button
+                      onClick={() => !isSidebarCollapsed && setExpandedGroup(expandedGroup === groupName ? null : groupName)}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group ${expandedGroup === groupName ? "text-[#1C1C1E] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-white/60" : "text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white/20"}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`flex items-center justify-center w-5 h-5 transition-colors duration-300 ${expandedGroup === groupName ? "text-[#1C1C1E]" : "text-[#8E8E93] group-hover:text-[#1C1C1E]"}`}>
+                          {groupName === "Operação" && <ShoppingBag size={16} />}
+                          {groupName === "Produção" && <Box size={16} />}
+                          {groupName === "Financeiro" && <DollarSign size={16} />}
+                          {groupName === "Marketing" && <Megaphone size={16} />}
+                          {groupName === "Sistema" && <Settings size={16} />}
+                        </div>
+                        {!isSidebarCollapsed && (
+                          <span className="text-[10px] font-black uppercase tracking-[0.18em]">{groupName}</span>
+                        )}
+                      </div>
+                      {!isSidebarCollapsed && (
+                        <ChevronDown 
+                          size={12} 
+                          className={`transition-transform duration-500 opacity-40 ${isExpanded ? "rotate-180" : ""}`} 
+                        />
+                      )}
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {isExpanded && !isSidebarCollapsed && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                          className="overflow-hidden"
                         >
-                          {isActive && (
-                            <motion.div
-                              layoutId="activeNavBg"
-                              className="absolute inset-0 bg-white border border-white/40 shadow-[0_2px_10px_rgba(0,0,0,0.04)] rounded-xl backdrop-blur-xl"
-                            />
-                          )}
-                          <div className="relative z-10 flex items-center justify-center w-5 h-5">
-                             <item.icon
-                               size={16}
-                               strokeWidth={isActive ? 2.5 : 2}
-                               className={`${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93] group-hover:text-[#1C1C1E]"} transition-colors duration-300`}
-                             />
+                          <div className="pl-10 pr-2 space-y-1 py-1.5">
+                            {items.map((item) => {
+                              const isActive = activeTab === item.id;
+                              return (
+                                <button
+                                  key={item.id}
+                                  onClick={() => setActiveTab(item.id)}
+                                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative group ${isActive ? "text-[#1C1C1E] bg-[#F5F5F7]/80" : "text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-[#F5F5F7]/40"}`}
+                                >
+                                  {isActive && (
+                                    <motion.div
+                                      layoutId="activeSubNavIndicator"
+                                      className="absolute left-1 w-1 h-1 bg-[#1C1C1E] rounded-full shadow-[0_0_8px_#1C1C1E]"
+                                    />
+                                  )}
+                                  <span className={`text-[11px] font-semibold tracking-wide transition-colors duration-300 ${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93] group-hover:text-[#1C1C1E]"}`}>
+                                    {item.label}
+                                  </span>
+                                </button>
+                              );
+                            })}
                           </div>
-                          {!isSidebarCollapsed && (
-                            <span
-                              className={`text-xs font-medium relative z-10 transition-colors duration-300 ${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93] group-hover:text-[#1C1C1E]"}`}
-                            >
-                              {item.label}
-                            </span>
-                          )}
-                          {isActive && !isSidebarCollapsed && (
-                            <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[#1C1C1E] z-10" />
-                          )}
-                        </button>
-                      )
-                    })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </nav>
           </div>
 
@@ -399,39 +494,94 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   </button>
                 </div>
 
-                <nav className="flex-1 space-y-6 overflow-y-auto pr-2 scrollbar-hide">
-                  {Object.entries(groupedMenu).map(([category, items]) => (
-                    <div key={`mob-cat-${category}`}>
-                      <h3 className="text-[10px] font-medium uppercase text-[#8E8E93] tracking-widest pl-4 mb-2">{category}</h3>
-                      <div className="space-y-1">
-                        {items.map((item) => {
-                          const isActive = activeTab === item.id;
-                          return (
-                            <button
-                              key={`mob-${item.id}`}
-                              onClick={() => {
-                                setActiveTab(item.id);
-                                setTimeout(() => setIsMobileMenuOpen(false), 100);
-                              }}
-                              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all relative ${isActive ? "bg-white text-[#1C1C1E] shadow-sm" : "text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white/50"}`}
+                <nav className="flex-1 space-y-4 overflow-y-auto pr-2 scrollbar-hide">
+                  {menuGroups.map((groupName) => {
+                    const items = groupedMenu[groupName] || [];
+                    const isExpanded = expandedGroup === groupName;
+                    const isDashboard = groupName === "Dashboard";
+
+                    if (isDashboard && items.length > 0) {
+                      const item = items[0];
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={`mob-${item.id}`}
+                          onClick={() => {
+                            setActiveTab(item.id);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative mb-2 ${isActive ? "bg-white text-[#1C1C1E] shadow-[0_4px_12px_rgba(0,0,0,0.04)] border border-white/60" : "text-[#8E8E93] hover:text-[#1C1C1E]"}`}
+                        >
+                          <item.icon
+                            size={16}
+                            strokeWidth={isActive ? 2.5 : 2}
+                            className={isActive ? "text-[#1C1C1E]" : "text-[#8E8E93]"}
+                          />
+                          <span className="text-[11px] font-bold uppercase tracking-wider">
+                            {groupName}
+                          </span>
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <div key={`mob-group-${groupName}`} className="space-y-1.5">
+                        <button
+                          onClick={() => setExpandedGroup(expandedGroup === groupName ? null : groupName)}
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${isExpanded ? "bg-white/60 text-[#1C1C1E] shadow-[0_2px_8px_rgba(0,0,0,0.02)]" : "text-[#8E8E93] hover:text-[#1C1C1E]"}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-5 h-5 flex items-center justify-center">
+                              {groupName === "Operação" && <ShoppingBag size={16} />}
+                              {groupName === "Produção" && <Box size={16} />}
+                              {groupName === "Financeiro" && <DollarSign size={16} />}
+                              {groupName === "Marketing" && <Megaphone size={16} />}
+                              {groupName === "Sistema" && <Settings size={16} />}
+                            </div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.15em]">{groupName}</span>
+                          </div>
+                          <ChevronDown 
+                            size={14} 
+                            className={`transition-transform duration-300 opacity-40 ${isExpanded ? "rotate-180" : ""}`} 
+                          />
+                        </button>
+
+                        <AnimatePresence initial={false}>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
                             >
-                              <item.icon
-                                size={16}
-                                strokeWidth={isActive ? 2.5 : 2}
-                                className={isActive ? "text-[#1C1C1E]" : "text-[#8E8E93]"}
-                              />
-                              <span className="text-xs font-medium">
-                                {item.label}
-                              </span>
-                              {isActive && (
-                                <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[#1C1C1E]" />
-                              )}
-                            </button>
-                          )
-                        })}
+                              <div className="pl-10 space-y-1 py-1.5">
+                                {items.map((item) => {
+                                  const isActive = activeTab === item.id;
+                                  return (
+                                    <button
+                                      key={`mob-sub-${item.id}`}
+                                      onClick={() => {
+                                        setActiveTab(item.id);
+                                        setIsMobileMenuOpen(false);
+                                      }}
+                                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative ${isActive ? "text-[#1C1C1E] font-bold bg-[#F5F5F7]/80" : "text-[#8E8E93]"}`}
+                                    >
+                                      {isActive && (
+                                        <div className="absolute left-1 w-1 h-1 bg-[#1C1C1E] rounded-full shadow-[0_0_8px_#1C1C1E]" />
+                                      )}
+                                      <span className="text-[11px] tracking-wide">
+                                        {item.label}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </nav>
 
                 <div className="mt-auto pt-4 space-y-2">
@@ -655,7 +805,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       companyId={selectedCompanyId}
                       orders={sales}
                       products={products}
-                      insumos={insumos}
                     />
                   )}
                   {activeTab === "reports" && (
@@ -675,6 +824,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       insumos={insumos}
                     />
                   )}
+                  {activeTab === "expedition" && (
+                    <ExpeditionTab
+                      companyId={selectedCompanyId}
+                      orders={sales}
+                      products={products}
+                    />
+                  )}
                   {activeTab === "settings" && (
                     <SettingsTab companyId={selectedCompanyId} />
                   )}
@@ -689,6 +845,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   )}
                   {activeTab === "funnel" && (
                     <FunnelLogsTab events={checkoutEvents} selectedCompanyId={selectedCompanyId} />
+                  )}
+                  {activeTab === "integrations" && (
+                    <IntegrationsTab />
+                  )}
+                  {activeTab === "notifications" && (
+                    <NotificationsTab />
                   )}
                   {activeTab === "activity-logs" && (
                     <ActivityLogTab />

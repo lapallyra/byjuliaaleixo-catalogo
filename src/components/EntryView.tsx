@@ -258,8 +258,8 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </div>
 
       {/* BOUTIQUE ATELIERS VERTICAL CAPSULE CARDS */}
-      <section id="ateliers" className="scroll-mt-24 pb-16 px-2 sm:px-4 max-w-[1440px] mx-auto w-full">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2.5 max-w-[1360px] mx-auto font-poppins lg:scale-105 transition-transform duration-500">
+      <section id="ateliers" className="scroll-mt-24 pb-16 px-4 sm:px-6 max-w-6xl mx-auto w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto font-poppins transition-transform duration-500">
           {ateliers.map((atelier) => (
             <div 
               key={atelier.id}
@@ -267,41 +267,63 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               tabIndex={0}
               className="flex flex-col items-center group cursor-pointer relative outline-none focus:outline-none"
             >
+              {/* Floating Sparkles around the card */}
+              <div className="absolute inset-0 pointer-events-none z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <Sparkles 
+                  className="absolute -top-4 -left-2 text-white animate-star-pop" 
+                  size={16} 
+                  style={{ color: atelier.accentColor, filter: `drop-shadow(0 0 8px ${atelier.accentColor})`, fill: 'currentColor' } as any}
+                />
+                <Sparkles 
+                  className="absolute top-0 -right-4 text-white animate-star-pop" 
+                  size={12} 
+                  style={{ animationDelay: '0.4s', color: atelier.accentColor, filter: `drop-shadow(0 0 6px ${atelier.accentColor})`, fill: 'currentColor' } as any}
+                />
+                <Sparkles 
+                  className="absolute -bottom-4 -right-2 text-white animate-star-pop" 
+                  size={14} 
+                  style={{ animationDelay: '0.8s', color: atelier.accentColor, filter: `drop-shadow(0 0 8px ${atelier.accentColor})`, fill: 'currentColor' } as any}
+                />
+                <Sparkles 
+                  className="absolute bottom-0 -left-4 text-white animate-star-pop" 
+                  size={18} 
+                  style={{ animationDelay: '1.2s', color: atelier.accentColor, filter: `drop-shadow(0 0 10px ${atelier.accentColor})`, fill: 'currentColor' } as any}
+                />
+              </div>
+
               {/* Card Body - Square with slightly rounded corners */}
               <div 
                 className="relative w-full aspect-square rounded-2xl bg-white p-1 transition-all duration-500 overflow-hidden shadow-sm flex flex-col z-10 
-                           group-hover:scale-[1.02] group-focus:scale-[1.02]
-                           group-hover:shadow-[0_0_30px_-5px_var(--glow-color),0_0_8px_-1px_var(--glow-color),inset_0_0_12px_-2px_var(--glow-color)]
-                           group-focus:shadow-[0_0_30px_-5px_var(--glow-color),0_0_8px_-1px_var(--glow-color),inset_0_0_12px_-2px_var(--glow-color)]"
+                           group-hover:animate-sparkle group-focus:animate-sparkle"
                 style={{ 
-                  border: `1.5px solid ${atelier.accentColor}`,
+                  border: `2px solid ${atelier.accentColor}`,
                   '--glow-color': atelier.accentColor
                 } as any}
               >
                 {/* Image/Content Container */}
                 <div className="relative flex-grow rounded-xl overflow-hidden bg-[#fcfaf7]">
                   {/* Brand Content */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center select-none z-10 transition-transform duration-500 group-hover:scale-105">
-                    <span className="text-5xl mb-5 filter drop-shadow-md">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none z-10 transition-transform duration-500 group-hover:scale-105">
+                    <span className="text-4xl mb-4 filter drop-shadow-md">
                       {atelier.emoji}
                     </span>
-                    <h3 className="font-mea-culpa text-4xl text-[#3A312D] mb-1 font-normal leading-none">
+                    <h3 className="font-mea-culpa text-3xl text-[#3A312D] mb-1 font-normal leading-none">
                       {atelier.name}
                     </h3>
-                    <div className="h-[1px] w-12 bg-[#cca062]/30 my-3" />
-                    <p className="font-parisienne text-[11px] text-[#cca062] tracking-[0.2em] uppercase font-normal">
+                    <div className="h-[1px] w-10 bg-[#cca062]/30 my-2" />
+                    <p className="font-parisienne text-[10px] text-[#cca062] tracking-[0.2em] uppercase font-normal">
                       {atelier.subtitle}
                     </p>
                   </div>
 
                   {/* Active Hover Cover */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 z-20 flex flex-col justify-center items-center p-6 text-center text-white bg-black/85 select-none">
-                    <p className="font-parisienne text-lg text-[#e8dcc8] mb-3 font-normal">{atelier.details}</p>
-                    <p className="text-[11px] tracking-wide leading-relaxed font-light mb-8 max-w-[180px] opacity-90 font-sans">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 z-20 flex flex-col justify-center items-center p-5 text-center text-white bg-black/85 select-none">
+                    <p className="font-parisienne text-base text-[#e8dcc8] mb-2 font-normal">{atelier.details}</p>
+                    <p className="text-[10px] tracking-wide leading-relaxed font-light mb-6 max-w-[150px] opacity-90 font-sans">
                       {atelier.description}
                     </p>
-                    <div className="absolute bottom-8 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                      <span className="font-poppins font-bold text-[9px] uppercase tracking-[0.25em] border border-white/30 px-6 py-2.5 rounded-full hover:bg-white hover:text-black transition-all">
+                    <div className="absolute bottom-6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                      <span className="font-poppins font-bold text-[8px] uppercase tracking-[0.25em] border border-white/30 px-5 py-2 rounded-full hover:bg-white hover:text-black transition-all">
                         ver vitrine
                       </span>
                     </div>
@@ -310,11 +332,21 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               </div>
 
               {/* Title below card */}
-              <h3 className="font-mea-culpa text-4xl font-normal text-[#3A312D] text-center mt-6 block group-hover:text-[#3A312D] transition-all duration-300 group-hover:translate-y-1">
+              <h3 className="font-mea-culpa text-3xl font-normal text-[#3A312D] text-center mt-5 block group-hover:text-[#3A312D] transition-all duration-300 group-hover:translate-y-1">
                 {atelier.name}
               </h3>
             </div>
           ))}
+        </div>
+
+        <div className="mt-14 text-center">
+          <button 
+            onClick={() => navigate('/atelies')}
+            className="group inline-flex flex-col items-center gap-2 cursor-pointer outline-none"
+          >
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#cca062] group-hover:text-[#3A312D] transition-colors">conheça a história dos nossos ateliês</span>
+            <div className="h-[1px] w-12 bg-[#cca062]/40 group-hover:w-24 group-hover:bg-[#3A312D] transition-all duration-500" />
+          </button>
         </div>
       </section>
 

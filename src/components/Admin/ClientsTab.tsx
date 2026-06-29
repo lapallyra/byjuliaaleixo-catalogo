@@ -173,12 +173,14 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
       .filter((c) => {
         // Search query (name, email, contact, cpf/cnpj, code)
         const normSearch = searchTerm.toLowerCase();
+        const cleanSearch = searchTerm.replace(/\D/g, "");
+        
         const matchesSearch =
           c.name.toLowerCase().includes(normSearch) ||
           (c.email && c.email.toLowerCase().includes(normSearch)) ||
-          (c.contact && c.contact.includes(searchTerm)) ||
-          (c.cpfCnpj && c.cpfCnpj.includes(searchTerm)) ||
-          (c.code && c.code.includes(searchTerm));
+          (c.code && c.code.toLowerCase().includes(normSearch)) ||
+          (cleanSearch && c.contact && c.contact.replace(/\D/g, "").includes(cleanSearch)) ||
+          (cleanSearch && c.cpfCnpj && c.cpfCnpj.replace(/\D/g, "").includes(cleanSearch));
 
         if (!matchesSearch) return false;
 
@@ -266,6 +268,64 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
       }
     });
   }, [customers]);
+
+  // Global customer metrics map for quick summary
+  const customerMetricsMap = useMemo(() => {
+    const map = new Map<string, {
+      activeOrders: number;
+      lastPurchaseDate: Date | null;
+      isRecurrent: boolean;
+      topProducts: string[];
+    }>();
+
+    customers.forEach(c => {
+      const cleanPhone = c.contact?.replace(/\D/g, "");
+      const cleanCpf = c.cpfCnpj?.replace(/\D/g, "");
+      
+      const cSales = sales.filter((o) => {
+        const orderPhone = o.contact?.replace(/\D/g, "");
+        const orderCpf = o.customerCpfCnpj?.replace(/\D/g, "");
+        return (
+          (cleanPhone && orderPhone === cleanPhone) ||
+          (cleanCpf && orderCpf === cleanCpf) ||
+          (o.customerName && o.customerName.toLowerCase() === c.name.toLowerCase())
+        );
+      });
+
+      let activeCount = 0;
+      let lastDate: Date | null = null;
+      const productsMap: { [name: string]: number } = {};
+
+      cSales.forEach(o => {
+        if (["pending", "processing", "production", "shipped"].includes(o.status || "")) {
+          activeCount++;
+        }
+        const oDate = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt || 0);
+        if (!lastDate || oDate > lastDate) {
+          lastDate = oDate;
+        }
+
+        o.items?.forEach(item => {
+           const pName = item.product_name || "Produto";
+           productsMap[pName] = (productsMap[pName] || 0) + (item.quantity || 1);
+        });
+      });
+
+      const topProducts = Object.entries(productsMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(entry => entry[0]);
+
+      map.set(c.id, {
+        activeOrders: activeCount,
+        lastPurchaseDate: lastDate,
+        isRecurrent: cSales.length > 1,
+        topProducts
+      });
+    });
+
+    return map;
+  }, [customers, sales]);
 
   // Correlate sales to active selected customer for timeline, history, and aggregate products
   const customerOrders = useMemo(() => {
@@ -908,11 +968,12 @@ Histórico de Compras:
                   const isCopied = copiedId === c.id;
                   const cStatus = c.status || "Ativo";
                   const isIncomplete = cStatus === "Cadastro Incompleto" && (!c.cpfCnpj || !c.email || !c.address || !c.city || !c.state || !c.zipCode);
+                  const metrics = customerMetricsMap.get(c.id);
 
                   return (
                     <tr
                       key={c.id}
-                      className="hover:bg-[#FAF9F6]/60 transition-colors group cursor-pointer"
+                      className="hover:bg-[#FAF9F6]/60 transition-colors group cursor-pointer relative"
                       onClick={() => {
                         setSelectedCustomer(c);
                         setIsDetailDrawerOpen(true);
@@ -932,18 +993,33 @@ Histórico de Compras:
                       </td>
 
                       {/* Code / Avatar cell */}
-                      <td className="p-4">
+                      <td className="p-4 relative">
                         <div className="flex items-center gap-3">
-                          {renderAvatar(c.name, c.avatarUrl, "sm")}
-                          <span className="text-[10px] font-bold text-[#cca062] uppercase tracking-wider">
-                            #{c.code || "----"}
-                          </span>
+                          <div className="relative">
+                             {renderAvatar(c.name, c.avatarUrl, "sm")}
+                             {metrics?.activeOrders ? (
+                               <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981] animate-pulse border-2 border-white" title={`${metrics.activeOrders} pedido(s) em andamento`} />
+                             ) : null}
+                          </div>
+                          <div className="flex flex-col items-start">
+                            <span className="text-[10px] font-bold text-[#cca062] uppercase tracking-wider">
+                              #{c.code || "----"}
+                            </span>
+                            {metrics?.isRecurrent && (
+                              <span className="text-[8px] font-black text-white bg-[#cca062] px-1.5 py-[1px] rounded uppercase tracking-widest mt-0.5">
+                                Recorrente
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
 
                       {/* Name / Location cell */}
                       <td className="p-4">
-                        <div className="space-y-0.5">
+                        <div 
+                          className="space-y-0.5 group/name relative inline-block"
+                          title={`Resumo: \nPedidos: ${c.ordersCount || 0} \nGasto: R$ ${(c.totalSpent || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} \nÚltima Compra: ${metrics?.lastPurchaseDate ? metrics.lastPurchaseDate.toLocaleDateString() : "N/A"}`}
+                        >
                           <p className="text-xs font-bold text-[#1C1C1E] group-hover:text-[#cca062] transition-colors uppercase">
                             {c.name}
                           </p>
@@ -972,9 +1048,16 @@ Histórico de Compras:
 
                       {/* Total Spent cell */}
                       <td className="p-4 text-right">
-                        <span className="text-xs font-bold text-emerald-600">
-                          R$ {(c.totalSpent || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                        </span>
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs font-bold text-emerald-600">
+                            R$ {(c.totalSpent || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                          </span>
+                          {metrics?.lastPurchaseDate && (
+                            <span className="text-[9px] text-[#8E8E93] font-medium mt-0.5">
+                              {metrics.lastPurchaseDate.toLocaleDateString('pt-BR')}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Status indicator badge */}
@@ -1184,6 +1267,50 @@ Histórico de Compras:
                         <p className="text-xs italic text-[#8E8E93]">Nenhum endereço cadastrado para este cliente.</p>
                       )}
                     </div>
+
+                    {/* Latest Purchases & Preferences */}
+                    <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-3xs space-y-4">
+                      <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-[#cca062] border-b border-[#F2F2F7] pb-2 flex items-center gap-1.5">
+                        <ShoppingBag size={12} /> Últimos Produtos & Preferências
+                      </h5>
+                      
+                      <div className="space-y-4">
+                        {/* Latest Purchase */}
+                        <div>
+                           <p className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] mb-2">Última Compra</p>
+                           {customerOrders.length > 0 ? (
+                             <div className="p-3 bg-[#F5F5F7] rounded-xl border border-[#E5E5EA]">
+                               <div className="flex items-center justify-between mb-2">
+                                 <span className="text-xs font-bold text-[#1C1C1E] uppercase">Pedido #{customerOrders[0].code || '---'}</span>
+                                 <span className="text-[10px] font-bold text-[#8E8E93]">
+                                   {customerOrders[0].createdAt?.toDate ? customerOrders[0].createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A'}
+                                 </span>
+                               </div>
+                               <p className="text-xs text-[#8E8E93] truncate">
+                                 {customerOrders[0].items?.map(i => `${i.quantity}x ${i.product_name}`).join(', ') || 'Sem itens'}
+                               </p>
+                             </div>
+                           ) : (
+                             <p className="text-xs italic text-[#8E8E93]">Nenhuma compra registrada.</p>
+                           )}
+                        </div>
+
+                        {/* Top Preferences */}
+                        {customerProducts.length > 0 && (
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] mb-2">Preferências (Mais Comprados)</p>
+                            <div className="flex flex-wrap gap-2">
+                              {customerProducts.slice(0, 3).map((p, idx) => (
+                                <span key={idx} className="px-2.5 py-1 text-[10px] font-bold text-[#cca062] bg-[#cca062]/10 rounded-lg border border-[#cca062]/20 uppercase">
+                                  {p.qty}x {p.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                   </div>
                 )}
 

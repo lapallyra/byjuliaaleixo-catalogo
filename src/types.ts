@@ -157,6 +157,8 @@ export interface Order {
   }[];
   approvalStatus?: OrderApprovalStatus;
   currentVersion?: number;
+  trackingCode?: string;
+  shippingLabelUrl?: string;
 }
 
 export interface Customer {
@@ -308,6 +310,11 @@ export interface CartItem extends Product {
   selectedVariation?: string;
   selectedAddons?: any[];
   personalizationValues?: Record<string, string>;
+  customization?: {
+    name?: string;
+    text?: string;
+    notes?: string;
+  };
 }
 
 export interface AppConfig {
@@ -467,6 +474,19 @@ export interface ProductModel extends Product {
   layers: ProductLayer[];
   canvasWidth: number;
   canvasHeight: number;
+}
+
+export interface ActivityLog {
+  id: string;
+  actionType: 'criado' | 'editado' | 'atualizado' | 'excluido' | 'login' | 'logout' | 'aprovado' | 'finalizado' | 'cadastrado';
+  entityType: 'Produto' | 'Pedido' | 'Cliente' | 'Insumo' | 'Campanha' | 'Coleção' | 'Configuração' | 'Cupom' | 'Financeiro';
+  entityName: string;
+  userId: string;
+  userName?: string;
+  timestamp: any;
+  details?: string;
+  module?: string;
+  ip?: string;
 }
 
 export interface Coupon {

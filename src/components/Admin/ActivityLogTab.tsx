@@ -14,19 +14,20 @@ import {
   Clock,
   User,
   Box,
-  FileText
+  FileText,
+  CheckCircle2,
+  Calendar,
+  ChevronRight,
+  Hash,
+  ShoppingBag,
+  Zap,
+  Tag,
+  Settings,
+  DollarSign,
+  History as HistoryIcon
 } from 'lucide-react';
-
-export interface ActivityLog {
-  id: string;
-  actionType: 'criado' | 'editado' | 'atualizado' | 'excluído';
-  entityType: string;
-  entityName: string;
-  userId: string;
-  userName?: string;
-  timestamp: any;
-  details?: string;
-}
+import { ActivityLog } from '../../types';
+import { startOfDay, startOfWeek, startOfMonth, isAfter } from 'date-fns';
 
 export const ActivityLogTab: React.FC = () => {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -34,15 +35,13 @@ export const ActivityLogTab: React.FC = () => {
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterAction, setFilterAction] = useState<string>('todos');
-  const [filterDateStart, setFilterDateStart] = useState<string>('');
-  const [filterDateEnd, setFilterDateEnd] = useState<string>('');
+  const [activeRange, setActiveRange] = useState<'hoje' | 'semana' | 'mes' | 'todos'>('todos');
 
   const fetchLogs = async () => {
     setLoading(true);
     try {
       const logsRef = collection(db, 'activity_logs');
-      const q = query(logsRef, orderBy('timestamp', 'desc'), limit(100));
+      const q = query(logsRef, orderBy('timestamp', 'desc'), limit(150));
       const snapshot = await getDocs(q);
       
       const fetchedLogs: ActivityLog[] = [];
@@ -50,47 +49,64 @@ export const ActivityLogTab: React.FC = () => {
         fetchedLogs.push({ id: doc.id, ...doc.data() } as ActivityLog);
       });
       
-      // If no logs, let's inject some dummy ones just for demonstration of the UI
       if (fetchedLogs.length === 0) {
+        // Injecting Premium Mock Data if empty
+        const now = new Date();
         const dummyLogs: ActivityLog[] = [
           {
-            id: 'mock1',
-            actionType: 'editado',
-            entityType: 'Produto',
-            entityName: 'Caneca Personalizada',
-            userId: 'admin',
-            userName: 'Julia Aleixo',
-            timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
-            details: 'Alteração de preço de R$45 para R$50'
-          },
-          {
-            id: 'mock2',
-            actionType: 'excluído',
-            entityType: 'Insumo',
-            entityName: 'Fita de Cetim Rosa',
-            userId: 'admin',
-            userName: 'Julia Aleixo',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-            details: 'Insumo removido do sistema'
-          },
-          {
-            id: 'mock3',
+            id: 'm1',
             actionType: 'atualizado',
             entityType: 'Pedido',
-            entityName: '#PED-9921',
-            userId: 'admin',
+            entityName: '#MS-9921',
+            userId: 'u1',
             userName: 'Julia Aleixo',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-            details: 'Status alterado para "Enviado"'
+            timestamp: new Date(now.getTime() - 1000 * 60 * 15),
+            module: 'Expedição',
+            details: 'Status alterado para "Enviado" e código de rastreio adicionado.'
           },
           {
-            id: 'mock4',
+            id: 'm2',
             actionType: 'criado',
             entityType: 'Produto',
-            entityName: 'Agenda 2027',
-            userId: 'admin',
+            entityName: 'Agenda 2027 Premium',
+            userId: 'u1',
             userName: 'Julia Aleixo',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
+            timestamp: new Date(now.getTime() - 1000 * 60 * 120),
+            module: 'Catálogo',
+            details: 'Novo produto cadastrado com 12 variações de capa.'
+          },
+          {
+            id: 'm3',
+            actionType: 'aprovado',
+            entityType: 'Pedido',
+            entityName: '#MS-9915',
+            userId: 'u2',
+            userName: 'Admin Vitrine',
+            timestamp: new Date(now.getTime() - 1000 * 60 * 60 * 5),
+            module: 'Vendas',
+            details: 'Pagamento via PIX confirmado automaticamente.'
+          },
+          {
+            id: 'm4',
+            actionType: 'editado',
+            entityType: 'Cliente',
+            entityName: 'Roberto Silva',
+            userId: 'u1',
+            userName: 'Julia Aleixo',
+            timestamp: new Date(now.getTime() - 1000 * 60 * 60 * 24),
+            module: 'CRM',
+            details: 'Endereço de entrega atualizado conforme solicitação via WhatsApp.'
+          },
+          {
+            id: 'm5',
+            actionType: 'cadastrado',
+            entityType: 'Insumo',
+            entityName: 'Papel Fotográfico 180g',
+            userId: 'u3',
+            userName: 'Produção Central',
+            timestamp: new Date(now.getTime() - 1000 * 60 * 60 * 48),
+            module: 'Produção',
+            details: 'Entrada de estoque: 500 folhas.'
           }
         ];
         setLogs(dummyLogs);
@@ -110,205 +126,238 @@ export const ActivityLogTab: React.FC = () => {
 
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
-      // Search term filter
+      // Search filter
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
-        const matchName = log.entityName.toLowerCase().includes(term);
-        const matchType = log.entityType.toLowerCase().includes(term);
+        const matchEntity = log.entityName.toLowerCase().includes(term);
         const matchUser = log.userName?.toLowerCase().includes(term);
-        if (!matchName && !matchType && !matchUser) return false;
+        const matchDetails = log.details?.toLowerCase().includes(term);
+        const matchModule = log.module?.toLowerCase().includes(term);
+        if (!matchEntity && !matchUser && !matchDetails && !matchModule) return false;
       }
 
-      // Action type filter
-      if (filterAction !== 'todos' && log.actionType !== filterAction) {
-        return false;
-      }
-
-      // Date filter
+      // Range filter
       const logDate = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
-      if (filterDateStart) {
-        const start = new Date(filterDateStart + 'T00:00:00');
-        if (logDate < start) return false;
-      }
-      if (filterDateEnd) {
-        const end = new Date(filterDateEnd + 'T23:59:59');
-        if (logDate > end) return false;
+      const now = new Date();
+      if (activeRange === 'hoje') {
+        if (!isAfter(logDate, startOfDay(now))) return false;
+      } else if (activeRange === 'semana') {
+        if (!isAfter(logDate, startOfWeek(now))) return false;
+      } else if (activeRange === 'mes') {
+        if (!isAfter(logDate, startOfMonth(now))) return false;
       }
 
       return true;
     });
-  }, [logs, searchTerm, filterAction, filterDateStart, filterDateEnd]);
+  }, [logs, searchTerm, activeRange]);
 
-  const getActionIcon = (action: string) => {
-    switch (action) {
-      case 'criado': return <PlusCircle size={16} className="text-emerald-500" />;
-      case 'editado': return <Edit2 size={16} className="text-amber-500" />;
-      case 'atualizado': return <RefreshCw size={16} className="text-blue-500" />;
-      case 'excluído': return <Trash2 size={16} className="text-rose-500" />;
-      default: return <Activity size={16} className="text-slate-500" />;
+  const getEntityIcon = (type: string) => {
+    switch (type) {
+      case 'Produto': return <Box size={14} />;
+      case 'Pedido': return <ShoppingBag size={14} />;
+      case 'Cliente': return <User size={14} />;
+      case 'Insumo': return <Zap size={14} />;
+      case 'Campanha': return <Zap size={14} />;
+      case 'Financeiro': return <DollarSign size={14} />;
+      case 'Configuração': return <Settings size={14} />;
+      case 'Cupom': return <Tag size={14} />;
+      default: return <FileText size={14} />;
     }
   };
 
   const getActionColor = (action: string) => {
     switch (action) {
-      case 'criado': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'editado': return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'atualizado': return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'excluído': return 'bg-rose-50 text-rose-700 border-rose-200';
-      default: return 'bg-slate-50 text-slate-700 border-slate-200';
+      case 'criado':
+      case 'cadastrado': return 'bg-emerald-500';
+      case 'editado':
+      case 'atualizado': return 'bg-amber-500';
+      case 'aprovado':
+      case 'finalizado': return 'bg-sky-500';
+      case 'excluido': return 'bg-rose-500';
+      default: return 'bg-[#1C1C1E]';
     }
   };
 
   return (
-    <div className="bg-[#F5F5F7] text-[#1C1C1E] space-y-8 animate-in fade-in duration-300">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/70 backdrop-blur-md border border-[#E5E5EA] p-6 rounded-2xl shadow-sm">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+      {/* Header & Search */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-xl font-medium text-slate-900 tracking-normal flex items-center gap-2">
-            <Activity size={24} className="text-[#1C1C1E]" />
-            Logs de Atividades
+          <h2 className="text-2xl font-medium text-[#1C1C1E] tracking-tight flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white border border-[#E5E5EA] shadow-sm flex items-center justify-center text-[#1C1C1E]">
+              <HistoryIcon size={20} strokeWidth={1.5} />
+            </div>
+            Histórico de Atividades
           </h2>
-          <p className="text-xs font-bold text-[#8E8E93] tracking-normal mt-1">
-            Auditoria de ações realizadas no painel administrativo
+          <p className="text-[11px] font-bold text-[#8E8E93] uppercase tracking-wider mt-2 ml-13">
+            Rastreabilidade e auditoria de ações do sistema
           </p>
         </div>
-        <button
-          onClick={fetchLogs}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E5E5EA] rounded-xl text-[10px] font-medium uppercase tracking-wider text-[#8E8E93] hover:text-[#1C1C1E] transition-all shadow-sm"
-        >
-          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          Atualizar
-        </button>
-      </div>
 
-      {/* Filters */}
-      <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm space-y-4">
-        <div className="flex items-center gap-2 text-[#8E8E93] mb-2">
-          <Filter size={16} />
-          <span className="text-[10px] font-medium tracking-normal">Filtros de Busca</span>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D1D1D6]" size={14} />
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-80 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8E93] group-focus-within:text-[#1C1C1E] transition-colors" size={16} />
             <input
               type="text"
-              placeholder="Buscar entidade ou usuário..."
+              placeholder="Buscar por usuário, pedido, produto..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl pl-9 pr-4 py-2.5 text-[10px] font-bold uppercase tracking-wider outline-none focus:border-[#1C1C1E]"
+              className="w-full bg-white border border-[#E5E5EA] rounded-2xl py-3.5 pl-11 pr-4 text-xs font-medium focus:ring-2 focus:ring-[#1C1C1E]/5 outline-none transition-all placeholder:text-[#AEAEB2] shadow-sm"
             />
           </div>
-
-          <div>
-            <select
-              value={filterAction}
-              onChange={(e) => setFilterAction(e.target.value)}
-              className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider outline-none focus:border-[#1C1C1E] cursor-pointer"
-            >
-              <option value="todos">Todas as Ações</option>
-              <option value="criado">Criado</option>
-              <option value="editado">Editado</option>
-              <option value="atualizado">Atualizado</option>
-              <option value="excluído">Excluído</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col">
-            <span className="text-[8px] font-bold uppercase text-[#8E8E93] mb-1 ml-1">Data Inicial</span>
-            <input
-              type="date"
-              value={filterDateStart}
-              onChange={(e) => setFilterDateStart(e.target.value)}
-              className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider outline-none focus:border-[#1C1C1E]"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <span className="text-[8px] font-bold uppercase text-[#8E8E93] mb-1 ml-1">Data Final</span>
-            <input
-              type="date"
-              value={filterDateEnd}
-              onChange={(e) => setFilterDateEnd(e.target.value)}
-              className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider outline-none focus:border-[#1C1C1E]"
-            />
-          </div>
+          <button 
+            onClick={fetchLogs}
+            className="p-3.5 bg-white border border-[#E5E5EA] rounded-2xl text-[#1C1C1E] hover:bg-[#F5F5F7] transition-all shadow-sm active:scale-95"
+          >
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+          </button>
         </div>
       </div>
 
-      {/* Logs List */}
-      <div className="bg-white border border-[#E5E5EA] rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto scrollbar-hide">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#F5F5F7] border-b border-[#E5E5EA] text-[9px] font-medium uppercase tracking-wider text-[#8E8E93]">
-              <tr>
-                <th className="px-6 py-4">Data e Hora</th>
-                <th className="px-6 py-4">Usuário</th>
-                <th className="px-6 py-4">Ação</th>
-                <th className="px-6 py-4">Entidade</th>
-                <th className="px-6 py-4">Detalhes</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E5E5EA] font-semibold">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-[#8E8E93] font-bold tracking-normal">
-                    <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-[#1C1C1E]" />
-                    Carregando logs...
-                  </td>
-                </tr>
-              ) : filteredLogs.length > 0 ? (
-                filteredLogs.map((log) => {
+      {/* Quick Filters */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide">
+        {[
+          { id: 'todos', label: 'Tudo', icon: Activity },
+          { id: 'hoje', label: 'Hoje', icon: Clock },
+          { id: 'semana', label: 'Esta Semana', icon: Calendar },
+          { id: 'mes', label: 'Este Mês', icon: Calendar },
+        ].map((range) => (
+          <button
+            key={range.id}
+            onClick={() => setActiveRange(range.id as any)}
+            className={`flex items-center gap-2.5 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-all border ${
+              activeRange === range.id 
+                ? 'bg-[#1C1C1E] border-[#1C1C1E] text-white shadow-[0_8px_20px_rgba(0,0,0,0.12)]' 
+                : 'bg-white border-[#E5E5EA] text-[#8E8E93] hover:text-[#1C1C1E] hover:border-[#1C1C1E]/20 active:scale-95'
+            }`}
+          >
+            <range.icon size={13} strokeWidth={activeRange === range.id ? 2.5 : 2} />
+            {range.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Timeline Container */}
+      <div className="bg-white border border-[#E5E5EA] rounded-[3rem] p-8 md:p-12 shadow-sm relative overflow-hidden">
+        {/* Background Mesh Effect */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#F5F5F7]/30 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
+        
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 opacity-40">
+            <RefreshCw size={40} className="animate-spin text-[#1C1C1E] mb-4" />
+            <p className="text-xs font-bold text-[#8E8E93] uppercase tracking-widest">Carregando eventos...</p>
+          </div>
+        ) : filteredLogs.length > 0 ? (
+          <div className="relative">
+            {/* The Vertical Line */}
+            <div className="absolute left-[19px] top-4 bottom-4 w-[2px] bg-[#F5F5F7]" />
+
+            <div className="space-y-12">
+              <AnimatePresence mode="popLayout">
+                {filteredLogs.map((log, idx) => {
                   const logDate = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
                   return (
-                    <tr key={log.id} className="hover:bg-[#F5F5F7]/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-slate-700">
-                          <Clock size={14} className="text-[#8E8E93]" />
-                          {safeFormat(logDate, 'dd/MM/yyyy HH:mm')}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-slate-700">
-                          <User size={14} className="text-[#8E8E93]" />
-                          {log.userName || log.userId}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[9px] font-medium uppercase tracking-wider ${getActionColor(log.actionType)}`}>
-                          {getActionIcon(log.actionType)}
-                          {log.actionType}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-[#8E8E93] font-bold tracking-normal">{log.entityType}</span>
-                          <span className="text-slate-900 font-semibold uppercase">{log.entityName}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 min-w-[200px]">
-                        {log.details ? (
-                          <div className="flex items-start gap-2 text-[#1C1C1E] text-[11px] font-medium leading-relaxed bg-[#F5F5F7] p-2.5 rounded-xl border border-[#E5E5EA]/50">
-                            <FileText size={14} className="text-[#8E8E93] mt-0.5 shrink-0" />
-                            {log.details}
+                    <motion.div
+                      layout
+                      key={log.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="relative pl-14 group"
+                    >
+                      {/* LED Node */}
+                      <div className={`absolute left-0 top-1.5 w-10 h-10 rounded-2xl bg-white border border-[#E5E5EA] shadow-sm flex items-center justify-center z-10 transition-all group-hover:scale-110 group-hover:shadow-md`}>
+                        <div className={`w-3 h-3 rounded-full ${getActionColor(log.actionType)} shadow-[0_0_10px_rgba(0,0,0,0.1)] animate-pulse`} />
+                      </div>
+
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-[#1C1C1E]">
+                              {log.actionType}
+                            </span>
+                            <div className="w-1 h-1 rounded-full bg-[#E5E5EA]" />
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#F5F5F7] rounded-full text-[9px] font-bold text-[#8E8E93] uppercase tracking-wide border border-[#E5E5EA]/50">
+                              {getEntityIcon(log.entityType)}
+                              {log.entityType}
+                            </div>
+                            {log.module && (
+                              <div className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full text-[9px] font-black uppercase tracking-wide border border-indigo-100/50">
+                                {log.module}
+                              </div>
+                            )}
                           </div>
-                        ) : (
-                          <span className="text-[#D1D1D6] italic text-[10px]">- Sem detalhes adicionais -</span>
-                        )}
-                      </td>
-                    </tr>
+
+                          <h4 className="text-sm font-black text-[#1C1C1E] tracking-tight group-hover:text-indigo-600 transition-colors">
+                            {log.entityName}
+                          </h4>
+
+                          {log.details && (
+                            <p className="text-[11px] font-medium text-[#8E8E93] leading-relaxed max-w-2xl bg-[#F5F5F7]/50 p-3 rounded-2xl border border-[#E5E5EA]/30 group-hover:bg-white group-hover:border-[#E5E5EA] transition-all">
+                              {log.details}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col items-start md:items-end gap-2 shrink-0">
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-[#1C1C1E]">
+                            <User size={12} className="text-[#8E8E93]" />
+                            {log.userName || log.userId}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-[#8E8E93]">
+                            <Clock size={12} />
+                            {safeFormat(logDate, "dd/MM/yyyy 'às' HH:mm")}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
                   );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-[#8E8E93] font-bold tracking-normal">
-                    <Box size={32} className="mx-auto mb-3 text-[#E5E5EA]" />
-                    Nenhum log de atividade encontrado para os filtros selecionados.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                })}
+              </AnimatePresence>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-20 h-20 rounded-[2.5rem] bg-[#F5F5F7] flex items-center justify-center text-[#AEAEB2] mb-6">
+              <Search size={32} strokeWidth={1} />
+            </div>
+            <h3 className="text-sm font-black text-[#1C1C1E] uppercase tracking-widest mb-2">Sem registros encontrados</h3>
+            <p className="text-[11px] font-medium text-[#8E8E93] max-w-xs leading-relaxed">
+              Não encontramos nenhum evento no histórico que corresponda aos filtros aplicados no momento.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Preparation for future integrations footer */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white border border-[#E5E5EA] p-6 rounded-[2rem] flex items-center gap-4 shadow-sm opacity-60">
+          <div className="w-10 h-10 rounded-2xl bg-[#F5F5F7] flex items-center justify-center text-[#8E8E93]">
+            <Zap size={18} />
+          </div>
+          <div>
+            <p className="text-[9px] font-black uppercase text-[#8E8E93] tracking-widest">Integração</p>
+            <p className="text-xs font-bold text-[#1C1C1E]">Monitoramento Real-time</p>
+          </div>
+        </div>
+        <div className="bg-white border border-[#E5E5EA] p-6 rounded-[2rem] flex items-center gap-4 shadow-sm opacity-60">
+          <div className="w-10 h-10 rounded-2xl bg-[#F5F5F7] flex items-center justify-center text-[#8E8E93]">
+            <Settings size={18} />
+          </div>
+          <div>
+            <p className="text-[9px] font-black uppercase text-[#8E8E93] tracking-widest">Sistema</p>
+            <p className="text-xs font-bold text-[#1C1C1E]">Auditoria Completa</p>
+          </div>
+        </div>
+        <div className="bg-white border border-[#E5E5EA] p-6 rounded-[2rem] flex items-center gap-4 shadow-sm opacity-60">
+          <div className="w-10 h-10 rounded-2xl bg-[#F5F5F7] flex items-center justify-center text-[#8E8E93]">
+            <DollarSign size={18} />
+          </div>
+          <div>
+            <p className="text-[9px] font-black uppercase text-[#8E8E93] tracking-widest">Logs</p>
+            <p className="text-xs font-bold text-[#1C1C1E]">Rastreio Financeiro</p>
+          </div>
         </div>
       </div>
     </div>

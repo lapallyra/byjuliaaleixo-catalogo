@@ -148,6 +148,30 @@ html {
   .animate-pulse-glow {
     animation: led-pulse-glow 1.8s infinite ease-in-out;
   }
+
+  @keyframes sparkle {
+    0%, 100% { 
+      transform: scale(1); 
+      box-shadow: 0 0 15px -5px var(--glow-color), 0 0 8px -2px var(--glow-color); 
+    }
+    50% { 
+      transform: scale(1.04); 
+      box-shadow: 0 0 35px -2px var(--glow-color), 0 0 50px -5px var(--glow-color); 
+    }
+  }
+
+  .animate-sparkle {
+    animation: sparkle 1.2s ease-in-out infinite;
+  }
+
+  @keyframes star-pop {
+    0%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+    50% { transform: scale(1) rotate(180deg); opacity: 1; }
+  }
+
+  .animate-star-pop {
+    animation: star-pop 1.5s ease-in-out infinite;
+  }
 }
 
 @layer utilities {
