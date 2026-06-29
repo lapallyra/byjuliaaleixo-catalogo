@@ -258,27 +258,28 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </div>
 
       {/* BOUTIQUE ATELIERS VERTICAL CAPSULE CARDS */}
-      <section id="ateliers" className="scroll-mt-24 pb-16 px-4 sm:px-5 max-w-[1440px] mx-auto w-full">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-11 max-w-[1360px] mx-auto font-poppins lg:scale-105 transition-transform duration-500">
+      <section id="ateliers" className="scroll-mt-24 pb-16 px-2 sm:px-4 max-w-[1440px] mx-auto w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2.5 max-w-[1360px] mx-auto font-poppins lg:scale-105 transition-transform duration-500">
           {ateliers.map((atelier) => (
             <div 
               key={atelier.id}
               onClick={() => navigate(atelier.route)}
-              className="flex flex-col items-center group cursor-pointer relative"
+              tabIndex={0}
+              className="flex flex-col items-center group cursor-pointer relative outline-none focus:outline-none"
             >
-              {/* Glow Aura (Background Light) - Expand on hover */}
+              {/* Card Body - Square with slightly rounded corners */}
               <div 
-                className="glow-aura absolute inset-0 opacity-0 group-hover:opacity-40 transition-all duration-700 blur-[30px] rounded-full pointer-events-none scale-90 group-hover:scale-130"
-                style={{ backgroundColor: atelier.accentColor }}
-              />
-
-              {/* Card Body - Solid LED Border */}
-              <div 
-                className="relative w-full aspect-square rounded-full bg-white p-1.5 transition-all duration-500 overflow-hidden shadow-sm flex flex-col z-10"
-                style={{ border: `4px solid ${atelier.accentColor}` }}
+                className="relative w-full aspect-square rounded-2xl bg-white p-1 transition-all duration-500 overflow-hidden shadow-sm flex flex-col z-10 
+                           group-hover:scale-[1.02] group-focus:scale-[1.02]
+                           group-hover:shadow-[0_0_30px_-5px_var(--glow-color),0_0_8px_-1px_var(--glow-color),inset_0_0_12px_-2px_var(--glow-color)]
+                           group-focus:shadow-[0_0_30px_-5px_var(--glow-color),0_0_8px_-1px_var(--glow-color),inset_0_0_12px_-2px_var(--glow-color)]"
+                style={{ 
+                  border: `1.5px solid ${atelier.accentColor}`,
+                  '--glow-color': atelier.accentColor
+                } as any}
               >
                 {/* Image/Content Container */}
-                <div className="relative flex-grow rounded-full overflow-hidden bg-[#fcfaf7]">
+                <div className="relative flex-grow rounded-xl overflow-hidden bg-[#fcfaf7]">
                   {/* Brand Content */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center select-none z-10 transition-transform duration-500 group-hover:scale-105">
                     <span className="text-5xl mb-5 filter drop-shadow-md">
@@ -294,7 +295,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                   </div>
 
                   {/* Active Hover Cover */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 z-20 flex flex-col justify-center items-center p-6 text-center text-white bg-black/85 backdrop-blur-[6px] select-none">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 z-20 flex flex-col justify-center items-center p-6 text-center text-white bg-black/85 select-none">
                     <p className="font-parisienne text-lg text-[#e8dcc8] mb-3 font-normal">{atelier.details}</p>
                     <p className="text-[11px] tracking-wide leading-relaxed font-light mb-8 max-w-[180px] opacity-90 font-sans">
                       {atelier.description}

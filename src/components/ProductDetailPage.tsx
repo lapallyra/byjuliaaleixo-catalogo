@@ -322,7 +322,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           {/* Production Time */}
           <div className="flex items-center gap-2 text-sky-700 text-[10px] font-extrabold uppercase tracking-widest pl-1">
               <Clock size={14} strokeWidth={2.5} />
-              <span>Produção: 03 a 20 dias úteis</span>
+              <span>Produção: {product.productionTime || 5} { (product.productionTime || 5) === 1 ? 'dia útil' : 'dias úteis' }</span>
           </div>
           
           {/* ADICIONAIS / VARIAÇÕES (Condicional) */}

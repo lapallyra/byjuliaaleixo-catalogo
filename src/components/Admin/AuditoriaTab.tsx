@@ -73,7 +73,6 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
   
   // Simulator states
   const [selectedSimProduct, setSelectedSimProduct] = useState<string>('');
-  const [simQuantity, setSimQuantity] = useState<number>(50);
 
   // Material form modal states
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
@@ -478,56 +477,6 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
       productionTime
     };
   }, [selectedSimProduct, products, rawInsumos, operationalCosts]);
-
-  // Simulator production numbers
-  const simulatorResult = useMemo(() => {
-    const prd = products.find(p => p.id === selectedSimProduct) || products[0];
-    if (!prd) return null;
-
-    const rank = viabilityRanking.find(r => r.id === prd.id);
-    const unitPrice = prd.retail_price || 0;
-    const unitCost = rank ? rank.totalCost : unitPrice * 0.40;
-    const unitProfit = rank ? rank.profit : unitPrice * 0.60;
-    const unitMargin = rank ? rank.margin : 60;
-
-    const estRevenue = simQuantity * unitPrice;
-    const estCosts = simQuantity * unitCost;
-    const estProfit = simQuantity * unitProfit;
-
-    // Check material shortfalls
-    const materialsNeeded: { name: string; required: number; available: number; missing: number; costToBuy: number; unit: string }[] = [];
-    let extraInvestmentNeeded = 0;
-
-    prd.insumos?.forEach(req => {
-      const ins = rawInsumos.find(i => i.id === req.insumoId);
-      if (ins) {
-        const totalReq = req.quantity * simQuantity;
-        const avail = ins.quantity || 0;
-        const missing = Math.max(0, totalReq - avail);
-        const costToBuy = missing * (ins.unitValue || 0);
-        extraInvestmentNeeded += costToBuy;
-
-        materialsNeeded.push({
-          name: ins.name,
-          required: totalReq,
-          available: avail,
-          missing,
-          costToBuy,
-          unit: ins.unit
-        });
-      }
-    });
-
-    return {
-      productName: prd.product_name,
-      revenue: estRevenue,
-      costs: estCosts,
-      profit: estProfit,
-      margin: unitMargin,
-      materialsNeeded,
-      extraInvestmentNeeded
-    };
-  }, [selectedSimProduct, simQuantity, products, viabilityRanking, rawInsumos]);
 
   // Handle adding materials
   const handleSaveMaterial = async (e: React.FormEvent) => {
