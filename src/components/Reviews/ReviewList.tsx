@@ -43,7 +43,7 @@ export const ReviewList: React.FC<Props> = ({ productId }) => {
             <p className="text-sm mt-1">{review.comment}</p>
             {review.adminReply && (
               <div className="bg-neutral-100 p-2 rounded mt-2 text-xs">
-                <span className="font-bold">Resposta do Administrador:</span> {review.adminReply}
+                <span className="font-bold">Resposta da CEO  BILIONÁRIA:</span> {review.adminReply}
               </div>
             )}
           </div>

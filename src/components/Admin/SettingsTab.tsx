@@ -24,7 +24,17 @@ import {
   Truck,
   X,
   Bell,
+  Users,
+  Package,
+  CheckCircle2,
+  Settings,
 } from "lucide-react";
+import { ClientSettings } from "./Settings/ClientSettings";
+import { ProductSettings } from "./Settings/ProductSettings";
+import { PaymentSettings } from "./Settings/PaymentSettings";
+import { ApprovalSettings } from "./Settings/ApprovalSettings";
+import { NotificationSettings } from "./Settings/NotificationSettings";
+import { SystemSettings } from "./Settings/SystemSettings";
 import { ImageUpload } from "./ImageUpload";
 import { DynamicPricingList } from "./DynamicPricingList";
 import { CompanyId, SiteSettings } from "../../types";
@@ -64,6 +74,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
     | "roulette"
     | "notifications"
     | "reset"
+    | "clients"
+    | "products"
+    | "payments"
+    | "approval"
+    | "system"
   >("brand");
   const [settings, setSettings] = useState<Partial<SiteSettings>>({});
   const [loading, setLoading] = useState(true);
@@ -288,7 +303,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
 
   if (loading)
     return (
-      <div className="p-20 text-center animate-pulse text-[#A09898] font-bold uppercase tracking-widest text-[9px]">
+      <div className="p-20 text-center animate-pulse text-[#8E8E93] font-bold tracking-normal text-[9px]">
         Carregando Configurações...
       </div>
     );
@@ -300,11 +315,16 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
         {[
           { id: "brand", label: "Empresa", icon: Building2 },
           { id: "about", label: "Sobre Nós", icon: User },
+          { id: "clients", label: "Clientes", icon: Users },
+          { id: "products", label: "Produtos", icon: Package },
+          { id: "payments", label: "Pagamentos", icon: CreditCard },
+          { id: "approval", label: "Aprovação", icon: CheckCircle2 },
           { id: "pix", label: "PIX & Checkout", icon: QrCode },
-          { id: "pricing", label: "Precificação & Frete", icon: Calculator },
+          { id: "pricing", label: "Formação de Preço", icon: Calculator },
           { id: "receipt", label: "Comprovantes", icon: FileText },
           { id: "roulette", label: "Roleta de Brindes", icon: Gift },
           { id: "notifications", label: "Notificações", icon: Bell },
+          { id: "system", label: "Sistema", icon: Settings },
           { id: "reset", label: "Reset de Dados", icon: RotateCw },
         ].map((item) => (
           <button
@@ -313,12 +333,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
             onClick={() => setActiveSubTab(item.id as any)}
             className={`flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all whitespace-nowrap border ${
               activeSubTab === item.id
-                ? "bg-black text-white border-black font-extrabold shadow-md scale-[1.01]"
+                ? "bg-black text-white border-black font-semibold shadow-md scale-[1.01]"
                 : "bg-white text-slate-400 border-slate-100 hover:border-pink-300 hover:text-slate-900 shadow-sm"
             }`}
           >
             <item.icon size={14} className={activeSubTab === item.id ? "text-white" : "text-slate-400"} />
-            <span className="text-[10px] uppercase font-black tracking-wider">
+            <span className="text-[10px] uppercase font-medium tracking-wider">
               {item.label}
             </span>
           </button>
@@ -326,14 +346,20 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
       </div>
 
       {/* Content Area */}
-      <div className="w-full p-8 rounded-3xl bg-white border border-slate-100 shadow-xl shadow-slate-200/50 min-h-0">
+      <div className="w-full p-8 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-200/50 min-h-0">
+        {activeSubTab === "clients" && <ClientSettings />}
+        {activeSubTab === "products" && <ProductSettings />}
+        {activeSubTab === "payments" && <PaymentSettings />}
+        {activeSubTab === "approval" && <ApprovalSettings />}
+        {activeSubTab === "system" && <SystemSettings />}
+        
         {activeSubTab === "brand" && (
           <div className="space-y-8">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-pink-100/50 text-pink-700">
+              <div className="p-2.5 rounded-xl bg-pink-100/50 text-[#1C1C1E]">
                 <Store size={22} />
               </div>
-              <h3 className="text-lg font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-lg font-medium text-slate-900 tracking-normal">
                 Gestão de Marcas
               </h3>
             </div>
@@ -355,16 +381,16 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 return (
                   <div
                     key={atl.id}
-                    className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm transition-all hover:border-pink-200/50"
+                    className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm transition-all hover:border-pink-200/50"
                   >
                     <div className="flex items-center justify-between border-b border-slate-50 pb-5 mb-8">
                       <div className="flex items-center gap-3">
                         <div className={`w-3 h-3 rounded-full bg-current ${atl.color} shadow-sm`} />
-                        <h4 className="text-base font-black uppercase tracking-tight text-slate-800">
+                        <h4 className="text-base font-medium uppercase tracking-tight text-slate-800">
                           {atl.label}
                         </h4>
                       </div>
-                      <span className="px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-[8px] font-black uppercase text-slate-400 tracking-[0.2em]">
+                      <span className="px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-[8px] font-medium uppercase text-slate-400 tracking-[0.2em]">
                         ID: {atl.id}
                       </span>
                     </div>
@@ -372,7 +398,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
                       {/* COLUNA ESQUERDA: Logos & Visual Assets */}
                       <div className="space-y-6">
-                        <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                        <div className="p-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
                           <ImageUpload
                             label="Logotipo Principal"
                             path={`catalogos/${atl.id}`}
@@ -385,7 +411,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                             }
                           />
                         </div>
-                        <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                        <div className="p-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
                           <ImageUpload
                             label="Isotipo"
                             path={`catalogos/${atl.id}/isotipo`}
@@ -398,7 +424,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                             }
                           />
                         </div>
-                        <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                        <div className="p-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
                           <ImageUpload
                             label="Banner Topo Checkout"
                             path={`catalogos/${atl.id}/banner`}
@@ -417,7 +443,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-1.5">
-                            <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
+                            <label className="text-[9px] uppercase font-medium text-slate-500 ml-1">
                               Nome da Marca
                             </label>
                             <input
@@ -426,12 +452,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               onChange={(e) =>
                                 updateMultiField(atl.id, "store_name", e.target.value)
                               }
-                              className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
+                              className="w-full bg-[#F5F5F7] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
                               placeholder="Nome oficial..."
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
+                            <label className="text-[9px] uppercase font-medium text-slate-500 ml-1">
                               Razão Social (Legal)
                             </label>
                             <input
@@ -440,12 +466,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               onChange={(e) =>
                                 updateMultiField(atl.id, "store_legal_name", e.target.value)
                               }
-                              className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
+                              className="w-full bg-[#F5F5F7] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
                               placeholder="63.348.579 JULIA GABRIELA..."
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
+                            <label className="text-[9px] uppercase font-medium text-slate-500 ml-1">
                               Slogan Curto
                             </label>
                             <input
@@ -454,12 +480,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               onChange={(e) =>
                                 updateMultiField(atl.id, "store_slogan", e.target.value)
                               }
-                              className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
+                              className="w-full bg-[#F5F5F7] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
                               placeholder="Foco da marca..."
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
+                            <label className="text-[9px] uppercase font-medium text-slate-500 ml-1">
                               Instagram (@perfil)
                             </label>
                             <input
@@ -468,14 +494,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               onChange={(e) =>
                                 updateMultiField(atl.id, "instagram", e.target.value)
                               }
-                              className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
+                              className="w-full bg-[#F5F5F7] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
                               placeholder="@seuinstagram"
                             />
                           </div>
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[9px] uppercase font-black text-slate-500 ml-1">
+                          <label className="text-[9px] uppercase font-medium text-slate-500 ml-1">
                             Descrição da Marca / Narrativa (About)
                           </label>
                           <textarea
@@ -483,17 +509,17 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                             onChange={(e) =>
                               updateMultiField(atl.id, "about_me_bio", e.target.value)
                             }
-                            className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-4 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all h-28 resize-none shadow-sm"
+                            className="w-full bg-[#F5F5F7] border border-slate-100 rounded-2xl px-4 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all h-28 resize-none shadow-sm"
                             placeholder="Conte a história deste ateliê específico..."
                           />
                         </div>
 
                         <div className="pt-4 space-y-4">
-                          <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-800 border-b border-slate-50 pb-2">Identidade Visual (Cores)</h5>
+                          <h5 className="text-[10px] font-medium tracking-normal text-slate-800 border-b border-slate-50 pb-2">Identidade Visual (Cores)</h5>
                           <div className="grid grid-cols-3 gap-6">
                             <div className="space-y-2">
-                              <label className="text-[8px] uppercase font-black text-slate-400 block text-center">Primária</label>
-                              <div className="flex items-center gap-3 bg-[#FAF9F6] p-2 rounded-xl border border-slate-100 shadow-inner">
+                              <label className="text-[8px] uppercase font-medium text-slate-400 block text-center">Primária</label>
+                              <div className="flex items-center gap-3 bg-[#F5F5F7] p-2 rounded-xl border border-slate-100 shadow-inner">
                                 <input
                                   type="color"
                                   value={atlSettings.theme_primary_color || "#ffffff"}
@@ -506,8 +532,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               </div>
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[8px] uppercase font-black text-slate-400 block text-center">Destaque</label>
-                              <div className="flex items-center gap-3 bg-[#FAF9F6] p-2 rounded-xl border border-slate-100 shadow-inner">
+                              <label className="text-[8px] uppercase font-medium text-slate-400 block text-center">Destaque</label>
+                              <div className="flex items-center gap-3 bg-[#F5F5F7] p-2 rounded-xl border border-slate-100 shadow-inner">
                                 <input
                                   type="color"
                                   value={atlSettings.theme_accent_color || "#db2777"}
@@ -520,8 +546,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               </div>
                             </div>
                             <div className="space-y-2">
-                              <label className="text-[8px] uppercase font-black text-slate-400 block text-center">Texto</label>
-                              <div className="flex items-center gap-3 bg-[#FAF9F6] p-2 rounded-xl border border-slate-100 shadow-inner">
+                              <label className="text-[8px] uppercase font-medium text-slate-400 block text-center">Texto</label>
+                              <div className="flex items-center gap-3 bg-[#F5F5F7] p-2 rounded-xl border border-slate-100 shadow-inner">
                                 <input
                                   type="color"
                                   value={atlSettings.theme_text_color || "#1f2937"}
@@ -543,12 +569,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
             </div>
 
             {/* WhatsApp & Pixel Configuration */}
-            <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm space-y-8 mt-10">
+            <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm space-y-8 mt-10">
               <div className="flex items-center gap-3 border-b border-slate-50 pb-5">
-                <div className="p-2 bg-pink-100 rounded-lg text-pink-700">
+                <div className="p-2 bg-pink-100 rounded-lg text-[#1C1C1E]">
                   <Phone size={18} />
                 </div>
-                <h4 className="text-base font-black uppercase tracking-tight text-slate-800">
+                <h4 className="text-base font-medium uppercase tracking-tight text-slate-800">
                   Integrações de Contato & Tráfego (WhatsApp e Pixel)
                 </h4>
               </div>
@@ -558,13 +584,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 <div className="space-y-6">
                   <div className="flex items-center gap-2">
                     <Phone size={16} className="text-emerald-500" />
-                    <span className="text-[10px] uppercase font-black text-slate-600 tracking-wider">
+                    <span className="text-[10px] uppercase font-medium text-slate-600 tracking-wider">
                       Configurações do WhatsApp
                     </span>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] uppercase font-black text-slate-400">
+                    <label className="text-[9px] uppercase font-medium text-slate-400">
                       Número Master (WhatsApp + DDD)
                     </label>
                     <input
@@ -572,30 +598,30 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       value={settings.store_contact || ""}
                       onChange={(e) => updateField("store_contact", e.target.value)}
                       placeholder="(00) 0 0000-0000"
-                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-mono font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
+                      className="w-full bg-[#F5F5F7] border border-slate-100 rounded-xl px-4 py-3 text-xs font-mono font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] uppercase font-black text-slate-400">
+                    <label className="text-[9px] uppercase font-medium text-slate-400">
                       Mensagem Automática (Geral)
                     </label>
                     <textarea
                       value={settings.whatsapp_main_message || ""}
                       onChange={(e) => updateField("whatsapp_main_message", e.target.value)}
-                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 transition-all h-24 resize-none shadow-sm"
+                      className="w-full bg-[#F5F5F7] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 transition-all h-24 resize-none shadow-sm"
                       placeholder="Olá! Gostaria de conversar sobre as marcas..."
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] uppercase font-black text-slate-400">
+                    <label className="text-[9px] uppercase font-medium text-slate-400">
                       Lead de Produto (Automático)
                     </label>
                     <textarea
                       value={settings.whatsapp_product_message || ""}
                       onChange={(e) => updateField("whatsapp_product_message", e.target.value)}
-                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 transition-all h-24 resize-none shadow-sm"
+                      className="w-full bg-[#F5F5F7] border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-pink-500 transition-all h-24 resize-none shadow-sm"
                       placeholder="Olá! Tenho interesse no item {product}..."
                     />
                   </div>
@@ -605,7 +631,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 <div className="space-y-6">
                   <div className="flex items-center gap-2">
                     <Facebook size={16} className="text-blue-600" />
-                    <span className="text-[10px] uppercase font-black text-slate-600 tracking-wider">
+                    <span className="text-[10px] uppercase font-medium text-slate-600 tracking-wider">
                       Pixel do Facebook
                     </span>
                   </div>
@@ -615,7 +641,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   </p>
 
                   <div className="space-y-2">
-                    <label className="text-[9px] uppercase font-black text-slate-400">
+                    <label className="text-[9px] uppercase font-medium text-slate-400">
                       Pixel ID
                     </label>
                     <input
@@ -623,7 +649,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       value={settings.facebook_pixel || ""}
                       onChange={(e) => updateField("facebook_pixel", e.target.value)}
                       placeholder="Ex: 1234567890"
-                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-3 text-xs font-mono font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
+                      className="w-full bg-[#F5F5F7] border border-slate-100 rounded-xl px-4 py-3 text-xs font-mono font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
                     />
                   </div>
                 </div>
@@ -634,22 +660,22 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 {activeSubTab === "about" && (
           <div className="space-y-8">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-pink-100/50 text-pink-700">
+              <div className="p-3 rounded-2xl bg-pink-100/50 text-[#1C1C1E]">
                 <User size={24} />
               </div>
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-xl font-medium text-slate-900 tracking-normal">
                 Editar Página Sobre Nós
               </h3>
             </div>
 
-            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest leading-relaxed">
+            <p className="text-[10px] uppercase font-medium text-slate-500 tracking-widest leading-relaxed">
               Personalize a apresentação de Julia Aleixo, enviando uma foto profissional e editando os textos de biografia e propósito.
             </p>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
               {/* Photo Upload Card */}
               <div className="space-y-4">
-                <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                <div className="p-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
                   <ImageUpload
                     label="Minha Foto (Perfil / Ateliê)"
                     path="sobrenos"
@@ -660,13 +686,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 </div>
                 
                 <div className="space-y-1.5 max-w-full pl-1">
-                  <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                  <label className="text-[8px] font-medium text-slate-400 tracking-normal">
                     Link Manual da Imagem (Opcional)
                   </label>
                   <input
                     type="text"
                     placeholder="Link da sua foto..."
-                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-xl px-4 py-2 text-[10px] outline-none font-bold focus:border-pink-500 transition-all shadow-sm"
+                    className="w-full bg-[#F5F5F7] border border-slate-100 rounded-xl px-4 py-2 text-[10px] outline-none font-bold focus:border-pink-500 transition-all shadow-sm"
                     value={settings.about_me_photo || ""}
                     onChange={(e) => updateField("about_me_photo", e.target.value)}
                   />
@@ -676,7 +702,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               {/* Text Fields Editorial */}
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                  <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                     Título do Perfil / Saudação
                   </label>
                   <input
@@ -684,30 +710,30 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     value={settings.about_me_title || ""}
                     onChange={(e) => updateField("about_me_title", e.target.value)}
                     placeholder="Ex: Olá, sou a Julia Aleixo!"
-                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
+                    className="w-full bg-[#F5F5F7] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all shadow-sm"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                  <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                     Texto Biográfico / Sua História
                   </label>
                   <textarea
                     value={settings.about_me_bio || ""}
                     onChange={(e) => updateField("about_me_bio", e.target.value)}
-                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all h-32 resize-none shadow-sm"
+                    className="w-full bg-[#F5F5F7] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all h-32 resize-none shadow-sm"
                     placeholder="Conte sobre sua paixão pelo artesanato..."
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                  <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                     Nosso Propósito / Compromisso
                   </label>
                   <textarea
                     value={settings.about_me_purpose || ""}
                     onChange={(e) => updateField("about_me_purpose", e.target.value)}
-                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all h-32 resize-none shadow-sm"
+                    className="w-full bg-[#F5F5F7] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 focus:bg-white transition-all h-32 resize-none shadow-sm"
                     placeholder="Explique o diferencial de qualidade..."
                   />
                 </div>
@@ -722,14 +748,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-600">
                 <CreditCard size={24} />
               </div>
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-xl font-medium text-slate-900 tracking-normal">
                 Configurações de Venda
               </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-6">
-                <div className="p-6 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                <div className="p-6 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
                   <ImageUpload
                     label="QR Code PIX Principal"
                     path="pix"
@@ -739,8 +765,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   />
                 </div>
                 
-                <div className="space-y-4 p-6 rounded-3xl bg-slate-50/50 border border-slate-100">
-                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                <div className="space-y-4 p-6 rounded-2xl bg-slate-50/50 border border-slate-100">
+                  <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                     Meta de Vendas Mensal (R$)
                   </label>
                   <input
@@ -749,10 +775,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     onChange={(e) =>
                       updateField("monthly_goal", Number(e.target.value))
                     }
-                    className="w-full bg-white border border-slate-100 rounded-2xl px-6 py-4 text-xs font-black outline-none focus:border-pink-500 transition-all shadow-sm"
+                    className="w-full bg-white border border-slate-100 rounded-2xl px-6 py-4 text-xs font-medium outline-none focus:border-pink-500 transition-all shadow-sm"
                     placeholder="Ex: 10000"
                   />
-                  <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest ml-2 leading-relaxed">
+                  <p className="text-[8px] text-slate-400 font-bold tracking-normal ml-2 leading-relaxed">
                     Esta meta será usada no termômetro do dashboard.
                   </p>
                 </div>
@@ -761,7 +787,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                    <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                       Chave PIX
                     </label>
                     <input
@@ -770,12 +796,12 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       onChange={(e) =>
                         updateField("store_pix_key", e.target.value)
                       }
-                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
+                      className="w-full bg-[#F5F5F7] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
                       placeholder="Ex: 00.000.000/0001-00"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                    <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                       Nome do Beneficiário
                     </label>
                     <input
@@ -784,7 +810,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       onChange={(e) =>
                         updateField("store_pix_name", e.target.value)
                       }
-                      className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
+                      className="w-full bg-[#F5F5F7] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all shadow-sm"
                       placeholder="Ex: Nome Completo ou Ateliê"
                     />
                   </div>
@@ -795,7 +821,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     <div className="p-2 rounded-xl bg-sky-50 text-sky-600">
                       <CreditCard size={18} />
                     </div>
-                    <h4 className="text-[10px] uppercase font-black text-slate-900 tracking-widest">Pix Automático (Mercado Pago)</h4>
+                    <h4 className="text-[10px] uppercase font-medium text-slate-900 tracking-widest">Pix Automático (Mercado Pago)</h4>
                   </div>
                   
                   <div className="space-y-4">
@@ -805,15 +831,15 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                         type="password"
                         value={settings.mercadopago_token || ""}
                         onChange={(e) => updateField("mercadopago_token", e.target.value)}
-                        className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-5 py-3 text-[11px] font-mono outline-none focus:border-pink-500 transition-all shadow-sm"
+                        className="w-full bg-[#F5F5F7] border border-slate-100 rounded-2xl px-5 py-3 text-[11px] font-mono outline-none focus:border-pink-500 transition-all shadow-sm"
                         placeholder="APP_USR-..."
                       />
                     </div>
                     
                     <div className="flex items-center justify-between bg-emerald-50/30 p-4 rounded-2xl border border-emerald-100/50">
                       <div>
-                        <p className="text-[10px] font-black uppercase text-emerald-900 tracking-wider">Ativar Geração Dinâmica</p>
-                        <p className="text-[8px] font-bold text-emerald-600 uppercase tracking-widest">QR Code gerado automaticamente</p>
+                        <p className="text-[10px] font-medium uppercase text-emerald-900 tracking-wider">Ativar Geração Dinâmica</p>
+                        <p className="text-[8px] font-bold text-emerald-600 tracking-normal">QR Code gerado automaticamente</p>
                       </div>
                       <button 
                         onClick={() => updateField("pix_automatico_active", !settings.pix_automatico_active)}
@@ -826,8 +852,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     <div className="pt-4 border-t border-slate-50">
                       <div className="flex items-center justify-between bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50">
                         <div>
-                          <p className="text-[10px] font-black uppercase text-amber-900 tracking-wider">Modo teste de Checkout</p>
-                          <p className="text-[8px] font-bold text-amber-600 uppercase tracking-widest leading-relaxed">
+                          <p className="text-[10px] font-medium uppercase text-amber-900 tracking-wider">Modo teste de Checkout</p>
+                          <p className="text-[8px] font-bold text-amber-600 tracking-normal leading-relaxed">
                             Simula pagamentos aprovados sem Mercado Pago
                           </p>
                         </div>
@@ -853,17 +879,17 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               <div className="p-3 rounded-2xl bg-amber-100/50 text-amber-700">
                 <Calculator size={24} />
               </div>
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
-                Base de Precificação
+              <h3 className="text-xl font-medium text-slate-900 tracking-normal">
+                Base de Formação de Preço
               </h3>
             </div>
 
-            <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest leading-relaxed max-w-2xl">
+            <p className="text-[10px] uppercase font-medium text-slate-500 tracking-widest leading-relaxed max-w-2xl">
               Estes valores globais serão usados na hora de sugerir o Preço de Venda do seus produtos baseando-se no tempo gasto e custo dos insumos.
             </p>
 
             <div className="grid grid-cols-1 gap-12 pt-4">
-              <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100 shadow-sm">
+              <div className="bg-slate-50/50 p-8 rounded-2xl border border-slate-100 shadow-sm">
                 <DynamicPricingList
                   title="Custos Fixos (Mensal)"
                   subtitle="Água, luz, assinaturas, aluguel..."
@@ -882,7 +908,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 />
               </div>
 
-              <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100 shadow-sm">
+              <div className="bg-slate-50/50 p-8 rounded-2xl border border-slate-100 shadow-sm">
                 <DynamicPricingList
                   title="Mão de Obra"
                   subtitle="Dia / Hora = Valor Cobrado"
@@ -901,7 +927,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 />
               </div>
 
-              <div className="bg-slate-50/50 p-8 rounded-3xl border border-slate-100 shadow-sm">
+              <div className="bg-slate-50/50 p-8 rounded-2xl border border-slate-100 shadow-sm">
                 <DynamicPricingList
                   title="Taxas e Impostos"
                   subtitle="Taxas de cartão, emissão de NF, etc"
@@ -920,6 +946,44 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   }}
                 />
               </div>
+
+              {/* Seção Atendimento de Urgência */}
+              <div className="bg-slate-50/50 p-8 rounded-2xl border border-slate-100 shadow-sm space-y-6">
+                <div>
+                  <h4 className="text-sm font-medium text-slate-900 uppercase tracking-wider">
+                    Serviço de Atendimento de Urgência
+                  </h4>
+                  <p className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-widest mt-1 leading-relaxed">
+                    Configure a descrição e o valor cobrado do cliente quando selecionar a opção de Urgência no checkout.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-2 space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest ml-1">
+                      Descrição do Serviço
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.urgency_description !== undefined ? settings.urgency_description : "Seu pedido será tratado com prioridade máxima de produção e envio rápido."}
+                      onChange={(e) => updateField("urgency_description", e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 outline-none focus:border-pink-300"
+                      placeholder="Ex: Seu pedido será tratado com prioridade máxima..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest ml-1">
+                      Valor do Serviço (R$)
+                    </label>
+                    <input
+                      type="number"
+                      value={settings.urgency_price !== undefined ? settings.urgency_price : 25}
+                      onChange={(e) => updateField("urgency_price", Number(e.target.value))}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 outline-none focus:border-pink-300"
+                      placeholder="Ex: 25"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Configuração de Frete integrada */}
@@ -928,16 +992,16 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 <div className="p-3 rounded-2xl bg-sky-100 text-sky-600">
                   <Truck size={24} />
                 </div>
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
+                <h3 className="text-xl font-medium text-slate-900 tracking-normal">
                   Cálculo de Frete (Regiões de Entrega)
                 </h3>
               </div>
 
-              <div className="bg-white rounded-3xl p-8 border border-lilac/10 space-y-8">
+              <div className="bg-white rounded-2xl p-8 border border-lilac/10 space-y-8">
                  <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">Faixas de Preço por CEP</h4>
-                      <p className="text-[10px] text-[#A09898] uppercase font-bold tracking-widest mt-1">Defina valores de entrega baseados em intervalos de CEP.</p>
+                      <h4 className="text-sm font-medium text-slate-900 uppercase tracking-wider">Faixas de Preço por CEP</h4>
+                      <p className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-widest mt-1">Defina valores de entrega baseados em intervalos de CEP.</p>
                     </div>
                     <button 
                       onClick={() => {
@@ -952,7 +1016,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                         });
                         updateField('shipping_rules', newRules);
                       }}
-                      className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all"
+                      className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-medium tracking-normal hover:bg-black transition-all"
                     >
                       + Adicionar Região
                     </button>
@@ -962,7 +1026,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     {(settings.shipping_rules || []).map((rule, idx) => (
                       <div key={rule.id} className="grid grid-cols-1 md:grid-cols-6 gap-4 p-5 bg-[#F8F5F2] rounded-2xl border border-lilac/5 items-center">
                         <div className="md:col-span-2 space-y-1">
-                          <label className="text-[8px] font-black text-[#A09898] uppercase">Nome da Região / Cidade</label>
+                          <label className="text-[8px] font-medium text-[#8E8E93] uppercase">Nome da Região / Cidade</label>
                           <input 
                             value={rule.region}
                             onChange={(e) => {
@@ -974,7 +1038,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[#A09898] uppercase">CEP Inicial</label>
+                          <label className="text-[8px] font-medium text-[#8E8E93] uppercase">CEP Inicial</label>
                           <input 
                             value={rule.cep_start}
                             onChange={(e) => {
@@ -987,7 +1051,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[#A09898] uppercase">CEP Final</label>
+                          <label className="text-[8px] font-medium text-[#8E8E93] uppercase">CEP Final</label>
                           <input 
                             value={rule.cep_end}
                             onChange={(e) => {
@@ -1000,7 +1064,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[#A09898] uppercase">Valor (R$)</label>
+                          <label className="text-[8px] font-medium text-[#8E8E93] uppercase">Valor (R$)</label>
                           <input 
                             type="number"
                             value={rule.price}
@@ -1019,7 +1083,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               newRules[idx].active = !newRules[idx].active;
                               updateField('shipping_rules', newRules);
                             }}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest ${rule.active ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all text-[9px] font-medium tracking-normal ${rule.active ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}
                             title={rule.active ? 'Desativar' : 'Ativar'}
                           >
                             {rule.active ? <CheckCircle size={14} /> : <X size={14} />} {rule.active ? 'Desativar' : 'Ativar'}
@@ -1029,7 +1093,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                               const newRules = (settings.shipping_rules || []).filter(r => r.id !== rule.id);
                               updateField('shipping_rules', newRules);
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-400 hover:text-white hover:bg-rose-500 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-400 hover:text-white hover:bg-rose-500 rounded-xl transition-all text-[9px] font-medium tracking-normal"
                             title="Remover"
                           >
                             <Trash2 size={14} /> Excluir
@@ -1039,17 +1103,17 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     ))}
 
                     {(settings.shipping_rules || []).length === 0 && (
-                      <div className="p-12 text-center border-2 border-dashed border-lilac/10 rounded-[2rem] space-y-3">
+                      <div className="p-12 text-center border-2 border-dashed border-lilac/10 rounded-2xl space-y-3">
                         <Truck size={32} className="mx-auto text-lilac/20" />
-                        <p className="text-[10px] text-[#A09898] uppercase font-black tracking-widest">Nenhuma regra de frete cadastrada.</p>
+                        <p className="text-[10px] text-[#8E8E93] uppercase font-medium tracking-widest">Nenhuma regra de frete cadastrada.</p>
                       </div>
                     )}
                  </div>
               </div>
 
-              <div className="bg-sky-50/50 rounded-3xl p-8 border border-sky-100">
-                 <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2">Instruções de Uso</h4>
-                 <ul className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest space-y-2 leading-relaxed">
+              <div className="bg-sky-50/50 rounded-2xl p-8 border border-sky-100">
+                 <h4 className="text-xs font-medium text-slate-900 uppercase tracking-wider mb-2">Instruções de Uso</h4>
+                 <ul className="text-[10px] text-[#8E8E93] font-bold tracking-normal space-y-2 leading-relaxed">
                     <li>• O sistema buscará o CEP do cliente no checkout e aplicará o valor da primeira regra que coincidir com o intervalo.</li>
                     <li>• Insira apenas números nos campos de CEP.</li>
                     <li>• Regras desativadas serão ignoradas.</li>
@@ -1069,7 +1133,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               <div className="p-3 rounded-2xl bg-amber-100/50 text-amber-700">
                 <FileText size={24} />
               </div>
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-xl font-medium text-slate-900 tracking-normal">
                 Modelo de Comprovantes
               </h3>
             </div>
@@ -1077,7 +1141,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                  <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                     Aviso Legal (Cupom)
                   </label>
                   <textarea
@@ -1085,11 +1149,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     onChange={(e) =>
                       updateField("receipt_footer", e.target.value)
                     }
-                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all h-32 resize-none shadow-sm"
+                    className="w-full bg-[#F5F5F7] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all h-32 resize-none shadow-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                  <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                     Cláusulas (Orçamento)
                   </label>
                   <textarea
@@ -1097,11 +1161,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     onChange={(e) =>
                       updateField("quote_footer", e.target.value)
                     }
-                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all h-32 resize-none shadow-sm"
+                    className="w-full bg-[#F5F5F7] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all h-32 resize-none shadow-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                  <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                     Agradecimento Geral
                   </label>
                   <textarea
@@ -1109,26 +1173,26 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     onChange={(e) =>
                       updateField("receipt_message", e.target.value)
                     }
-                    className="w-full bg-[#FAF9F6] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all h-24 resize-none shadow-sm"
+                    className="w-full bg-[#F5F5F7] border border-slate-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-pink-500 transition-all h-24 resize-none shadow-sm"
                     placeholder="Ex: Obrigado pela sua compra..."
                   />
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className="p-8 rounded-[3rem] bg-slate-50 border border-slate-100 shadow-inner">
-                  <p className="text-[10px] uppercase font-black text-slate-500 tracking-widest mb-6">
+                <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner">
+                  <p className="text-[10px] uppercase font-medium text-slate-500 tracking-widest mb-6">
                     Tags Inteligentes
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     {["{ateliê}", "{cliente}", "{pedido}", "{total}", "{data}"].map(tag => (
                       <div key={tag} className="p-4 bg-white rounded-2xl border border-slate-100 flex items-center justify-between group cursor-help transition-all hover:border-pink-200">
-                        <span className="text-[10px] font-mono font-black text-pink-600">{tag}</span>
+                        <span className="text-[10px] font-mono font-medium text-pink-600">{tag}</span>
                         <div className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover:bg-pink-400 mt-0.5" />
                       </div>
                     ))}
                   </div>
-                  <p className="mt-8 text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">As tags de ateliê e cliente são detectadas e preenchidas automaticamente em cada geração.</p>
+                  <p className="mt-8 text-[9px] text-slate-400 font-bold tracking-normal leading-relaxed">As tags de ateliê e cliente são detectadas e preenchidas automaticamente em cada geração.</p>
                 </div>
               </div>
             </div>
@@ -1142,13 +1206,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               <div className="p-3 rounded-2xl bg-purple-100 text-purple-600">
                 <Gift size={24} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-2xl font-medium text-slate-900 tracking-normal">
                 Roleta de Brindes
               </h3>
             </div>
 
             <div className="p-6 rounded-2xl bg-white border border-lilac/10">
-              <p className="text-xs text-gray-500 mb-6 uppercase tracking-widest font-black">
+              <p className="text-xs text-gray-500 mb-6 tracking-normal font-medium">
                 Configure exatamente 5 opções para a roleta. Ela será exibida
                 no final de compras a partir de R$ 300,00.
               </p>
@@ -1172,7 +1236,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       key={prize.id}
                       className="flex items-center gap-4 p-4 bg-white rounded-xl border border-lilac/20 shadow-sm"
                     >
-                      <span className="w-6 font-mono font-bold text-[#A09898]">
+                      <span className="w-6 font-mono font-bold text-[#8E8E93]">
                         {idx + 1}.
                       </span>
                       <input
@@ -1188,7 +1252,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       />
 
                       <div className="flex items-center gap-2">
-                        <label className="text-[10px] uppercase font-black text-[#A09898]">
+                        <label className="text-[10px] uppercase font-medium text-[#8E8E93]">
                           Peso (1 a 100):
                         </label>
                         <input
@@ -1211,7 +1275,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                           newPrizes[idx].active = !newPrizes[idx].active;
                           updateField("roulette_prizes", newPrizes);
                         }}
-                        className={`w-24 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${prize.active ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-rose-600"}`}
+                        className={`w-24 py-3 rounded-xl text-[10px] font-medium tracking-normal transition-all ${prize.active ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-rose-600"}`}
                       >
                         {prize.active ? "Ativo" : "Inativo"}
                       </button>
@@ -1230,21 +1294,23 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               <div className="p-3 rounded-2xl bg-rose-100/50 text-[#D48C8C]">
                 <Bell size={24} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-2xl font-medium text-slate-900 tracking-normal">
                 Gerenciador de Notificações
               </h3>
             </div>
 
-            <div className="bg-white rounded-3xl p-8 border border-lilac/10 space-y-8">
+            <NotificationSettings />
+
+            <div className="bg-white rounded-2xl p-8 border border-lilac/10 space-y-8">
               <div>
-                <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">Alertas e Efeitos Sonoros</h4>
-                <p className="text-[10px] text-[#A09898] uppercase font-bold tracking-widest mt-1">Configure o comportamento das notificações do sistema.</p>
+                <h4 className="text-sm font-medium text-slate-900 uppercase tracking-wider">Alertas e Efeitos Sonoros</h4>
+                <p className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-widest mt-1">Configure o comportamento das notificações do sistema.</p>
               </div>
 
               <div className="p-6 bg-[#F8F5F2] rounded-2xl border border-lilac/5 flex items-center justify-between">
                 <div className="space-y-1 pr-4">
-                  <p className="text-xs font-black text-slate-900 uppercase tracking-wider">Feedback Sonoro de Sucesso</p>
-                  <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest max-w-md leading-relaxed normal-case">
+                  <p className="text-xs font-medium text-slate-900 uppercase tracking-wider">Feedback Sonoro de Sucesso</p>
+                  <p className="text-[10px] text-[#8E8E93] font-bold tracking-normal max-w-md leading-relaxed normal-case">
                     Reproduzir automaticamente um som de recebimento de dinheiro ("cash register cha-ching") ou confirmação quando novos pedidos forem criados ou marcados como pagos e concluídos.
                   </p>
                 </div>
@@ -1274,25 +1340,25 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     const { playSuccessSound } = await import("../../utils/audio");
                     playSuccessSound();
                   }}
-                  className="px-6 py-3 border border-[#F0E6D2] hover:bg-[#FAF9F6] text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm"
+                  className="px-6 py-3 border border-[#E5E5EA] hover:bg-[#F5F5F7] text-slate-900 rounded-xl text-[9px] font-medium tracking-normal transition-all shadow-sm"
                 >
                   🔊 Testar Som de Sucesso
                 </button>
               </div>
             </div>
 
-            <div className="bg-lilac/5 rounded-3xl p-8 border border-lilac/10">
-              <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-2">Compatibilidade de Áudio</h4>
-              <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest leading-relaxed">
+            <div className="bg-lilac/5 rounded-2xl p-8 border border-lilac/10">
+              <h4 className="text-xs font-medium text-slate-900 uppercase tracking-wider mb-2">Compatibilidade de Áudio</h4>
+              <p className="text-[10px] text-[#8E8E93] font-bold tracking-normal leading-relaxed">
                 • Efeitos sonoros são gerados de forma limpa pelo navegador via Web Audio API, exigindo uma primeira interação na página para contornar restrições de autoplayer do navegador.
               </p>
             </div>
 
             {/* Configuração Telegram */}
-            <div className="bg-white rounded-3xl p-8 border border-sky-100 space-y-8">
+            <div className="bg-white rounded-2xl p-8 border border-sky-100 space-y-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="flex items-center gap-2 text-sm font-black text-sky-900 uppercase tracking-wider">
+                  <h4 className="flex items-center gap-2 text-sm font-medium text-sky-900 uppercase tracking-wider">
                     <Smartphone size={18} />
                     Telegram
                   </h4>
@@ -1301,19 +1367,19 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                   </p>
                 </div>
                 {telegramStatus === 'success' && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100 text-[10px] font-bold uppercase tracking-widest text-emerald-600">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100 text-[10px] font-bold tracking-normal text-emerald-600">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
                     Telegram Conectado
                   </div>
                 )}
                 {(telegramStatus === 'error' || telegramStatus === 'idle') && telegramConfig.telegram_bot_token === '' && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 rounded-lg border border-rose-100 text-[10px] font-bold uppercase tracking-widest text-rose-600">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 rounded-lg border border-rose-100 text-[10px] font-bold tracking-normal text-rose-600">
                     <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
                     Telegram Desconectado
                   </div>
                 )}
                 {telegramStatus === 'error' && telegramConfig.telegram_bot_token !== '' && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 rounded-lg border border-rose-100 text-[10px] font-bold uppercase tracking-widest text-rose-600">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 rounded-lg border border-rose-100 text-[10px] font-bold tracking-normal text-rose-600">
                     <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
                     Falha ao Conectar
                   </div>
@@ -1323,8 +1389,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               <div className="p-6 bg-slate-50/50 rounded-2xl border border-slate-100 flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1 pr-4">
-                    <p className="text-xs font-black text-slate-900 uppercase tracking-wider">Ativar Notificações Telegram</p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed normal-case">
+                    <p className="text-xs font-medium text-slate-900 uppercase tracking-wider">Ativar Notificações Telegram</p>
+                    <p className="text-[10px] text-slate-400 font-bold tracking-normal leading-relaxed normal-case">
                       Liga ou desliga o envio prático de alertas.
                     </p>
                   </div>
@@ -1346,7 +1412,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200/60">
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                    <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                       Bot Token
                     </label>
                     <input
@@ -1354,7 +1420,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       value={telegramConfig.telegram_bot_token || ""}
                       onChange={(e) => handleTelegramChange("telegram_bot_token", e.target.value)}
                       placeholder="Ex: 123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"
-                      className="w-full bg-[#FAF9F6] border border-slate-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-sky-500 transition-all shadow-sm"
+                      className="w-full bg-[#F5F5F7] border border-slate-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-sky-500 transition-all shadow-sm"
                     />
                     {telegramConfig.telegram_bot_token && telegramConfig.telegram_bot_token.length > 5 && (
                       <p className="text-[9px] font-mono text-slate-400 ml-2">
@@ -1363,7 +1429,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                    <label className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                       Chat ID
                     </label>
                     <input
@@ -1371,14 +1437,14 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       value={telegramConfig.telegram_chat_id || ""}
                       onChange={(e) => handleTelegramChange("telegram_chat_id", e.target.value)}
                       placeholder="Ex: -1001234567890"
-                      className="w-full bg-[#FAF9F6] border border-slate-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-sky-500 transition-all shadow-sm"
+                      className="w-full bg-[#F5F5F7] border border-slate-200 rounded-2xl px-6 py-4 text-xs font-mono font-bold outline-none focus:border-sky-500 transition-all shadow-sm"
                     />
                   </div>
                 </div>
 
                 {telegramConfig.telegram_enabled && (
                   <div className="pt-4 border-t border-slate-200/60 space-y-4">
-                    <h5 className="text-[10px] uppercase font-black text-slate-500 ml-2">
+                    <h5 className="text-[10px] uppercase font-medium text-slate-500 ml-2">
                       Eventos para Notificar
                     </h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1411,7 +1477,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     type="button"
                     disabled={telegramStatus === 'loading'}
                     onClick={testTelegram}
-                    className="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-50 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2"
+                    className="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white disabled:opacity-50 rounded-xl text-[9px] font-medium tracking-normal transition-all shadow-sm flex items-center gap-2"
                   >
                     {telegramStatus === 'loading' ? (
                       <>⏳ Testando...</>
@@ -1424,13 +1490,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 {/* Logs de Notificações */}
                 {telegramLogs.length > 0 && (
                   <div className="pt-4 border-t border-slate-200/60 space-y-4">
-                    <h5 className="text-[10px] uppercase font-black text-slate-500 ml-2">Ultimas Notificações (Logs)</h5>
+                    <h5 className="text-[10px] uppercase font-medium text-slate-500 ml-2">Ultimas Notificações (Logs)</h5>
                     <div className="space-y-3">
                       {telegramLogs.map(log => (
                         <div key={log.id} className={`p-4 rounded-xl border ${log.status === 'error' ? 'bg-red-50/50 border-red-100' : 'bg-white border-slate-100'}`}>
                           <div className="flex justify-between items-start">
                              <div>
-                                <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 ${log.status === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
+                                <span className={`text-[10px] font-bold tracking-normal flex items-center gap-2 ${log.status === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
                                   {log.status === 'success' ? '🟢 Enviado' : '🔴 Falha'} - {new Date(log.createdAt?.seconds * 1000).toLocaleString()}
                                 </span>
                                 <p className="text-xs text-slate-600 mt-2 whitespace-pre-wrap">{log.message}</p>
@@ -1440,7 +1506,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                              </div>
                              <button
                                onClick={() => resendTelegramNotification(log.id, log)}
-                               className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2"
+                               className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold tracking-normal transition-colors flex items-center gap-2"
                              >
                                <RotateCw size={12} /> Reenviar
                              </button>
@@ -1461,24 +1527,24 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               <div className="p-3 rounded-2xl bg-rose-100/50 text-[#D48C8C]">
                 <RotateCw size={24} className="animate-spin" style={{ animationDuration: '6s' }} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-2xl font-medium text-slate-900 tracking-normal">
                 Reset Geral de Dados
               </h3>
             </div>
 
-            <div className="bg-white rounded-3xl p-8 border border-red-100 space-y-8 shadow-[0_10px_40px_rgba(239,68,68,0.03)]">
+            <div className="bg-white rounded-2xl p-8 border border-red-100 space-y-8 shadow-[0_10px_40px_rgba(239,68,68,0.03)]">
               <div>
-                <h4 className="text-sm font-black text-rose-900 uppercase tracking-wider flex items-center gap-2">
+                <h4 className="text-sm font-medium text-rose-900 uppercase tracking-wider flex items-center gap-2">
                   <span>⚠️</span> Cuidado! Zona de Perigo Extremo
                 </h4>
-                <p className="text-[10px] text-[#A09898] uppercase font-bold tracking-widest mt-1">
+                <p className="text-[10px] text-[#8E8E93] uppercase font-bold tracking-widest mt-1">
                   Esta ação executará um reset completo dos dados cadastrados para que o sistema volte ao estado inicial de uso.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                 <div className="p-6 rounded-2xl bg-red-50/50 border border-red-100/70 space-y-3">
-                  <h5 className="text-[11px] font-black text-rose-800 uppercase tracking-wider flex items-center gap-2">
+                  <h5 className="text-[11px] font-medium text-rose-800 uppercase tracking-wider flex items-center gap-2">
                     🔴 APAGAR COMPLETAMENTE
                   </h5>
                   <ul className="text-[10px] space-y-2 text-slate-600 font-medium tracking-wide leading-relaxed">
@@ -1491,13 +1557,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 </div>
 
                 <div className="p-6 rounded-2xl bg-emerald-50/50 border border-emerald-100/70 space-y-3">
-                  <h5 className="text-[11px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-2">
+                  <h5 className="text-[11px] font-medium text-emerald-800 uppercase tracking-wider flex items-center gap-2">
                     🟢 MANTER INTACTO (NÃO SERÁ ALTERADO)
                   </h5>
                   <ul className="text-[10px] space-y-2 text-slate-600 font-medium tracking-wide leading-relaxed">
                     <li>✅ <strong>Empresas</strong>: definições de marca, WhatsApp, pixel do Facebook, contatos.</li>
                     <li>✅ <strong>Estrutura de Frete</strong>: faixas de frete estabelecidas e taxas gerais.</li>
-                    <li>✅ <strong>Precificação</strong>: fórmulas, tarifas de transações, custos de mão de obra.</li>
+                    <li>✅ <strong>Formação de Preço</strong>: fórmulas, tarifas de transações, custos de mão de obra.</li>
                     <li>✅ <strong>Aparência & Layout</strong>: cores de background, slogans e layouts de páginas.</li>
                     <li>✅ <strong>Integrações</strong>: configurações gerais de bots, notificações e webhooks.</li>
                     <li>✅ <strong>Metas Financeiras</strong>: metas mensais cadastradas no painel.</li>
@@ -1506,9 +1572,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
               </div>
 
               <div className="pt-6 border-t border-slate-100 space-y-4">
-                <div className="flex flex-col gap-2 bg-[#FAF9F6] p-4 rounded-xl border border-[#F0E6D2]">
-                  <p className="text-[10px] font-black text-[#8C8273] uppercase tracking-widest leading-relaxed">
-                    Para confirmar o reset operacional, digite <span className="text-red-600 font-extrabold select-all">RESETAR SISTEMA</span> no campo abaixo e logo após clique no botão de redefinição.
+                <div className="flex flex-col gap-2 bg-[#F5F5F7] p-4 rounded-xl border border-[#E5E5EA]">
+                  <p className="text-[10px] font-medium text-[#8C8273] tracking-normal leading-relaxed">
+                    Para confirmar o reset operacional, digite <span className="text-red-600 font-semibold select-all">RESETAR SISTEMA</span> no campo abaixo e logo após clique no botão de redefinição.
                   </p>
                   <input
                     type="text"
@@ -1524,7 +1590,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     type="button"
                     onClick={handleResetAction}
                     disabled={confirmInput.trim().toUpperCase() !== "RESETAR SISTEMA" || resetProgress === "loading"}
-                    className="flex items-center justify-center gap-2 px-8 py-4 bg-red-600 hover:bg-red-700 text-white hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg shadow-red-900/15 cursor-pointer"
+                    className="flex items-center justify-center gap-2 px-8 py-4 bg-red-600 hover:bg-red-700 text-white hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 rounded-xl text-[9px] font-medium tracking-normal transition-all shadow-lg shadow-red-900/15 cursor-pointer"
                   >
                     {resetProgress === "loading" ? "⏳ Redefinindo o Banco de Dados..." : "🚨 Executar Reset Geral do Sistema"}
                   </button>
@@ -1539,7 +1605,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           <button
             disabled={saving}
             onClick={handleSave}
-            className="flex items-center gap-3 px-10 py-5 bg-black text-white rounded-2xl font-black font-sans text-[10px] uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-50"
+            className="flex items-center gap-3 px-10 py-5 bg-black text-white rounded-2xl font-medium font-sans text-[10px] tracking-tight hover:scale-105 active:scale-95 transition-all shadow-xl disabled:opacity-50"
           >
             {saving ? (
               "Gravando..."
@@ -1554,17 +1620,17 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
         {/* Quick Lite Editor Modal */}
         {showEditor && tempLogo && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white rounded-[3rem] w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-              <div className="p-8 border-b border-[#F0E6D2] flex justify-between items-center bg-white/50">
+            <div className="bg-white rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+              <div className="p-8 border-b border-[#E5E5EA] flex justify-between items-center bg-white/50">
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-2xl bg-black text-white">
                     <Scissors size={20} />
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 uppercase tracking-widest">
+                    <h4 className="font-medium text-slate-900 tracking-normal">
                       Ajustar Logo
                     </h4>
-                    <p className="text-[9px] font-bold text-[#A09898] uppercase tracking-widest mt-1">
+                    <p className="text-[9px] font-bold text-[#8E8E93] tracking-normal mt-1">
                       Refine a posição e escala da sua marca
                     </p>
                   </div>
@@ -1574,7 +1640,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                     setShowEditor(false);
                     setEditingAtelierId(null);
                   }}
-                  className="p-3 rounded-2xl hover:bg-slate-100 transition-colors text-[#A09898]"
+                  className="p-3 rounded-2xl hover:bg-slate-100 transition-colors text-[#8E8E93]"
                 >
                   <CloseIcon size={24} />
                 </button>
@@ -1594,7 +1660,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                 return (
                   <>
                     <div className="p-12 flex flex-col items-center gap-10">
-                      <div className="relative w-72 h-72 rounded-[2rem] bg-grid-slate-100 border border-[#F0E6D2] flex items-center justify-center overflow-hidden shadow-inner">
+                      <div className="relative w-72 h-72 rounded-2xl bg-grid-slate-100 border border-[#E5E5EA] flex items-center justify-center overflow-hidden shadow-inner">
                         <ImageWithFallback
                           src={tempLogo}
                           className="max-w-[none] max-h-[none] w-64 h-64 object-contain transition-transform"
@@ -1609,10 +1675,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                         <div className="grid grid-cols-2 gap-6">
                           <div className="space-y-3">
                             <div className="flex justify-between items-center px-1">
-                              <span className="text-[9px] font-black uppercase text-[#A09898] tracking-widest">
+                              <span className="text-[9px] font-medium uppercase text-[#8E8E93] tracking-widest">
                                 Posição X
                               </span>
-                              <span className="text-[9px] font-mono font-black text-lilac">
+                              <span className="text-[9px] font-mono font-medium text-lilac">
                                 {currentObj.store_logo_x || 0}px
                               </span>
                             </div>
@@ -1633,10 +1699,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                           </div>
                           <div className="space-y-3">
                             <div className="flex justify-between items-center px-1">
-                              <span className="text-[9px] font-black uppercase text-[#A09898] tracking-widest">
+                              <span className="text-[9px] font-medium uppercase text-[#8E8E93] tracking-widest">
                                 Posição Y
                               </span>
-                              <span className="text-[9px] font-mono font-black text-lilac">
+                              <span className="text-[9px] font-mono font-medium text-lilac">
                                 {currentObj.store_logo_y || 0}px
                               </span>
                             </div>
@@ -1659,10 +1725,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
 
                         <div className="space-y-4">
                           <div className="flex justify-between items-center px-1">
-                            <span className="text-[9px] font-black uppercase text-[#A09898] tracking-widest">
+                            <span className="text-[9px] font-medium uppercase text-[#8E8E93] tracking-widest">
                               Escala
                             </span>
-                            <span className="text-[9px] font-mono font-black text-lilac">
+                            <span className="text-[9px] font-mono font-medium text-lilac">
                               {(
                                 (currentObj.store_logo_scale || 1) * 100
                               ).toFixed(0)}
@@ -1687,10 +1753,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
 
                         <div className="space-y-4">
                           <div className="flex justify-between items-center px-1">
-                            <span className="text-[9px] font-black uppercase text-[#A09898] tracking-widest">
+                            <span className="text-[9px] font-medium uppercase text-[#8E8E93] tracking-widest">
                               Rotação
                             </span>
-                            <span className="text-[9px] font-mono font-black text-lilac">
+                            <span className="text-[9px] font-mono font-medium text-lilac">
                               {currentObj.store_logo_rotate || 0}°
                             </span>
                           </div>
@@ -1702,7 +1768,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                                   (currentObj.store_logo_rotate || 0) - 90,
                                 )
                               }
-                              className="p-3 rounded-xl bg-white border border-[#F0E6D2] hover:border-lilac transition-all text-slate-900 shadow-sm"
+                              className="p-3 rounded-xl bg-white border border-[#E5E5EA] hover:border-lilac transition-all text-slate-900 shadow-sm"
                             >
                               <RotateCw size={14} className="scale-x-[-1]" />
                             </button>
@@ -1727,7 +1793,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                                   (currentObj.store_logo_rotate || 0) + 90,
                                 )
                               }
-                              className="p-3 rounded-xl bg-white border border-[#F0E6D2] hover:border-lilac transition-all text-slate-900 shadow-sm"
+                              className="p-3 rounded-xl bg-white border border-[#E5E5EA] hover:border-lilac transition-all text-slate-900 shadow-sm"
                             >
                               <RotateCw size={14} />
                             </button>
@@ -1736,7 +1802,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                       </div>
                     </div>
 
-                    <div className="p-8 border-t border-[#F0E6D2] bg-white/50 flex gap-4">
+                    <div className="p-8 border-t border-[#E5E5EA] bg-white/50 flex gap-4">
                       <button
                         onClick={() => {
                           updateFn("store_logo_scale", 1);
@@ -1744,7 +1810,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                           updateFn("store_logo_x", 0);
                           updateFn("store_logo_y", 0);
                         }}
-                        className="flex-1 py-5 rounded-2xl bg-white border border-slate-200 text-[#A09898] font-black text-[10px] uppercase tracking-widest hover:border-lilac hover:text-lilac transition-all"
+                        className="flex-1 py-5 rounded-2xl bg-white border border-slate-200 text-[#8E8E93] font-medium text-[10px] tracking-normal hover:border-lilac hover:text-lilac transition-all"
                       >
                         Resetar
                       </button>
@@ -1753,7 +1819,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
                           setShowEditor(false);
                           setEditingAtelierId(null);
                         }}
-                        className="flex-[2] py-5 rounded-2xl bg-black text-white font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
+                        className="flex-[2] py-5 rounded-2xl bg-black text-white font-medium text-[10px] tracking-normal hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
                       >
                         Aplicar Ajustes
                       </button>

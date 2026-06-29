@@ -100,16 +100,16 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
       {/* Critical Alert */}
       {criticalItems.length > 0 && (
-        <div className="bg-slate-50 border-1 border-rose-200 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in zoom-in-95 duration-500">
+        <div className="bg-slate-50 border-1 border-rose-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in zoom-in-95 duration-500">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-200 animate-pulse">
               <AlertTriangle size={24} />
             </div>
             <div>
-              <h3 className="text-sm font-black text-rose-900 uppercase tracking-widest tracking-tight">
+              <h3 className="text-sm font-medium text-rose-900 tracking-normal tracking-tight">
                 Estoque Crítico Detectado
               </h3>
-              <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest mt-0.5">
+              <p className="text-[10px] font-bold text-rose-600 tracking-normal mt-0.5">
                 {criticalItems.length}{" "}
                 {criticalItems.length === 1 ? "item precisa" : "itens precisam"}{" "}
                 de reposição imediata.
@@ -120,14 +120,14 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
             {criticalItems.slice(0, 5).map((item, idx) => (
               <div
                 key={`crit-${item.id}-${idx}`}
-                className="w-10 h-10 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-black text-slate-9000 shadow-sm"
+                className="w-10 h-10 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-medium text-slate-9000 shadow-sm"
                 title={item.name}
               >
                 {item.name.charAt(0)}
               </div>
             ))}
             {criticalItems.length > 5 && (
-              <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[8px] font-black text-slate-9000 shadow-sm">
+              <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[8px] font-medium text-slate-9000 shadow-sm">
                 +{criticalItems.length - 5}
               </div>
             )}
@@ -136,16 +136,16 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
       )}
 
       {/* Top Bar */}
-      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-3xl border border-lilac/10 shadow-sm">
+      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-2xl border border-lilac/10 shadow-sm">
         <div className="relative w-full lg:w-96">
           <Search
-            className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D1CACA]"
+            className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D1D1D6]"
             size={16}
           />
           <input
             type="text"
             placeholder="BUSCAR NO ESTOQUE..."
-            className="w-full pl-14 pr-6 py-4 rounded-[1.25rem] bg-white border border-lilac/10 text-[10px] uppercase font-black tracking-[0.2em] outline-none focus:border-lilac transition-all text-slate-900 shadow-sm"
+            className="w-full pl-14 pr-6 py-4 rounded-[1.25rem] bg-white border border-lilac/10 text-[10px] uppercase font-medium tracking-[0.2em] outline-none focus:border-lilac transition-all text-slate-900 shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -180,7 +180,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                 filters: `Busca: ${searchTerm || 'Nenhuma'}`
               });
             }}
-            className="flex items-center justify-center px-6 py-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group text-[9px] font-black uppercase tracking-widest gap-2"
+            className="flex items-center justify-center px-6 py-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group text-[9px] font-medium tracking-normal gap-2"
           >
             <Printer size={16} className="group-hover:scale-110 transition-transform" /> PDF
           </button>
@@ -189,7 +189,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
               setEditingInsumo({});
               setIsModalOpen(true);
             }}
-            className="flex-1 md:flex-none flex items-center justify-center gap-3 bg-black text-white font-black py-4 px-10 rounded-[1.25rem] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl text-[9px] uppercase tracking-[0.3em] border border-black/10"
+            className="flex-1 md:flex-none flex items-center justify-center gap-3 bg-black text-white font-medium py-4 px-10 rounded-[1.25rem] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl text-[9px] uppercase tracking-[0.3em] border border-black/10"
           >
             <Plus size={18} /> Novo Insumo
           </button>
@@ -198,8 +198,8 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(max(300px,20%),1fr))] gap-6 pb-20">
         {filtered.length === 0 && (
-          <div className="col-span-full py-32 text-center bg-white rounded-3xl border border-dashed border-lilac/20">
-            <p className="text-[#A09898] italic text-[11px] font-black tracking-widest opacity-50 uppercase">
+          <div className="col-span-full py-32 text-center bg-white rounded-2xl border border-dashed border-lilac/20">
+            <p className="text-[#8E8E93] italic text-[11px] font-medium tracking-widest opacity-50 uppercase">
               Nenhum insumo encontrado no catálogo.
             </p>
           </div>
@@ -209,10 +209,21 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
           return (
             <div
               key={`ins-card-${insumo.id}-${idx}`}
-              className={`bg-white rounded-2xl border transition-all duration-300 p-8 flex flex-col gap-6 hover:shadow-xl group relative min-h-[360px] ${
+              className={`bg-white rounded-2xl border transition-all duration-300 p-8 flex flex-col gap-6 hover:shadow-xl group relative min-h-[360px] overflow-hidden ${
                 selectedIds.includes(insumo.id) ? "border-lilac ring-1 ring-lilac/20" : "border-lilac/10 hover:border-lilac/30"
               }`}
             >
+              {/* High intensity left LED strip */}
+              <div 
+                className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all ${isCritical ? 'animate-pulse-glow' : ''}`}
+                style={{
+                  backgroundColor: isCritical ? "rgb(244, 63, 94)" : "rgb(16, 185, 129)",
+                  boxShadow: isCritical 
+                    ? undefined 
+                    : "0 0 15px 4px rgba(16, 185, 129, 0.95), inset -1px 0 2px rgba(255, 255, 255, 0.5)",
+                  ...({ '--glow-color': isCritical ? "rgba(244, 63, 94, 0.95)" : "rgba(16, 185, 129, 0.95)" } as React.CSSProperties)
+                }}
+              />
               {/* Checkbox Overlay */}
               <div className="absolute top-6 left-6 z-10" onClick={(e) => e.stopPropagation()}>
                 <input
@@ -225,13 +236,13 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
 
               <div className="flex items-start justify-between pl-8">
                 <div className="flex flex-col gap-1">
-                  <span className="font-mono text-[9px] font-black text-lilac tracking-widest uppercase">
+                  <span className="font-mono text-[9px] font-medium text-lilac tracking-widest uppercase">
                     #{insumo.code || "---"}
                   </span>
-                  <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight group-hover:text-lilac transition-colors">
+                  <h4 className="text-sm font-medium text-slate-900 uppercase tracking-tight group-hover:text-lilac transition-colors">
                     {insumo.name}
                   </h4>
-                  <span className="text-[10px] font-black text-[#A09898] uppercase tracking-widest">
+                  <span className="text-[10px] font-medium text-[#8E8E93] tracking-normal">
                     {insumo.category || "Geral"}
                   </span>
                 </div>
@@ -244,21 +255,21 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
 
               <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-gray-50 bg-slate-50/50 rounded-2xl px-4">
                 <div className="flex flex-col">
-                  <span className="text-[8px] font-black text-[#A09898] uppercase tracking-widest mb-1">Qtd Atual</span>
-                  <span className={`text-sm font-black ${isCritical ? "text-rose-600" : "text-slate-900"}`}>
-                    {insumo.quantity} <span className="text-[9px] text-[#A09898] ml-0.5">{insumo.unit}</span>
+                  <span className="text-[8px] font-medium text-[#8E8E93] tracking-normal mb-1">Qtd Atual</span>
+                  <span className={`text-sm font-medium ${isCritical ? "text-rose-600" : "text-slate-900"}`}>
+                    {insumo.quantity} <span className="text-[9px] text-[#8E8E93] ml-0.5">{insumo.unit}</span>
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[8px] font-black text-[#A09898] uppercase tracking-widest mb-1">Preço/Un.</span>
-                  <span className="text-sm font-black text-slate-900">
+                  <span className="text-[8px] font-medium text-[#8E8E93] tracking-normal mb-1">Preço/Un.</span>
+                  <span className="text-sm font-medium text-slate-900">
                     {formatCurrency(insumo.unitValue || 0)}
                   </span>
                 </div>
               </div>
 
               {insumo.description && (
-                <p className="text-[10px] text-[#A09898] font-medium leading-relaxed line-clamp-2 px-2 italic">
+                <p className="text-[10px] text-[#8E8E93] font-medium leading-relaxed line-clamp-2 px-2 italic">
                   {insumo.description}
                 </p>
               )}
@@ -270,7 +281,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                       setEditingInsumo(insumo);
                       setIsModalOpen(true);
                     }}
-                    className="p-3 rounded-xl bg-slate-50 text-[#D1CACA] hover:text-slate-900 hover:bg-white transition-all border border-transparent hover:border-slate-200"
+                    className="p-3 rounded-xl bg-slate-50 text-[#D1D1D6] hover:text-slate-900 hover:bg-white transition-all border border-transparent hover:border-slate-200"
                     title="Editar"
                   >
                     <Edit size={14} />
@@ -286,7 +297,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                 
                 <button
                   onClick={() => setIsDetailOpen(isDetailOpen === insumo.id ? null : insumo.id)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-9000 text-white text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md active:scale-95"
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-9000 text-white text-[9px] font-medium tracking-normal hover:scale-105 transition-all shadow-md active:scale-95"
                 >
                   <Info size={14} /> Detalhes
                 </button>
@@ -299,14 +310,14 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
                   className="pt-4 border-t border-gray-50 space-y-3"
                 >
                   <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-[#A09898]">Custo Total</span>
-                    <span className="text-xs font-black text-slate-900">
+                    <span className="text-[8px] font-medium tracking-normal text-[#8E8E93]">Custo Total</span>
+                    <span className="text-xs font-medium text-slate-900">
                       {formatCurrency(insumo.costPrice || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-[#A09898]">Subcategoria</span>
-                    <span className="text-xs font-black text-lilac">
+                    <span className="text-[8px] font-medium tracking-normal text-[#8E8E93]">Subcategoria</span>
+                    <span className="text-xs font-medium text-lilac">
                       {insumo.subcategory || "---"}
                     </span>
                   </div>
@@ -336,9 +347,9 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
       )}
       {insumoToDelete && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center animate-in zoom-in-95">
+          <div className="bg-white max-w-md w-full rounded-2xl p-8 text-center animate-in zoom-in-95">
             <Trash2 size={48} className="mx-auto text-slate-9000 mb-6" />
-            <h3 className="text-xl font-black mb-2 uppercase">
+            <h3 className="text-xl font-medium mb-2 uppercase">
               Excluir Insumo?
             </h3>
             <p className="text-sm text-gray-500 mb-8">
@@ -347,13 +358,13 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
             <div className="flex gap-4">
               <button
                 onClick={() => setInsumoToDelete(null)}
-                className="flex-1 py-4 bg-slate-100 rounded-2xl font-black text-gray-500 uppercase text-xs"
+                className="flex-1 py-4 bg-slate-100 rounded-2xl font-medium text-gray-500 uppercase text-xs"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-rose-500/30"
+                className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-medium uppercase text-xs shadow-lg shadow-rose-500/30"
               >
                 Sim, Excluir
               </button>
@@ -364,9 +375,9 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
 
       {isBulkDeleteModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center animate-in zoom-in-95">
+          <div className="bg-white max-w-md w-full rounded-2xl p-8 text-center animate-in zoom-in-95">
             <Trash2 size={48} className="mx-auto text-rose-500 mb-6" />
-            <h3 className="text-xl font-black mb-2 uppercase">
+            <h3 className="text-xl font-medium mb-2 uppercase">
               Excluir Insumos Selecionados?
             </h3>
             <p className="text-sm text-gray-500 mb-8">
@@ -375,13 +386,13 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
             <div className="flex gap-4">
               <button
                 onClick={() => setIsBulkDeleteModalOpen(false)}
-                className="flex-1 py-4 bg-slate-100 rounded-2xl font-black text-gray-500 uppercase text-xs"
+                className="flex-1 py-4 bg-slate-100 rounded-2xl font-medium text-gray-500 uppercase text-xs"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-rose-600/30"
+                className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-medium uppercase text-xs shadow-lg shadow-rose-600/30"
               >
                 Sim, Excluir Todos
               </button>
@@ -392,18 +403,18 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
 
       {selectedIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-lilac/20 shadow-2xl rounded-2xl p-4 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-2 duration-300">
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-600">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-600">
             {selectedIds.length} {selectedIds.length === 1 ? 'insumo selecionado' : 'insumos selecionados'}
           </span>
           <button
             onClick={() => setIsBulkDeleteModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-rose-600 text-white font-black text-[9px] uppercase tracking-widest hover:bg-rose-700 transition-all hover:scale-105 active:scale-95 shadow-md shadow-rose-200"
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-rose-600 text-white font-medium text-[9px] tracking-normal hover:bg-rose-700 transition-all hover:scale-105 active:scale-95 shadow-md shadow-rose-200"
           >
             <Trash2 size={14} /> Excluir Selecionados
           </button>
           <button
             onClick={() => setSelectedIds([])}
-            className="text-[9px] font-black uppercase tracking-widest text-[#A09898] hover:text-slate-900 transition-colors"
+            className="text-[9px] font-medium tracking-normal text-[#8E8E93] hover:text-slate-900 transition-colors"
           >
             Cancelar
           </button>
@@ -469,15 +480,15 @@ const InsumoFormModal: React.FC<
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-      <div className="bg-white  w-full  max-w-xl  rounded-3xl border border-lilac/30 p-8 md:p-10 shadow-2xl  relative max-h-[90vh] overflow-y-auto max-h-[90vh] overflow-y-auto">
+      <div className="bg-white  w-full  max-w-xl  rounded-2xl border border-lilac/30 p-8 md:p-10 shadow-2xl  relative max-h-[90vh] overflow-y-auto max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           disabled={loading}
-          className="absolute top-8 right-8 p-1 rounded-full hover:bg-slate-100 text-[#A09898]"
+          className="absolute top-8 right-8 p-1 rounded-full hover:bg-slate-100 text-[#8E8E93]"
         >
           <X size={24} />
         </button>
-        <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest mb-8">
+        <h2 className="text-xl font-medium text-slate-900 tracking-normal mb-8">
           {editingInsumo?.id ? "Editar Insumo" : "Novo Insumo"}
         </h2>
 
@@ -510,7 +521,7 @@ const InsumoFormModal: React.FC<
           className="space-y-6"
         >
           <div className="space-y-1.5 text-left">
-            <label className="text-[9px] uppercase font-black tracking-widest text-[#A09898] pl-2">
+            <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
               Nome do Material
             </label>
             <input
@@ -524,7 +535,7 @@ const InsumoFormModal: React.FC<
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-black tracking-widest text-[#A09898] pl-2">
+              <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
                 Categoria
               </label>
               {!showNewCatInput ? (
@@ -569,7 +580,7 @@ const InsumoFormModal: React.FC<
               )}
             </div>
             <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-black tracking-widest text-[#A09898] pl-2">
+              <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
                 Subcategoria
               </label>
               {!showNewSubInput ? (
@@ -617,7 +628,7 @@ const InsumoFormModal: React.FC<
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-black tracking-widest text-[#A09898] pl-2">
+              <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
                 Qtd em Estoque
               </label>
               <input
@@ -629,11 +640,11 @@ const InsumoFormModal: React.FC<
                 }
                 required
                 placeholder="0"
-                className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-black outline-none text-slate-900"
+                className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-medium outline-none text-slate-900"
               />
             </div>
             <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-black tracking-widest text-[#A09898] pl-2">
+              <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
                 Vlr Pago Total (R$)
               </label>
               <input
@@ -645,17 +656,17 @@ const InsumoFormModal: React.FC<
                 }
                 required
                 placeholder="0.00"
-                className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-black outline-none text-slate-900"
+                className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-medium outline-none text-slate-900"
               />
             </div>
             <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-black tracking-widest text-[#A09898] pl-2">
+              <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
                 Unidade
               </label>
               <select
                 name="unit"
                 defaultValue={editingInsumo?.unit || "unid"}
-                className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-black outline-none text-slate-900 appearance-none"
+                className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-medium outline-none text-slate-900 appearance-none"
               >
                 <option value="mt">MT</option>
                 <option value="unid">UN</option>
@@ -666,16 +677,16 @@ const InsumoFormModal: React.FC<
           </div>
 
           <div className="p-4 rounded-xl bg-black text-white text-center border-2 border-lilac/20">
-            <p className="text-[9px] font-black uppercase text-[#A09898] tracking-widest mb-1">
+            <p className="text-[9px] font-medium uppercase text-[#8E8E93] tracking-widest mb-1">
               Custo por Unidade (Unidade/M/Pct)
             </p>
-            <p className="text-xl font-mono font-black">
+            <p className="text-xl font-mono font-medium">
               {formatCurrency(unitVal)}
             </p>
           </div>
 
           <div className="space-y-1.5 text-left">
-            <label className="text-[9px] uppercase font-black tracking-widest text-[#A09898] pl-2">
+            <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
               Observações / Fornecedor
             </label>
             <textarea
@@ -690,14 +701,14 @@ const InsumoFormModal: React.FC<
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 py-4 border border-lilac/10 rounded-xl font-bold uppercase text-[9px] tracking-widest text-[#A09898]"
+              className="flex-1 py-4 border border-lilac/10 rounded-xl font-bold uppercase text-[9px] tracking-widest text-[#8E8E93]"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-4 bg-black text-white rounded-xl font-black uppercase text-[9px] tracking-widest hover:scale-[1.02] transition-all disabled:opacity-50"
+              className="flex-1 py-4 bg-black text-white rounded-xl font-medium uppercase text-[9px] tracking-widest hover:scale-[1.02] transition-all disabled:opacity-50"
             >
               {loading ? "Salvando..." : "Salvar Insumo"}
             </button>

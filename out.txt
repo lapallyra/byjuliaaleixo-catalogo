@@ -1,0 +1,18 @@
+src/components/Admin/AuditoriaTab.tsx:    doc.text(`Status de Catálogo: ${prd.activeInCatalog ? 'Ativo' : 'Oculto'}  |  Venda Sugerida: ${formatCurrency(prd.retail_price)}`, 18, y + 20);
+src/components/Admin/AuditoriaTab.tsx:    doc.text(`Mão de Obra Operacional: ${formatCurrency(costDetails.laborCost)}`, 18, y + 6);
+src/components/Admin/AuditoriaTab.tsx:    doc.text(`Embalagem de Envio: ${formatCurrency(costDetails.packageCost)}`, 18, y + 12);
+src/components/Admin/AuditoriaTab.tsx:    doc.text(`Impostos Estimados (${costDetails.taxPercent}%): ${formatCurrency(costDetails.taxCost)}`, 18, y + 18);
+src/components/Admin/AuditoriaTab.tsx:    doc.text(`Preço de Venda Praticado: ${formatCurrency(costDetails.salePrice)}`, 110, y + 6);
+src/components/Admin/AuditoriaTab.tsx:    doc.text(`LUCRO LÍQUIDO UNITÁRIO: ${formatCurrency(costDetails.profit)}`, 110, y + 12);
+src/components/Admin/AuditoriaTab.tsx:      doc.text(formatCurrency(item.unitCost), 138, y + 4.5);
+src/components/Admin/AuditoriaTab.tsx:      doc.text(formatCurrency(item.totalCost), 168, y + 4.5);
+src/components/Admin/AuditoriaTab.tsx:    doc.text(`Receita Total Gerada: ${formatCurrency(totalProductRevenue)}`, 18, y + 6);
+src/components/Admin/AuditoriaTab.tsx:    doc.text(`Custo Acumulado de Produção: ${formatCurrency(totalProductCost)}`, 18, y + 12);
+src/components/Admin/AuditoriaTab.tsx:    doc.text(`Potencial Adicional de Faturamento: ${formatCurrency(maxPoss * prd.retail_price)}`, 18, y + 24);
+src/components/Admin/AuditoriaTab.tsx:                  { title: "Custos do Período", value: formatCurrency(dashboardStats.costs), desc: "Insumos consumidos + variáveis de atelier", icon: Briefcase, color: "text-rose-700 bg-rose-50 border-rose-100" },
+src/components/Admin/AuditoriaTab.tsx:                        {formatCurrency(potentialProductionList.reduce((acc, current) => acc + current.potentialRevenue, 0))}
+src/components/Admin/AuditoriaTab.tsx:                        {formatCurrency(potentialProductionList.reduce((acc, current) => acc + current.potentialProfit, 0))}
+src/utils/pdfGenerator.ts:  doc.text(formatCurrency(data.grossRevenue), 18, y + 17);
+src/utils/pdfGenerator.ts:  doc.text(`- ${formatCurrency(data.totalExpenses)}`, 78, y + 17);
+src/utils/pdfGenerator.ts:  doc.text(formatCurrency(data.netProfit), 138, y + 17);
+src/utils/pdfGenerator.ts:      doc.text(formatCurrency(h.netProfit), xOffset + 16, y + 11, { align: "center" });

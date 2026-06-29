@@ -19,6 +19,8 @@ import { ColecoesView } from './components/ColecoesView';
 import { TrackingView } from './components/TrackingView';
 import { MinhaExperienciaPage } from './components/cliente/MinhaExperienciaPage';
 import { CheckoutPage } from './components/CheckoutPage';
+import { OrderApprovalPage } from './components/Approval/OrderApprovalPage';
+import { ClientCheckout } from './components/Checkout/ClientCheckout';
 import { Footer } from './components/Footer';
 import { TopAnnouncementBar } from './components/TopAnnouncementBar';
 import { INITIAL_CONFIG, PRODUCTS } from './constants';
@@ -188,7 +190,7 @@ function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, set
   );
 }
 
-function MainApp() {
+function SiteApp() {
   const [config, setConfig] = useState<AppConfig>(INITIAL_CONFIG);
   const [allProducts, setAllProducts] = useState<Product[]>(PRODUCTS);
   const effectiveConfig = config || INITIAL_CONFIG;
@@ -300,46 +302,63 @@ function MainApp() {
           {/* Checkout Flow */}
           <Route path="/checkout/:id" element={<CheckoutPage config={effectiveConfig} />} />
           <Route path="/ped-:code" element={<CheckoutPage config={effectiveConfig} />} />
+          <Route path="/approval/:code" element={<OrderApprovalPage />} />
+          <Route path="/client-checkout/:code" element={<ClientCheckout />} />
           
            {/* Tracking */}
           <Route path="/rastreamento" element={<TrackingView onBack={() => window.history.back()} />} />
           
           {/* Minha Experiência */}
           <Route path="/minha-experiencia/*" element={<MinhaExperienciaPage />} />
-  
-          {/* ADMIN ROUTES */}
-          <Route path="/admin/login" element={<AdminLoginView />} />
-          <Route path="/admin" element={
-            <ProtectedRoute>
-              <ErrorBoundary fallback={
-                <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
-                  <div className="w-20 h-20 bg-rose-500/10 rounded-[2rem] flex items-center justify-center mb-6 border border-rose-500/20">
-                    <span className="text-4xl">⚠️</span>
-                  </div>
-                  <h1 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter italic">Erro no Painel</h1>
-                  <p className="text-slate-400 mb-8 max-w-sm font-sans text-xs uppercase tracking-widest leading-loose">
-                    Ocorreu um erro crítico ao carregar o painel administrativo. Por favor, recarregue a página.
-                  </p>
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className="bg-white text-black font-bold py-4 px-10 rounded-2xl hover:scale-105 transition-all uppercase tracking-widest text-[10px]"
-                  >
-                    Recarregar Página
-                  </button>
-                </div>
-              }>
-                <AdminDashboard onGoBack={() => window.history.back()} />
-              </ErrorBoundary>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
+          
           <Route path="/document" element={<DocumentSearch onGoBack={() => window.history.back()} />} />
           <Route path="/studiomockup" element={<StudioPage />} />
-  
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
-      {!location.pathname.startsWith('/admin') && <Footer config={effectiveConfig} />}
+      <Footer config={effectiveConfig} />
     </div>
+  );
+}
+
+function AdminApp() {
+  return (
+    <Routes>
+      <Route path="login" element={<AdminLoginView />} />
+      <Route path="" element={
+        <ProtectedRoute>
+          <ErrorBoundary fallback={
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
+              <div className="w-20 h-20 bg-rose-500/10 rounded-[2rem] flex items-center justify-center mb-6 border border-rose-500/20">
+                <span className="text-4xl">⚠️</span>
+              </div>
+              <h1 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter italic">Erro no Painel</h1>
+              <p className="text-slate-400 mb-8 max-w-sm font-sans text-xs uppercase tracking-widest leading-loose">
+                Ocorreu um erro crítico ao carregar o painel administrativo. Por favor, recarregue a página.
+              </p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="bg-white text-black font-bold py-4 px-10 rounded-2xl hover:scale-105 transition-all uppercase tracking-widest text-[10px]"
+              >
+                Recarregar Página
+              </button>
+            </div>
+          }>
+            <AdminDashboard onGoBack={() => window.history.back()} />
+          </ErrorBoundary>
+        </ProtectedRoute>
+      } />
+      <Route path="*" element={<Navigate to="" replace />} />
+    </Routes>
+  );
+}
+
+function MainApp() {
+  return (
+    <Routes>
+      <Route path="/admin/*" element={<AdminApp />} />
+      <Route path="/*" element={<SiteApp />} />
+    </Routes>
   );
 }
 

@@ -133,6 +133,21 @@ html {
   .tracking-none {
     letter-spacing: 0;
   }
+  
+  @keyframes led-pulse-glow {
+    0%, 100% {
+      opacity: 0.85;
+      box-shadow: 0 0 12px 3px var(--glow-color, rgba(239, 68, 68, 0.8)), inset -1px 0 2px rgba(255, 255, 255, 0.5);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 0 28px 10px var(--glow-color, rgba(239, 68, 68, 1)), inset -1px 0 2px rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: led-pulse-glow 1.8s infinite ease-in-out;
+  }
 }
 
 @layer utilities {

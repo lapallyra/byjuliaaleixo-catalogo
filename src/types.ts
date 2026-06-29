@@ -42,6 +42,31 @@ export interface Product {
   kitItems?: { type: 'product' | 'insumo' | 'addon'; id: string; quantity: number }[];
   kitDiscountPercentage?: number;
   price?: number;
+  
+  // Custom properties for advanced editor tabs
+  brand?: string;
+  isExclusive?: boolean;
+  collection?: string;
+  collectionCoverImage?: string;
+  minStock?: number;
+  tags?: string[];
+  displayOrder?: number;
+  relatedProductId?: string;
+  recommendedProductIds?: string[];
+  seoTitle?: string;
+  slug?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  personalizationSettings?: {
+    id: string;
+    type: 'text' | 'image' | 'select';
+    label: string;
+    placeholder?: string;
+    charLimit?: number;
+    isRequired: boolean;
+    options?: string[];
+  }[];
+  productionTime?: number;
 }
 
 export interface Variation {
@@ -51,6 +76,10 @@ export interface Variation {
   options: {
     name: string;
     price: number;
+    sku?: string;
+    stock?: number;
+    weight?: number;
+    image?: string;
     stockId?: string;
   }[];
 }
@@ -69,6 +98,18 @@ export interface Insumo {
   subcategory?: string;
 }
 
+export type OrderApprovalStatus = 'pending' | 'approved' | 'adjustments_requested';
+
+export interface OrderVersion {
+  id: string;
+  orderId: string;
+  version: number;
+  data: Partial<Order>;
+  comment?: string;
+  author: 'admin' | 'customer';
+  createdAt: any;
+}
+
 export interface Order {
   id: string;
   code: string; // MS12345
@@ -79,7 +120,7 @@ export interface Order {
   address?: string;
   items: CartItem[];
   total: number;
-  status: 'quote' | 'approval' | 'waiting_deposit' | 'production' | 'assembly' | 'ready' | 'delivered' | 'cancelled' | 'pending' | 'delivery' | 'waiting_payment' | 'planned_payment' | 'paid' | 'waiting_remaining' | 'planned_active' | 'fully_paid';
+  status: 'novo pedido' | 'quote' | 'approval' | 'waiting_deposit' | 'production' | 'assembly' | 'ready' | 'delivered' | 'cancelled' | 'pending' | 'delivery' | 'waiting_payment' | 'planned_payment' | 'paid' | 'waiting_remaining' | 'planned_active' | 'fully_paid';
   createdAt: any; 
   deliveryDate: string;
   deliveryType?: 'retirada' | 'delivery' | 'shipping';
@@ -106,12 +147,16 @@ export interface Order {
   insumosDeducted?: boolean;
   marketplace?: string;
   marketplaceTax?: number;
+  couponCode?: string;
+  discountAmount?: number;
   history?: {
     status: Order['status'];
     timestamp: any;
     updatedBy?: string;
     notes?: string;
   }[];
+  approvalStatus?: OrderApprovalStatus;
+  currentVersion?: number;
 }
 
 export interface Customer {
@@ -133,6 +178,10 @@ export interface Customer {
   pendingBalance?: number;
   createdAt: any;
   companyId: CompanyId;
+  status?: 'Ativo' | 'Inativo' | 'Cadastro Incompleto';
+  notes?: string;
+  avatarUrl?: string;
+  lastPurchaseDate?: string;
 }
 
 export interface Review {
@@ -248,12 +297,17 @@ export interface SiteSettings {
   labor_list?: { id: string; name: string; value: number }[];
   test_mode?: boolean;
   sound_notifications_active?: boolean;
+  urgency_price?: number;
+  urgency_description?: string;
 }
 
 export interface CartItem extends Product {
   quantity: number;
   productId?: string;
   observations?: string;
+  selectedVariation?: string;
+  selectedAddons?: any[];
+  personalizationValues?: Record<string, string>;
 }
 
 export interface AppConfig {
@@ -414,4 +468,28 @@ export interface ProductModel extends Product {
   canvasWidth: number;
   canvasHeight: number;
 }
+
+export interface Coupon {
+  id: string;
+  companyId: CompanyId;
+  name: string;
+  code: string;
+  description?: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  minOrderValue?: number;
+  startDate?: string;
+  endDate?: string;
+  maxUses?: number;
+  usesCount: number;
+  limitPerClient?: number;
+  status: 'active' | 'inactive' | 'archived';
+  scope: 'all' | 'products' | 'categories' | 'collections';
+  appliedProducts?: string[];
+  appliedCategories?: string[];
+  appliedCollections?: string[];
+  excludedProducts?: string[];
+  createdAt: any;
+}
+
 

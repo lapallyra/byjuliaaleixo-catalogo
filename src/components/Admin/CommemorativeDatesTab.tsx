@@ -194,7 +194,7 @@ export function CommemorativeDatesTab() {
       {/* Header Premium */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-4xl font-display font-black text-slate-900 tracking-tight">
+          <h2 className="text-4xl font-display font-medium text-slate-900 tracking-tight">
             Datas Comemorativas
           </h2>
           <p className="text-slate-500 text-sm mt-1 font-medium">
@@ -205,13 +205,13 @@ export function CommemorativeDatesTab() {
           <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200/50">
             <button
               onClick={() => setViewMode("list")}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === "list" ? "bg-white text-slate-900 shadow-sm" : "text-[#A09898] hover:text-slate-600"}`}
+              className={`px-4 py-2 rounded-xl text-xs font-medium tracking-normal transition-all ${viewMode === "list" ? "bg-white text-slate-900 shadow-sm" : "text-[#8E8E93] hover:text-slate-600"}`}
             >
               Lista
             </button>
             <button
               onClick={() => setViewMode("calendar")}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === "calendar" ? "bg-white text-slate-900 shadow-sm" : "text-[#A09898] hover:text-slate-600"}`}
+              className={`px-4 py-2 rounded-xl text-xs font-medium tracking-normal transition-all ${viewMode === "calendar" ? "bg-white text-slate-900 shadow-sm" : "text-[#8E8E93] hover:text-slate-600"}`}
             >
               Calendário
             </button>
@@ -234,7 +234,7 @@ export function CommemorativeDatesTab() {
               size={18}
               className="group-hover:rotate-90 transition-transform duration-500"
             />
-            <span className="text-xs font-black uppercase tracking-widest">
+            <span className="text-xs font-medium tracking-normal">
               Nova Data
             </span>
           </button>
@@ -243,7 +243,7 @@ export function CommemorativeDatesTab() {
 
       {/* Widget Hoje/Próximos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-10 text-white relative overflow-hidden group shadow-2xl shadow-indigo-500/20">
+        <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-10 text-white relative overflow-hidden group shadow-2xl shadow-indigo-500/20">
           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-1000">
             <Calendar size={180} strokeWidth={1} />
           </div>
@@ -253,14 +253,14 @@ export function CommemorativeDatesTab() {
               <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
                 <Bell className="animate-bounce" size={24} />
               </div>
-              <span className="text-xs font-black uppercase tracking-[0.3em] opacity-80">
+              <span className="text-xs font-medium uppercase tracking-[0.3em] opacity-80">
                 Radar de Oportunidades
               </span>
             </div>
 
             {todayDates.length > 0 ? (
               <div className="space-y-6">
-                <h3 className="text-3xl font-display font-black leading-tight">
+                <h3 className="text-3xl font-display font-medium leading-tight">
                   Hoje, {format(new Date(), "dd 'de' MMMM", { locale: ptBR })}:
                   <br />
                   <span className="text-yellow-300">
@@ -272,17 +272,17 @@ export function CommemorativeDatesTab() {
                   seus clientes.
                 </p>
                 <div className="flex gap-4 pt-4">
-                  <button className="bg-white text-indigo-600 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2">
+                  <button className="bg-white text-indigo-600 px-6 py-3 rounded-xl text-[10px] font-medium tracking-normal hover:bg-slate-50 transition-all flex items-center gap-2">
                     Criar Campanha <ArrowRight size={14} />
                   </button>
-                  <button className="bg-indigo-500/50 text-white border border-white/20 backdrop-blur-md px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500/70 transition-all">
+                  <button className="bg-indigo-500/50 text-white border border-white/20 backdrop-blur-md px-6 py-3 rounded-xl text-[10px] font-medium tracking-normal hover:bg-indigo-500/70 transition-all">
                     Ver Sugestões
                   </button>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <h3 className="text-3xl font-display font-black">
+                <h3 className="text-3xl font-display font-medium">
                   Nenhuma data oficial para hoje.
                 </h3>
                 <p className="text-white/70">
@@ -294,27 +294,27 @@ export function CommemorativeDatesTab() {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl p-10 border border-[#F0E6D2] shadow-xl shadow-slate-200/50">
-          <h4 className="text-xs font-black uppercase tracking-widest text-[#A09898] mb-8 flex items-center gap-2">
+        <div className="bg-white rounded-2xl p-10 border border-[#E5E5EA] shadow-xl shadow-slate-200/50">
+          <h4 className="text-xs font-medium tracking-normal text-[#8E8E93] mb-8 flex items-center gap-2">
             <Clock size={16} /> Próximos 40 dias
           </h4>
           <div className="space-y-6">
             {upcomingDates.length > 0 ? (
               upcomingDates.map((d, i) => (
                 <div key={d.id} className="flex items-center gap-4 group">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex flex-col items-center justify-center text-[#A09898] group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
-                    <span className="text-[10px] font-black leading-none">
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex flex-col items-center justify-center text-[#8E8E93] group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
+                    <span className="text-[10px] font-medium leading-none">
                       {format(getFullDate(d), "dd")}
                     </span>
-                    <span className="text-[7px] font-black uppercase">
+                    <span className="text-[7px] font-medium uppercase">
                       {format(getFullDate(d), "MMM", { locale: ptBR })}
                     </span>
                   </div>
                   <div>
-                    <p className="text-xs font-black text-slate-800">
+                    <p className="text-xs font-medium text-slate-800">
                       {d.name}
                     </p>
-                    <p className="text-[9px] text-[#A09898] font-bold uppercase tracking-tight">
+                    <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-tight">
                       {categories.find((c) => c.id === d.category)?.label}
                     </p>
                   </div>
@@ -323,7 +323,7 @@ export function CommemorativeDatesTab() {
             ) : (
               <div className="text-center py-10 opacity-30">
                 <Calendar size={40} className="mx-auto mb-2" strokeWidth={1} />
-                <p className="text-[10px] font-black uppercase">
+                <p className="text-[10px] font-medium uppercase">
                   Tranquilo por enquanto
                 </p>
               </div>
@@ -336,13 +336,13 @@ export function CommemorativeDatesTab() {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative group">
           <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A09898] group-focus-within:text-slate-900 transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8E93] group-focus-within:text-slate-900 transition-colors"
             size={20}
           />
           <input
             type="text"
             placeholder="Buscar por nome, descrição ou hashtag..."
-            className="w-full h-14 bg-white border border-slate-200 rounded-3xl pl-12 pr-6 text-sm font-medium focus:ring-4 focus:ring-slate-100 focus:border-slate-400 transition-all outline-none shadow-sm"
+            className="w-full h-14 bg-white border border-slate-200 rounded-2xl pl-12 pr-6 text-sm font-medium focus:ring-4 focus:ring-slate-100 focus:border-slate-400 transition-all outline-none shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -350,7 +350,7 @@ export function CommemorativeDatesTab() {
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
           <button
             onClick={() => setSelectedCategory("all")}
-            className={`px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all border ${selectedCategory === "all" ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-[#F0E6D2] text-slate-500 hover:bg-slate-50"}`}
+            className={`px-6 py-3 rounded-full text-xs font-medium tracking-normal whitespace-nowrap transition-all border ${selectedCategory === "all" ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-[#E5E5EA] text-slate-500 hover:bg-slate-50"}`}
           >
             Todos
           </button>
@@ -358,7 +358,7 @@ export function CommemorativeDatesTab() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all border flex items-center gap-2 ${selectedCategory === cat.id ? "bg-white border-slate-900 text-slate-900 shadow-lg" : "bg-white border-[#F0E6D2] text-slate-500 hover:bg-slate-50"}`}
+              className={`px-6 py-3 rounded-full text-xs font-medium tracking-normal whitespace-nowrap transition-all border flex items-center gap-2 ${selectedCategory === cat.id ? "bg-white border-slate-900 text-slate-900 shadow-lg" : "bg-white border-[#E5E5EA] text-slate-500 hover:bg-slate-50"}`}
             >
               <cat.icon size={14} style={{ color: cat.color }} />
               {cat.label}
@@ -384,11 +384,11 @@ export function CommemorativeDatesTab() {
               return (
                 <div
                   key={date.id}
-                  className="bg-white rounded-3xl border border-[#F0E6D2] p-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all group relative overflow-hidden"
+                  className="bg-white rounded-2xl border border-[#E5E5EA] p-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all group relative overflow-hidden"
                 >
                   {!date.active && (
                     <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
-                      <span className="bg-slate-900 text-white px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em]">
+                      <span className="bg-slate-900 text-white px-4 py-1.5 rounded-full text-[8px] font-medium tracking-tight">
                         Data Inativa
                       </span>
                     </div>
@@ -411,7 +411,7 @@ export function CommemorativeDatesTab() {
                             <Sparkles size={12} className="text-yellow-500" />
                           )}
                         </div>
-                        <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest">
+                        <p className="text-[10px] text-[#8E8E93] font-bold tracking-normal">
                           {catInfo?.label}
                         </p>
                       </div>
@@ -422,13 +422,13 @@ export function CommemorativeDatesTab() {
                           setEditingDate(date);
                           setIsModalOpen(true);
                         }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-slate-50 rounded-xl text-[#A09898] hover:text-slate-900 transition-all text-[9px] font-black uppercase tracking-widest"
+                        className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-slate-50 rounded-xl text-[#8E8E93] hover:text-slate-900 transition-all text-[9px] font-medium tracking-normal"
                       >
                         <Edit2 size={14} /> Editar
                       </button>
                       <button
                         onClick={() => handleDelete(date.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-slate-50 rounded-xl text-[#A09898] hover:text-rose-500 transition-all text-[9px] font-black uppercase tracking-widest"
+                        className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-slate-50 rounded-xl text-[#8E8E93] hover:text-rose-500 transition-all text-[9px] font-medium tracking-normal"
                       >
                         <Trash2 size={14} /> Excluir
                       </button>
@@ -443,7 +443,7 @@ export function CommemorativeDatesTab() {
                     {date.hashtags.map((tag, i) => (
                       <span
                         key={`tag-${tag}-${i}`}
-                        className="text-[9px] font-bold text-[#A09898] lowercase"
+                        className="text-[9px] font-bold text-[#8E8E93] lowercase"
                       >
                         #{tag}
                       </span>
@@ -453,20 +453,20 @@ export function CommemorativeDatesTab() {
                   <div className="flex items-center justify-between pt-6 border-t border-slate-50">
                     <div className="flex items-center gap-2">
                       <Calendar size={14} className="text-slate-300" />
-                      <span className="text-xs font-black text-slate-800 uppercase">
+                      <span className="text-xs font-medium text-slate-800 uppercase">
                         {format(getFullDate(date), "dd 'de' MMMM", {
                           locale: ptBR,
                         })}
                       </span>
                     </div>
                     {date.year_fixed ? (
-                      <span className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-300">
+                      <span className="text-[8px] font-medium uppercase tracking-[0.1em] text-slate-300">
                         Data Fixa
                       </span>
                     ) : (
                       <div className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                        <span className="text-[8px] font-black uppercase tracking-[0.1em] text-blue-500">
+                        <span className="text-[8px] font-medium uppercase tracking-[0.1em] text-blue-500">
                           Móvel
                         </span>
                       </div>
@@ -482,10 +482,10 @@ export function CommemorativeDatesTab() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-3xl border border-[#F0E6D2] shadow-xl overflow-hidden"
+            className="bg-white rounded-2xl border border-[#E5E5EA] shadow-xl overflow-hidden"
           >
             <div className="p-10 border-b border-slate-50 flex items-center justify-between">
-              <h3 className="text-xl font-display font-black text-slate-900 uppercase tracking-widest">
+              <h3 className="text-xl font-display font-medium text-slate-900 tracking-normal">
                 {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
               </h3>
               <div className="flex gap-2">
@@ -512,7 +512,7 @@ export function CommemorativeDatesTab() {
               {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((d) => (
                 <div
                   key={d}
-                  className="p-4 text-center text-[10px] font-black uppercase tracking-[0.3em] text-[#A09898] border-r border-[#F0E6D2] last:border-0"
+                  className="p-4 text-center text-[10px] font-medium uppercase tracking-[0.3em] text-[#8E8E93] border-r border-[#E5E5EA] last:border-0"
                 >
                   {d}
                 </div>
@@ -559,7 +559,7 @@ export function CommemorativeDatesTab() {
                       className={`p-4 border-r border-b border-slate-50 relative group hover:bg-slate-50/30 transition-colors min-h-[120px] ${isToday(cellDate) ? "bg-indigo-50/30" : ""}`}
                     >
                       <span
-                        className={`text-xs font-black transition-colors ${isToday(cellDate) ? "text-indigo-600" : "text-slate-300 group-hover:text-slate-900"}`}
+                        className={`text-xs font-medium transition-colors ${isToday(cellDate) ? "text-indigo-600" : "text-slate-300 group-hover:text-slate-900"}`}
                       >
                         {d}
                       </span>
@@ -568,7 +568,7 @@ export function CommemorativeDatesTab() {
                         {dayEvents.map((event) => (
                           <div
                             key={event.id}
-                            className="px-2 py-1 rounded-md text-[7px] font-black uppercase tracking-tighter truncate text-white"
+                            className="px-2 py-1 rounded-md text-[7px] font-medium uppercase tracking-tighter truncate text-white"
                             style={{
                               backgroundColor:
                                 categories.find((c) => c.id === event.category)
@@ -603,15 +603,15 @@ export function CommemorativeDatesTab() {
           />
           <motion.div
             layoutId="modal-date"
-            className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl relative z-10 overflow-hidden"
+            className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl relative z-10 overflow-hidden"
           >
             <div className="p-10 overflow-y-auto max-h-[85vh] no-scrollbar">
               <div className="flex justify-between items-center mb-10">
                 <div>
-                  <h3 className="text-2xl font-display font-black text-slate-900">
+                  <h3 className="text-2xl font-display font-medium text-slate-900">
                     {editingDate?.id ? "Editar Data" : "Nova Data Comemorativa"}
                   </h3>
-                  <p className="text-[#A09898] text-xs font-medium uppercase tracking-widest mt-1">
+                  <p className="text-[#8E8E93] text-xs font-medium tracking-normal mt-1">
                     Configure os parâmetros da data estratégica.
                   </p>
                 </div>
@@ -626,7 +626,7 @@ export function CommemorativeDatesTab() {
               <form onSubmit={handleSave} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-[#A09898] ml-2">
+                    <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
                       Nome da Data
                     </label>
                     <input
@@ -636,12 +636,12 @@ export function CommemorativeDatesTab() {
                       onChange={(e) =>
                         setEditingDate({ ...editingDate, name: e.target.value })
                       }
-                      className="w-full h-14 bg-slate-50 border border-[#F0E6D2] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-slate-100 transition-all outline-none"
+                      className="w-full h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl px-6 text-sm font-bold focus:bg-white focus:ring-4 focus:ring-slate-100 transition-all outline-none"
                       placeholder="Ex: Dia do Designer"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-[#A09898] ml-2">
+                    <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
                       Categoria
                     </label>
                     <select
@@ -652,7 +652,7 @@ export function CommemorativeDatesTab() {
                           category: e.target.value as CategoryId,
                         })
                       }
-                      className="w-full h-14 bg-slate-50 border border-[#F0E6D2] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none"
+                      className="w-full h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none"
                     >
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -664,7 +664,7 @@ export function CommemorativeDatesTab() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-[#A09898] ml-2">
+                  <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
                     Descrição / Curiosidade
                   </label>
                   <textarea
@@ -675,14 +675,14 @@ export function CommemorativeDatesTab() {
                         description: e.target.value,
                       })
                     }
-                    className="w-full min-h-[100px] bg-slate-50 border border-[#F0E6D2] rounded-2xl p-6 text-sm font-medium focus:bg-white outline-none resize-none"
+                    className="w-full min-h-[100px] bg-slate-50 border border-[#E5E5EA] rounded-2xl p-6 text-sm font-medium focus:bg-white outline-none resize-none"
                     placeholder="Descreva brevemente o significado desta data..."
                   />
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-[#A09898] ml-2">
+                    <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
                       Dia
                     </label>
                     <input
@@ -697,11 +697,11 @@ export function CommemorativeDatesTab() {
                           day: parseInt(e.target.value),
                         })
                       }
-                      className="w-full h-14 bg-slate-50 border border-[#F0E6D2] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none disabled:opacity-30"
+                      className="w-full h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none disabled:opacity-30"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-[#A09898] ml-2">
+                    <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
                       Mês
                     </label>
                     <select
@@ -713,7 +713,7 @@ export function CommemorativeDatesTab() {
                           month: parseInt(e.target.value),
                         })
                       }
-                      className="w-full h-14 bg-slate-50 border border-[#F0E6D2] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none disabled:opacity-30"
+                      className="w-full h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none disabled:opacity-30"
                     >
                       {Array.from({ length: 12 }).map((_, i) => (
                         <option key={i + 1} value={i + 1}>
@@ -744,7 +744,7 @@ export function CommemorativeDatesTab() {
                           })
                         }
                       />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-900">
+                      <span className="text-[10px] font-medium tracking-normal text-slate-500 group-hover:text-slate-900">
                         Data Fixa?
                       </span>
                     </label>
@@ -752,7 +752,7 @@ export function CommemorativeDatesTab() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-[#A09898] ml-2">
+                  <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
                     Frase de Marketing SUGERIDA
                   </label>
                   <input
@@ -764,7 +764,7 @@ export function CommemorativeDatesTab() {
                         marketing_phrase: e.target.value,
                       })
                     }
-                    className="w-full h-14 bg-slate-50 border border-[#F0E6D2] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none"
+                    className="w-full h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none"
                     placeholder="Ex: Presenteie quem te ensina todos os dias..."
                   />
                 </div>
@@ -773,13 +773,13 @@ export function CommemorativeDatesTab() {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#A09898] hover:text-slate-900 transition-all"
+                    className="px-8 py-4 rounded-2xl text-[10px] font-medium tracking-normal text-[#8E8E93] hover:text-slate-900 transition-all"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="bg-black text-white px-10 py-5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-black/10 active:scale-95"
+                    className="bg-black text-white px-10 py-5 rounded-2xl text-[10px] font-medium tracking-normal hover:scale-105 transition-all shadow-xl shadow-black/10 active:scale-95"
                   >
                     Salvar Configuração
                   </button>

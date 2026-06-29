@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Lock, Check, ChevronRight, UploadCloud, MapPin, Search, ShieldCheck, HeartHandshake, Box, UserCheck, Gift, Truck, Clock, Calendar } from 'lucide-react';
 import { CartItem, CompanyId } from '../types';
 import { themes, getTheme } from '../lib/theme';
-import { logCheckoutEvent, getSiteSettings, getGlobalSettings, getCustomerByCpf } from '../services/firebaseService';
+import { logCheckoutEvent, getSiteSettings, getGlobalSettings, getCustomerByCpf, getCoupons } from '../services/firebaseService';
 import { SiteSettings } from '../types';
 import { useAuth } from './AuthProvider';
 import { ImageWithFallback } from './ImageWithFallback';
@@ -60,6 +60,80 @@ export function CheckoutModal({
   const [persColors, setPersColors] = useState('');
   const [persObs, setPersObs] = useState('');
 
+  // Serviços Adicionais
+  const [additionalServices, setAdditionalServices] = useState<Array<{ id: string; name: string; price: number; description: string }>>([
+    {
+      id: 'desenvolvimento_exclusivo',
+      name: 'Desenvolvimento Exclusivo de Arte',
+      price: 15,
+      description: 'Será desenvolvido uma arte do 0 exclusiva e baseada nas informações fornecidas por você. A arte será vendida para uso Exclusivo seu.'
+    },
+    {
+      id: 'atendimento_urgencia',
+      name: 'Atendimento de Urgência',
+      price: 25,
+      description: 'Seu pedido será tratado com prioridade máxima de produção e envio rápido.'
+    }
+  ]);
+
+  // Sincronizar o Atendimento de Urgência com as configurações do Firestore
+  useEffect(() => {
+    const loadedUrgencyPrice = siteSettings?.urgency_price !== undefined ? siteSettings.urgency_price : globalSettings?.urgency_price;
+    const loadedUrgencyDesc = siteSettings?.urgency_description !== undefined ? siteSettings.urgency_description : globalSettings?.urgency_description;
+
+    setAdditionalServices(prev => prev.map(service => {
+      if (service.id === 'atendimento_urgencia') {
+        return {
+          ...service,
+          price: loadedUrgencyPrice !== undefined && loadedUrgencyPrice !== null ? loadedUrgencyPrice : service.price,
+          description: loadedUrgencyDesc || service.description
+        };
+      }
+      return service;
+    }));
+  }, [siteSettings, globalSettings]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [isCreatingService, setIsCreatingService] = useState(false);
+  const [newServiceName, setNewServiceName] = useState('');
+  const [newServicePrice, setNewServicePrice] = useState('');
+  const [newServiceDescription, setNewServiceDescription] = useState('');
+
+  const servicesTotal = useMemo(() => {
+    return additionalServices
+      .filter(s => selectedServices.includes(s.id))
+      .reduce((sum, s) => sum + s.price, 0);
+  }, [additionalServices, selectedServices]);
+
+  const handleCreateService = () => {
+    if (!newServiceName.trim()) {
+      alert("Por favor, preencha o nome do serviço.");
+      return;
+    }
+    const price = parseFloat(newServicePrice) || 0;
+    const newService = {
+      id: `service_${Date.now()}`,
+      name: newServiceName,
+      price,
+      description: newServiceDescription
+    };
+    setAdditionalServices([...additionalServices, newService]);
+    setSelectedServices([...selectedServices, newService.id]);
+    
+    // Clear inputs
+    setNewServiceName('');
+    setNewServicePrice('');
+    setNewServiceDescription('');
+    setIsCreatingService(false);
+  };
+
+  const toggleService = (id: string) => {
+    if (selectedServices.includes(id)) {
+      setSelectedServices(selectedServices.filter(s => s !== id));
+    } else {
+      setSelectedServices([...selectedServices, id]);
+    }
+  };
+
   // Step 2: Dados e Entrega
   const [clientName, setClientName] = useState('');
   const [clientContact, setClientContact] = useState('');
@@ -81,7 +155,126 @@ export function CheckoutModal({
 
   // Step 3: Pagamento
   const [cupom, setCupom] = useState('');
+  const [couponsList, setCouponsList] = useState<any[]>([]);
   const [payFullAmount, setPayFullAmount] = useState(false);
+  const [couponFeedback, setCouponFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const handleValidateCoupon = () => {
+    const code = cupom.trim().toUpperCase();
+    if (!code) {
+      setCouponFeedback(null);
+      return;
+    }
+
+    const fallbackCoupons: Record<string, number> = {
+      'ARTESANAL10': 0.10,
+      'DESCONTO15': 0.15,
+      'PROMO20': 0.20,
+      'GANHEI10': 0.10,
+    };
+
+    if (fallbackCoupons[code] !== undefined) {
+      setCouponFeedback({
+        type: 'success',
+        message: `Cupom ${code} aplicado: ${fallbackCoupons[code] * 100}% de desconto.`
+      });
+      return;
+    }
+
+    const realCoupon = couponsList.find(c => c.code?.toUpperCase() === code);
+    if (!realCoupon) {
+      setCouponFeedback({
+        type: 'error',
+        message: 'Cupom inválido ou não encontrado.'
+      });
+      return;
+    }
+
+    if (realCoupon.status !== "active") {
+      setCouponFeedback({
+        type: 'error',
+        message: 'Este cupom não está ativo.'
+      });
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    if (realCoupon.startDate && realCoupon.startDate > today) {
+      setCouponFeedback({
+        type: 'error',
+        message: 'Este cupom ainda não é válido.'
+      });
+      return;
+    }
+    if (realCoupon.endDate && realCoupon.endDate < today) {
+      setCouponFeedback({
+        type: 'error',
+        message: 'Este cupom já expirou.'
+      });
+      return;
+    }
+
+    if (realCoupon.maxUses && realCoupon.usesCount >= realCoupon.maxUses) {
+      setCouponFeedback({
+        type: 'error',
+        message: 'Este cupom atingiu o limite máximo de usos.'
+      });
+      return;
+    }
+
+    if (realCoupon.minOrderValue && subtotal < realCoupon.minOrderValue) {
+      setCouponFeedback({
+        type: 'error',
+        message: `Valor mínimo de compra para este cupom é R$ ${realCoupon.minOrderValue.toFixed(2)}.`
+      });
+      return;
+    }
+
+    if (realCoupon.scope === "products" && realCoupon.appliedProducts?.length > 0) {
+      const hasMatchingProduct = cart.some(item => realCoupon.appliedProducts.includes(item.id));
+      if (!hasMatchingProduct) {
+        setCouponFeedback({
+          type: 'error',
+          message: 'Este cupom não se aplica aos itens do carrinho.'
+        });
+        return;
+      }
+    }
+
+    if (realCoupon.scope === "categories" && realCoupon.appliedCategories?.length > 0) {
+      const hasMatchingCategory = cart.some(item => realCoupon.appliedCategories?.includes(item.category || ""));
+      if (!hasMatchingCategory) {
+        setCouponFeedback({
+          type: 'error',
+          message: 'Este cupom não se aplica às categorias dos itens no carrinho.'
+        });
+        return;
+      }
+    }
+
+    const valueStr = realCoupon.discountType === "percentage" 
+      ? `${realCoupon.discountValue}%` 
+      : `R$ ${realCoupon.discountValue.toFixed(2)}`;
+
+    setCouponFeedback({
+      type: 'success',
+      message: `Cupom ${code} aplicado com sucesso! Desconto de ${valueStr}.`
+    });
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      const loadCoupons = async () => {
+        try {
+          const list = await getCoupons(companyId);
+          setCouponsList(list);
+        } catch (e) {
+          console.error("Erro ao carregar cupons para checkout:", e);
+        }
+      };
+      loadCoupons();
+    }
+  }, [isOpen, companyId]);
   
   const [selectedMainOption, setSelectedMainOption] = useState<'full' | 'planned' | ''>('');
   const [plannedMethod, setPlannedMethod] = useState<'credit_card' | 'digital_booklet' | ''>('');
@@ -177,7 +370,63 @@ export function CheckoutModal({
   };
 
   const subtotal: number = useMemo(() => cart.reduce((sum, item) => sum + ((item.retail_price || 0) * (item.quantity || 1)), 0), [cart]);
-  const discount: number = cupom === 'GANHEI10' ? subtotal * 0.1 : 0; // Fake discount implementation, should be from backend
+  
+  const discount: number = useMemo(() => {
+    const code = cupom.trim().toUpperCase();
+    if (!code) return 0;
+
+    // First check hardcoded ones as fallback
+    const fallbackCoupons: Record<string, number> = {
+      'ARTESANAL10': 0.10,
+      'DESCONTO15': 0.15,
+      'PROMO20': 0.20,
+      'GANHEI10': 0.10,
+    };
+
+    if (fallbackCoupons[code] !== undefined) {
+      return subtotal * fallbackCoupons[code];
+    }
+
+    // Now check real database coupons
+    const realCoupon = couponsList.find(c => c.code?.toUpperCase() === code);
+    if (!realCoupon) return 0;
+
+    // Validate status
+    if (realCoupon.status !== "active") return 0;
+
+    // Validate dates
+    const today = new Date().toISOString().split('T')[0];
+    if (realCoupon.startDate && realCoupon.startDate > today) return 0;
+    if (realCoupon.endDate && realCoupon.endDate < today) return 0;
+
+    // Validate uses count
+    if (realCoupon.maxUses && realCoupon.usesCount >= realCoupon.maxUses) return 0;
+
+    // Validate minOrderValue
+    if (realCoupon.minOrderValue && subtotal < realCoupon.minOrderValue) return 0;
+
+    // Check restrictions/scope
+    if (realCoupon.scope === "products" && realCoupon.appliedProducts?.length > 0) {
+      const hasMatchingProduct = cart.some(item => realCoupon.appliedProducts.includes(item.id));
+      if (!hasMatchingProduct) return 0;
+    }
+    if (realCoupon.scope === "categories" && realCoupon.appliedCategories?.length > 0) {
+      const hasMatchingCategory = cart.some(item => realCoupon.appliedCategories?.includes(item.category || ""));
+      if (!hasMatchingCategory) return 0;
+    }
+
+    // Calculate discount amount
+    const nonExcludedSubtotal = cart.reduce((sum, item) => {
+      const isExcluded = realCoupon.excludedProducts?.includes(item.id);
+      return sum + (isExcluded ? 0 : ((item.retail_price || 0) * (item.quantity || 1)));
+    }, 0);
+
+    if (realCoupon.discountType === "percentage") {
+      return nonExcludedSubtotal * (realCoupon.discountValue / 100);
+    } else {
+      return Math.min(realCoupon.discountValue, nonExcludedSubtotal);
+    }
+  }, [cupom, subtotal, couponsList, cart]);
   
   const delivery: number = useMemo(() => {
     if (deliveryType === 'retirada') return 0;
@@ -201,7 +450,7 @@ export function CheckoutModal({
     return rule ? rule.price : 0;
   }, [deliveryType, cep, siteSettings, globalSettings]);
 
-  const total: number = subtotal - discount + delivery + pendingBalance;
+  const total: number = subtotal - discount + delivery + pendingBalance + servicesTotal;
 
   // Log on start
   useEffect(() => {
@@ -303,8 +552,17 @@ export function CheckoutModal({
       description: `Método: Mercado Pago, Sinal: ${isFullPayment ? 'Integral' : '50%'}, Valor Pago: R$ ${amountToPay.toFixed(2)}`
     });
 
+    const selectedServicesDetails = additionalServices
+      .filter(s => selectedServices.includes(s.id))
+      .map(s => `${s.name} (R$ ${s.price.toFixed(2).replace('.', ',')})`)
+      .join(', ');
+
+    const formattedPersObs = selectedServicesDetails
+      ? `${persObs ? persObs + '\n\n' : ''}Serviços Adicionais Selecionados: ${selectedServicesDetails}`
+      : persObs;
+
     onCheckoutSubmit({
-      personalization: { persName, persAge, persTheme, persColors, persObs },
+      personalization: { persName, persAge, persTheme, persColors, persObs: formattedPersObs },
       client: { clientName, clientContact, clientCpf, clientEmail, pendingBalance },
       address: deliveryType !== 'retirada' ? { cep, rua, numero, bairro, cidade, estado, ref } : undefined,
       cupom,
@@ -360,8 +618,17 @@ export function CheckoutModal({
       description: `Método: Teste Simulado, Sinal: ${isFullPayment ? 'Integral' : '50%'}, Valor: R$ ${amountToPay.toFixed(2)}`
     });
 
+    const selectedServicesDetails = additionalServices
+      .filter(s => selectedServices.includes(s.id))
+      .map(s => `${s.name} (R$ ${s.price.toFixed(2).replace('.', ',')})`)
+      .join(', ');
+
+    const formattedPersObs = selectedServicesDetails
+      ? `${persObs ? persObs + '\n\n' : ''}Serviços Adicionais Selecionados: ${selectedServicesDetails}`
+      : persObs;
+
     onCheckoutSubmit({
-      personalization: { persName, persAge, persTheme, persColors, persObs },
+      personalization: { persName, persAge, persTheme, persColors, persObs: formattedPersObs },
       client: { clientName, clientContact, clientCpf, clientEmail, pendingBalance },
       address: deliveryType !== 'retirada' ? { cep, rua, numero, bairro, cidade, estado, ref } : undefined,
       cupom,
@@ -499,6 +766,16 @@ export function CheckoutModal({
                 <div className="flex-1 flex flex-col justify-center">
                   <h4 className="text-sm font-semibold text-gray-800 pr-2 line-clamp-2 leading-tight">{item.product_name}</h4>
                   <p className="text-[11px] text-gray-500 mt-1 uppercase tracking-wider">{item.category}</p>
+                  
+                  {/* Render Selections */}
+                  {(item.selectedVariation || (item.selectedAddons && item.selectedAddons.length > 0) || item.personalizationValues) && (
+                    <div className="text-[10px] text-gray-500 mt-1 space-y-0.5 leading-tight">
+                      {item.selectedVariation && <p className="truncate">{item.selectedVariation}</p>}
+                      {item.selectedAddons && item.selectedAddons.length > 0 && <p className="truncate">+{item.selectedAddons.length} Serv. Adicional(is)</p>}
+                      {item.personalizationValues && Object.keys(item.personalizationValues).length > 0 && <p className="truncate">Personalizado</p>}
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-xs font-medium text-gray-500 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">Qtd: {item.quantity}</span>
                     <span className="font-bold text-gray-900">R$ {((item.retail_price || 0) * (item.quantity || 1)).toFixed(2).replace('.', ',')}</span>
@@ -519,6 +796,12 @@ export function CheckoutModal({
                 <span className="font-medium">- R$ {formatMoney(discount)}</span>
               </div>
             )}
+            {additionalServices.filter(s => selectedServices.includes(s.id)).map(s => (
+              <div key={s.id} className="flex justify-between text-sm text-gray-500">
+                <span>{s.name}</span>
+                <span className="font-medium">R$ {s.price.toFixed(2).replace('.', ',')}</span>
+              </div>
+            ))}
             <div className="flex justify-between text-sm text-gray-500">
               <span className="flex items-center gap-1">
                 <Truck size={14} className="opacity-40" /> Entrega
@@ -676,6 +959,118 @@ export function CheckoutModal({
                    </div>
 
                    <div className="space-y-2">
+                    {/* Categoria Serviços Adicionais */}
+                    <div className="space-y-4 border border-gray-100 p-6 md:p-8 rounded-3xl bg-white shadow-[0_4px_24px_-10px_rgba(0,0,0,0.03)] mb-6">
+                      <div className="flex justify-between items-center border-b border-gray-50 pb-3">
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                            <span>✨</span> Serviços Adicionais
+                          </h3>
+                          <p className="text-[11px] text-gray-400 mt-0.5">Selecione os serviços extras que deseja para o seu pedido.</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsCreatingService(!isCreatingService)}
+                          className="text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-all flex items-center gap-1 border border-dashed border-gray-200"
+                          style={{ color: theme.accentColor }}
+                        >
+                          {isCreatingService ? 'Cancelar' : '+ Criar'}
+                        </button>
+                      </div>
+
+                      {isCreatingService && (
+                        <div className="p-4 bg-gray-50/50 border border-gray-200 rounded-2xl space-y-4 animate-fade-in">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">Novo Serviço Adicional</span>
+                          
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <div className="space-y-1 md:col-span-2">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nome do Serviço</label>
+                                <input
+                                  type="text"
+                                  placeholder="Ex: Embalagem para Presente"
+                                  value={newServiceName}
+                                  onChange={e => setNewServiceName(e.target.value)}
+                                  className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:ring-1"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Valor (R$)</label>
+                                <input
+                                  type="number"
+                                  placeholder="15"
+                                  value={newServicePrice}
+                                  onChange={e => setNewServicePrice(e.target.value)}
+                                  className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:ring-1"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Descrição do Serviço</label>
+                              <textarea
+                                placeholder="Descrição detalhada sobre este serviço adicional..."
+                                value={newServiceDescription}
+                                onChange={e => setNewServiceDescription(e.target.value)}
+                                rows={2}
+                                className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:ring-1 resize-none"
+                              />
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={handleCreateService}
+                              className="w-full py-3 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.01] active:scale-[0.98] transition-all shadow-md"
+                              style={{ backgroundColor: theme.accentColor }}
+                            >
+                              Adicionar Serviço
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        {additionalServices.map((service) => {
+                          const isSelected = selectedServices.includes(service.id);
+                          return (
+                            <div
+                              key={service.id}
+                              onClick={() => toggleService(service.id)}
+                              className={`p-4 bg-white border rounded-2xl cursor-pointer transition-all flex items-start gap-4 hover:border-gray-200 ${
+                                isSelected ? 'ring-2' : 'border-gray-100'
+                              }`}
+                              style={isSelected ? { borderColor: theme.accentColor, '--tw-ring-color': theme.accentColor + '20' } as any : {}}
+                            >
+                              <div
+                                className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                                  isSelected ? 'text-white' : 'border-gray-300 bg-white'
+                                }`}
+                                style={{
+                                  backgroundColor: isSelected ? theme.accentColor : undefined,
+                                  borderColor: isSelected ? theme.accentColor : undefined
+                                }}
+                              >
+                                {isSelected && <Check size={12} strokeWidth={3} />}
+                              </div>
+                              <div className="flex-grow text-left min-w-0">
+                                <div className="flex justify-between items-start gap-2">
+                                  <h4 className="text-xs font-bold text-gray-800 truncate">
+                                    {service.name}
+                                  </h4>
+                                  <span className="text-xs font-extrabold text-gray-900 shrink-0 font-mono">
+                                    R$ {service.price.toFixed(2).replace('.', ',')}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-1 leading-normal font-medium">
+                                  {service.description}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Observações adicionais</label>
                      <textarea value={persObs} onChange={e => setPersObs(e.target.value)} rows={3} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium text-gray-800 resize-none" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Algum detalhe especial ou nome adicional?" />
                    </div>
@@ -947,11 +1342,30 @@ export function CheckoutModal({
                         </div>
                         
                         <div className="flex gap-2 pt-2">
-                          <input value={cupom} onChange={e => setCupom(e.target.value.toUpperCase())} className="flex-1 p-3 bg-[#F8F5F2] border-0 rounded-xl focus:ring-2 outline-none transition-all text-xs font-bold text-gray-700 uppercase" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="CUPOM" />
-                          <button className="bg-gray-800 hover:bg-gray-900 text-white px-4 rounded-xl text-xs font-bold tracking-wider transition-colors">
+                          <input 
+                            value={cupom} 
+                            onChange={e => {
+                              setCupom(e.target.value.toUpperCase());
+                              setCouponFeedback(null);
+                            }} 
+                            className="flex-1 p-3 bg-[#F8F5F2] border-0 rounded-xl focus:ring-2 outline-none transition-all text-xs font-bold text-gray-700 uppercase" 
+                            style={{ '--tw-ring-color': theme.accentColor + '50' } as any} 
+                            placeholder="CUPOM" 
+                          />
+                          <button 
+                            type="button"
+                            onClick={handleValidateCoupon}
+                            className="bg-gray-800 hover:bg-gray-900 text-white px-4 rounded-xl text-xs font-bold tracking-wider transition-colors"
+                          >
                             APLICAR
                           </button>
                         </div>
+
+                        {couponFeedback && (
+                          <div className={`text-[10px] font-bold px-1 ${couponFeedback.type === 'success' ? 'text-green-600' : 'text-red-500'} transition-all`}>
+                            {couponFeedback.message}
+                          </div>
+                        )}
 
                         {discount > 0 && (
                           <div className="flex justify-between text-sm text-green-600 font-medium pt-2">

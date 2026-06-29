@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingCart, Trash2, Plus, Minus, Tag, ChevronLeft, ChevronRight, Package } from 'lucide-react';
 import { SafeImage } from './ui/SafeImage';
@@ -6,6 +6,7 @@ import { CartItem, CompanyId } from '../types';
 import { formatCurrency } from '../lib/currencyUtils';
 import { ImageWithFallback } from './ImageWithFallback';
 import { themes, getTheme } from '../lib/theme';
+import { getCoupons } from '../services/firebaseService';
 
 interface CartSidebarProps {
   cart: CartItem[];
@@ -63,27 +64,128 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   const isMimada = companyId === 'mimada';
 
   const [coupon, setCoupon] = useState('');
-  const [discount, setDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null);
+  const [couponsList, setCouponsList] = useState<any[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
-  const total = subtotal * (1 - discount);
-  const needsDeposit = total >= 100;
+  useEffect(() => {
+    const loadCoupons = async () => {
+      try {
+        const data = await getCoupons(companyId);
+        setCouponsList(data);
+      } catch (err) {
+        console.error("Erro ao carregar cupons:", err);
+      }
+    };
+    loadCoupons();
+  }, [companyId]);
 
-  const validCoupons: Record<string, number> = {
-    'ARTESANAL10': 0.10,
-    'DESCONTO15': 0.15,
-    'PROMO20': 0.20
-  };
+  const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
+
+  const discountAmount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    const nonExcludedSubtotal = cart.reduce((sum, item) => {
+      const isExcluded = appliedCoupon.excludedProducts?.includes(item.id);
+      return sum + (isExcluded ? 0 : (item.retail_price * item.quantity));
+    }, 0);
+
+    if (appliedCoupon.discountType === 'percentage') {
+      return nonExcludedSubtotal * (appliedCoupon.discountValue / 100);
+    } else {
+      return Math.min(appliedCoupon.discountValue, nonExcludedSubtotal);
+    }
+  }, [appliedCoupon, subtotal, cart]);
+
+  const total = Math.max(0, subtotal - discountAmount);
+  const needsDeposit = total >= 100;
 
   const applyCoupon = () => {
     const code = coupon.trim().toUpperCase();
-    if (validCoupons[code]) {
-      setDiscount(validCoupons[code]);
-    } else {
-      setDiscount(0);
-      alert('Cupom inválido');
+    if (!code) {
+      setAppliedCoupon(null);
+      return;
     }
+
+    // First check hardcoded fallbacks
+    const fallbackCoupons: Record<string, number> = {
+      'ARTESANAL10': 0.10,
+      'DESCONTO15': 0.15,
+      'PROMO20': 0.20,
+    };
+
+    if (fallbackCoupons[code] !== undefined) {
+      setAppliedCoupon({
+        code,
+        discountType: 'percentage',
+        discountValue: fallbackCoupons[code] * 100,
+      });
+      return;
+    }
+
+    // Check database coupons
+    const realCoupon = couponsList.find(c => c.code?.toUpperCase() === code);
+    if (!realCoupon) {
+      setAppliedCoupon(null);
+      alert('Cupom inválido');
+      return;
+    }
+
+    // Validate status
+    if (realCoupon.status !== "active") {
+      setAppliedCoupon(null);
+      alert('Este cupom não está ativo.');
+      return;
+    }
+
+    // Validate dates
+    const today = new Date().toISOString().split('T')[0];
+    if (realCoupon.startDate && realCoupon.startDate > today) {
+      setAppliedCoupon(null);
+      alert('Este cupom ainda não é válido.');
+      return;
+    }
+    if (realCoupon.endDate && realCoupon.endDate < today) {
+      setAppliedCoupon(null);
+      alert('Este cupom já expirou.');
+      return;
+    }
+
+    // Validate uses count
+    if (realCoupon.maxUses && realCoupon.usesCount >= realCoupon.maxUses) {
+      setAppliedCoupon(null);
+      alert('Este cupom já atingiu o limite de usos.');
+      return;
+    }
+
+    // Validate minOrderValue
+    if (realCoupon.minOrderValue && subtotal < realCoupon.minOrderValue) {
+      setAppliedCoupon(null);
+      alert(`Valor mínimo de compra para este cupom é R$ ${realCoupon.minOrderValue.toFixed(2)}.`);
+      return;
+    }
+
+    // Validate product restrictions
+    if (realCoupon.scope === "products" && realCoupon.appliedProducts?.length > 0) {
+      const hasMatchingProduct = cart.some(item => realCoupon.appliedProducts.includes(item.id));
+      if (!hasMatchingProduct) {
+        setAppliedCoupon(null);
+        alert('Este cupom não se aplica aos itens selecionados.');
+        return;
+      }
+    }
+
+    // Validate category restrictions
+    if (realCoupon.scope === "categories" && realCoupon.appliedCategories?.length > 0) {
+      const hasMatchingCategory = cart.some(item => realCoupon.appliedCategories?.includes(item.category || ""));
+      if (!hasMatchingCategory) {
+        setAppliedCoupon(null);
+        alert('Este cupom não se aplica a nenhum item desta categoria.');
+        return;
+      }
+    }
+
+    // All validation passed
+    setAppliedCoupon(realCoupon);
   };
 
   return (
@@ -167,6 +269,15 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                          </button>
                        </div>
                        
+                       {/* Render Selections */}
+                       {(item.selectedVariation || (item.selectedAddons && item.selectedAddons.length > 0) || item.personalizationValues) && (
+                         <div className={`text-[10px] ${theme.textSecondary} space-y-0.5 opacity-80 leading-tight`}>
+                           {item.selectedVariation && <p className="truncate">{item.selectedVariation}</p>}
+                           {item.selectedAddons && item.selectedAddons.length > 0 && <p className="truncate">+{item.selectedAddons.length} Serv. Adicional(is)</p>}
+                           {item.personalizationValues && Object.keys(item.personalizationValues).length > 0 && <p className="truncate">Personalizado</p>}
+                         </div>
+                       )}
+
                        <div className="flex justify-between items-center mt-auto">
                          <div className={`flex items-center gap-3 ${theme.searchBg} p-1 rounded-lg border ${theme.borderLine} ${theme.textPrimary}`}>
                            <button onClick={() => onUpdateQty(item.id, -1)} className={`p-1 ${theme.textSecondary}`}><Minus size={12} /></button>
@@ -221,9 +332,9 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                   </button>
                 </div>
 
-                {discount > 0 && (
+                {appliedCoupon && (
                   <div className={`w-full ${theme.specialBg} ${theme.specialBorder} ${theme.specialText} border text-[9px] font-black py-3 rounded-xl text-center uppercase tracking-widest flex items-center justify-center gap-2`}>
-                    <span className={`w-1.5 h-1.5 rounded-full bg-current animate-pulse`} /> {Math.round(discount * 100)}% OFF APLICADO
+                    <span className={`w-1.5 h-1.5 rounded-full bg-current animate-pulse`} /> {appliedCoupon.discountType === 'percentage' ? `${appliedCoupon.discountValue}% OFF APLICADO` : `${formatCurrency(appliedCoupon.discountValue)} OFF APLICADO`}
                   </div>
                 )}
 

@@ -46,6 +46,11 @@ import {
   TrendingUp,
   FileCheck,
   PackagePlus,
+  Activity,
+  Layers,
+  UploadCloud,
+  Megaphone,
+  Tag,
 } from "lucide-react";
 import { playSuccessSound } from "../utils/audio";
 import { useAuth } from "./AuthProvider";
@@ -67,6 +72,11 @@ import { PrizesTab } from "./Admin/PrizesTab";
 import { FeedbacksTab } from "./Admin/FeedbacksTab";
 import { FunnelLogsTab } from "./Admin/FunnelLogsTab";
 import { AuditoriaTab } from "./Admin/AuditoriaTab";
+import { ActivityLogTab } from "./Admin/ActivityLogTab";
+import { CollectionsTab } from "./Admin/CollectionsTab";
+import { MediaCenterTab } from "./Admin/MediaCenterTab";
+import { CampaignsTab } from "./Admin/CampaignsTab";
+import { CouponsTab } from "./Admin/CouponsTab";
 
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
@@ -90,7 +100,12 @@ type TabType =
   | "addons"
   | "prizes"
   | "feedbacks"
-  | "funnel";
+  | "funnel"
+  | "activity-logs"
+  | "collections"
+  | "media-center"
+  | "campaigns"
+  | "coupons";
 
 interface AdminDashboardProps {
   onGoBack: () => void;
@@ -173,7 +188,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
 
   if (loading) {
     return (
-      <div className="feminine-admin min-h-screen admin-bg flex flex-col items-center justify-center p-8">
+      <div className="min-h-screen bg-[#F5F5F7] flex flex-col items-center justify-center p-8">
         <TabLoader />
       </div>
     );
@@ -181,27 +196,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
 
   if (!isAdmin) {
     return (
-      <div className="feminine-admin min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
-        <div className="w-20 h-20 bg-gold/10 rounded-[2rem] flex items-center justify-center mb-6 border border-gold/20">
-          <Box className="text-gold" size={40} />
+      <div className="min-h-screen bg-[#1C1C1E] flex flex-col items-center justify-center p-8 text-center">
+        <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center mb-6 border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
+          <Box className="text-[#F5F5F7]" size={40} />
         </div>
-        <h2 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">
+        <h2 className="text-3xl font-medium text-white mb-4 tracking-tight">
           Acesso Restrito
         </h2>
-        <p className="text-[#A09898] mb-8 max-w-sm font-sans text-xs uppercase tracking-widest leading-loose">
+        <p className="text-[#8E8E93] mb-8 max-w-sm text-sm leading-relaxed">
           Este painel é exclusivo para a administração. Faça login com as
           credenciais autorizadas.
         </p>
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <button
             onClick={() => import("../lib/firebase").then((m) => m.login())}
-            className="bg-gold text-slate-900 font-bold py-4 px-10 rounded-2xl hover:scale-105 transition-all shadow-[0_20px_60px_rgba(212,175,55,0.3)]"
+            className="relative overflow-hidden bg-white/10 backdrop-blur-xl border border-white/20 text-white font-medium py-3.5 px-8 rounded-2xl hover:bg-white/20 transition-all shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-0.5"
           >
-            Acessar com Google
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent" />
+            <div className="absolute inset-0 shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)] rounded-2xl" />
+            <span className="relative z-10 flex items-center justify-center gap-2">
+               Acessar com Google
+            </span>
           </button>
           <button
             onClick={onGoBack}
-            className="text-slate-500 hover:text-white transition-all text-[9px] uppercase font-black tracking-[0.3em] mt-4"
+            className="text-[#8E8E93] hover:text-white transition-colors text-xs font-medium mt-4"
           >
             ← Voltar ao Início
           </button>
@@ -215,12 +234,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     { id: "orders", label: "Pedidos", category: "OPERAÇÃO", icon: ShoppingBag },
     { id: "clients", label: "Clientes", category: "OPERAÇÃO", icon: User },
     { id: "products", label: "Produtos", category: "OPERAÇÃO", icon: Box },
+    { id: "collections", label: "Coleções", category: "OPERAÇÃO", icon: Layers },
+    { id: "campaigns", label: "Campanhas", category: "OPERAÇÃO", icon: Megaphone },
+    { id: "coupons", label: "Cupons", category: "OPERAÇÃO", icon: Tag },
+    { id: "gift-lists", label: "Lista de Presentes", category: "OPERAÇÃO", icon: Gift },
+    { id: "media-center", label: "Central de Mídia", category: "OPERAÇÃO", icon: UploadCloud },
     { id: "kits", label: "Kits", category: "OPERAÇÃO", icon: PackagePlus },
     { id: "inventory", label: "Estoque", category: "OPERAÇÃO", icon: Archive },
     { id: "finance", label: "Financeiro", category: "FINANCEIRO", icon: DollarSign },
     { id: "auditoria", label: "Auditoria", category: "FINANCEIRO", icon: FileCheck },
     { id: "reports", label: "Relatórios", category: "FINANCEIRO", icon: BarChart3 },
     { id: "settings", label: "Configurações", category: "SISTEMA", icon: Settings },
+    { id: "activity-logs", label: "Atividades", category: "SISTEMA", icon: Activity },
   ];
 
   const groupedMenu = menuItems.reduce((acc, item) => {
@@ -230,37 +255,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   }, {} as Record<string, typeof menuItems>);
 
   return (
-    <div className="feminine-admin h-screen bg-[#FAF9F6] text-[#4A4444] flex font-sans overflow-hidden relative">
+    <div className="h-screen bg-[#F5F5F7] text-[#1C1C1E] flex font-sans overflow-hidden relative selection:bg-[#E5E5EA] selection:text-[#1C1C1E]">
       <AdminNotificationPortal />
 
       {/* Sidebar navigation - Desktop */}
       <aside
-        className={`bg-white border-r border-[#F0E6D2] flex flex-col hidden lg:flex flex-shrink-0 relative z-[60] shadow-[10px_0_30px_rgba(240,230,210,0.2)] transition-all duration-300 ${isSidebarCollapsed ? "w-20 items-center" : "w-64"}`}
-        style={{ background: "linear-gradient(180deg, rgba(255,255,255,1), rgba(250,246,243,1))" }}
+        className={`bg-white/30 backdrop-blur-2xl border-r border-white/20 flex flex-col hidden lg:flex flex-shrink-0 relative z-[60] transition-all duration-300 ${isSidebarCollapsed ? "w-20 items-center" : "w-64"}`}
       >
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-1.5 top-10 bg-white border border-[#F0E6D2] w-4 h-4 flex items-center justify-center rounded-full z-50 text-[#A09088] hover:text-[#B48E4D] transition-all opacity-70 hover:opacity-100"
+          className="absolute -right-3 top-10 bg-white border border-[#E5E5EA] w-6 h-6 flex items-center justify-center rounded-full z-50 text-[#8E8E93] hover:text-[#1C1C1E] shadow-sm transition-all"
         >
           <ChevronRight
-            size={10}
+            size={12}
             className={`transition-transform duration-300 ${!isSidebarCollapsed ? "rotate-180" : ""}`}
           />
         </button>
 
         <div className={`flex flex-col flex-1 overflow-hidden p-6 ${isSidebarCollapsed ? "px-4" : ""}`}>
           <div className="flex items-center gap-3 mb-10 px-2 shrink-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#D88D85] to-[#F0E6D2] flex items-center justify-center text-white shadow-[0_8px_20px_rgba(216,141,133,0.3)]">
-              <Sparkles size={20} />
+            <div className="w-10 h-10 rounded-2xl bg-white/50 border border-white/20 flex items-center justify-center text-[#1C1C1E] shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative backdrop-blur-sm">
+               {/* Ambient glowing dot */}
+               <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#34C759] rounded-full shadow-[0_0_8px_#34C759]" />
+               <Sparkles size={16} className="text-[#1C1C1E] opacity-80" />
             </div>
             {!isSidebarCollapsed && (
               <div>
-                <h1 className="font-sans font-semibold text-xs tracking-[0.1em] uppercase text-[#4A3A34]">
+                <h1 className="font-sans font-medium text-sm text-[#1C1C1E] tracking-tight">
                    By Julia Aleixo
                 </h1>
-                <p className="text-[7px] text-[#D88D85] uppercase tracking-widest font-bold">
-                  CEO PRINCIPAL
-                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="w-1 h-1 bg-[#34C759] rounded-full shadow-[0_0_6px_#34C759]" />
+                  <p className="text-[10px] text-[#8E8E93] uppercase font-medium tracking-wider">
+                    Online
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -270,49 +299,58 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               {Object.entries(groupedMenu).map(([category, items]) => (
                 <div key={category}>
                   {!isSidebarCollapsed && (
-                    <h3 className="text-[9px] font-black uppercase text-[#A09088] tracking-[0.2em] pl-4 mb-4 opacity-60">{category}</h3>
+                    <h3 className="text-[10px] font-medium uppercase text-[#8E8E93] tracking-widest pl-4 mb-3">{category}</h3>
                   )}
-                  <div className="space-y-1.5">
-                    {items.map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => setActiveTab(item.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative group overflow-hidden ${activeTab === item.id ? "text-[#2D221F] shadow-sm" : "text-[#5F524C] hover:text-[#2D221F] hover:bg-white/50"}`}
-                      >
-                        {activeTab === item.id && (
-                          <motion.div
-                            layoutId="activeNavBg"
-                            className="absolute inset-0 bg-[#FFFDFB] border border-[#F0E6D2] rounded-2xl"
-                          />
-                        )}
-                        <item.icon
-                          size={18}
-                          className={`${activeTab === item.id ? "text-[#D88D85] opacity-100 scale-110" : "text-[#A09088] opacity-70 group-hover:text-[#D88D85] group-hover:opacity-100 group-hover:scale-110"} transition-all duration-300 relative z-10 w-5 h-5`}
-                        />
-                        {!isSidebarCollapsed && (
-                          <span
-                            className={`text-[10px] uppercase font-bold tracking-[0.15em] relative z-10 ${activeTab === item.id ? "translate-x-1" : "group-hover:translate-x-1"} transition-transform duration-300`}
-                          >
-                            {item.label}
-                          </span>
-                        )}
-                      </button>
-                    ))}
+                  <div className="space-y-1">
+                    {items.map((item) => {
+                      const isActive = activeTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => setActiveTab(item.id)}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all relative group overflow-hidden ${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93] hover:text-[#1C1C1E]"}`}
+                        >
+                          {isActive && (
+                            <motion.div
+                              layoutId="activeNavBg"
+                              className="absolute inset-0 bg-white border border-white/40 shadow-[0_2px_10px_rgba(0,0,0,0.04)] rounded-xl backdrop-blur-xl"
+                            />
+                          )}
+                          <div className="relative z-10 flex items-center justify-center w-5 h-5">
+                             <item.icon
+                               size={16}
+                               strokeWidth={isActive ? 2.5 : 2}
+                               className={`${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93] group-hover:text-[#1C1C1E]"} transition-colors duration-300`}
+                             />
+                          </div>
+                          {!isSidebarCollapsed && (
+                            <span
+                              className={`text-xs font-medium relative z-10 transition-colors duration-300 ${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93] group-hover:text-[#1C1C1E]"}`}
+                            >
+                              {item.label}
+                            </span>
+                          )}
+                          {isActive && !isSidebarCollapsed && (
+                            <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[#1C1C1E] z-10" />
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               ))}
             </nav>
           </div>
 
-          <div className="p-6 border-t border-[#F0E6D2] space-y-3 bg-white/30 backdrop-blur-sm">
+          <div className="pt-6 space-y-3">
           <button
             onClick={() => {
               logout();
               window.location.href = "/";
             }}
-            className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[#A09898] hover:bg-[#FAF9F6] hover:text-[#D48C8C] transition-all text-[9px] font-bold uppercase tracking-[0.15em] border border-transparent"
+            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl text-[#8E8E93] hover:bg-white hover:text-[#1C1C1E] hover:shadow-[0_2px_10px_rgba(0,0,0,0.04)] transition-all text-xs font-medium"
           >
-            <LogOut size={16} /> {!isSidebarCollapsed && "Sair"}
+            <LogOut size={14} /> {!isSidebarCollapsed && "Encerrar Sessão"}
           </button>
         </div>
       </div>
@@ -332,73 +370,80 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
-              className="fixed left-0 top-0 bottom-0 w-72 bg-white z-[110] lg:hidden border-r border-[#F0E6D2] flex flex-col shadow-2xl"
+              className="fixed left-0 top-0 bottom-0 w-72 bg-[#F5F5F7] z-[110] lg:hidden border-r border-[#E5E5EA] flex flex-col shadow-2xl"
             >
               <div className="p-6 flex flex-col h-full">
                 <div className="flex items-center justify-between mb-10">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#D48C8C] text-white flex items-center justify-center shadow-lg shadow-rose-100">
-                      <Sparkles size={18} />
+                    <div className="w-10 h-10 rounded-2xl bg-white border border-[#E5E5EA] text-[#1C1C1E] flex items-center justify-center shadow-sm relative">
+                       <div className="absolute top-1 right-1 w-1 h-1 bg-[#34C759] rounded-full shadow-[0_0_8px_#34C759]" />
+                       <Sparkles size={16} />
                     </div>
                     <div>
-                      <h1 className="font-sans font-semibold text-xs tracking-[0.1em] uppercase text-[#4A4444]">
+                      <h1 className="font-sans font-medium text-sm tracking-tight text-[#1C1C1E]">
                         By Julia Aleixo
                       </h1>
-                      <p className="text-[7px] text-[#D48C8C] uppercase tracking-widest font-bold">
-                        CEO PRINCIPAL
-                      </p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <div className="w-1 h-1 bg-[#34C759] rounded-full" />
+                        <p className="text-[10px] text-[#8E8E93] uppercase tracking-wider font-medium">
+                          Online
+                        </p>
+                      </div>
                     </div>
                   </div>
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 bg-[#FAF9F6] rounded-xl text-[#A09898] hover:text-[#D48C8C] transition-all"
+                    className="p-2 bg-white rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] shadow-sm transition-all"
                   >
-                    <X size={20} />
+                    <X size={18} />
                   </button>
                 </div>
 
                 <nav className="flex-1 space-y-6 overflow-y-auto pr-2 scrollbar-hide">
                   {Object.entries(groupedMenu).map(([category, items]) => (
                     <div key={`mob-cat-${category}`}>
-                      <h3 className="text-[9px] font-black uppercase text-[#D1CACA] tracking-widest pl-4 mb-2">{category}</h3>
+                      <h3 className="text-[10px] font-medium uppercase text-[#8E8E93] tracking-widest pl-4 mb-2">{category}</h3>
                       <div className="space-y-1">
-                        {items.map((item) => (
-                          <button
-                            key={`mob-${item.id}`}
-                            onClick={() => {
-                              setActiveTab(item.id);
-                              setTimeout(() => setIsMobileMenuOpen(false), 100);
-                            }}
-                            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all ${activeTab === item.id ? "bg-[#FAF9F6] text-[#D48C8C]" : "text-[#A09898] hover:text-[#D48C8C] hover:bg-[#FAF9F6]"}`}
-                          >
-                            <item.icon
-                              size={18}
-                              className={
-                                activeTab === item.id
-                                  ? "text-[#D48C8C]"
-                                  : "text-[#D1CACA]"
-                              }
-                            />
-                            <span className="text-[9px] uppercase font-semibold tracking-[0.15em]">
-                              {item.label}
-                            </span>
-                          </button>
-                        ))}
+                        {items.map((item) => {
+                          const isActive = activeTab === item.id;
+                          return (
+                            <button
+                              key={`mob-${item.id}`}
+                              onClick={() => {
+                                setActiveTab(item.id);
+                                setTimeout(() => setIsMobileMenuOpen(false), 100);
+                              }}
+                              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all relative ${isActive ? "bg-white text-[#1C1C1E] shadow-sm" : "text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white/50"}`}
+                            >
+                              <item.icon
+                                size={16}
+                                strokeWidth={isActive ? 2.5 : 2}
+                                className={isActive ? "text-[#1C1C1E]" : "text-[#8E8E93]"}
+                              />
+                              <span className="text-xs font-medium">
+                                {item.label}
+                              </span>
+                              {isActive && (
+                                <div className="absolute right-4 w-1.5 h-1.5 rounded-full bg-[#1C1C1E]" />
+                              )}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
                   ))}
                 </nav>
 
-                <div className="mt-auto pt-4 border-t border-[#F0E6D2] space-y-2">
+                <div className="mt-auto pt-4 space-y-2">
                   <button
                     onClick={() => {
                       setIsMobileMenuOpen(false);
                       logout();
                       window.location.href = "/";
                     }}
-                    className="w-full flex items-center justify-center gap-3 py-3 rounded-xl text-[#D48C8C] bg-[#FAF9F6] transition-all text-[9px] font-bold uppercase tracking-[0.15em]"
+                    className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl text-[#8E8E93] bg-white hover:text-[#1C1C1E] hover:shadow-sm transition-all text-xs font-medium"
                   >
-                    <LogOut size={16} /> Sair
+                    <LogOut size={14} /> Encerrar Sessão
                   </button>
                 </div>
               </div>
@@ -408,67 +453,44 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-[#FAF9F6]">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-[#F5F5F7]">
         {/* Top Header Bar */}
-        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-[#F0E6D2] px-6 lg:px-8 flex items-center justify-between z-50 flex-shrink-0 shadow-sm">
-          <div className="flex items-center gap-6 flex-1">
+        <header className="h-16 bg-white/30 backdrop-blur-2xl border-b border-white/20 px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0">
+          <div className="flex items-center gap-4 flex-1">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 text-[#A09898] hover:text-[#D48C8C] transition-all"
+              className="lg:hidden p-2 text-[#8E8E93] hover:text-[#1C1C1E] transition-colors"
             >
-              <LayoutDashboard size={20} />
+              <LayoutDashboard size={18} />
             </button>
-            <div className="relative w-full max-w-sm md:block hidden">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D1CACA]"
-                size={14}
-              />
-              <input
-                type="text"
-                placeholder="Pesquisar..."
-                className="w-full bg-[#FAF9F6] border border-[#F0E6D2] focus:border-[#D48C8C] focus:ring-1 focus:ring-[#D48C8C]/10 rounded-xl pl-10 pr-4 py-2 text-[9px] uppercase font-bold tracking-[0.1em] outline-none transition-all text-[#4A4444] placeholder:text-[#D1CACA]"
-                value={globalSearch}
-                onChange={(e) => setGlobalSearch(e.target.value)}
-              />
-            </div>
           </div>
 
-          <div className="flex items-center gap-2 lg:gap-4">
+          <div className="flex items-center gap-4">
             <div className="relative">
               <button
                 onClick={() => setIsSuggestionsModalOpen(true)}
-                className={`p-2 rounded-xl transition-all relative border border-transparent ${suggestions.some((s) => !s.read) ? "text-[#D48C8C] bg-[#FAF9F6]" : "text-[#A09898] hover:bg-[#FAF9F6]"}`}
+                className={`p-2 rounded-xl transition-all relative bg-white border border-[#E5E5EA] shadow-sm hover:shadow-md ${suggestions.some((s) => !s.read) ? "text-[#1C1C1E]" : "text-[#8E8E93]"}`}
               >
-                <Bell size={18} />
+                <Bell size={16} />
                 {suggestions.filter((s) => !s.read).length > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#D48C8C] rounded-full ring-2 ring-white" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FF3B30] rounded-full border-2 border-white shadow-[0_0_8px_rgba(255,59,48,0.5)]" />
                 )}
               </button>
             </div>
 
-            <div className="h-5 w-px bg-[#F0E6D2] mx-2" />
+            <div className="h-6 w-px bg-[#E5E5EA] mx-1" />
 
-            <div className="flex items-center gap-3 bg-[#FAF9F6] border border-[#F0E6D2] px-3 py-1 rounded-xl">
-              <div className="flex flex-col items-end mr-1 hidden sm:flex">
-                <span className="text-[8px] font-black uppercase text-[#4A3A34] tracking-widest">
-                  JULIA ALEIXO
-                </span>
-                <span className="text-[6px] font-black uppercase text-[#D88D85] tracking-[0.2em]">
-                  CEO PRINCIPAL
-                </span>
-              </div>
-              <div className="w-7 h-7 rounded-lg bg-white border border-[#F0E6D2] p-0.5 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 bg-white border border-[#E5E5EA] px-3 py-1.5 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+              <div className="w-7 h-7 rounded-lg bg-[#F5F5F7] border border-[#E5E5EA] overflow-hidden flex items-center justify-center">
                 {user?.photoURL ? (
                   <ImageWithFallback
                     src={user.photoURL}
                     alt=""
-                    className="w-full h-full object-cover rounded shadow-inner"
+                    className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[#D1CACA]">
-                    <User size={12} />
-                  </div>
+                  <User size={14} className="text-[#8E8E93]" />
                 )}
               </div>
             </div>
@@ -476,14 +498,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         </header>
 
         {/* Content Tabs Container */}
-        <div className="flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto px-6 py-6 lg:px-10 lg:py-8 scrollbar-hide scroll-smooth h-full">
+        <div className="flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto px-6 py-8 lg:px-10 lg:py-10 scrollbar-hide scroll-smooth h-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, scale: 0.995, y: 5 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 1.005, y: -5 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               className="pb-24 lg:pb-12"
             >
               <React.Suspense fallback={<TabLoader />}>
@@ -491,19 +513,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   key={activeTab}
                   fallback={
                     <div className="h-full flex flex-col items-center justify-center p-10 text-center animate-in fade-in">
-                      <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-9000 mb-6">
-                        <X size={32} />
+                      <div className="w-16 h-16 bg-white border border-[#E5E5EA] rounded-2xl flex items-center justify-center text-[#FF3B30] mb-6 shadow-sm">
+                        <X size={24} />
                       </div>
-                      <h3 className="text-sm font-black uppercase text-slate-900 tracking-widest mb-2">
-                        Ops! Algo deu errado no Dashboard
+                      <h3 className="text-sm font-medium text-[#1C1C1E] mb-2">
+                        Falha ao carregar o módulo
                       </h3>
-                      <p className="text-[10px] text-[#A09898] font-bold uppercase tracking-widest max-w-xs">
-                        Encontramos um erro ao carregar as informações. Tente
-                        recarregar a página.
+                      <p className="text-xs text-[#8E8E93] max-w-xs mb-8">
+                        Ocorreu um erro interno. Por favor, recarregue a página para continuar.
                       </p>
                       <button
                         onClick={() => window.location.reload()}
-                        className="mt-8 px-8 py-3 bg-black text-white rounded-xl text-[9px] font-black uppercase tracking-widest"
+                        className="px-6 py-2.5 bg-white border border-[#E5E5EA] hover:border-[#1C1C1E] text-[#1C1C1E] rounded-xl text-xs font-medium shadow-sm transition-all"
                       >
                         Recarregar Dashboard
                       </button>
@@ -541,6 +562,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       orders={sales}
                       products={products}
                       insumos={insumos}
+                      customers={customers}
                       companyId={selectedCompanyId}
                       onUpdateStatus={async (id, status) => {
                         await updateOrderStatus(id, status);
@@ -593,6 +615,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       onDeleteProduct={(id) => deleteProduct(id)}
                     />
                   )}
+                  {activeTab === "collections" && (
+                    <CollectionsTab />
+                  )}
+                  {activeTab === "campaigns" && (
+                    <CampaignsTab />
+                  )}
+                  {activeTab === "coupons" && (
+                    <CouponsTab
+                      companyId={selectedCompanyId}
+                      orders={sales}
+                      products={products}
+                    />
+                  )}
+                  {activeTab === "media-center" && (
+                    <MediaCenterTab />
+                  )}
                   {activeTab === "kits" && (
                     <KitsTab
                       products={products}
@@ -607,7 +645,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "gift-lists" && (
-                    <GiftListsTab companyId={selectedCompanyId} />
+                    <GiftListsTab companyId={selectedCompanyId} products={products} />
                   )}
                   {activeTab === "commemorative-dates" && (
                     <CommemorativeDatesTab />
@@ -652,6 +690,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   {activeTab === "funnel" && (
                     <FunnelLogsTab events={checkoutEvents} selectedCompanyId={selectedCompanyId} />
                   )}
+                  {activeTab === "activity-logs" && (
+                    <ActivityLogTab />
+                  )}
                 </ErrorBoundary>
               </React.Suspense>
             </motion.div>
@@ -661,80 +702,87 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         {/* Suggestions Modal Overlay */}
         <AnimatePresence>
           {isSuggestionsModalOpen && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-end p-4">
+            <div className="fixed inset-0 z-[200] flex items-center justify-end p-0 sm:p-4">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setIsSuggestionsModalOpen(false)}
-                className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                className="absolute inset-0 bg-black/20 backdrop-blur-sm"
               />
               <motion.div
                 initial={{ opacity: 0, x: 100 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 100 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="relative w-full max-w-lg bg-[#FAF9F6] h-full lg:rounded-l-[2rem] border-l border-[#F0E6D2] shadow-2xl flex flex-col overflow-hidden"
+                className="relative w-full max-w-md bg-[#F5F5F7] h-full sm:rounded-[2rem] border border-[#E5E5EA] shadow-2xl flex flex-col overflow-hidden"
               >
-                <div className="p-8 border-b border-[#F0E6D2] bg-white space-y-4">
+                <div className="p-6 border-b border-[#E5E5EA] bg-white/80 backdrop-blur-xl space-y-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#FAF9F6] text-[#D48C8C] flex items-center justify-center border border-[#F0E6D2] shadow-sm">
-                        <Sparkles size={20} />
+                      <div className="w-10 h-10 rounded-2xl bg-white text-[#1C1C1E] flex items-center justify-center border border-[#E5E5EA] shadow-sm relative">
+                         <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#007AFF] rounded-full" />
+                         <Bell size={16} />
                       </div>
                       <div>
-                        <h2 className="text-sm font-semibold uppercase tracking-widest text-[#4A4444]">
-                          Feedback & Sugestões
+                        <h2 className="text-sm font-medium text-[#1C1C1E]">
+                          Notificações
                         </h2>
-                        <p className="text-[8px] text-[#D48C8C] font-medium uppercase tracking-[0.1em] mt-0.5">
-                          Notificações e Ideias
+                        <p className="text-[10px] text-[#8E8E93] uppercase tracking-wider font-medium mt-0.5">
+                          Sistema & Interações
                         </p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsSuggestionsModalOpen(false)}
-                      className="p-2.5 bg-[#FAF9F6] hover:bg-[#F0E6D2] rounded-xl text-[#A09898] transition-all cursor-pointer outline-none"
+                      className="p-2.5 bg-white hover:bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] transition-all cursor-pointer outline-none shadow-sm"
                     >
-                      <X size={20} />
+                      <X size={16} />
                     </button>
                   </div>
 
                   {/* Tab menu */}
-                  <div className="flex gap-2 p-1 bg-[#FAF9F6] rounded-xl border border-[#F0E6D2]">
+                  <div className="flex p-1 bg-[#F5F5F7] rounded-xl border border-[#E5E5EA] relative">
                     <button
                       type="button"
                       onClick={() => setActiveNotificationTab('suggestions')}
-                      className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all cursor-pointer outline-none ${
+                      className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all cursor-pointer outline-none relative z-10 ${
                         activeNotificationTab === 'suggestions'
-                          ? 'bg-[#D48C8C] text-white'
-                          : 'text-[#A09898] hover:text-[#4A4444]'
+                          ? 'text-[#1C1C1E]'
+                          : 'text-[#8E8E93] hover:text-[#1C1C1E]'
                       }`}
                     >
-                      Sugestões ({suggestions.length})
+                      Alertas ({suggestions.length})
                     </button>
                     <button
                       type="button"
                       onClick={() => setActiveNotificationTab('feedbacks')}
-                      className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all cursor-pointer outline-none ${
+                      className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all cursor-pointer outline-none relative z-10 ${
                         activeNotificationTab === 'feedbacks'
-                          ? 'bg-[#D48C8C] text-white'
-                          : 'text-[#A09898] hover:text-[#4A4444]'
+                          ? 'text-[#1C1C1E]'
+                          : 'text-[#8E8E93] hover:text-[#1C1C1E]'
                       }`}
                     >
-                      Feedbacks ({feedbacks.length})
+                      Mensagens ({feedbacks.length})
                     </button>
+                    <motion.div
+                       layoutId="notificationTabIndicator"
+                       className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm border border-[#E5E5EA]"
+                       animate={{ left: activeNotificationTab === 'suggestions' ? 4 : 'calc(50% + 0px)' }}
+                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-8 space-y-4 scrollbar-hide">
+                <div className="flex-1 overflow-y-auto p-6 space-y-3 scrollbar-hide">
                   {activeNotificationTab === 'suggestions' ? (
                     <>
                       {suggestions.length === 0 && (
-                        <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-40">
-                          <Box size={40} className="text-[#D1CACA] mb-4" />
-                          <p className="text-[9px] font-medium uppercase tracking-widest text-[#A09898]">
-                            Sem novas sugestões no momento.
+                        <div className="h-full flex flex-col items-center justify-center text-center p-10">
+                          <Box size={32} className="text-[#D1D1D6] mb-4" />
+                          <p className="text-xs font-medium text-[#8E8E93]">
+                            Nenhum alerta pendente.
                           </p>
                         </div>
                       )}
@@ -759,28 +807,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                             onClick={() => {
                               if (!s.read) markSuggestionAsRead(s.id);
                             }}
-                            className={`p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${s.read ? "bg-white/50 border-[#F0E6D2] opacity-50" : "bg-white border-[#D48C8C]/20 shadow-lg shadow-[#D48C8C]/5"}`}
+                            className={`p-5 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${s.read ? "bg-transparent border-[#E5E5EA] opacity-60" : "bg-white border-[#E5E5EA] shadow-sm"}`}
                           >
-                            <div className="flex justify-between items-center mb-4">
+                            <div className="flex justify-between items-center mb-3">
                               <span
-                                className={`text-[8px] font-semibold uppercase tracking-widest px-2.5 py-1 rounded ${s.read ? "bg-[#F0E6D2] text-[#A09898]" : "bg-[#D48C8C] text-white"}`}
+                                className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${s.read ? "bg-[#E5E5EA] text-[#8E8E93]" : "bg-[#007AFF]/10 text-[#007AFF] border border-[#007AFF]/20"}`}
                               >
                                 {s.companyId}
                               </span>
-                              <span className="text-[8px] font-medium text-[#A09898] uppercase tracking-widest">
+                              <span className="text-[10px] font-medium text-[#8E8E93]">
                                 {s.createdAt?.toDate
                                   ? s.createdAt.toDate().toLocaleDateString()
-                                  : "Recent"}
+                                  : "Recente"}
                               </span>
                             </div>
-                            <p className="text-[11px] font-medium text-[#4A4444] leading-relaxed whitespace-pre-wrap">
+                            <p className="text-xs font-medium text-[#1C1C1E] leading-relaxed whitespace-pre-wrap">
                               {s.message}
                             </p>
                             {!s.read && (
-                              <div className="mt-4 flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#D48C8C] shadow-[0_0_8px_rgba(212,140,140,1)] animate-pulse" />
-                                <span className="text-[7px] font-semibold uppercase text-[#D48C8C] tracking-widest">
-                                  Nova atividade
+                              <div className="mt-3 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#007AFF] shadow-[0_0_8px_#007AFF]" />
+                                <span className="text-[10px] font-medium text-[#007AFF]">
+                                  Novo Evento
                                 </span>
                               </div>
                             )}
@@ -790,10 +838,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   ) : (
                     <>
                       {feedbacks.length === 0 && (
-                        <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-40">
-                          <Heart size={40} className="text-[#D1CACA] mb-4 animate-pulse text-[#D1CACA]" />
-                          <p className="text-[9px] font-medium uppercase tracking-widest text-[#A09898]">
-                            Nenhum feedback recebido ainda.
+                        <div className="h-full flex flex-col items-center justify-center text-center p-10">
+                          <Heart size={32} className="text-[#D1D1D6] mb-4" />
+                          <p className="text-xs font-medium text-[#8E8E93]">
+                            Nenhuma mensagem recebida.
                           </p>
                         </div>
                       )}
@@ -815,26 +863,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
-                            className="p-6 rounded-2xl border border-[#F0E6D2] bg-white shadow-sm hover:shadow-md transition-all text-[#4A4444]"
+                            className="p-5 rounded-2xl border border-[#E5E5EA] bg-white shadow-sm transition-all"
                           >
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-[10px] font-bold uppercase tracking-widest">
+                              <span className="text-xs font-medium text-[#1C1C1E]">
                                 {fb.name}
                               </span>
-                              <span className="text-[8px] font-medium text-[#A09898] uppercase tracking-widest">
+                              <span className="text-[10px] font-medium text-[#8E8E93]">
                                 {fb.createdAt?.toDate
                                   ? fb.createdAt.toDate().toLocaleDateString()
-                                  : "Recent"}
+                                  : "Recente"}
                               </span>
                             </div>
                             
-                            <div className="flex gap-0.5 mb-3 text-[#D48C8C]">
+                            <div className="flex gap-1 mb-3 text-[#FF9500]">
                               {Array.from({ length: fb.stars || 5 }).map((_, i) => (
-                                <Star key={i} size={11} fill="currentColor" stroke="none" />
+                                <Star key={i} size={12} fill="currentColor" stroke="none" />
                               ))}
                             </div>
 
-                            <p className="text-[11px] text-gray-500 leading-relaxed italic">
+                            <p className="text-xs text-[#8E8E93] leading-relaxed">
                               "{fb.text}"
                             </p>
                           </motion.div>

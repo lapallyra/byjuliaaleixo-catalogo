@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Download,
   Calendar,
@@ -13,7 +13,6 @@ import {
   AlertCircle,
   Save,
   Percent,
-  Calculator,
   Package,
   Sparkles,
   Lightbulb,
@@ -21,6 +20,15 @@ import {
   Layers,
   Search,
   ArrowUpRight,
+  ChevronRight,
+  Filter,
+  X,
+  CheckCircle,
+  Copy,
+  Clock,
+  ArrowRight,
+  FileSpreadsheet,
+  FileText
 } from "lucide-react";
 import { FinanceEntry, CompanyId, Order, SiteSettings, Product, Insumo } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
@@ -30,9 +38,12 @@ import {
   saveMonthlyProfitHistory,
   subscribeToMonthlyProfitHistory,
 } from "../../services/firebaseService";
-import { format, subMonths, isSameMonth } from "date-fns";
+import { format, subMonths, isSameMonth, isSameDay, isSameYear, subDays, startOfDay, endOfDay, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { exportFinanceReportPDF } from "../../utils/pdfGenerator";
+import { saveAs } from "file-saver";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 interface FinanceTabProps {
   companyId: CompanyId;
@@ -47,1050 +58,1123 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
   products,
   insumos,
 }) => {
-  const [entries, setEntries] = useState<FinanceEntry[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [activeSection, setActiveSection] = useState("visao-geral");
-  const [filterMonth, setFilterMonth] = useState(new Date());
+  // Filters & State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState<"hoje" | "7dias" | "30dias" | "mes" | "ano" | "todos" | "personalizado">("mes");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<"all" | "paid" | "pending" | "cancelled">("all");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"all" | "pix" | "credit_card" | "digital_booklet" | "other">("all");
+  const [minValue, setMinValue] = useState("");
+  const [maxValue, setMaxValue] = useState("");
+  
+  // Selected order for sidebar details
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [copiedOrderId, setCopiedOrderId] = useState<string | null>(null);
 
-  // Pricing Simulator States
-  const [selectedSimProduct, setSelectedSimProduct] = useState<string>("custom");
-  const [simMaterialCost, setSimMaterialCost] = useState<number>(35);
-  const [simLaborHours, setSimLaborHours] = useState<number>(2);
-  const [simLaborRate, setSimLaborRate] = useState<number>(30);
-  const [simFixedCostPct, setSimFixedCostPct] = useState<number>(10);
-  const [simTaxRate, setSimTaxRate] = useState<number>(6);
-  const [simFeesRate, setSimFeesRate] = useState<number>(5);
-  const [simDesiredMargin, setSimDesiredMargin] = useState<number>(35);
-  const [simCustomPrice, setSimCustomPrice] = useState<number>(150);
-  const [insumosSearchTerm, setInsumosSearchTerm] = useState<string>("");
-
-  // Sync simulator with selected product
-  useEffect(() => {
-    if (selectedSimProduct !== "custom") {
-      const prod = products.find((p) => p.id === selectedSimProduct);
-      if (prod) {
-        setSimMaterialCost(prod.estimatedCost || 30);
-        setSimCustomPrice(prod.current_price || prod.retail_price || 0);
-      }
+  // Parse safety helper
+  const parseOrderDate = (o: Order): Date => {
+    if (!o.createdAt) return new Date();
+    if (typeof o.createdAt.toDate === "function") {
+      return o.createdAt.toDate();
     }
-  }, [selectedSimProduct, products]);
-
-  // Sync labor and tax rates when global settings load
-  useEffect(() => {
-    if (settings) {
-      if (settings.global_labor_cost_per_hour) {
-        setSimLaborRate(settings.global_labor_cost_per_hour);
-      }
-      if (settings.global_tax_rate) {
-        setSimTaxRate(settings.global_tax_rate);
-      }
+    if (o.createdAt.seconds) {
+      return new Date(o.createdAt.seconds * 1000);
     }
-  }, [settings]);
-
-  useEffect(() => {
-    const unsubFinance = subscribeToFinance(setEntries, companyId);
-    const unsubHistory = subscribeToMonthlyProfitHistory(setHistory, companyId);
-    return () => {
-      unsubFinance();
-      unsubHistory();
-    };
-  }, [companyId]);
-
-  const handleCloseMonth = async () => {
-    if (confirm("Deseja fechar o mês e salvar o lucro atual no histórico?")) {
-      await saveMonthlyProfitHistory(companyId, {
-        month: format(filterMonth, "MM/yyyy"),
-        netProfit: netProfit,
-      });
-      alert("Mês fechado e registrado!");
-    }
+    return new Date(o.createdAt);
   };
 
-  useEffect(() => {
-    getGlobalSettings().then((data) => {
-      if (data) setSettings(data);
-    });
-  }, [companyId]);
-
-  const currentMonthOrders = useMemo(
-    () =>
-      orders.filter(
-        (o) =>
-          o.status !== "cancelled" &&
-          isSameMonth(
-            o.createdAt?.toDate
-              ? o.createdAt.toDate()
-              : new Date(o.createdAt as any),
-            filterMonth,
-          ),
-      ),
-    [orders, filterMonth],
-  );
-
-  const grossRevenue = useMemo(
-    () =>
-      currentMonthOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0),
-    [currentMonthOrders],
-  );
-
-  const monthEntries = useMemo(
-    () => entries.filter((e) => isSameMonth(new Date(e.date), filterMonth)),
-    [entries, filterMonth],
-  );
-  const totalManualInflows = useMemo(
-    () =>
-      monthEntries
-        .filter((e) => e.type === "revenue")
-        .reduce((sum, e) => sum + (Number(e.value) || 0), 0),
-    [monthEntries],
-  );
-  const totalManualOutflows = useMemo(
-    () =>
-      monthEntries
-        .filter((e) => e.type === "expense")
-        .reduce((sum, e) => sum + (Number(e.value) || 0), 0),
-    [monthEntries],
-  );
-
-  // Derived costs from Settings
-  const fixedCosts = settings?.global_fixed_costs || 0;
-  const taxesRate = settings?.global_tax_rate || 0;
-  const variableTaxes = grossRevenue * (taxesRate / 100);
-
-  // Custom formula for COGS (Cost of Goods Sold based on Insumos). As a fallback, estimate at 35% of revenue if no precise data
-  // But let's assume 35% of revenue for standard
-  const cogsEstimate = grossRevenue * 0.35;
-
-  const totalExpenses =
-    totalManualOutflows + fixedCosts + variableTaxes + cogsEstimate;
-
-  const totalMarketplaceFees = useMemo(() => {
-    return currentMonthOrders.reduce((sum, o) => {
-      if (o.marketplace && o.marketplaceTax) {
-        return sum + (Number(o.total) || 0) * (Number(o.marketplaceTax) / 100);
+  // Helper to compute cost for an individual order
+  const getOrderCost = (order: Order) => {
+    if (!order.items || order.items.length === 0) return 0;
+    return order.items.reduce((sum, item) => {
+      let cost = item.estimatedCost;
+      if (cost === undefined || cost === null || cost === 0) {
+        const prod = products.find(p => p.id === (item.productId || item.id));
+        if (prod && prod.estimatedCost !== undefined && prod.estimatedCost !== null && prod.estimatedCost > 0) {
+          cost = prod.estimatedCost;
+        } else {
+          // Fallback: 35% of the price
+          const itemPrice = item.current_price || item.retail_price || 0;
+          cost = itemPrice * 0.35;
+        }
       }
-      return sum;
+      return sum + (cost * (item.quantity || 1));
     }, 0);
-  }, [currentMonthOrders]);
+  };
 
-  const netProfit = grossRevenue + totalManualInflows - (totalExpenses + totalMarketplaceFees);
+  // Filter orders by active companyId prop
+  const companyOrders = useMemo(() => {
+    if ((companyId as string) === "all") return orders;
+    return orders.filter(o => o.companyId === companyId);
+  }, [orders, companyId]);
 
-  const monthlyGoal = settings?.monthly_goal || 1; // prevent div/0
-  const goalProgress = Math.min((grossRevenue / monthlyGoal) * 100, 100);
-  const remainingGoal = Math.max(0, monthlyGoal - grossRevenue);
+  // General KPIs (Calculated from all company orders)
+  const today = new Date();
+  
+  const kpis = useMemo(() => {
+    let faturamentoHoje = 0;
+    let faturamentoMes = 0;
+    let faturamentoAno = 0;
+    let totalPaidValue = 0;
+    let paidCount = 0;
+    let pendingCount = 0;
+    let cancelledCount = 0;
+    let totalCostPaid = 0;
 
-  const averageTicket = grossRevenue / (currentMonthOrders.length || 1);
-  const conversionRate = 3.2; // Simulated conversion rate as we don't track pageviews
+    companyOrders.forEach(o => {
+      const oDate = parseOrderDate(o);
+      const oTotal = Number(o.total) || 0;
+      const isPaid = o.status === "paid" || o.status === "fully_paid" || o.paymentStatus === "paid";
+      const isCancelled = o.status === "cancelled" || o.paymentStatus === "cancelled";
 
-  const TabNav = () => (
-    <div className="flex flex-wrap gap-2 mb-10 bg-white/80 backdrop-blur-md py-4 border-b border-[#F0E6D2] scroll-mt-20">
-      {[
-        { id: "visao-geral", label: "Visão Geral", icon: LayoutDashboard },
-        { id: "analise-inteligente", label: "Análise Inteligente", icon: Target },
-        { id: "analise", label: "Custos", icon: Activity },
-      ].map((sec) => (
-        <button
-          key={sec.id}
-          onClick={() => setActiveSection(sec.id)}
-          className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeSection === sec.id ? "bg-black text-white shadow-lg" : "bg-white text-[#A09898] hover:bg-slate-100"}`}
-        >
-          <sec.icon size={14} />
-          {sec.label}
-        </button>
-      ))}
-    </div>
-  );
+      if (isPaid) {
+        paidCount++;
+        totalPaidValue += oTotal;
+        totalCostPaid += getOrderCost(o);
 
-  const renderActiveSection = () => {
-    switch (activeSection) {
-      case "visao-geral":
-        return (
-          <section className="space-y-8 animate-in fade-in duration-300">
-            {/* Main KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                {
-                  label: "Faturamento Bruto",
-                  val: grossRevenue,
-                  icon: TrendingUp,
-                  color: "text-emerald-500",
-                  bg: "bg-emerald-50",
-                  border: "border-emerald-100",
-                },
-                {
-                  label: "Lucro Líquido Estimado",
-                  val: netProfit,
-                  icon: DollarSign,
-                  color: "text-emerald-500",
-                  bg: "bg-emerald-50",
-                  border: "border-emerald-100",
-                },
-                {
-                  label: "Custo Promedio / Prejuízo",
-                  val: totalExpenses,
-                  icon: TrendingDown,
-                  color: "text-rose-500",
-                  bg: "bg-rose-50",
-                  border: "border-rose-100",
-                },
-                {
-                  label: "Conversão Estimada",
-                  val: conversionRate + "%",
-                  isText: true,
-                  icon: Activity,
-                  color: "text-lilac",
-                  bg: "bg-lilac-baby",
-                  border: "border-lilac/20",
-                },
-              ].map((card, idx) => (
-                <div
-                  key={card.label}
-                  className={`p-8 rounded-3xl bg-white border ${card.border} shadow-sm relative overflow-hidden group hover:scale-[1.02] transition-transform`}
-                >
-                  <div
-                    className={`absolute -right-4 -top-4 w-24 h-24 rounded-full ${card.bg} opacity-50 group-hover:scale-150 transition-transform duration-500`}
-                  />
-                  <div className="flex items-center gap-4 relative z-10">
-                    <div className={`p-3 rounded-xl ${card.bg} ${card.color}`}>
-                      <card.icon size={20} />
-                    </div>
-                    <span className="text-[9px] font-black uppercase text-[#A09898] tracking-widest">
-                      {card.label}
-                    </span>
-                  </div>
-                  <p className="text-3xl font-black text-slate-800 mt-6 relative z-10 font-sans tracking-tight">
-                    {card.isText ? card.val : formatCurrency(card.val as number)}
-                  </p>
-                </div>
-              ))}
-            </div>
+        if (isSameDay(oDate, today)) {
+          faturamentoHoje += oTotal;
+        }
+        if (isSameMonth(oDate, today)) {
+          faturamentoMes += oTotal;
+        }
+        if (isSameYear(oDate, today)) {
+          faturamentoAno += oTotal;
+        }
+      } else if (isCancelled) {
+        cancelledCount++;
+      } else {
+        pendingCount++;
+      }
+    });
 
-            {/* Funil de Vendas Simples */}
-            <div className="p-8 rounded-3xl bg-white border border-[#F0E6D2] shadow-sm">
-               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#A09898] mb-6">
-                 Funil de Vendas (Neste Mês)
-               </h3>
-               <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-4">
-                     <div className="w-full bg-[#FAF9F6] rounded-xl h-12 relative overflow-hidden flex items-center">
-                        <div className="absolute left-0 top-0 bottom-0 bg-lilac/10 w-full"></div>
-                        <span className="relative z-10 px-6 text-xs font-black uppercase tracking-widest text-[#4A4444]">Visitantes (Estimado 100%)</span>
-                     </div>
-                     <span className="w-16 text-right font-black text-xs text-[#A09898]">~{Math.round((currentMonthOrders.length || 1) / (conversionRate / 100))}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                     <div className="w-full bg-[#FAF9F6] rounded-xl h-12 relative overflow-hidden flex items-center">
-                        <div className="absolute left-0 top-0 bottom-0 bg-amber-500/10 w-[45%]"></div>
-                        <span className="relative z-10 px-6 text-xs font-black uppercase tracking-widest text-[#4A4444]">Intentos de Compra (45%)</span>
-                     </div>
-                     <span className="w-16 text-right font-black text-xs text-[#A09898]">~{Math.round((currentMonthOrders.length || 1) / (conversionRate / 100) * 0.45)}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                     <div className="w-full bg-[#FAF9F6] rounded-xl h-12 relative overflow-hidden flex items-center">
-                        <div className="absolute left-0 top-0 bottom-0 bg-emerald-500/10 w-[5%]"></div>
-                        <span className="relative z-10 px-6 text-xs font-black uppercase tracking-widest text-emerald-600">Vendas Finalizadas ({conversionRate}%)</span>
-                     </div>
-                     <span className="w-16 text-right font-black text-xs text-emerald-600">{currentMonthOrders.length}</span>
-                  </div>
-               </div>
-            </div>
+    const ticketMedio = paidCount > 0 ? totalPaidValue / paidCount : 0;
+    const lucroEstimado = totalPaidValue - totalCostPaid;
 
-            {/* Goal Progress Tracker */}
-            {settings?.monthly_goal && settings.monthly_goal > 0 && (
-              <div className="p-8 rounded-3xl bg-gradient-to-br from-slate-900 to-black text-white shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-lilac/20 rounded-full blur-[80px]" />
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
-                      <Target size={24} className="text-lilac" />
-                    </div>
-                    <div>
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">
-                        Progresso da Meta Mensal
-                      </h3>
-                      <p className="text-2xl font-black mt-1 font-sans">
-                        <span className="text-lilac">
-                          {formatCurrency(grossRevenue)}
-                        </span>{" "}
-                        <span className="text-white/30 text-lg">
-                          / {formatCurrency(settings.monthly_goal)}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
+    return {
+      faturamentoHoje,
+      faturamentoMes,
+      faturamentoAno,
+      ticketMedio,
+      lucroEstimado,
+      paidCount,
+      pendingCount,
+      cancelledCount,
+    };
+  }, [companyOrders, products]);
 
-                  <div className="flex-1 w-full flex items-center justify-end gap-6">
-                    <div className="w-full max-w-md h-4 rounded-full bg-white/5 border border-white/10 overflow-hidden relative shadow-inner">
-                      <div
-                        className="h-full bg-gradient-to-r from-lilac to-pink-500 relative"
-                        style={{ width: `${goalProgress}%` }}
-                      >
-                        <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                      </div>
-                    </div>
-                    <div className="text-2xl font-black font-sans w-16 text-right">
-                      {Math.round(goalProgress)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
+  // Filter and Search logic for the table list
+  const filteredOrders = useMemo(() => {
+    return companyOrders.filter(o => {
+      const oDate = parseOrderDate(o);
+      const oTotal = Number(o.total) || 0;
+      
+      // 1. Text Search (Order Number, Client Name, Product Name)
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const matchesCode = o.code?.toLowerCase().includes(term);
+        const matchesClient = o.customerName?.toLowerCase().includes(term);
+        const matchesProduct = o.items?.some(item => item.product_name?.toLowerCase().includes(term));
+        if (!matchesCode && !matchesClient && !matchesProduct) {
+          return false;
+        }
+      }
+
+      // 2. Period Filter
+      if (selectedPeriod === "hoje") {
+        if (!isSameDay(oDate, today)) return false;
+      } else if (selectedPeriod === "7dias") {
+        const sevenDaysAgo = subDays(today, 7);
+        if (oDate < sevenDaysAgo) return false;
+      } else if (selectedPeriod === "30dias") {
+        const thirtyDaysAgo = subDays(today, 30);
+        if (oDate < thirtyDaysAgo) return false;
+      } else if (selectedPeriod === "mes") {
+        if (!isSameMonth(oDate, today)) return false;
+      } else if (selectedPeriod === "ano") {
+        if (!isSameYear(oDate, today)) return false;
+      } else if (selectedPeriod === "personalizado") {
+        if (customStartDate) {
+          const start = startOfDay(new Date(customStartDate));
+          if (oDate < start) return false;
+        }
+        if (customEndDate) {
+          const end = endOfDay(new Date(customEndDate));
+          if (oDate > end) return false;
+        }
+      }
+
+      // 3. Payment Status Filter
+      const isPaid = o.status === "paid" || o.status === "fully_paid" || o.paymentStatus === "paid";
+      const isCancelled = o.status === "cancelled" || o.paymentStatus === "cancelled";
+      const isPending = !isPaid && !isCancelled;
+
+      if (selectedPaymentStatus === "paid" && !isPaid) return false;
+      if (selectedPaymentStatus === "pending" && !isPending) return false;
+      if (selectedPaymentStatus === "cancelled" && !isCancelled) return false;
+
+      // 4. Payment Method Filter
+      const method = (o.plannedMethod || o.payment_method || "").toLowerCase();
+      if (selectedPaymentMethod === "pix") {
+        if (method.includes("credit") || method.includes("booklet") || o.plannedMethod === "credit_card" || o.plannedMethod === "digital_booklet") return false;
+      } else if (selectedPaymentMethod === "credit_card") {
+        if (o.plannedMethod !== "credit_card" && !method.includes("credit")) return false;
+      } else if (selectedPaymentMethod === "digital_booklet") {
+        if (o.plannedMethod !== "digital_booklet" && !method.includes("booklet")) return false;
+      } else if (selectedPaymentMethod === "other") {
+        if (o.plannedMethod === "credit_card" || o.plannedMethod === "digital_booklet" || method.includes("credit") || method.includes("booklet")) return false;
+      }
+
+      // 5. Value Range Filter
+      if (minValue && oTotal < parseFloat(minValue)) return false;
+      if (maxValue && oTotal > parseFloat(maxValue)) return false;
+
+      return true;
+    });
+  }, [companyOrders, searchTerm, selectedPeriod, customStartDate, customEndDate, selectedPaymentStatus, selectedPaymentMethod, minValue, maxValue]);
+
+  // Automatic Indicators Calculations
+  const indicators = useMemo(() => {
+    // A. Growth compared to the previous month (MoM)
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const prevMonthDate = subMonths(today, 1);
+    
+    let currentMonthRevenue = 0;
+    let prevMonthRevenue = 0;
+
+    companyOrders.forEach(o => {
+      const oDate = parseOrderDate(o);
+      const oTotal = Number(o.total) || 0;
+      const isPaid = o.status === "paid" || o.status === "fully_paid" || o.paymentStatus === "paid";
+
+      if (isPaid) {
+        if (isSameMonth(oDate, today)) {
+          currentMonthRevenue += oTotal;
+        } else if (isSameMonth(oDate, prevMonthDate)) {
+          prevMonthRevenue += oTotal;
+        }
+      }
+    });
+
+    const growthMoM = prevMonthRevenue > 0 
+      ? ((currentMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100 
+      : currentMonthRevenue > 0 ? 100 : 0;
+
+    // B. Most profitable products (Top 5)
+    const productProfitMap: Record<string, { name: string; profit: number; count: number; revenue: number }> = {};
+    companyOrders.forEach(o => {
+      const isPaid = o.status === "paid" || o.status === "fully_paid" || o.paymentStatus === "paid";
+      if (!isPaid) return;
+
+      o.items?.forEach(item => {
+        const prodId = item.productId || item.id;
+        const qty = item.quantity || 1;
+        const itemPrice = item.current_price || item.retail_price || 0;
+        const revenue = itemPrice * qty;
+        
+        let cost = item.estimatedCost;
+        if (cost === undefined || cost === null || cost === 0) {
+          const originalProd = products.find(p => p.id === prodId);
+          cost = (originalProd && originalProd.estimatedCost) || (itemPrice * 0.35);
+        }
+        
+        const profit = (itemPrice - cost) * qty;
+
+        if (!productProfitMap[prodId]) {
+          productProfitMap[prodId] = { name: item.product_name, profit: 0, count: 0, revenue: 0 };
+        }
+        productProfitMap[prodId].profit += profit;
+        productProfitMap[prodId].count += qty;
+        productProfitMap[prodId].revenue += revenue;
+      });
+    });
+
+    const topProducts = Object.values(productProfitMap)
+      .sort((a, b) => b.profit - a.profit)
+      .slice(0, 5);
+
+    // C. Most profitable categories (Top 5)
+    const categoryProfitMap: Record<string, { category: string; profit: number; revenue: number }> = {};
+    companyOrders.forEach(o => {
+      const isPaid = o.status === "paid" || o.status === "fully_paid" || o.paymentStatus === "paid";
+      if (!isPaid) return;
+
+      o.items?.forEach(item => {
+        const prodId = item.productId || item.id;
+        const qty = item.quantity || 1;
+        const itemPrice = item.current_price || item.retail_price || 0;
+        const revenue = itemPrice * qty;
+        
+        const originalProd = products.find(p => p.id === prodId);
+        const category = originalProd?.category || "Papelaria Fina";
+        
+        let cost = item.estimatedCost;
+        if (cost === undefined || cost === null || cost === 0) {
+          cost = (originalProd && originalProd.estimatedCost) || (itemPrice * 0.35);
+        }
+        
+        const profit = (itemPrice - cost) * qty;
+
+        if (!categoryProfitMap[category]) {
+          categoryProfitMap[category] = { category, profit: 0, revenue: 0 };
+        }
+        categoryProfitMap[category].profit += profit;
+        categoryProfitMap[category].revenue += revenue;
+      });
+    });
+
+    const topCategories = Object.values(categoryProfitMap)
+      .sort((a, b) => b.profit - a.profit)
+      .slice(0, 5);
+
+    // D. Most used payment methods
+    const paymentMethodsMap: Record<string, { label: string; count: number; totalValue: number }> = {};
+    companyOrders.forEach(o => {
+      const isPaid = o.status === "paid" || o.status === "fully_paid" || o.paymentStatus === "paid";
+      if (!isPaid) return;
+
+      let methodLabel = "PIX / À Vista";
+      if (o.plannedMethod === "credit_card") methodLabel = "Cartão de Crédito";
+      else if (o.plannedMethod === "digital_booklet") methodLabel = "Carnê Digital";
+      else if (o.payment_method === "planned") methodLabel = "Parcelado";
+
+      if (!paymentMethodsMap[methodLabel]) {
+        paymentMethodsMap[methodLabel] = { label: methodLabel, count: 0, totalValue: 0 };
+      }
+      paymentMethodsMap[methodLabel].count++;
+      paymentMethodsMap[methodLabel].totalValue += Number(o.total) || 0;
+    });
+
+    const topPaymentMethods = Object.values(paymentMethodsMap)
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      currentMonthRevenue,
+      prevMonthRevenue,
+      growthMoM,
+      topProducts,
+      topCategories,
+      topPaymentMethods,
+    };
+  }, [companyOrders, products]);
+
+  // Export functions
+  const handleExportPDF = () => {
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4"
+    });
+
+    // Premium Vitrine PDF layout
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor("#1C1C1E");
+    doc.text("HISTÓRICO FINANCEIRO INTEGRAL", 15, 20);
+    
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor("#8E8E93");
+    doc.text(`Ateliê: ${companyId.toUpperCase()} | Filtros aplicados | Registros: ${filteredOrders.length}`, 15, 26);
+    doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 282, 26, { align: "right" });
+
+    doc.setDrawColor("#E5E5EA");
+    doc.line(15, 30, 282, 30);
+
+    const columns = [
+      "Pedido",
+      "Cliente",
+      "Valor Bruto",
+      "Valor Custo",
+      "Lucro Est.",
+      "Método",
+      "Data",
+      "Status"
+    ];
+
+    const rows = filteredOrders.map(o => {
+      const isPaid = o.status === "paid" || o.status === "fully_paid" || o.paymentStatus === "paid";
+      const isCancelled = o.status === "cancelled" || o.paymentStatus === "cancelled";
+      const statusLabel = isPaid ? "Pago" : isCancelled ? "Cancelado" : "Pendente";
+      
+      let methodLabel = "PIX / À Vista";
+      if (o.plannedMethod === "credit_card") methodLabel = "Cartão de Crédito";
+      else if (o.plannedMethod === "digital_booklet") methodLabel = "Carnê Digital";
+
+      const cost = getOrderCost(o);
+      const profit = (Number(o.total) || 0) - cost;
+
+      return [
+        `#${o.code || o.id.slice(0, 6)}`,
+        o.customerName || "Não informado",
+        formatCurrency(Number(o.total) || 0),
+        formatCurrency(cost),
+        formatCurrency(profit),
+        methodLabel,
+        format(parseOrderDate(o), "dd/MM/yyyy"),
+        statusLabel
+      ];
+    });
+
+    (doc as any).autoTable({
+      startY: 36,
+      head: [columns],
+      body: rows,
+      theme: 'grid',
+      headStyles: {
+        fillColor: '#F2F2F7',
+        textColor: '#1C1C1E',
+        fontStyle: 'bold',
+        halign: 'left',
+        lineWidth: 0.1,
+        borderColor: '#E5E5EA'
+      },
+      bodyStyles: {
+        textColor: '#2C2C2E',
+        fontSize: 8.5,
+      },
+      alternateRowStyles: {
+        fillColor: '#F8F9FA'
+      },
+      margin: { left: 15, right: 15 }
+    });
+
+    const pdfBlob = doc.output('blob');
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+    window.open(pdfUrl, '_blank');
+  };
+
+  const handleExportExcel = () => {
+    const headers = ["Pedido", "Cliente", "Valor Bruto", "Valor de Custo", "Lucro Estimado", "Forma de Pagamento", "Data", "Status"];
+    const rows = filteredOrders.map(o => {
+      const cost = getOrderCost(o);
+      const profit = (Number(o.total) || 0) - cost;
+      
+      const isPaid = o.status === "paid" || o.status === "fully_paid" || o.paymentStatus === "paid";
+      const isCancelled = o.status === "cancelled" || o.paymentStatus === "cancelled";
+      const statusLabel = isPaid ? "Pago" : isCancelled ? "Cancelado" : "Pendente";
+
+      let methodLabel = "PIX / À Vista";
+      if (o.plannedMethod === "credit_card") methodLabel = "Cartão de Crédito";
+      else if (o.plannedMethod === "digital_booklet") methodLabel = "Carnê Digital";
+
+      return [
+        `#${o.code}`,
+        o.customerName || "Anônimo",
+        (Number(o.total) || 0).toFixed(2).replace('.', ','),
+        cost.toFixed(2).replace('.', ','),
+        profit.toFixed(2).replace('.', ','),
+        methodLabel,
+        format(parseOrderDate(o), "dd/MM/yyyy"),
+        statusLabel
+      ];
+    });
+    
+    const csvContent = [
+      headers.join(";"),
+      ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";"))
+    ].join("\r\n");
+    
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    saveAs(blob, `Financeiro_Vitrine_${companyId}_${format(new Date(), "yyyyMMdd")}.csv`);
+  };
+
+  const handleCopyOrderId = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedOrderId(code);
+    setTimeout(() => setCopiedOrderId(null), 2000);
+  };
+
+  return (
+    <div className="space-y-8 pb-24 bg-[#F8F9FA] min-h-screen px-6 py-8 md:px-8 relative overflow-hidden">
+      
+      {/* AREA 1: Cabeçalho (Header) */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[#E5E5EA] pb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="bg-black text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Módulo Admin</span>
+            <span className="text-[#8E8E93] text-xs font-medium">|</span>
+            <span className="text-slate-500 text-xs font-medium tracking-tight">Gestão de Performance Operacional</span>
+          </div>
+          <h1 className="text-3xl font-medium tracking-tight text-[#1C1C1E] uppercase font-sans">
+            Financeiro <span className="font-light text-[#8E8E93]">Vitrine</span>
+          </h1>
+          <p className="text-[#8E8E93] text-sm font-medium tracking-normal mt-1 leading-relaxed max-w-xl">
+            Acompanhe o faturamento, ticket médio, lucros reais estimados e indicadores analíticos do seu ateliê em tempo real.
+          </p>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex flex-wrap items-center gap-3">
+          
+          {/* Quick Clear 3D button for Filters */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-normal transition-all duration-200 border shadow-[0_2px_8px_rgba(0,0,0,0.03)] ${
+              showFilters 
+                ? "bg-black text-white border-black hover:bg-black/90" 
+                : "bg-white text-slate-800 border-[#E5E5EA] hover:bg-[#F2F2F7] active:translate-y-px active:shadow-sm"
+            }`}
+          >
+            <Filter size={14} />
+            <span>Filtros</span>
+            { (selectedPeriod !== "mes" || selectedPaymentStatus !== "all" || selectedPaymentMethod !== "all" || searchTerm || minValue || maxValue) && (
+              <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
             )}
+          </button>
 
-            {/* Inflows & Outflows List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-              {/* Entradas */}
-              <div className="bg-white rounded-3xl border border-emerald-100 shadow-xl shadow-emerald-50/50 p-8">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-sm font-black uppercase text-slate-800 flex items-center gap-2">
-                    <TrendingUp size={16} className="text-emerald-500" /> Fluxo
-                    Positivo
-                  </h3>
-                  <span className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full">
-                    {currentMonthOrders.length} Pedidos
-                  </span>
-                </div>
-                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
-                  {currentMonthOrders.length > 0 ? (
-                    currentMonthOrders.slice(0, 10).map((o, idx) => (
-                      <div
-                        key={`order-entry-${o.id}-${idx}`}
-                        className="flex justify-between items-center p-4 bg-emerald-50/30 rounded-xl border border-emerald-100/50"
-                      >
-                        <div>
-                          <p className="font-bold text-xs text-slate-800 font-sans uppercase flex flex-wrap items-center gap-1.5">
-                            {o.customerName || "Cliente"}
-                            {o.marketplace && (
-                              <span className="bg-lilac/10 text-lilac font-black text-[7px] tracking-wider uppercase px-1.5 py-0.5 rounded">
-                                {o.marketplace.replace("_", " ")}
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-[9px] font-black text-emerald-600 tracking-widest mt-0.5">
-                            #{o.code}
-                          </p>
-                        </div>
-                        <span className="font-black text-emerald-600">
-                          + {formatCurrency(o.total)}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-[10px] uppercase font-black tracking-widest text-[#A09898] py-10">
-                      Nenhuma venda esse mês.
-                    </p>
-                  )}
-                </div>
-              </div>
+          {/* Excel Export (Clear 3D Style) */}
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#E5E5EA] text-slate-800 font-semibold text-xs shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:bg-[#F2F2F7] hover:shadow-md active:translate-y-px active:shadow-sm transition-all"
+          >
+            <FileSpreadsheet size={15} className="text-emerald-600" />
+            <span>Exportar Excel</span>
+          </button>
 
-              {/* Saídas e Custos Base */}
-              <div className="bg-white rounded-3xl border border-rose-100 shadow-xl shadow-rose-50/50 p-8">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-sm font-black uppercase text-slate-800 flex items-center gap-2">
-                    <TrendingDown size={16} className="text-slate-9000" />{" "}
-                    Previsão de Custos
-                  </h3>
-                  <span className="text-[10px] font-black bg-slate-50 text-rose-600 px-3 py-1 rounded-full">
-                    Baseado nas configs
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 bg-slate-50/30 rounded-xl border border-rose-100/50">
-                    <div>
-                      <p className="font-bold text-xs text-slate-800 uppercase">
-                        Custos Fixos Globais
-                      </p>
-                      <p className="text-[9px] font-black text-slate-9000 tracking-widest mt-0.5">
-                        Aluguel, Luz, etc.
-                      </p>
-                    </div>
-                    <span className="font-black text-slate-9000">
-                      - {formatCurrency(fixedCosts)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-4 bg-slate-50/30 rounded-xl border border-rose-100/50">
-                    <div>
-                      <p className="font-bold text-xs text-slate-800 uppercase">
-                        Impostos sobre Faturamento
-                      </p>
-                      <p className="text-[9px] font-black text-slate-9000 tracking-widest mt-0.5">
-                        {taxesRate}% sobre R$ {grossRevenue.toFixed(2)}
-                      </p>
-                    </div>
-                    <span className="font-black text-slate-9000">
-                      - {formatCurrency(variableTaxes)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-4 bg-amber-50/30 rounded-xl border border-amber-100/50">
-                    <div>
-                      <p className="font-bold text-xs text-slate-800 uppercase">
-                        CMV (Custo Mercadoria Projetado)
-                      </p>
-                      <p className="text-[9px] font-black text-amber-600 tracking-widest mt-0.5">
-                        ~35% do Faturamento Agregado
-                      </p>
-                    </div>
-                    <span className="font-black text-amber-600">
-                      - {formatCurrency(cogsEstimate)}
-                    </span>
-                  </div>
-                  {totalMarketplaceFees > 0 && (
-                    <div className="flex justify-between items-center p-4 bg-purple-50/50 rounded-xl border border-purple-100/80">
-                      <div>
-                        <p className="font-bold text-xs text-slate-800 uppercase">
-                          Taxas de Marketplace
-                        </p>
-                        <p className="text-[9px] font-black text-purple-600 tracking-widest mt-0.5">
-                          Comissões das Plataformas Integradas
-                        </p>
-                      </div>
-                      <span className="font-black text-purple-600">
-                        - {formatCurrency(totalMarketplaceFees)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+          {/* PDF Export (Clear 3D Style) */}
+          <button
+            onClick={handleExportPDF}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#E5E5EA] text-slate-800 font-semibold text-xs shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:bg-[#F2F2F7] hover:shadow-md active:translate-y-px active:shadow-sm transition-all"
+          >
+            <FileText size={15} className="text-indigo-600" />
+            <span>Exportar PDF</span>
+          </button>
+        </div>
+      </div>
 
-            {/* History Section */}
-            <div className="bg-white rounded-3xl border border-[#F0E6D2] shadow-xl p-8 mt-8">
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-xs font-black uppercase tracking-tighter text-slate-800">
-                  Histórico de Lucro Registrado
-                </h2>
-                <button
-                  onClick={handleCloseMonth}
-                  className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all"
+      {/* FILTER EXPANSION DRAWER */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              
+              {/* Periodo */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">Período</label>
+                <select
+                  value={selectedPeriod}
+                  onChange={(e) => setSelectedPeriod(e.target.value as any)}
+                  className="bg-[#F2F2F7] border border-transparent rounded-xl px-3 py-2.5 text-xs font-semibold text-[#1C1C1E] outline-none focus:border-indigo-500 focus:bg-white transition-all cursor-pointer"
                 >
-                  <Save size={12} /> Fechar Mês / Salvar
-                </button>
+                  <option value="hoje">Hoje</option>
+                  <option value="7dias">Últimos 7 dias</option>
+                  <option value="30dias">Últimos 30 dias</option>
+                  <option value="mes">Este Mês</option>
+                  <option value="ano">Este Ano</option>
+                  <option value="todos">Todos</option>
+                  <option value="personalizado">Personalizado</option>
+                </select>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
-                {history.map((h) => (
-                  <div
-                    key={h.id}
-                    className="p-4 bg-slate-50 rounded-xl border border-[#F0E6D2] text-center"
-                  >
-                    <p className="text-[8px] font-bold text-[#A09898] uppercase tracking-widest">
-                      {h.month}
-                    </p>
-                    <p className="text-xs font-black text-slate-800 mt-1">
-                      {formatCurrency(h.netProfit)}
-                    </p>
+
+              {/* Custom Dates if Personalized */}
+              {selectedPeriod === "personalizado" && (
+                <div className="flex gap-2 lg:col-span-1">
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">Início</label>
+                    <input
+                      type="date"
+                      value={customStartDate}
+                      onChange={(e) => setCustomStartDate(e.target.value)}
+                      className="bg-[#F2F2F7] border border-transparent rounded-xl px-3 py-2 text-xs font-semibold text-[#1C1C1E] outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                    />
                   </div>
-                ))}
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">Fim</label>
+                    <input
+                      type="date"
+                      value={customEndDate}
+                      onChange={(e) => setCustomEndDate(e.target.value)}
+                      className="bg-[#F2F2F7] border border-transparent rounded-xl px-3 py-2 text-xs font-semibold text-[#1C1C1E] outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Status do Pagamento */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">Status do Pagamento</label>
+                <select
+                  value={selectedPaymentStatus}
+                  onChange={(e) => setSelectedPaymentStatus(e.target.value as any)}
+                  className="bg-[#F2F2F7] border border-transparent rounded-xl px-3 py-2.5 text-xs font-semibold text-[#1C1C1E] outline-none focus:border-indigo-500 focus:bg-white transition-all cursor-pointer"
+                >
+                  <option value="all">Todos os status</option>
+                  <option value="paid">Pago</option>
+                  <option value="pending">Pendente</option>
+                  <option value="cancelled">Cancelado</option>
+                </select>
+              </div>
+
+              {/* Forma de Pagamento */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">Forma de Pagamento</label>
+                <select
+                  value={selectedPaymentMethod}
+                  onChange={(e) => setSelectedPaymentMethod(e.target.value as any)}
+                  className="bg-[#F2F2F7] border border-transparent rounded-xl px-3 py-2.5 text-xs font-semibold text-[#1C1C1E] outline-none focus:border-indigo-500 focus:bg-white transition-all cursor-pointer"
+                >
+                  <option value="all">Todas as formas</option>
+                  <option value="pix">PIX / À Vista</option>
+                  <option value="credit_card">Cartão de Crédito</option>
+                  <option value="digital_booklet">Carnê Digital</option>
+                  <option value="other">Outra forma</option>
+                </select>
+              </div>
+
+              {/* Faixa de Valor */}
+              <div className="flex gap-2">
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">Valor Mín.</label>
+                  <input
+                    type="number"
+                    placeholder="Min R$"
+                    value={minValue}
+                    onChange={(e) => setMinValue(e.target.value)}
+                    className="bg-[#F2F2F7] border border-transparent rounded-xl px-3 py-2 text-xs font-semibold text-[#1C1C1E] outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">Valor Máx.</label>
+                  <input
+                    type="number"
+                    placeholder="Max R$"
+                    value={maxValue}
+                    onChange={(e) => setMaxValue(e.target.value)}
+                    className="bg-[#F2F2F7] border border-transparent rounded-xl px-3 py-2 text-xs font-semibold text-[#1C1C1E] outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                  />
+                </div>
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* AREA 2: KPIs Financeiros */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+        
+        {/* Card 1: Faturamento Hoje */}
+        <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Hoje</span>
+            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+              <Calendar size={13} />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-slate-800 font-sans truncate">{formatCurrency(kpis.faturamentoHoje)}</p>
+          <p className="text-[9px] text-[#8E8E93] mt-1 font-semibold truncate uppercase">Faturamento Hoje</p>
+        </div>
+
+        {/* Card 2: Faturamento do Mês */}
+        <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Este Mês</span>
+            <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+              <TrendingUp size={13} />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-slate-800 font-sans truncate">{formatCurrency(kpis.faturamentoMes)}</p>
+          <p className="text-[9px] text-[#8E8E93] mt-1 font-semibold truncate uppercase">Faturamento Mês</p>
+        </div>
+
+        {/* Card 3: Faturamento do Ano */}
+        <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Este Ano</span>
+            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+              <Activity size={13} />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-slate-800 font-sans truncate">{formatCurrency(kpis.faturamentoAno)}</p>
+          <p className="text-[9px] text-[#8E8E93] mt-1 font-semibold truncate uppercase">Faturamento Ano</p>
+        </div>
+
+        {/* Card 4: Ticket Médio */}
+        <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Média</span>
+            <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+              <Percent size={13} />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-slate-800 font-sans truncate">{formatCurrency(kpis.ticketMedio)}</p>
+          <p className="text-[9px] text-[#8E8E93] mt-1 font-semibold truncate uppercase">Ticket Médio</p>
+        </div>
+
+        {/* Card 5: Lucro Estimado */}
+        <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden group hover:shadow-md transition-all col-span-1 md:col-span-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Lucratividade</span>
+            <div className="p-1.5 rounded-lg bg-purple-50 text-purple-600">
+              <DollarSign size={13} />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-indigo-700 font-sans truncate">{formatCurrency(kpis.lucroEstimado)}</p>
+          <p className="text-[9px] text-[#8E8E93] mt-1 font-semibold truncate uppercase">Lucro Líquido Estimado</p>
+        </div>
+
+        {/* Card 6: Pedidos Pagos */}
+        <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Quitados</span>
+            <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+              <CheckCircle size={13} />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-emerald-600 font-sans truncate">{kpis.paidCount}</p>
+          <p className="text-[9px] text-[#8E8E93] mt-1 font-semibold truncate uppercase">Vendas Pagas</p>
+        </div>
+
+        {/* Card 7: Pedidos Pendentes */}
+        <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Pendentes</span>
+            <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+              <Clock size={13} />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-amber-600 font-sans truncate">{kpis.pendingCount}</p>
+          <p className="text-[9px] text-[#8E8E93] mt-1 font-semibold truncate uppercase">Aguardando Pagamento</p>
+        </div>
+
+        {/* Card 8: Pedidos Cancelados */}
+        <div className="bg-white border border-[#E5E5EA] rounded-2xl p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden group hover:shadow-md transition-all">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Cancelados</span>
+            <div className="p-1.5 rounded-lg bg-red-50 text-red-600">
+              <XCircle size={13} />
+            </div>
+          </div>
+          <p className="text-lg font-bold text-red-600 font-sans truncate">{kpis.cancelledCount}</p>
+          <p className="text-[9px] text-[#8E8E93] mt-1 font-semibold truncate uppercase">Cancelados</p>
+        </div>
+
+      </div>
+
+      {/* CORE WORKSPACE GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        
+        {/* AREA 3: Histórico Financeiro & Busca (Colspan 3/5) */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="bg-white border border-[#E5E5EA] rounded-3xl shadow-[0_4px_16px_rgba(0,0,0,0.02)] overflow-hidden">
+            
+            {/* Table Header Controls */}
+            <div className="p-6 border-b border-[#E5E5EA] space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-indigo-600"></div>
+                  <h3 className="font-sans font-semibold text-slate-800 text-sm uppercase tracking-wide">Pedidos do Período ({filteredOrders.length})</h3>
+                </div>
+
+                {/* Instant Search Bar */}
+                <div className="relative w-full md:w-72">
+                  <input
+                    type="text"
+                    placeholder="Número do pedido, cliente ou produto..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-[#F2F2F7] border border-transparent rounded-xl text-xs font-medium text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-inner"
+                  />
+                  <Search className="absolute left-3 top-2.5 text-slate-400" size={13} />
+                </div>
               </div>
             </div>
-          </section>
-        );
 
-      case "analise-inteligente": {
-        const catalogSuggestions = products.slice(0, 3).map((p) => {
-          const price = p.current_price || p.retail_price || 120;
-          const cost = p.estimatedCost || Math.round(price * 0.35);
-          const margin = ((price - cost) / price) * 100;
-          return {
-            id: p.id,
-            name: p.product_name,
-            price,
-            margin: margin.toFixed(0),
-            unitsNeeded: remainingGoal > 0 ? Math.ceil(remainingGoal / price) : 0,
-            image: p.image || "https://images.unsplash.com/photo-1544816155-12df9643f363?w=300"
-          };
-        });
+            {/* List Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#F8F9FA] border-b border-[#E5E5EA] text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">
+                    <th className="py-4 px-6">Código</th>
+                    <th className="py-4 px-4">Cliente</th>
+                    <th className="py-4 px-4 text-right">Valor Bruto</th>
+                    <th className="py-4 px-4 text-right">Custo</th>
+                    <th className="py-4 px-4 text-right">Lucro Est.</th>
+                    <th className="py-4 px-4">Pagamento</th>
+                    <th className="py-4 px-4 text-right">Data</th>
+                    <th className="py-4 px-6 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E5E5EA]">
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((o) => {
+                      const cost = getOrderCost(o);
+                      const profit = (Number(o.total) || 0) - cost;
+                      const isPaid = o.status === "paid" || o.status === "fully_paid" || o.paymentStatus === "paid";
+                      const isCancelled = o.status === "cancelled" || o.paymentStatus === "cancelled";
+                      const statusColor = isPaid 
+                        ? "text-emerald-700 bg-emerald-50 border border-emerald-100" 
+                        : isCancelled 
+                          ? "text-red-700 bg-red-50 border border-red-100" 
+                          : "text-amber-700 bg-amber-50 border border-amber-100";
 
-        const displaySuggestions = catalogSuggestions.length > 0 ? catalogSuggestions : [
-          { name: "Planner Não Datado Premium", price: 180, margin: "65", unitsNeeded: remainingGoal > 0 ? Math.ceil(remainingGoal / 180) : 10, image: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=300" },
-          { name: "Caixas Cartonadas para Batizado", price: 250, margin: "58", unitsNeeded: remainingGoal > 0 ? Math.ceil(remainingGoal / 250) : 8, image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=300" },
-          { name: "Kit Papelaria Romântica C/ Lacre", price: 110, margin: "70", unitsNeeded: remainingGoal > 0 ? Math.ceil(remainingGoal / 110) : 16, image: "https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=300" }
-        ];
+                      let methodLabel = "PIX / À Vista";
+                      if (o.plannedMethod === "credit_card") methodLabel = "Cartão de Crédito";
+                      else if (o.plannedMethod === "digital_booklet") methodLabel = "Carnê Digital";
 
-        const customProductIdeas = [
-          {
-            title: "Planner de Estudos Minimalista",
-            desc: "Capa soft-touch fosca de alta gramatura, miolo focado em produtividade universitária, rastreador de hábitos (habit tracker) e marcos de conquistas. Altíssimo engajamento entre o público jovem.",
-            badge: "Público Estudantil",
-            ticket: 95
-          },
-          {
-            title: "Caderno de Receitas Afetivo",
-            desc: "Lombada costurada copta exposta artesanalmente, folhas com textura rústica e divisórias de papel kraft decoradas em serigrafia tradicional para registrar legados culinários familiares.",
-            badge: "Coleções Afetivas",
-            ticket: 130
-          },
-          {
-            title: "Álbum de Fotos Revestido em Linho Cru",
-            desc: "Cartonagem estrutural de alta fidelidade envolvida em tecido natural de linho cru com plaqueta metálica rebaixada na frente. Espaçadores e folhas pretas de alta gramatura intercaladas com papel vegetal protetor.",
-            badge: "Linha Casamento / Premium",
-            ticket: 220
-          }
-        ];
-
-        const externalTrends = [
-          {
-            title: "Lombo Costurado Exposto (Copta e Japonesa)",
-            trend: "Visualização estética em alta no TikTok e Pinterest (+124% este ano)",
-            text: "O acabamento costurado com linhas coloradas e enceradas expostas na lateral evoca autenticidade, agregando até 60% de valor percebido ao projeto de papelaria fina."
-          },
-          {
-            title: "Paleta Botânica Neutra & Estética Cottagecore",
-            trend: "Destaque internacional de design e moda",
-            text: "Cores sálvia, areia do deserto, terracota e lavanda acinzentada estão desbancando os pastéis saturados clássicos. Produtos com essa roupagem de tecido de linho/algodão têm tido maior giro."
-          },
-          {
-            title: "Gravações em Hot Stamping Dourado e Rosé",
-            trend: "Personalização de Luxo corporativo",
-            text: "Clientes corporativos e noivas dão preferência absoluta a relevos com fita metalizada e lacres de cera verdadeiros em fita cetim. Transmita refinamento desde o unboxing."
-          }
-        ];
-
-        const renewalStrategies = [
-          {
-            title: "Estratégia ABC: Eliminação de Cauda Longa",
-            text: "Produtos que não registraram nenhuma venda ou clique nos últimos 45 dias devem ser retirados do catálogo ativo imediatamente. Concentre a matéria-prima em novos lançamentos limitados."
-          },
-          {
-            title: "Lançamento em Lotes Fechados",
-            text: "Evite produzir itens customizados unitários aleatoriamente. Defina uma abertura oficial de catálogo com prazos específicos de pré-venda. Isso gera escassez e otimiza a compra coletiva de insumos de papelaria."
-          }
-        ];
-
-        return (
-          <section className="space-y-10 animate-in fade-in duration-300">
-            {/* Goal card */}
-            <div className="p-10 rounded-3xl bg-slate-950 text-white border border-slate-900 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-lilac/10 rounded-full blur-[100px] pointer-events-none" />
-              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-                <div className="space-y-3">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[9px] font-black uppercase tracking-wider text-lilac">
-                    <Sparkles size={10} />
-                    <span>Análise Estratégica Inteligente</span>
-                  </div>
-                  <h2 className="text-2xl font-black uppercase tracking-tight font-sans">
-                    Para atingir a meta este mês
-                  </h2>
-                  {remainingGoal > 0 ? (
-                    <p className="text-sm font-medium text-slate-400">
-                      Restam <span className="text-lilac font-black">{formatCurrency(remainingGoal)}</span> para conquistar sua meta estipulada de <span className="text-white font-bold">{formatCurrency(monthlyGoal)}</span>.
-                    </p>
+                      return (
+                        <tr
+                          key={o.id}
+                          onClick={() => setSelectedOrder(o)}
+                          className={`hover:bg-[#F2F2F7]/50 cursor-pointer transition-all duration-150 ${selectedOrder?.id === o.id ? "bg-indigo-50/20" : ""}`}
+                        >
+                          <td className="py-4 px-6 text-xs font-semibold text-indigo-600 font-mono">
+                            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                              <span>#{o.code}</span>
+                              <button 
+                                onClick={() => handleCopyOrderId(o.code)}
+                                className="text-slate-400 hover:text-indigo-600 p-0.5 rounded transition-colors"
+                                title="Copiar código do pedido"
+                              >
+                                {copiedOrderId === o.code ? (
+                                  <span className="text-[9px] text-emerald-600 font-sans">Copiado</span>
+                                ) : (
+                                  <Copy size={11} />
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-xs font-semibold text-[#1C1C1E] truncate max-w-[120px]" title={o.customerName}>
+                            {o.customerName || "Anônimo"}
+                          </td>
+                          <td className="py-4 px-4 text-xs font-bold text-[#1C1C1E] text-right font-sans">
+                            {formatCurrency(Number(o.total) || 0)}
+                          </td>
+                          <td className="py-4 px-4 text-xs font-medium text-slate-500 text-right font-sans">
+                            {formatCurrency(cost)}
+                          </td>
+                          <td className={`py-4 px-4 text-xs font-bold text-right font-sans ${profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                            {formatCurrency(profit)}
+                          </td>
+                          <td className="py-4 px-4 text-[11px] font-medium text-slate-600">
+                            {methodLabel}
+                          </td>
+                          <td className="py-4 px-4 text-xs text-slate-500 text-right font-sans">
+                            {format(parseOrderDate(o), "dd/MM/yyyy")}
+                          </td>
+                          <td className="py-4 px-6 text-center">
+                            <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusColor}`}>
+                              {isPaid ? "Pago" : isCancelled ? "Cancelado" : "Pendente"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
-                    <p className="text-sm font-medium text-emerald-400">
-                      Parabéns! Sua meta de faturamento bruto mensal de <span className="font-bold">{formatCurrency(monthlyGoal)}</span> foi plenamente alcançada!
-                    </p>
+                    <tr>
+                      <td colSpan={8} className="py-12 text-center text-xs font-semibold uppercase tracking-wider text-[#8E8E93]">
+                        Nenhum registro encontrado para os filtros selecionados.
+                      </td>
+                    </tr>
                   )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* INDICATORS & INSIGHTS (Colspan 2/5) */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white border border-[#E5E5EA] rounded-3xl p-6 shadow-[0_4px_16px_rgba(0,0,0,0.02)] space-y-6">
+            
+            <div className="flex items-center justify-between border-b border-[#E5E5EA] pb-4">
+              <h3 className="font-sans font-semibold text-slate-800 text-sm uppercase tracking-wide">Indicadores Operacionais</h3>
+              <Sparkles size={16} className="text-indigo-600 animate-pulse" />
+            </div>
+
+            {/* Indicator 1: MoM Growth */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-[#E5E5EA]/80 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Crescimento MoM</span>
+                <p className="text-sm font-semibold text-[#1C1C1E] mt-1">Este mês vs Mês Anterior</p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className="text-[10px] font-medium text-slate-500">Mês anterior:</span>
+                  <span className="text-[10px] font-semibold text-slate-700">{formatCurrency(indicators.prevMonthRevenue)}</span>
                 </div>
-                {remainingGoal > 0 && (
-                  <div className="flex gap-4">
-                    <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
-                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Atingido</p>
-                      <p className="text-lg font-black text-emerald-400 mt-1">{Math.round((grossRevenue / monthlyGoal) * 100)}%</p>
+              </div>
+              <div className="text-right">
+                <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
+                  indicators.growthMoM >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                }`}>
+                  {indicators.growthMoM >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                  <span>{indicators.growthMoM.toFixed(1)}%</span>
+                </div>
+                <p className="text-[10px] text-slate-400 font-semibold mt-1">Mês atual: {formatCurrency(indicators.currentMonthRevenue)}</p>
+              </div>
+            </div>
+
+            {/* Indicator 2: Most Profitable Products */}
+            <div className="space-y-3">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93]">Produtos Mais Lucrativos</h4>
+              <div className="space-y-3">
+                {indicators.topProducts.length > 0 ? (
+                  indicators.topProducts.map((p, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-semibold text-slate-800 truncate max-w-[150px]">{p.name}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-medium text-slate-500">{p.count} un</span>
+                          <span className="font-bold text-emerald-600">{formatCurrency(p.profit)}</span>
+                        </div>
+                      </div>
+                      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-indigo-600 rounded-full" 
+                          style={{ width: `${Math.min(100, (p.profit / (indicators.topProducts[0]?.profit || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-center">
-                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Faltante</p>
-                      <p className="text-lg font-black text-lilac mt-1">{formatCurrency(remainingGoal)}</p>
-                    </div>
-                  </div>
+                  ))
+                ) : (
+                  <p className="text-[10px] text-slate-500 italic">Nenhum produto faturado no período.</p>
                 )}
               </div>
             </div>
 
-            {/* Catalog Suggestions */}
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xs font-black uppercase tracking-widest text-[#A09898] flex items-center gap-2">
-                  <Package size={14} className="text-[#A09898]" /> Sugestões do Catálogo Ativo
-                </h3>
-                <p className="text-[10px] text-slate-400 uppercase mt-1">Produtos prontos com boa aceitação para acelerar vendas</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {displaySuggestions.map((item, idx) => (
-                  <div key={idx} className="bg-white border border-[#F0E6D2] rounded-3xl p-6 shadow-sm overflow-hidden flex flex-col justify-between">
-                    <div>
-                      <div className="h-40 rounded-2xl overflow-hidden bg-slate-50 mb-4 border border-[#F0E6D2]/50 relative">
-                        <img 
-                          src={item.image} 
-                          alt={item.name} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1544816155-12df9643f363?w=300";
-                          }}
-                        />
-                        <div className="absolute top-3 right-3 bg-black/75 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-wider">
-                          Margem ~{item.margin}%
-                        </div>
+            {/* Indicator 3: Most Profitable Categories */}
+            <div className="space-y-3 border-t border-[#E5E5EA] pt-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93]">Categorias Mais Lucrativas</h4>
+              <div className="space-y-3">
+                {indicators.topCategories.length > 0 ? (
+                  indicators.topCategories.map((c, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-semibold text-slate-800">{c.category}</span>
+                        <span className="font-bold text-indigo-600">{formatCurrency(c.profit)}</span>
                       </div>
-                      <h4 className="font-sans font-black text-slate-800 text-sm truncate uppercase tracking-tight">{item.name}</h4>
-                      <p className="text-xs text-slate-600 font-bold mt-2">{formatCurrency(item.price)}</p>
+                      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-purple-600 rounded-full" 
+                          style={{ width: `${Math.min(100, (c.profit / (indicators.topCategories[0]?.profit || 1)) * 100)}%` }}
+                        ></div>
+                      </div>
                     </div>
-
-                    <div className="mt-6 pt-4 border-t border-slate-100">
-                      {remainingGoal > 0 ? (
-                        <div className="flex justify-between items-center bg-lilac/5 border border-lilac/10 p-3 rounded-xl">
-                          <span className="text-[8px] uppercase font-black tracking-wider text-lilac">Vendas Necessárias:</span>
-                          <span className="font-black text-xs text-lilac">{item.unitsNeeded} un</span>
-                        </div>
-                      ) : (
-                        <p className="text-[9px] uppercase font-bold text-emerald-600 tracking-wider">Alto potencial de margem</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-[10px] text-slate-500 italic">Nenhuma categoria registrada.</p>
+                )}
               </div>
             </div>
 
-            {/* Custom product Ideas & External Trends */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Product customized ideas */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-2">
-                  <Lightbulb size={16} className="text-yellow-500" />
-                  <h3 className="text-xs font-black uppercase tracking-widest text-[#A09898]">Novos Produtos Customizados (Ideias)</h3>
-                </div>
-                <div className="space-y-4">
-                  {customProductIdeas.map((idea, idx) => (
-                    <div key={idx} className="p-6 bg-white border border-[#F0E6D2] rounded-3xl shadow-sm relative overflow-hidden group hover:border-lilac/30 transition-all">
-                      <div className="flex justify-between items-start gap-4">
-                        <div>
-                          <span className="inline-block bg-slate-100 text-[#4A4444] px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest mb-2">
-                            {idea.badge}
-                          </span>
-                          <h4 className="font-sans font-black text-slate-800 text-sm">{idea.title}</h4>
-                          <p className="text-xs text-[#A09898] mt-2 font-medium leading-relaxed">{idea.desc}</p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <span className="text-[10px] font-bold text-[#A09898] uppercase block">Ticket Sugerido</span>
-                          <span className="text-sm font-black text-lilac block mt-0.5">{formatCurrency(idea.ticket)}</span>
-                        </div>
+            {/* Indicator 4: Most Used Payment Methods */}
+            <div className="space-y-3 border-t border-[#E5E5EA] pt-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#8E8E93]">Métodos de Pagamento</h4>
+              <div className="space-y-2.5">
+                {indicators.topPaymentMethods.length > 0 ? (
+                  indicators.topPaymentMethods.map((pm, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-xs p-2 bg-slate-50 rounded-xl border border-transparent hover:border-[#E5E5EA] transition-all">
+                      <span className="font-semibold text-slate-700">{pm.label}</span>
+                      <div className="text-right">
+                        <span className="font-bold text-slate-800 block">{formatCurrency(pm.totalValue)}</span>
+                        <span className="text-[9px] font-semibold text-slate-400">{pm.count} vendas</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* External Trends */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-2">
-                  <Compass size={16} className="text-sky-500" />
-                  <h3 className="text-xs font-black uppercase tracking-widest text-[#A09898]">Tendências Externas Relevantes</h3>
-                </div>
-                <div className="space-y-4 animate-in fade-in">
-                  {externalTrends.map((trend, idx) => (
-                    <div key={idx} className="p-6 bg-white border border-[#F0E6D2] rounded-3xl shadow-sm relative">
-                      <div className="flex items-center gap-2 text-rose-500 mb-1.5">
-                        <ArrowUpRight size={14} />
-                        <span className="text-[9px] font-black uppercase tracking-wider">{trend.trend}</span>
-                      </div>
-                      <h4 className="font-sans font-black text-slate-800 text-xs">{trend.title}</h4>
-                      <p className="text-xs text-[#A09898] mt-2 font-medium leading-relaxed">{trend.text}</p>
-                    </div>
-                  ))}
-                </div>
+                  ))
+                ) : (
+                  <p className="text-[10px] text-slate-500 italic">Sem registros de pagamento.</p>
+                )}
               </div>
             </div>
 
-            {/* Catalog Renewal strategies */}
-            <div className="p-8 rounded-3xl bg-[#FAF9F6] border border-[#F0E6D2] space-y-6">
-              <div className="flex items-center gap-2">
-                <Layers size={16} className="text-[#A09898]" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-slate-800">Diretrizes de Renovação & Estruturação do Catálogo</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {renewalStrategies.map((strat, idx) => (
-                  <div key={idx} className="bg-white p-6 rounded-2xl border border-[#F0E6D2]/50 shadow-sm">
-                    <h4 className="font-black text-xs text-slate-900 uppercase tracking-tight">{strat.title}</h4>
-                    <p className="text-xs text-[#A09898] mt-2 font-medium leading-relaxed">{strat.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        );
-      }
-
-      case "analise": {
-        // Calculations for Cost analysis
-        const totalInsumosStockValue = insumos.reduce((sum, ins) => sum + (Number(ins.costPrice) || 0), 0);
-        const totalInsumosCount = insumos.length;
-        
-        // Grouped by Category spending
-        const spendByCategory = insumos.reduce((acc, ins) => {
-          const category = ins.category || "Outros";
-          acc[category] = (acc[category] || 0) + (Number(ins.costPrice) || 0);
-          return acc;
-        }, {} as Record<string, number>);
-
-        // Filter and Search for Insumos
-        const searchFiltered = insumos.filter((ins) => {
-          if (!insumosSearchTerm) return true;
-          const term = insumosSearchTerm.toLowerCase();
-          return (
-            ins.name.toLowerCase().includes(term) ||
-            ins.code.toLowerCase().includes(term) ||
-            (ins.category && ins.category.toLowerCase().includes(term))
-          );
-        });
-
-        // Interactive simulator formulas
-        const laborCost = simLaborHours * simLaborRate;
-        const directCost = simMaterialCost + laborCost;
-        // markup formula: DirectCost / (1 - (Fixed% + Taxes% + Fees% + Margin%) / 100)
-        const totalSimRates = (simFixedCostPct + simTaxRate + simFeesRate + simDesiredMargin) / 100;
-        const suggestedPrice = totalSimRates < 1 ? directCost / (1 - totalSimRates) : directCost * 2.5;
-
-        // Custom net profit
-        const simTaxExpense = simCustomPrice * (simTaxRate / 100);
-        const simFixedExpense = simCustomPrice * (simFixedCostPct / 100);
-        const simFeesExpense = simCustomPrice * (simFeesRate / 100);
-        const simNetProfit = simCustomPrice - (directCost + simTaxExpense + simFixedExpense + simFeesExpense);
-        const simMarginPct = simCustomPrice > 0 ? (simNetProfit / simCustomPrice) * 100 : 0;
-
-        // Margin health feedback
-        let marginFeedback = { 
-          label: "Prejuízo Líquido", 
-          bg: "bg-red-50 text-red-700 border-red-200", 
-          desc: "Atenção crucial! Você está cobrindo custos básicos com prejuízo nas contas." 
-        };
-        if (simMarginPct >= 35) {
-          marginFeedback = { 
-            label: "Margem Excelente", 
-            bg: "bg-emerald-50 text-emerald-700 border-emerald-200", 
-            desc: "Margem super segura e extremamente sustentável para o atelier artesanal!" 
-          };
-        } else if (simMarginPct >= 20) {
-          marginFeedback = { 
-            label: "Margem Saudável", 
-            bg: "bg-indigo-50 text-indigo-700 border-indigo-200", 
-            desc: "Margem recomendável de mercado. Cobre despesas e sustenta com folga." 
-          };
-        } else if (simMarginPct >= 0) {
-          marginFeedback = { 
-            label: "Margem Apertada", 
-            bg: "bg-amber-50 text-amber-700 border-amber-200", 
-            desc: "Margem muito limitada. Qualquer aumento de impostos ou desperdício zera o lucro." 
-          };
-        }
-
-        return (
-          <section className="space-y-10 animate-in fade-in duration-300">
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-6 rounded-2xl bg-white border border-[#F0E6D2] shadow-sm">
-                <div className="flex items-center gap-3">
-                  <Package className="text-lilac" size={20} />
-                  <span className="text-[9px] font-black uppercase text-[#A09898] tracking-widest">Aporte Total em Insumos</span>
-                </div>
-                <p className="text-2xl font-black text-slate-800 mt-3 font-sans">{formatCurrency(totalInsumosStockValue)}</p>
-                <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Investidos na matéria-prima ativa</p>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-white border border-[#F0E6D2] shadow-sm">
-                <div className="flex items-center gap-3">
-                  <Layers className="text-sky-500" size={20} />
-                  <span className="text-[9px] font-black uppercase text-[#A09898] tracking-widest">Insumos Cadastrados</span>
-                </div>
-                <p className="text-2xl font-black text-slate-800 mt-3 font-sans">{totalInsumosCount} Itens</p>
-                <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Diferentes matérias-primas</p>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-white border border-[#F0E6D2] shadow-sm">
-                <div className="flex items-center gap-3">
-                  <Percent className="text-emerald-500" size={20} />
-                  <span className="text-[9px] font-black uppercase text-[#A09898] tracking-widest">CMV Líquido Estimado</span>
-                </div>
-                <p className="text-2xl font-black text-slate-800 mt-3 font-sans">35.0%</p>
-                <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Custo projetado sobre faturamento</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-              {/* Left Column (3/5) - BASE PRICING SIMULATOR */}
-              <div className="lg:col-span-3 space-y-6">
-                <div className="p-8 rounded-3xl bg-white border border-[#F0E6D2] shadow-md space-y-6">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                    <div className="flex items-center gap-2">
-                      <Calculator className="text-lilac" size={18} />
-                      <h3 className="font-sans font-black uppercase tracking-wider text-slate-800 text-sm">Precificação Base & Lucro Líquido</h3>
-                    </div>
-                    <span className="text-[8px] font-black uppercase bg-lilac/10 text-lilac px-2.5 py-1 rounded-full">Simulador interativo</span>
-                  </div>
-
-                  {/* Product Choice / Inputs */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-[#4A4444]">Vincular com Produto</label>
-                      <select 
-                        value={selectedSimProduct}
-                        onChange={(e) => setSelectedSimProduct(e.target.value)}
-                        className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-lilac"
-                      >
-                        <option value="custom">-- Simulação Livre / Manual --</option>
-                        {products.map((p) => (
-                          <option key={p.id} value={p.id}>{p.product_name} ({formatCurrency(p.current_price || p.retail_price)})</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-[#4A4444]">Custo de Materiais (Insumos) (R$)</label>
-                      <input 
-                        type="number"
-                        disabled={selectedSimProduct !== "custom"}
-                        value={simMaterialCost}
-                        onChange={(e) => setSimMaterialCost(Math.max(0, parseFloat(e.target.value) || 0))}
-                        className="bg-slate-50 disabled:opacity-60 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-lilac"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Labor slider fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-[#4A4444]">Tempos de Mão de Obra (Horas): {simLaborHours}h</label>
-                      <input 
-                        type="range"
-                        min="0.5"
-                        max="24"
-                        step="0.5"
-                        value={simLaborHours}
-                        onChange={(e) => setSimLaborHours(parseFloat(e.target.value) || 1)}
-                        className="h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-lilac"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-[#4A4444]">Valor Hora de Trabalho (R$/hora)</label>
-                      <input 
-                        type="number"
-                        value={simLaborRate}
-                        onChange={(e) => setSimLaborRate(Math.max(0, parseFloat(e.target.value) || 0))}
-                        className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none focus:border-lilac"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Fixed allocation % and Taxes & Fees slider */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-50 pt-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest text-[#A09898]">Rateio Fixo (%)</label>
-                      <input 
-                        type="number"
-                        value={simFixedCostPct}
-                        onChange={(e) => setSimFixedCostPct(Math.max(0, parseFloat(e.target.value) || 0))}
-                        className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest text-[#A09898]">Impostos (%)</label>
-                      <input 
-                        type="number"
-                        value={simTaxRate}
-                        onChange={(e) => setSimTaxRate(Math.max(0, parseFloat(e.target.value) || 0))}
-                        className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[8px] font-black uppercase tracking-widest text-[#A09898]">Taxas Operacionais (%)</label>
-                      <input 
-                        type="number"
-                        value={simFeesRate}
-                        onChange={(e) => setSimFeesRate(Math.max(0, parseFloat(e.target.value) || 0))}
-                        className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-slate-800 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Calculations breakdown screen */}
-                  <div className="bg-[#FAF9F6] rounded-2xl p-6 space-y-4 border border-[#F0E6D2]">
-                    <div className="grid grid-cols-2 gap-4 text-xs font-medium text-slate-600">
-                      <div>Materiais Diretos:</div>
-                      <div className="text-right font-bold text-slate-800">{formatCurrency(simMaterialCost)}</div>
-
-                      <div>Mão de Obra ({simLaborHours}h x {formatCurrency(simLaborRate)}):</div>
-                      <div className="text-right font-bold text-slate-800">{formatCurrency(laborCost)}</div>
-
-                      <div className="text-slate-800 font-bold border-t border-slate-200/50 pt-2">Custo Direto:</div>
-                      <div className="text-right font-black text-slate-900 border-t border-slate-200/50 pt-2">{formatCurrency(directCost)}</div>
-                    </div>
-
-                    <div className="border-t border-dashed border-[#F0E6D2] pt-4 flex justify-between items-center bg-white p-4 rounded-xl">
-                      <div>
-                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">Preço de Venda Sugerido</span>
-                        <span className="text-[8px] text-[#A09898] uppercase block mt-0.5">(Margem Almejada: {simDesiredMargin}%)</span>
-                      </div>
-                      <span className="text-xl font-black text-slate-950 font-sans">{formatCurrency(suggestedPrice)}</span>
-                    </div>
-                  </div>
-
-                  {/* REAL NET PROFIT CALCULATION FIELD (Based on Custom Price) */}
-                  <div className="space-y-4 pt-2">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[9px] font-black uppercase tracking-widest text-[#4A4444]">Seu Preço Praticado de Venda (R$)</label>
-                      <input 
-                        type="number"
-                        value={simCustomPrice}
-                        onChange={(e) => setSimCustomPrice(Math.max(0, parseFloat(e.target.value) || 0))}
-                        className="bg-white border border-[#F0E6D2] rounded-xl p-3 text-sm font-black text-slate-800 outline-none focus:border-lilac shadow-sm"
-                      />
-                    </div>
-
-                    {/* Results panel for margins */}
-                    <div className={`p-5 rounded-2xl border ${marginFeedback.bg} flex justify-between items-center transition-all`}>
-                      <div className="space-y-1">
-                        <span className="text-[10px] uppercase font-black tracking-wider block">{marginFeedback.label}</span>
-                        <p className="text-[9px] opacity-80 leading-relaxed font-bold">{marginFeedback.desc}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-[9px] uppercase font-black opacity-60 block">Lucro Líquido Real</span>
-                        <span className="text-sm font-black block mt-0.5">{formatCurrency(simNetProfit)} ({simMarginPct.toFixed(0)}%)</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column (2/5) - INSUMO ANALYSIS BY CATEGORY */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="p-8 rounded-3xl bg-white border border-[#F0E6D2] shadow-sm space-y-6 flex flex-col h-full justify-between">
-                  <div>
-                    <h3 className="font-sans font-black uppercase tracking-wider text-slate-800 text-xs border-b border-slate-100 pb-4 flex items-center gap-2">
-                      <Layers size={14} className="text-sky-500" /> Análise de Insumos por Categoria
-                    </h3>
-
-                    {/* Categorized spending lists */}
-                    <div className="space-y-4 mt-6">
-                      {Object.entries(spendByCategory).map(([cat, totalSpent]) => (
-                        <div key={cat} className="flex justify-between items-center p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                          <div>
-                            <span className="text-xs font-black text-slate-800 uppercase tracking-tight">{cat}</span>
-                            <span className="block text-[8px] font-black text-slate-400 mt-0.5 uppercase">
-                              {insumos.filter(i => i.category === cat || (!i.category && cat === "Outros")).length} Itens no estoque
-                            </span>
-                          </div>
-                          <span className="font-black text-xs text-slate-950">{formatCurrency(totalSpent)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Material search block */}
-                  <div className="space-y-4 mt-8 pt-4 border-t border-slate-100">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-[#A09898]">Consulta de Custo Unitário</span>
-                    </div>
-
-                    <div className="relative">
-                      <input 
-                        type="text"
-                        placeholder="Pesquisar insumo..."
-                        value={insumosSearchTerm}
-                        onChange={(e) => setInsumosSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-lilac"
-                      />
-                      <Search className="absolute left-3 top-3 text-slate-400" size={13} />
-                    </div>
-
-                    <div className="max-h-[220px] overflow-y-auto pr-1 space-y-2.5 scrollbar-hide">
-                      {searchFiltered.slice(0, 5).map((ins) => {
-                        const count = ins.quantity || 1;
-                        const unitPriceVal = ins.unitValue || (ins.costPrice / count);
-                        return (
-                          <div key={ins.id} className="flex justify-between items-center p-2.5 bg-slate-50/20 hover:bg-slate-50 rounded-lg border border-slate-100/50 transition-all text-xs">
-                            <div>
-                              <span className="font-black text-slate-800 text-[11px] block truncate max-w-[120px]">{ins.name}</span>
-                              <span className="text-[8px] font-black text-slate-400 block uppercase">Código: {ins.code}</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="font-black text-slate-800 block">{formatCurrency(unitPriceVal)} / {ins.unit}</span>
-                              <span className="text-[8px] text-slate-400 font-bold block">Estoque: {count} {ins.unit}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {searchFiltered.length === 0 && (
-                        <p className="text-center text-[9px] uppercase font-bold text-[#A09898] py-4">Nenhum insumo localizado.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        );
-      }
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <div className="space-y-12 pb-32 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">
-            Hub Financeiro Premium
-          </h2>
-          <p className="text-[#A09898] text-[10px] font-black uppercase tracking-[0.3em] mt-2">
-            Visibilidade total da sua lucratividade
-          </p>
-        </div>
-        <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-[#F0E6D2] shadow-sm">
-          <button 
-            onClick={() => exportFinanceReportPDF({
-              companyId,
-              filterMonth,
-              grossRevenue,
-              netProfit,
-              totalExpenses,
-              history,
-              currentMonthOrders,
-              fixedCosts,
-              taxesRate,
-              variableTaxes,
-              cogsEstimate,
-              totalManualInflows,
-              totalManualOutflows,
-              monthEntries
-            })}
-            title="Exportar PDF Financeiro"
-            className="p-3 bg-white hover:bg-[#FAF9F6] text-[#6d5443] hover:text-black rounded-xl transition-all hover:shadow-md flex items-center gap-2 text-[9px] uppercase tracking-widest font-bold"
-          >
-            <Download size={16} />
-            <span>Exportar PDF</span>
-          </button>
-          <div className="h-6 w-px bg-slate-200" />
-          <div className="flex items-center gap-3 px-4">
-            <Calendar size={18} className="text-slate-900" />
-            <select
-              value={format(filterMonth, "yyyy-MM")}
-              onChange={(e) =>
-                setFilterMonth(new Date(e.target.value + "-01T00:00:00"))
-              }
-              className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer text-slate-900"
-            >
-              {[0, 1, 2, 3, 4, 5, 6].map((i) => {
-                const d = subMonths(new Date(), i);
-                return (
-                  <option
-                    key={format(d, "yyyy-MM")}
-                    value={format(d, "yyyy-MM")}
-                  >
-                    {format(d, "MMMM yyyy", { locale: ptBR })}
-                  </option>
-                );
-              })}
-            </select>
           </div>
         </div>
+
       </div>
 
-      <TabNav />
+      {/* AREA 4: PAINEL LATERAL DE DETALHES (Sidebar Drawer) */}
+      <AnimatePresence>
+        {selectedOrder && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.3 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedOrder(null)}
+              className="fixed inset-0 bg-black z-40 cursor-pointer"
+            />
 
-      {renderActiveSection()}
+            {/* Drawer */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white z-50 shadow-2xl flex flex-col overflow-hidden"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-[#E5E5EA] flex justify-between items-start bg-[#F8F9FA]">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="bg-indigo-600 text-white text-[9px] font-bold px-2 py-0.5 rounded font-mono">#{selectedOrder.code}</span>
+                    <span className="text-[10px] text-[#8E8E93] font-semibold">{format(parseOrderDate(selectedOrder), "dd/MM/yyyy HH:mm")}</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800">{selectedOrder.customerName || "Cliente não informado"}</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">{selectedOrder.contact || "Sem telefone cadastrado"}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="p-2 hover:bg-[#E5E5EA] text-[#8E8E93] hover:text-[#1C1C1E] rounded-full transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Sidebar Content Scroll Area */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+                
+                {/* 1. Resumo Financeiro */}
+                <div className="space-y-3 bg-[#F2F2F7]/50 p-4 rounded-2xl border border-[#E5E5EA]/60">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93] border-b border-[#E5E5EA] pb-1.5">Resumo Financeiro</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">Valor Total Bruto:</span>
+                      <span className="font-bold text-slate-800">{formatCurrency(selectedOrder.total)}</span>
+                    </div>
+                    {selectedOrder.hasSignal && (
+                      <>
+                        <div className="flex justify-between text-emerald-600">
+                          <span className="font-medium">Sinal Pago:</span>
+                          <span className="font-bold">{formatCurrency(selectedOrder.signalValue || 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-amber-600">
+                          <span className="font-medium">Saldo Pendente:</span>
+                          <span className="font-bold">{formatCurrency(Math.max(0, selectedOrder.total - (selectedOrder.signalValue || 0)))}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. Produtos Vendidos */}
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93] border-b border-[#E5E5EA] pb-1.5">Produtos Vendidos</h4>
+                  <div className="space-y-3">
+                    {selectedOrder.items?.map((item, idx) => {
+                      const itemPrice = item.current_price || item.retail_price || 0;
+                      let itemCost = item.estimatedCost;
+                      if (itemCost === undefined || itemCost === null || itemCost === 0) {
+                        const original = products.find(p => p.id === (item.productId || item.id));
+                        itemCost = (original && original.estimatedCost) || (itemPrice * 0.35);
+                      }
+                      const itemProfit = itemPrice - itemCost;
+                      const itemMargin = itemPrice > 0 ? (itemProfit / itemPrice) * 100 : 0;
+
+                      return (
+                        <div key={idx} className="flex items-center justify-between p-3 bg-white border border-[#E5E5EA] rounded-xl shadow-sm text-xs">
+                          <div>
+                            <span className="font-bold text-slate-800 block truncate max-w-[180px]">{item.product_name}</span>
+                            <span className="text-[10px] text-[#8E8E93] font-semibold mt-0.5 block">{item.quantity} un x {formatCurrency(itemPrice)}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-bold text-slate-800 block">{formatCurrency(itemPrice * item.quantity)}</span>
+                            <span className="text-[9px] text-emerald-600 font-semibold block">Margem {itemMargin.toFixed(0)}%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 3. Custos Envolvidos & Lucro Estimado */}
+                <div className="space-y-3 bg-indigo-50/10 p-4 rounded-2xl border border-indigo-100/40">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 border-b border-indigo-100/50 pb-1.5">Custos e Rentabilidade</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">Custos de Produção (Estimado):</span>
+                      <span className="font-bold text-slate-700">- {formatCurrency(getOrderCost(selectedOrder))}</span>
+                    </div>
+                    {selectedOrder.shippingCost ? (
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Custo de Frete / Entrega:</span>
+                        <span className="font-bold text-slate-700">- {formatCurrency(selectedOrder.shippingCost)}</span>
+                      </div>
+                    ) : null}
+                    {selectedOrder.marketplaceTax ? (
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Comissão Marketplace ({selectedOrder.marketplaceTax}%):</span>
+                        <span className="font-bold text-slate-700">- {formatCurrency(selectedOrder.total * (selectedOrder.marketplaceTax / 100))}</span>
+                      </div>
+                    ) : null}
+                    
+                    <div className="border-t border-[#E5E5EA] pt-2.5 flex justify-between items-center">
+                      <div>
+                        <span className="font-bold text-indigo-700 block">LUCRO ESTIMADO</span>
+                        <span className="text-[10px] text-slate-400 font-semibold uppercase">Excluindo frete</span>
+                      </div>
+                      <span className="text-lg font-bold text-indigo-700">
+                        {formatCurrency(selectedOrder.total - getOrderCost(selectedOrder))}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Forma de Pagamento & Data */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-[#F2F2F7]/50 rounded-xl border border-[#E5E5EA]/60 text-xs">
+                    <span className="text-[9px] font-bold text-[#8E8E93] uppercase block">Forma de Pagamento</span>
+                    <span className="font-bold text-slate-800 block mt-1">
+                      {selectedOrder.plannedMethod === "credit_card" ? "Cartão de Crédito" : selectedOrder.plannedMethod === "digital_booklet" ? "Carnê Digital" : "PIX / À Vista"}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-[#F2F2F7]/50 rounded-xl border border-[#E5E5EA]/60 text-xs">
+                    <span className="text-[9px] font-bold text-[#8E8E93] uppercase block">Data da Venda</span>
+                    <span className="font-bold text-slate-800 block mt-1">
+                      {format(parseOrderDate(selectedOrder), "dd/MM/yyyy")}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 5. Histórico do Pedido (Transições de Status) */}
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93] border-b border-[#E5E5EA] pb-1.5">Histórico do Pedido</h4>
+                  <div className="relative pl-4 border-l-2 border-slate-200 ml-2 space-y-4 text-xs">
+                    {selectedOrder.history && selectedOrder.history.length > 0 ? (
+                      selectedOrder.history.map((h, hIdx) => {
+                        let hDate = new Date();
+                        if (h.timestamp) {
+                          if (typeof h.timestamp.toDate === "function") hDate = h.timestamp.toDate();
+                          else if (h.timestamp.seconds) hDate = new Date(h.timestamp.seconds * 1000);
+                          else hDate = new Date(h.timestamp);
+                        }
+                        return (
+                          <div key={hIdx} className="relative">
+                            {/* Dot indicator */}
+                            <div className="absolute -left-[23px] top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-600 border-2 border-white"></div>
+                            <div className="flex justify-between">
+                              <span className="font-bold text-slate-700 uppercase tracking-tight">{h.status}</span>
+                              <span className="text-[10px] text-slate-400">{format(hDate, "dd/MM/yy HH:mm")}</span>
+                            </div>
+                            {h.notes && <p className="text-[11px] text-slate-500 mt-0.5">{h.notes}</p>}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="relative">
+                        <div className="absolute -left-[23px] top-1.5 w-2.5 h-2.5 rounded-full bg-slate-400 border-2 border-white"></div>
+                        <span className="font-bold text-slate-500 uppercase tracking-tight">Criado</span>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Pedido criado e registrado no sistema.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };

@@ -219,9 +219,95 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["productId", "userId", "userName", "rating", "createdAt"]
+    },
+    "ProductCollection": {
+      "title": "Product Collection",
+      "description": "Permanent product grouping",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "description": { "type": "string" },
+        "image": { "type": "string" },
+        "banner": { "type": "string" },
+        "color": { "type": "string" },
+        "order": { "type": "number" },
+        "active": { "type": "boolean" },
+        "productIds": { "type": "array" },
+        "companyId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug", "active", "productIds"]
+    },
+    "ProductCampaign": {
+      "title": "Product Campaign",
+      "description": "Seasonal promotional campaign independent of collections",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "slogan": { "type": "string" },
+        "description": { "type": "string" },
+        "bannerDesktop": { "type": "string" },
+        "bannerMobile": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "status": { "type": "string" },
+        "productIds": { "type": "array", "items": { "type": "string" } },
+        "featuredProductId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug", "status", "productIds"]
+    },
+    "MediaFolder": {
+      "title": "Media Folder",
+      "description": "Folders in media library",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "parentId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "MediaFile": {
+      "title": "Media File",
+      "description": "Files in media library",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "url": { "type": "string" },
+        "format": { "type": "string" },
+        "size": { "type": "number" },
+        "dimensions": { "type": "string" },
+        "origin": { "type": "string" },
+        "folderId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "url", "format", "size"]
     }
   },
   "firestore": {
+    "/media_folders/{folderId}": {
+      "schema": "MediaFolder",
+      "description": "Folders in media center"
+    },
+    "/media_files/{fileId}": {
+      "schema": "MediaFile",
+      "description": "Files in media center"
+    },
+    "/product_collections/{collectionId}": {
+      "schema": "ProductCollection",
+      "description": "Permanent product collections"
+    },
+    "/product_campaigns/{campaignId}": {
+      "schema": "ProductCampaign",
+      "description": "Seasonal promotional campaigns"
+    },
     "/addons/{addonId}": {
       "schema": "Addon",
       "description": "Extra items for checkout"

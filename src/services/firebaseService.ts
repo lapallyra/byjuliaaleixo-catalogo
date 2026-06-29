@@ -17,7 +17,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { sendTelegramNotification } from './telegramService';
-import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig } from '../types';
+import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig, Coupon } from '../types';
 
 export enum OperationType {
   CREATE = 'create',
@@ -1301,4 +1301,215 @@ export const performSystemReset = async (): Promise<void> => {
     }
   }
 };
+
+export const subscribeToCollections = (callback: (collections: any[]) => void) => {
+  const path = 'product_collections';
+  const q = query(collection(db, path));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
+};
+
+export const saveCollection = async (data: any) => {
+  const path = 'product_collections';
+  try {
+    if (data.id) {
+      const { id, ...rest } = data;
+      await setDoc(doc(db, path, id), sanitize(rest), { merge: true });
+      return id;
+    } else {
+      const docRef = await addDoc(collection(db, path), sanitize({
+        ...data,
+        createdAt: serverTimestamp()
+      }));
+      return docRef.id;
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+};
+
+export const deleteCollection = async (id: string) => {
+  const path = `product_collections/${id}`;
+  try {
+    await deleteDoc(doc(db, 'product_collections', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+};
+
+// ----------------------------------------------------
+// MEDIA CENTER (FOLDERS & FILES)
+// ----------------------------------------------------
+
+export const subscribeToMediaFolders = (callback: (folders: any[]) => void) => {
+  const path = 'media_folders';
+  const q = query(collection(db, path));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
+};
+
+export const saveMediaFolder = async (data: any) => {
+  const path = 'media_folders';
+  try {
+    if (data.id) {
+      const { id, ...rest } = data;
+      await setDoc(doc(db, path, id), sanitize(rest), { merge: true });
+      return id;
+    } else {
+      const docRef = await addDoc(collection(db, path), sanitize({
+        ...data,
+        createdAt: serverTimestamp()
+      }));
+      return docRef.id;
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+};
+
+export const deleteMediaFolder = async (id: string) => {
+  const path = `media_folders/${id}`;
+  try {
+    await deleteDoc(doc(db, 'media_folders', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+};
+
+export const subscribeToMediaFiles = (callback: (files: any[]) => void) => {
+  const path = 'media_files';
+  const q = query(collection(db, path));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
+};
+
+export const saveMediaFile = async (data: any) => {
+  const path = 'media_files';
+  try {
+    if (data.id) {
+      const { id, ...rest } = data;
+      await setDoc(doc(db, path, id), sanitize(rest), { merge: true });
+      return id;
+    } else {
+      const docRef = await addDoc(collection(db, path), sanitize({
+        ...data,
+        createdAt: serverTimestamp()
+      }));
+      return docRef.id;
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+};
+
+export const deleteMediaFile = async (id: string) => {
+  const path = `media_files/${id}`;
+  try {
+    await deleteDoc(doc(db, 'media_files', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+};
+
+// ----------------------------------------------------
+// CAMPAIGNS (CAMPANHAS)
+// ----------------------------------------------------
+
+export const subscribeToCampaigns = (callback: (campaigns: any[]) => void) => {
+  const path = 'product_campaigns';
+  const q = query(collection(db, path));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
+};
+
+export const saveCampaign = async (data: any) => {
+  const path = 'product_campaigns';
+  try {
+    if (data.id) {
+      const { id, ...rest } = data;
+      await setDoc(doc(db, path, id), sanitize(rest), { merge: true });
+      return id;
+    } else {
+      const docRef = await addDoc(collection(db, path), sanitize({
+        ...data,
+        createdAt: serverTimestamp()
+      }));
+      return docRef.id;
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+};
+
+export const deleteCampaign = async (id: string) => {
+  const path = `product_campaigns/${id}`;
+  try {
+    await deleteDoc(doc(db, 'product_campaigns', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+};
+
+// ----------------------------------------------------
+// COUPONS (CUPONS)
+// ----------------------------------------------------
+
+export const subscribeToCoupons = (callback: (coupons: Coupon[]) => void, companyId?: CompanyId) => {
+  const path = 'coupons';
+  const q = companyId && (companyId as string) !== 'all'
+    ? query(collection(db, path), where('companyId', '==', companyId))
+    : query(collection(db, path));
+  
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Coupon)));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
+};
+
+export const saveCoupon = async (data: Partial<Coupon>) => {
+  const path = 'coupons';
+  try {
+    if (data.id) {
+      const { id, ...rest } = data;
+      await setDoc(doc(db, path, id), sanitize(rest), { merge: true });
+      return id;
+    } else {
+      const docRef = await addDoc(collection(db, path), sanitize({
+        ...data,
+        createdAt: serverTimestamp()
+      }));
+      return docRef.id;
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+};
+
+export const deleteCoupon = async (id: string) => {
+  const path = `coupons/${id}`;
+  try {
+    await deleteDoc(doc(db, 'coupons', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+};
+
+export const getCoupons = async (companyId?: CompanyId): Promise<Coupon[]> => {
+  const path = 'coupons';
+  try {
+    const q = companyId && (companyId as string) !== 'all'
+      ? query(collection(db, path), where('companyId', '==', companyId))
+      : query(collection(db, path));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Coupon));
+  } catch (error) {
+    console.error("Erro ao carregar cupons:", error);
+    return [];
+  }
+};
+
+
 

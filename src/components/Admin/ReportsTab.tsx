@@ -137,10 +137,10 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
       {/* Month Selector */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 uppercase tracking-[0.2em]">
+          <h2 className="text-2xl font-medium text-slate-900 tracking-tight">
             Análise Gerencial
           </h2>
-          <p className="text-[10px] text-[#A09898] uppercase font-black tracking-widest mt-1">
+          <p className="text-[10px] text-[#8E8E93] uppercase font-medium tracking-widest mt-1">
             Inteligência de vendas e performance
           </p>
         </div>
@@ -160,7 +160,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                 filters: `Período: ${selectedMonth}`
               });
             }}
-            className="flex items-center gap-2 p-2 hover:bg-slate-50 text-[#A09898] hover:text-lilac rounded-xl transition-all text-[9px] font-black uppercase tracking-widest"
+            className="flex items-center gap-2 p-2 hover:bg-slate-50 text-[#8E8E93] hover:text-lilac rounded-xl transition-all text-[9px] font-medium tracking-normal"
           >
             <Printer size={14} /> Abrir PDF
           </button>
@@ -169,7 +169,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="bg-transparent text-[10px] font-black uppercase tracking-widest outline-none pr-4 cursor-pointer text-slate-900"
+            className="bg-transparent text-[10px] font-medium tracking-normal outline-none pr-4 cursor-pointer text-slate-900"
           >
             {[...Array(12)].map((_, i) => {
               const d = new Date();
@@ -187,15 +187,15 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
       </div>
 
       {/* Sales Volume Chart */}
-      <div className="p-8 rounded-3xl bg-white border border-lilac/10 shadow-sm">
+      <div className="p-8 rounded-2xl bg-white border border-lilac/10 shadow-sm">
         <div className="flex justify-between items-center mb-8">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">
+          <h3 className="text-[10px] font-medium tracking-tight text-slate-900">
             Volume de Vendas (Últimos 6 Meses)
           </h3>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-lilac" />
-              <span className="text-[8px] font-black uppercase text-[#A09898]">
+              <span className="text-[8px] font-medium uppercase text-[#8E8E93]">
                 Qtd Pedidos
               </span>
             </div>
@@ -241,12 +241,12 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
       {/* Main Rankings Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Leading Customers */}
-        <div className="p-8 rounded-3xl bg-white border border-lilac/10 shadow-sm">
+        <div className="p-8 rounded-2xl bg-white border border-lilac/10 shadow-sm">
           <div className="flex items-center gap-4 mb-8">
             <div className="p-3 rounded-2xl bg-lilac/5 text-lilac">
               <Trophy size={20} />
             </div>
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">
+            <h3 className="text-sm font-medium tracking-normal text-slate-900">
               Clientes em Destaque
             </h3>
           </div>
@@ -257,17 +257,17 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                 className="flex items-center gap-4 p-4 rounded-2xl hover:bg-lilac-baby/30 transition-all group border border-transparent hover:border-lilac/20"
               >
                 <span
-                  className={`w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-black ${idx < 3 ? "bg-black text-white" : "bg-slate-100 text-[#A09898]"}`}
+                  className={`w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-medium ${idx < 3 ? "bg-black text-white" : "bg-slate-100 text-[#8E8E93]"}`}
                 >
                   {idx + 1}
                 </span>
                 <div className="flex-1">
                   <p className="text-xs font-bold text-gray-800">{c.name}</p>
-                  <p className="text-[9px] text-[#A09898] uppercase font-black tracking-tighter">
+                  <p className="text-[9px] text-[#8E8E93] uppercase font-medium tracking-tighter">
                     {c.ordersCount} pedidos confirmados
                   </p>
                 </div>
-                <span className="font-mono text-xs font-black text-emerald-500">
+                <span className="font-mono text-xs font-medium text-emerald-500">
                   {formatCurrency(c.totalSpent || 0)}
                 </span>
               </div>
@@ -276,12 +276,12 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         </div>
 
         {/* Leading Products */}
-        <div className="p-8 rounded-3xl bg-white border border-lilac/10 shadow-sm">
+        <div className="p-8 rounded-2xl bg-white border border-lilac/10 shadow-sm">
           <div className="flex items-center gap-4 mb-8">
             <div className="p-3 rounded-2xl bg-blue-50 text-blue-500">
               <TrendingUp size={20} />
             </div>
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900">
+            <h3 className="text-sm font-medium tracking-normal text-slate-900">
               Produtos Mais Vendidos
             </h3>
           </div>
@@ -291,7 +291,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                 key={`prod-rank-final-${p.id}-${idx}`}
                 className="flex items-center gap-4 p-4 rounded-2xl hover:bg-blue-50/50 transition-all group border border-transparent hover:border-blue-200"
               >
-                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border border-[#F0E6D2] overflow-hidden">
+                <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border border-[#E5E5EA] overflow-hidden">
                   <ImageWithFallback
                     src={p.image}
                     alt={p.product_name}
@@ -303,15 +303,15 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                   <p className="text-xs font-bold text-gray-800">
                     {p.product_name}
                   </p>
-                  <p className="text-[9px] text-[#A09898] uppercase font-black">
+                  <p className="text-[9px] text-[#8E8E93] uppercase font-medium">
                     {p.category}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono text-xs font-black text-blue-500">
+                  <p className="font-mono text-xs font-medium text-blue-500">
                     {p.sold || 0} unid.
                   </p>
-                  <p className="text-[8px] text-[#A09898] font-bold uppercase">
+                  <p className="text-[8px] text-[#8E8E93] font-bold uppercase">
                     Vendido
                   </p>
                 </div>
@@ -358,23 +358,23 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
               onClick={() =>
                 setActiveCard(activeCard === insight.id ? null : insight.id)
               }
-              className={`w-full p-8 rounded-3xl border transition-all text-left group flex flex-col shadow-sm ${activeCard === insight.id ? "bg-lilac/5 border-lilac" : "bg-white border-lilac/10 hover:border-lilac"}`}
+              className={`w-full p-8 rounded-2xl border transition-all text-left group flex flex-col shadow-sm ${activeCard === insight.id ? "bg-lilac/5 border-lilac" : "bg-white border-lilac/10 hover:border-lilac"}`}
             >
               <div
                 className={`p-3 rounded-2xl bg-white w-fit mb-6 ${insight.color}`}
               >
                 <insight.icon size={20} />
               </div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 transition-colors">
+              <h4 className="text-[10px] font-medium tracking-tight text-slate-900 transition-colors">
                 {insight.label}
               </h4>
-              <p className="text-[9px] text-[#A09898] mt-2 leading-relaxed font-bold">
+              <p className="text-[9px] text-[#8E8E93] mt-2 leading-relaxed font-bold">
                 {insight.desc}
               </p>
               <div
                 className={`mt-6 pt-4 border-t border-gray-50 flex items-center justify-between transition-all ${activeCard === insight.id ? "opacity-100" : "opacity-40 group-hover:opacity-100"}`}
               >
-                <span className="text-[8px] font-black uppercase tracking-widest text-lilac">
+                <span className="text-[8px] font-medium tracking-normal text-lilac">
                   Ver Detalhes
                 </span>
                 <ChevronDown
@@ -418,7 +418,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                     </div>
                     <div className="flex justify-between items-center text-[10px] font-bold uppercase">
                       <span className="text-gray-500">Dinheiro/Outros</span>
-                      <span className="text-[#A09898] font-mono">3%</span>
+                      <span className="text-[#8E8E93] font-mono">3%</span>
                     </div>
                   </div>
                 )}
@@ -431,7 +431,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                       >
                         <span className="text-gray-500">{ins.name}</span>
                         <span
-                          className={`font-mono ${ins.quantity < ins.criticalLimit ? "text-slate-9000" : "text-[#A09898]"}`}
+                          className={`font-mono ${ins.quantity < ins.criticalLimit ? "text-slate-9000" : "text-[#8E8E93]"}`}
                         >
                           {ins.quantity}
                           {ins.unit}

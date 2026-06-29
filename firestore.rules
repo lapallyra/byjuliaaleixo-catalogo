@@ -221,5 +221,42 @@ service cloud.firestore {
       allow list, get: if true;
       allow write: if isAdmin();
     }
+
+    // ----------------------------------------------------
+    // PRODUCT COLLECTIONS
+    // ----------------------------------------------------
+    match /product_collections/{collectionId} {
+      allow list, get: if true;
+      allow write: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // PRODUCT CAMPAIGNS
+    // ----------------------------------------------------
+    match /product_campaigns/{campaignId} {
+      allow list, get: if true;
+      allow write: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // MEDIA CENTER (FOLDERS & FILES)
+    // ----------------------------------------------------
+    match /media_folders/{folderId} {
+      allow list, get: if true;
+      allow write: if isAdmin();
+    }
+
+    match /media_files/{fileId} {
+      allow list, get: if true;
+      allow write: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // COUPONS
+    // ----------------------------------------------------
+    match /coupons/{couponId} {
+      allow list, get: if true;
+      allow write: if isAdmin();
+    }
   }
 }

@@ -22,7 +22,8 @@ import {
   Search,
   Check,
   RefreshCw,
-  Box
+  Box,
+  ClipboardList
 } from 'lucide-react';
 import { Product, Insumo, Order, CompanyId } from '../../types';
 import { formatCurrency } from '../../lib/currencyUtils';
@@ -324,7 +325,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
         scoreColor = "text-emerald-700 bg-emerald-50 border-emerald-200";
       } else if (margin >= 45) {
         classification = '🟡 Boa';
-        scoreColor = "text-[#C6A664] bg-neutral-50 border-[#F0E6D2]";
+        scoreColor = "text-[#C6A664] bg-neutral-50 border-[#E5E5EA]";
       } else if (margin >= 25) {
         classification = '🟠 Atenção';
         scoreColor = "text-amber-600 bg-amber-50 border-amber-200";
@@ -443,6 +444,40 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
       roi
     };
   }, [selectedProduct, rawInsumos, operationalCosts]);
+
+  // Executive Summary of selected product
+  const executiveSummaryResult = useMemo(() => {
+    const prd = products.find(p => p.id === selectedSimProduct) || products[0];
+    if (!prd) return null;
+
+    // Materials cost calculation
+    let materialsCost = 0;
+    prd.insumos?.forEach(req => {
+      const ins = rawInsumos.find(i => i.id === req.insumoId);
+      if (ins) {
+        materialsCost += (ins.unitValue || 0) * req.quantity;
+      }
+    });
+
+    // Operational, package, tax costs
+    const opSet = operationalCosts[prd.id] || { labor: 5.0, package: 2.0, extraTax: 6.0 };
+    const taxAmount = (prd.retail_price || 0) * (opSet.extraTax / 100);
+    const totalCost = materialsCost + opSet.labor + opSet.package + taxAmount;
+
+    const salePrice = prd.retail_price || 0;
+    const profit = Math.max(0, salePrice - totalCost);
+    const margin = salePrice > 0 ? (profit / salePrice) * 100 : 0;
+    const productionTime = prd.productionTime || 5;
+
+    return {
+      productName: prd.product_name,
+      salePrice,
+      totalCost,
+      profit,
+      margin,
+      productionTime
+    };
+  }, [selectedSimProduct, products, rawInsumos, operationalCosts]);
 
   // Simulator production numbers
   const simulatorResult = useMemo(() => {
@@ -744,14 +779,14 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
   };
 
   return (
-    <div className="bg-[#FAF9F6] text-[#4A4444] space-y-8 ">
+    <div className="bg-[#F5F5F7] text-[#1C1C1E] space-y-8 ">
       {/* Dynamic Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/70 backdrop-blur-md border border-[#F0E6D2] p-6 rounded-3xl shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/70 backdrop-blur-md border border-[#E5E5EA] p-6 rounded-2xl shadow-sm">
         <div>
-          <h2 className="text-xl font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+          <h2 className="text-xl font-medium text-slate-900 tracking-normal flex items-center gap-2">
             📂 Auditoria e Engenharia
           </h2>
-          <p className="text-xs font-bold text-[#A09898] uppercase tracking-widest mt-1">
+          <p className="text-xs font-bold text-[#8E8E93] tracking-normal mt-1">
             Centro de Custos, Viabilidade e Aproveitamento de Materiais
           </p>
         </div>
@@ -762,7 +797,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           <select 
             value={selectedAtelier}
             onChange={(e) => setSelectedAtelier(e.target.value)}
-            className="bg-[#FAF9F6] border border-[#F0E6D2] text-[10px] font-black uppercase tracking-wider rounded-xl px-4 py-2.5 text-[#4A4444] outline-none cursor-pointer"
+            className="bg-[#F5F5F7] border border-[#E5E5EA] text-[10px] font-medium uppercase tracking-wider rounded-xl px-4 py-2.5 text-[#1C1C1E] outline-none cursor-pointer"
           >
             <option value="all">TODOS OS ATELIÊS</option>
             <option value="pallyra">LA PALLYRA</option>
@@ -772,12 +807,12 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           </select>
 
           {/* Period selection */}
-          <div className="flex items-center bg-[#FAF9F6] border border-[#F0E6D2] rounded-xl p-1 gap-1">
+          <div className="flex items-center bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl p-1 gap-1">
             {(['7d', '30d', '90d', 'custom'] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => setSelectedPeriod(p)}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${selectedPeriod === p ? 'bg-[#4A4444] text-white shadow' : 'text-[#A09898] hover:text-[#4A4444]'}`}
+                className={`px-3 py-1.5 rounded-lg text-[9px] font-medium uppercase tracking-wider transition-all ${selectedPeriod === p ? 'bg-[#1C1C1E] text-white shadow' : 'text-[#8E8E93] hover:text-[#1C1C1E]'}`}
               >
                 {p === '7d' ? '7 Dias' : p === '30d' ? '30 Dias' : p === '90d' ? '90 Dias' : 'Personalizado'}
               </button>
@@ -790,14 +825,14 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                 type="date" 
                 value={customStartDate} 
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="bg-[#FAF9F6] border border-[#F0E6D2] text-[10px] rounded-xl px-2 py-2 outline-none font-semibold"
+                className="bg-[#F5F5F7] border border-[#E5E5EA] text-[10px] rounded-xl px-2 py-2 outline-none font-semibold"
               />
-              <span className="text-xs text-[#A09898] font-bold">Até</span>
+              <span className="text-xs text-[#8E8E93] font-bold">Até</span>
               <input 
                 type="date" 
                 value={customEndDate} 
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="bg-[#FAF9F6] border border-[#F0E6D2] text-[10px] rounded-xl px-2 py-2 outline-none font-semibold"
+                className="bg-[#F5F5F7] border border-[#E5E5EA] text-[10px] rounded-xl px-2 py-2 outline-none font-semibold"
               />
             </div>
           )}
@@ -805,13 +840,13 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
       </div>
 
       {/* Primary auditoria submenu bar */}
-      <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-none border-b border-[#F0E6D2]">
+      <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-none border-b border-[#E5E5EA]">
         {[
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
           { id: 'materials', label: 'Materiais (Estoque)', icon: Package },
           { id: 'suppliers', label: 'Fornecedores', icon: Users },
           { id: 'formulas', label: 'Fórmulas dos Produtos', icon: Layers },
-          { id: 'simulator', label: 'Simulador de Produção', icon: Play },
+          { id: 'simulator', label: 'Resumo Executivo', icon: ClipboardList },
           { id: 'viability', label: 'Viabilidade & Margens', icon: Percent },
           { id: 'reports', label: 'Relatórios PDF', icon: FileDown }
         ].map((sub) => (
@@ -829,7 +864,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                 setSelectedProductIdForReport(products[0].id);
               }
             }}
-            className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all border ${activeSubmenu === sub.id ? 'bg-[#4A4444] border-[#4A4444] text-white shadow-lg' : 'bg-white border-[#F0E6D2] text-[#A09898] hover:text-[#4A4444] hover:bg-[#FAF9F6]'}`}
+            className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-[10px] font-medium uppercase tracking-wider whitespace-nowrap transition-all border ${activeSubmenu === sub.id ? 'bg-[#1C1C1E] border-[#1C1C1E] text-white shadow-lg' : 'bg-white border-[#E5E5EA] text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-[#F5F5F7]'}`}
           >
             <sub.icon size={14} />
             {sub.label}
@@ -861,44 +896,44 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                   { title: "Produto Mais Vendido", value: dashboardStats.topSelling, desc: "Maior saída de estoque", icon: Box, color: "text-amber-700 bg-amber-50 border-amber-100" },
                   { title: "Insumo Mais Consumido", value: dashboardStats.topMaterial, desc: "Maior desgaste operacional", icon: Layers, color: "text-fuchsia-700 bg-fuchsia-50 border-fuchsia-100" }
                 ].map((s, idx) => (
-                  <div key={idx} className={`p-6 rounded-3xl border bg-white ${s.color} hover:scale-[1.02] hover:shadow-md transition-all shadow-sm`}>
+                  <div key={idx} className={`p-6 rounded-2xl border bg-white ${s.color} hover:scale-[1.02] hover:shadow-md transition-all shadow-sm`}>
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
-                        <span className="text-[10px] font-black uppercase text-[#A09898] tracking-widest">{s.title}</span>
-                        <div className="text-xl font-black text-slate-900 tracking-tight">{s.value}</div>
+                        <span className="text-[10px] font-medium uppercase text-[#8E8E93] tracking-widest">{s.title}</span>
+                        <div className="text-xl font-medium text-slate-900 tracking-tight">{s.value}</div>
                       </div>
                       <div className="p-3 bg-white rounded-2xl border border-transparent self-center">
                         <s.icon size={16} />
                       </div>
                     </div>
-                    <div className="text-[9px] font-semibold text-[#A09898] uppercase tracking-wide mt-3">{s.desc}</div>
+                    <div className="text-[9px] font-semibold text-[#8E8E93] uppercase tracking-wide mt-3">{s.desc}</div>
                   </div>
                 ))}
               </div>
 
               {/* Conversion Flow Diagram (Estoque Comprado -> Lucro) */}
-              <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-8 shadow-sm">
+              <div className="bg-white border border-[#E5E5EA] rounded-2xl p-8 space-y-8 shadow-sm">
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">🔄 Conversão e Fluxo de Produção</h3>
-                  <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Transformação física do valor focado na jornada de material a lucro</p>
+                  <h3 className="text-sm font-medium text-slate-900 tracking-normal">🔄 Conversão e Fluxo de Produção</h3>
+                  <p className="text-[10px] font-bold text-[#8E8E93] tracking-normal mt-1">Transformação física do valor focado na jornada de material a lucro</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
                   {/* Flow items */}
                   {[
                     { step: "1. Estoque Comprado", title: "Investimento em Matéria Prima", val: formatCurrency(dashboardStats.totalInvestedInMaterials), dsc: "Insumos importados ou comprados sob demanda.", color: "border-amber-200 bg-amber-50/50" },
-                    { step: "2. Estoque Transformado", title: "Fórmulas & Processamento", val: formatCurrency(dashboardStats.totalCurrentStockValue), dsc: "Insumos associados a fichas e convertidos em produtos.", color: "border-[#F0E6D2] bg-[#FAF9F6]" },
+                    { step: "2. Estoque Transformado", title: "Fórmulas & Processamento", val: formatCurrency(dashboardStats.totalCurrentStockValue), dsc: "Insumos associados a fichas e convertidos em produtos.", color: "border-[#E5E5EA] bg-[#F5F5F7]" },
                     { step: "3. Faturamento de Vendas", title: "Atari de Ativos Vendidos", val: formatCurrency(dashboardStats.revenue), dsc: "Recursos adquiridos de pedidos entregues.", color: "border-sky-200 bg-sky-50/50" },
                     { step: "4. Lucro Gerado", title: "Valor Líquido Realizado", val: formatCurrency(dashboardStats.netProfit), dsc: "Sobras absolutas e saudáveis de atelier.", color: "border-emerald-200 bg-emerald-50/50" }
                   ].map((fl, fidx) => (
-                    <div key={fidx} className={`p-6 rounded-3xl border ${fl.color} relative space-y-3`}>
-                      <span className="text-[9px] font-black uppercase text-[#A09898] tracking-wider block">{fl.step}</span>
-                      <div className="text-xs font-black text-slate-900 leading-tight">{fl.title}</div>
-                      <div className="text-lg font-black text-slate-900">{fl.val}</div>
+                    <div key={fidx} className={`p-6 rounded-2xl border ${fl.color} relative space-y-3`}>
+                      <span className="text-[9px] font-medium uppercase text-[#8E8E93] tracking-wider block">{fl.step}</span>
+                      <div className="text-xs font-medium text-slate-900 leading-tight">{fl.title}</div>
+                      <div className="text-lg font-medium text-slate-900">{fl.val}</div>
                       <p className="text-[10px] font-semibold text-slate-500">{fl.dsc}</p>
                       
                       {fidx < 3 && (
-                        <div className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-[#F0E6D2] items-center justify-center text-[#D1CACA]">
+                        <div className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white border border-[#E5E5EA] items-center justify-center text-[#D1D1D6]">
                           <ArrowRight size={14} />
                         </div>
                       )}
@@ -911,15 +946,15 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 
                 {/* Potential indicators */}
-                <div className="xl:col-span-2 bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm">
+                <div className="xl:col-span-2 bg-white border border-[#E5E5EA] rounded-2xl p-8 space-y-6 shadow-sm">
                   <div>
-                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">💰 Potencial de Faturamento Imediato</h3>
-                    <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Estimado baseado estritamente na matéria-prima e insumos hoje disponíveis no inventário físico</p>
+                    <h3 className="text-sm font-medium text-slate-900 tracking-normal">💰 Potencial de Faturamento Imediato</h3>
+                    <p className="text-[10px] font-bold text-[#8E8E93] tracking-normal mt-1">Estimado baseado estritamente na matéria-prima e insumos hoje disponíveis no inventário físico</p>
                   </div>
 
-                  <div className="overflow-x-auto max-h-[350px] scrollbar-hide border border-[#F0E6D2] rounded-2xl">
+                  <div className="overflow-x-auto max-h-[350px] scrollbar-hide border border-[#E5E5EA] rounded-2xl">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[#FAF9F6] border-b border-[#F0E6D2] text-[9px] font-black uppercase tracking-wider text-[#A09898]">
+                      <thead className="bg-[#F5F5F7] border-b border-[#E5E5EA] text-[9px] font-medium uppercase tracking-wider text-[#8E8E93]">
                         <tr>
                           <th className="px-5 py-4">Produto</th>
                           <th className="px-5 py-4">Ateliê</th>
@@ -928,20 +963,20 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                           <th className="px-5 py-4 text-right">Potencial de Lucro</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#F0E6D2] font-semibold">
+                      <tbody className="divide-y divide-[#E5E5EA] font-semibold">
                         {potentialProductionList.length > 0 ? (
                           potentialProductionList.map((pot, idx) => (
-                            <tr key={idx} className="hover:bg-[#FAF9F6]/50 transition-colors">
-                              <td className="px-5 py-4 text-slate-900 font-extrabold uppercase">{pot.name}</td>
-                              <td className="px-5 py-4 text-[10px] text-[#A09898] font-bold uppercase">{pot.brand}</td>
-                              <td className="px-5 py-4 text-center text-slate-900 font-black">{pot.maxUnits} un</td>
-                              <td className="px-5 py-4 text-right text-[#C6A664] font-black">{formatCurrency(pot.potentialRevenue)}</td>
-                              <td className="px-5 py-4 text-right text-emerald-700 font-black">{formatCurrency(pot.potentialProfit)}</td>
+                            <tr key={idx} className="hover:bg-[#F5F5F7]/50 transition-colors">
+                              <td className="px-5 py-4 text-slate-900 font-semibold uppercase">{pot.name}</td>
+                              <td className="px-5 py-4 text-[10px] text-[#8E8E93] font-bold uppercase">{pot.brand}</td>
+                              <td className="px-5 py-4 text-center text-slate-900 font-medium">{pot.maxUnits} un</td>
+                              <td className="px-5 py-4 text-right text-[#C6A664] font-medium">{formatCurrency(pot.potentialRevenue)}</td>
+                              <td className="px-5 py-4 text-right text-emerald-700 font-medium">{formatCurrency(pot.potentialProfit)}</td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={5} className="px-5 py-8 text-center text-[#A09898] font-bold uppercase tracking-widest">
+                            <td colSpan={5} className="px-5 py-8 text-center text-[#8E8E93] font-bold tracking-normal">
                               Nenhuma ficha cadastrada com insumos suficientes para predição.
                             </td>
                           </tr>
@@ -950,21 +985,21 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                     </table>
                   </div>
 
-                  <div className="bg-[#FAF9F6] border border-[#F0E6D2] rounded-2xl p-5 flex items-center gap-4">
+                  <div className="bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl p-5 flex items-center gap-4">
                     <Info size={18} className="text-[#C6A664] flex-shrink-0" />
-                    <p className="text-[10px] font-bold uppercase tracking-wide leading-relaxed text-[#4A4444]">
+                    <p className="text-[10px] font-bold uppercase tracking-wide leading-relaxed text-[#1C1C1E]">
                       A quantidade limite de fabricação de cada item é controlada automaticamente pelo menor multiplicador de insumos hoje em estoque. Complete as fichas técnicas dos produtos para calibrações mais exatas.
                     </p>
                   </div>
                 </div>
 
                 {/* Total Strategic Summary Box */}
-                <div className="bg-slate-900 text-[#FAF9F6] rounded-3xl p-8 flex flex-col justify-between shadow-xl">
+                <div className="bg-slate-900 text-[#F5F5F7] rounded-2xl p-8 flex flex-col justify-between shadow-xl">
                   <div className="space-y-4">
-                    <div className="inline-block bg-[#C6A664] text-slate-900 text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                    <div className="inline-block bg-[#C6A664] text-slate-900 text-[8px] font-medium tracking-normal px-3 py-1 rounded-full">
                       Resumo Tático de Giro
                     </div>
-                    <h3 className="text-lg font-black uppercase tracking-widest italic">VALOR TRANSFORMÁVEL</h3>
+                    <h3 className="text-lg font-medium tracking-normal italic">VALOR TRANSFORMÁVEL</h3>
                     <p className="text-[11px] text-slate-300 font-medium leading-relaxed">
                       Seu estoque possui materiais com alto potencial inovador e capacidade ociosa de montagem. Transformando todo o seu inventário disponível hoje no mix sugerido, você pode destravar faturamentos expressivos.
                     </p>
@@ -972,22 +1007,22 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
 
                   <div className="space-y-5 my-8">
                     <div>
-                      <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest">FATURAMENTO PREVISTO ACUMULADO</span>
-                      <div className="text-3xl font-black text-[#C6A664] mt-1">
+                      <span className="text-[9px] uppercase font-medium text-slate-400 tracking-widest">FATURAMENTO PREVISTO ACUMULADO</span>
+                      <div className="text-3xl font-medium text-[#C6A664] mt-1">
                         {formatCurrency(potentialProductionList.reduce((acc, current) => acc + current.potentialRevenue, 0))}
                       </div>
                     </div>
                     <div>
-                      <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest">LUCRO ESTIMADO ACUMULADO</span>
-                      <div className="text-2xl font-black text-emerald-400 mt-1">
+                      <span className="text-[9px] uppercase font-medium text-slate-400 tracking-widest">LUCRO ESTIMADO ACUMULADO</span>
+                      <div className="text-2xl font-medium text-emerald-400 mt-1">
                         {formatCurrency(potentialProductionList.reduce((acc, current) => acc + current.potentialProfit, 0))}
                       </div>
                     </div>
                   </div>
 
-                  <div className="border-t border-white/15 pt-5 flex items-center justify-between text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  <div className="border-t border-white/15 pt-5 flex items-center justify-between text-[10px] font-medium uppercase text-slate-400 tracking-wider">
                     <span>Gargalo Crítico</span>
-                    <span className="text-rose-400 font-extrabold uppercase">Papel Fotográfico</span>
+                    <span className="text-rose-400 font-semibold uppercase">Papel Fotográfico</span>
                   </div>
                 </div>
               </div>
@@ -996,26 +1031,26 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           )}
 
           {activeSubmenu === 'materials' && (
-            <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest font-extrabold">📌 Auditoria de Insumos & Cadastro de Custos</h3>
-                  <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Gerencie embalagens, folhas, insumos e custos agregados com cálculo autônomo por unidade operacional</p>
+                  <h3 className="text-sm font-medium text-slate-900 tracking-normal font-semibold">📌 Auditoria de Insumos & Cadastro de Custos</h3>
+                  <p className="text-[10px] font-bold text-[#8E8E93] tracking-normal mt-1">Gerencie embalagens, folhas, insumos e custos agregados com cálculo autônomo por unidade operacional</p>
                 </div>
                 <button
                   onClick={() => {
                     setEditingMaterial({});
                     setIsMaterialModalOpen(true);
                   }}
-                  className="flex items-center gap-2 px-5 py-3 bg-[#4A4444] text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow hover:bg-black transition-all cursor-pointer self-start sm:self-center"
+                  className="flex items-center gap-2 px-5 py-3 bg-[#1C1C1E] text-white rounded-xl text-[10px] font-medium uppercase tracking-wider shadow hover:bg-black transition-all cursor-pointer self-start sm:self-center"
                 >
                   <Plus size={14} /> Cadastrar Insumo
                 </button>
               </div>
 
-              <div className="overflow-x-auto border border-[#F0E6D2] rounded-2xl font-medium">
+              <div className="overflow-x-auto border border-[#E5E5EA] rounded-2xl font-medium">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#FAF9F6] border-b border-[#F0E6D2] text-[9px] font-black uppercase tracking-wider text-[#A09898]">
+                  <thead className="bg-[#F5F5F7] border-b border-[#E5E5EA] text-[9px] font-medium uppercase tracking-wider text-[#8E8E93]">
                     <tr>
                       <th className="px-5 py-4">Código</th>
                       <th className="px-5 py-4">Material</th>
@@ -1027,26 +1062,26 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                       <th className="px-5 py-4 text-right">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#F0E6D2] font-semibold">
+                  <tbody className="divide-y divide-[#E5E5EA] font-semibold">
                     {rawInsumos.map((insumo, idx) => {
                       const costPerUnit = insumo.unitValue || (insumo.costPrice / (insumo.quantity || 1));
                       const isLow = insumo.quantity <= (insumo.criticalLimit || 10);
                       
                       return (
-                        <tr key={insumo.id || idx} className="hover:bg-[#FAF9F6]/50 transition-colors">
+                        <tr key={insumo.id || idx} className="hover:bg-[#F5F5F7]/50 transition-colors">
                           <td className="px-5 py-4 font-mono text-[10px] text-slate-500">{insumo.code || 'INS-GP'}</td>
                           <td className="px-5 py-4">
-                            <div className="font-extrabold text-slate-900 uppercase">{insumo.name}</div>
-                            {insumo.description && <div className="text-[10px] text-[#A09898] font-medium">{insumo.description}</div>}
+                            <div className="font-semibold text-slate-900 uppercase">{insumo.name}</div>
+                            {insumo.description && <div className="text-[10px] text-[#8E8E93] font-medium">{insumo.description}</div>}
                           </td>
                           <td className="px-5 py-4 text-[10px] text-slate-500 font-bold uppercase">{insumo.unit || 'pct'}</td>
-                          <td className="px-5 py-4 text-center text-slate-900 font-extrabold">{insumo.quantity}</td>
+                          <td className="px-5 py-4 text-center text-slate-900 font-semibold">{insumo.quantity}</td>
                           <td className="px-5 py-4 text-right font-bold">{formatCurrency(insumo.costPrice || 0)}</td>
-                          <td className="px-5 py-4 text-right font-black text-slate-900 hover:scale-105 transition-transform">
-                            {formatCurrency(costPerUnit)} <span className="text-[8px] font-bold text-[#A09898] uppercase">/{insumo.unit}</span>
+                          <td className="px-5 py-4 text-right font-medium text-slate-900 hover:scale-105 transition-transform">
+                            {formatCurrency(costPerUnit)} <span className="text-[8px] font-bold text-[#8E8E93] uppercase">/{insumo.unit}</span>
                           </td>
                           <td className="px-5 py-4 text-center">
-                            <span className={`inline-block px-3 py-1 rounded-full text-[8.5px] font-black uppercase tracking-wider ${isLow ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-150'}`}>
+                            <span className={`inline-block px-3 py-1 rounded-full text-[8.5px] font-medium uppercase tracking-wider ${isLow ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-150'}`}>
                               {isLow ? 'Repor' : 'Estável'}
                             </span>
                           </td>
@@ -1057,7 +1092,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                                   setEditingMaterial(insumo);
                                   setIsMaterialModalOpen(true);
                                 }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 border border-[#F0E6D2] text-[#A09898] hover:text-[#4A4444] rounded-lg hover:bg-[#FAF9F6] transition-all cursor-pointer text-[9px] font-black uppercase tracking-widest"
+                                className="flex items-center gap-1.5 px-3 py-1.5 border border-[#E5E5EA] text-[#8E8E93] hover:text-[#1C1C1E] rounded-lg hover:bg-[#F5F5F7] transition-all cursor-pointer text-[9px] font-medium tracking-normal"
                               >
                                 <Edit size={12} /> Editar
                               </button>
@@ -1073,46 +1108,46 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           )}
 
           {activeSubmenu === 'suppliers' && (
-            <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest font-extrabold">🤝 Diretório de Fornecedores de Papelaria</h3>
-                  <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Contato direto, canais de suporte e taxas de desconto aplicadas a insumos rústicos ou de atacado</p>
+                  <h3 className="text-sm font-medium text-slate-900 tracking-normal font-semibold">🤝 Diretório de Fornecedores de Papelaria</h3>
+                  <p className="text-[10px] font-bold text-[#8E8E93] tracking-normal mt-1">Contato direto, canais de suporte e taxas de desconto aplicadas a insumos rústicos ou de atacado</p>
                 </div>
                 <button
                   onClick={() => {
                     setEditingSupplier({});
                     setIsSupplierModalOpen(true);
                   }}
-                  className="flex items-center gap-2 px-5 py-3 bg-[#4A4444] text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow hover:bg-black transition-all cursor-pointer self-start sm:self-center"
+                  className="flex items-center gap-2 px-5 py-3 bg-[#1C1C1E] text-white rounded-xl text-[10px] font-medium uppercase tracking-wider shadow hover:bg-black transition-all cursor-pointer self-start sm:self-center"
                 >
                   <Plus size={14} /> Cadastrar Fornecedor
                 </button>
               </div>
 
               {isSuppliersLoading ? (
-                <div className="flex justify-center p-12 text-[#A09898]">Carregando fornecedores...</div>
+                <div className="flex justify-center p-12 text-[#8E8E93]">Carregando fornecedores...</div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {suppliers.map((sup) => (
-                    <div key={sup.id} className="p-6 bg-[#FAF9F6] border border-[#F0E6D2] rounded-3xl hover:shadow-md transition-shadow relative space-y-4">
+                    <div key={sup.id} className="p-6 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl hover:shadow-md transition-shadow relative space-y-4">
                       
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
-                          <span className="text-[8px] bg-[#C6A664]/10 border border-[#C6A664]/30 text-[#C6A664] px-2.5 py-1 rounded-full font-black uppercase tracking-widest">{sup.type}</span>
-                          <h4 className="text-[13px] font-black uppercase text-slate-900 tracking-tight mt-1">{sup.name}</h4>
-                          <span className="text-[10px] text-[#A09898] font-bold block">Contato: {sup.contact}</span>
+                          <span className="text-[8px] bg-[#C6A664]/10 border border-[#C6A664]/30 text-[#C6A664] px-2.5 py-1 rounded-full font-medium tracking-normal">{sup.type}</span>
+                          <h4 className="text-[13px] font-medium uppercase text-slate-900 tracking-tight mt-1">{sup.name}</h4>
+                          <span className="text-[10px] text-[#8E8E93] font-bold block">Contato: {sup.contact}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-[#4a4444]/5 text-[#4a4444] px-3 py-1.5 rounded-full border border-[#FAF9F6] text-[9.5px] font-black">
+                        <div className="flex items-center gap-1.5 bg-[#4a4444]/5 text-[#4a4444] px-3 py-1.5 rounded-full border border-[#F5F5F7] text-[9.5px] font-medium">
                           {sup.defaultDiscount}% Desc.
                         </div>
                       </div>
 
-                      <p className="text-[10.5px] text-[#4A4444] font-medium leading-relaxed italic">
+                      <p className="text-[10.5px] text-[#1C1C1E] font-medium leading-relaxed italic">
                         "{sup.notes || 'Nenhuma observação ou histórico cadastrado'}"
                       </p>
 
-                      <div className="flex justify-between items-center pt-2 border-t border-[#F0E6D2]/60 text-[9px] font-black uppercase text-[#A09898]">
+                      <div className="flex justify-between items-center pt-2 border-t border-[#E5E5EA]/60 text-[9px] font-medium uppercase text-[#8E8E93]">
                         <span>Histórico de Compras Ativo</span>
                         <div className="flex gap-2">
                           <button
@@ -1120,13 +1155,13 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                               setEditingSupplier(sup);
                               setIsSupplierModalOpen(true);
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 border border-[#F0E6D2] text-[#A09898] hover:text-[#4A4444] hover:bg-white rounded-lg transition-colors cursor-pointer text-[9px] font-black uppercase tracking-widest"
+                            className="flex items-center gap-1.5 px-3 py-1.5 border border-[#E5E5EA] text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white rounded-lg transition-colors cursor-pointer text-[9px] font-medium tracking-normal"
                           >
                             <Edit size={11} /> Editar
                           </button>
                           <button
                             onClick={() => handleDeleteSupplier(sup.id)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition-all cursor-pointer text-[9px] font-black uppercase tracking-widest"
+                            className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-500 hover:text-white hover:bg-red-500 rounded-lg transition-all cursor-pointer text-[9px] font-medium tracking-normal"
                           >
                             <Trash2 size={11} /> Excluir
                           </button>
@@ -1144,10 +1179,10 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-in fade-in duration-300">
               
               {/* Left Selector List */}
-              <div className="bg-white border border-[#F0E6D2] rounded-3xl p-6 space-y-4 shadow-sm h-fit">
+              <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 space-y-4 shadow-sm h-fit">
                 <div>
-                  <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">📋 Engenharia de Produtos</h3>
-                  <p className="text-[9px] font-bold text-[#A09898] uppercase tracking-widest mt-0.5">Selecione o produto de catálogo para avaliar ou reformular sua Ficha Técnica</p>
+                  <h3 className="text-xs font-medium text-slate-800 tracking-normal">📋 Engenharia de Produtos</h3>
+                  <p className="text-[9px] font-bold text-[#8E8E93] tracking-normal mt-0.5">Selecione o produto de catálogo para avaliar ou reformular sua Ficha Técnica</p>
                 </div>
                 
                 <div className="flex flex-col gap-1.5 max-h-[450px] overflow-y-auto scrollbar-hide pr-1">
@@ -1155,9 +1190,9 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                     <button
                       key={p.id}
                       onClick={() => setSelectedProductIdForFormula(p.id)}
-                      className={`flex justify-between items-center p-3 rounded-xl border text-left text-xs font-semibold uppercase tracking-tight transition-all ${selectedProductIdForFormula === p.id || (!selectedProductIdForFormula && products[0]?.id === p.id) ? 'bg-[#4A4444] border-[#4A4444] text-white shadow' : 'bg-[#FAF9F6] border-[#F0E6D2] text-[#4A4444] hover:bg-white'}`}
+                      className={`flex justify-between items-center p-3 rounded-xl border text-left text-xs font-semibold uppercase tracking-tight transition-all ${selectedProductIdForFormula === p.id || (!selectedProductIdForFormula && products[0]?.id === p.id) ? 'bg-[#1C1C1E] border-[#1C1C1E] text-white shadow' : 'bg-[#F5F5F7] border-[#E5E5EA] text-[#1C1C1E] hover:bg-white'}`}
                     >
-                      <span className="truncate max-w-[150px] font-extrabold">{p.product_name}</span>
+                      <span className="truncate max-w-[150px] font-semibold">{p.product_name}</span>
                       <span className="font-bold text-[10px]">{formatCurrency(p.retail_price)}</span>
                     </button>
                   ))}
@@ -1165,53 +1200,53 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
               </div>
 
               {/* Right Formula View & Formulate */}
-              <div className="xl:col-span-2 bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-8 shadow-sm">
+              <div className="xl:col-span-2 bg-white border border-[#E5E5EA] rounded-2xl p-8 space-y-8 shadow-sm">
                 {selectedProduct ? (
                   <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-5 border-b border-dashed border-[#F0E6D2]">
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 pb-5 border-b border-dashed border-[#E5E5EA]">
                       <div>
-                        <span className="text-[8px] bg-[#FAF9F6] border border-[#F0E6D2] text-slate-400 font-mono tracking-widest rounded-lg px-2 py-1">ID: {selectedProduct.id.substring(0,8).toUpperCase()}</span>
-                        <h4 className="text-[15px] font-black uppercase text-slate-900 tracking-tight mt-1.5">{selectedProduct.product_name}</h4>
-                        <span className="text-[9.5px] font-bold text-[#A09898] uppercase tracking-widest mt-0.5 block">Pertence a: {brandNames[selectedProduct.company]}</span>
+                        <span className="text-[8px] bg-[#F5F5F7] border border-[#E5E5EA] text-slate-400 font-mono tracking-widest rounded-lg px-2 py-1">ID: {selectedProduct.id.substring(0,8).toUpperCase()}</span>
+                        <h4 className="text-[15px] font-medium uppercase text-slate-900 tracking-tight mt-1.5">{selectedProduct.product_name}</h4>
+                        <span className="text-[9.5px] font-bold text-[#8E8E93] tracking-normal mt-0.5 block">Pertence a: {brandNames[selectedProduct.company]}</span>
                       </div>
 
                       {/* Financial KPI values in real-time */}
                       <div className="flex gap-4">
                         <div className="p-4 bg-teal-50/50 border border-teal-100 rounded-2xl text-center min-w-[90px]">
-                          <span className="text-[8px] uppercase font-black text-teal-600 tracking-widest">Margem</span>
-                          <div className="text-base font-black text-teal-700 mt-1">{selectedProductFormulaDetails?.margin.toFixed(0)}%</div>
+                          <span className="text-[8px] uppercase font-medium text-teal-600 tracking-widest">Margem</span>
+                          <div className="text-base font-medium text-teal-700 mt-1">{selectedProductFormulaDetails?.margin.toFixed(0)}%</div>
                         </div>
                         <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl text-center min-w-[90px]">
-                          <span className="text-[8px] uppercase font-black text-emerald-600 tracking-widest">Lucros Unit.</span>
-                          <div className="text-base font-black text-emerald-700 mt-1">{formatCurrency(selectedProductFormulaDetails?.profit || 0)}</div>
+                          <span className="text-[8px] uppercase font-medium text-emerald-600 tracking-widest">Lucros Unit.</span>
+                          <div className="text-base font-medium text-emerald-700 mt-1">{formatCurrency(selectedProductFormulaDetails?.profit || 0)}</div>
                         </div>
                         <div className="p-4 bg-[#C6A664]/10 border border-[#C6A664]/20 rounded-2xl text-center min-w-[90px]">
-                          <span className="text-[8px] uppercase font-black text-[#C6A664] tracking-widest">Custo Real</span>
-                          <div className="text-base font-black text-slate-950 mt-1">{formatCurrency(selectedProductFormulaDetails?.totalCost || 0)}</div>
+                          <span className="text-[8px] uppercase font-medium text-[#C6A664] tracking-widest">Custo Real</span>
+                          <div className="text-base font-medium text-slate-950 mt-1">{formatCurrency(selectedProductFormulaDetails?.totalCost || 0)}</div>
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-4">
-                      <h4 className="text-[11px] font-black uppercase text-slate-800 tracking-widest flex items-center gap-1.5">
+                      <h4 className="text-[11px] font-medium uppercase text-slate-800 tracking-widest flex items-center gap-1.5">
                         📦 Lista de Materiais da Ficha Técnica (Consumo Físico)
                       </h4>
 
-                      <div className="border border-[#F0E6D2] rounded-xl overflow-hidden font-medium">
+                      <div className="border border-[#E5E5EA] rounded-xl overflow-hidden font-medium">
                         <table className="w-full text-left text-xs">
-                          <tbody className="divide-y divide-[#F0E6D2]">
+                          <tbody className="divide-y divide-[#E5E5EA]">
                             {selectedProductFormulaDetails?.items.map((it, iIdx) => (
-                              <tr key={iIdx} className="hover:bg-[#FAF9F6]/55 transition-colors">
-                                <td className="px-5 py-3 font-extrabold text-slate-900 uppercase">{it.name}</td>
-                                <td className="px-5 py-3 text-[#A09898] font-bold uppercase">{it.unit}</td>
-                                <td className="px-5 py-3 text-slate-900 font-extrabold">{it.reqQty} unidades sugeridas</td>
+                              <tr key={iIdx} className="hover:bg-[#F5F5F7]/55 transition-colors">
+                                <td className="px-5 py-3 font-semibold text-slate-900 uppercase">{it.name}</td>
+                                <td className="px-5 py-3 text-[#8E8E93] font-bold uppercase">{it.unit}</td>
+                                <td className="px-5 py-3 text-slate-900 font-semibold">{it.reqQty} unidades sugeridas</td>
                                 <td className="px-5 py-3 text-right text-slate-600">{formatCurrency(it.unitCost)} /unid</td>
-                                <td className="px-5 py-3 text-right font-black text-slate-900">{formatCurrency(it.totalCost)}</td>
+                                <td className="px-5 py-3 text-right font-medium text-slate-900">{formatCurrency(it.totalCost)}</td>
                               </tr>
                             ))}
                             {(!selectedProductFormulaDetails?.items.length) && (
                               <tr>
-                                <td colSpan={5} className="px-5 py-6 text-center text-[#A09898] uppercase tracking-widest text-[9.5px] font-black leading-relaxed">
+                                <td colSpan={5} className="px-5 py-6 text-center text-[#8E8E93] tracking-normal text-[9.5px] font-medium leading-relaxed">
                                   ⚠️ Nenhuma matéria-prima ou material foi associado a este produto no Cadastro Técnico. Vá em "Produtos", edite o item e inclua os insumos em sua Ficha Técnica!
                                 </td>
                               </tr>
@@ -1222,13 +1257,13 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                     </div>
 
                     {/* Operational Variables simulation adjusters */}
-                    <div className="bg-[#FAF9F6] border border-[#F0E6D2] rounded-3xl p-6 space-y-4">
-                      <h4 className="text-[10px] font-black uppercase text-slate-800 tracking-widest">⚙️ Custos Operacionais e Margem do Produto</h4>
+                    <div className="bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl p-6 space-y-4">
+                      <h4 className="text-[10px] font-medium uppercase text-slate-800 tracking-widest">⚙️ Custos Operacionais e Margem do Produto</h4>
                       <p className="text-[10px] uppercase font-semibold text-slate-500 leading-normal mb-1">Ajuste os valores operacionais para as simulações estratégicas e viabilidades deste modelo comercial:</p>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Mão de obra por un. (R$)</label>
+                          <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Mão de obra por un. (R$)</label>
                           <input 
                             type="number" 
                             step="0.5"
@@ -1244,11 +1279,11 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                                 }
                               }));
                             }}
-                            className="w-full bg-white border border-[#F0E6D2] text-xs font-bold rounded-xl px-3 py-2 outline-none"
+                            className="w-full bg-white border border-[#E5E5EA] text-xs font-bold rounded-xl px-3 py-2 outline-none"
                           />
                         </div>
                         <div>
-                          <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Custo de Embalagem (R$)</label>
+                          <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Custo de Embalagem (R$)</label>
                           <input 
                             type="number" 
                             step="0.5"
@@ -1264,11 +1299,11 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                                 }
                               }));
                             }}
-                            className="w-full bg-white border border-[#F0E6D2] text-xs font-bold rounded-xl px-3 py-2 outline-none"
+                            className="w-full bg-white border border-[#E5E5EA] text-xs font-bold rounded-xl px-3 py-2 outline-none"
                           />
                         </div>
                         <div>
-                          <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Impostos e Taxas (%)</label>
+                          <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Impostos e Taxas (%)</label>
                           <input 
                             type="number" 
                             step="0.5"
@@ -1284,7 +1319,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                                 }
                               }));
                             }}
-                            className="w-full bg-white border border-[#F0E6D2] text-xs font-bold rounded-xl px-3 py-2 outline-none"
+                            className="w-full bg-white border border-[#E5E5EA] text-xs font-bold rounded-xl px-3 py-2 outline-none"
                           />
                         </div>
                       </div>
@@ -1292,7 +1327,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
 
                   </div>
                 ) : (
-                  <div className="text-center p-12 text-[#A09898] uppercase font-bold tracking-wider">Nenhum produto selecionado</div>
+                  <div className="text-center p-12 text-[#8E8E93] uppercase font-bold tracking-wider">Nenhum produto selecionado</div>
                 )}
               </div>
 
@@ -1300,141 +1335,108 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           )}
 
           {activeSubmenu === 'simulator' && (
-            <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
               
-              {/* Simulation Header controls */}
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-[#F0E6D2]">
+              {/* Header and Select Controls */}
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-[#E5E5EA]">
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">🔮 Simulador de Pedidos Sob Demanda (Simulações de Atacado)</h3>
-                  <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Simule o faturamento, consumo, margens e shortfalls de insumos para fechar lotes de produção</p>
+                  <h3 className="text-sm font-medium text-slate-900 tracking-normal">📋 Resumo Executivo de Viabilidade</h3>
+                  <p className="text-[10px] font-bold text-[#8E8E93] tracking-normal mt-1">Visão geral unificada dos indicadores financeiros e logísticos cruciais para o produto selecionado</p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4">
                   {/* Select product */}
                   <div className="space-y-1">
-                    <span className="text-[8.5px] font-black uppercase text-[#A09898] tracking-wider block">Escolha o Produto</span>
+                    <span className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-wider block">Escolha o Produto</span>
                     <select
                       value={selectedSimProduct}
                       onChange={(e) => setSelectedSimProduct(e.target.value)}
-                      className="bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-3 py-2 outline-none font-bold uppercase"
+                      className="bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-3 py-2 outline-none font-bold uppercase"
                     >
                       {products.map(p => (
                         <option key={p.id} value={p.id}>{p.product_name}</option>
                       ))}
                     </select>
                   </div>
-
-                  {/* Quantity to simulate */}
-                  <div className="space-y-1">
-                    <span className="text-[8.5px] font-black uppercase text-[#A09898] tracking-wider block">Quantidade do Lote</span>
-                    <input 
-                      type="number" 
-                      min="1"
-                      value={simQuantity}
-                      onChange={(e) => setSimQuantity(Math.max(1, parseInt(e.target.value) || 0))}
-                      className="bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-3 py-2 outline-none font-bold w-24"
-                    />
-                  </div>
                 </div>
               </div>
 
-              {/* Simulation display cards */}
-              {simulatorResult ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div className="p-6 bg-amber-50/40 border border-amber-200/50 rounded-3xl">
-                      <span className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest">Receita Bruta Estimada</span>
-                      <div className="text-2xl font-black text-slate-950 mt-1">{formatCurrency(simulatorResult.revenue)}</div>
-                      <p className="text-[10px] text-slate-500 font-semibold mt-2">Valor de faturamento integral do lote.</p>
-                    </div>
-                    <div className="p-6 bg-rose-50/40 border border-rose-200/50 rounded-3xl">
-                      <span className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest">Investimento Necessário</span>
-                      <div className="text-2xl font-black text-slate-950 mt-1">{formatCurrency(simulatorResult.costs)}</div>
-                      <p className="text-[10px] text-slate-500 font-semibold mt-2">Custo integral dos insumos + operação.</p>
-                    </div>
-                    <div className="p-6 bg-emerald-50/40 border border-emerald-200/50 rounded-3xl">
-                      <span className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest">Margem & Lucro Estimado</span>
-                      <div className="text-2xl font-black text-emerald-800 mt-1">{formatCurrency(simulatorResult.profit)}</div>
-                      <div className="text-[10px] font-black text-emerald-700 uppercase mt-2">Margem Líquida Proposta: {simulatorResult.margin.toFixed(0)}%</div>
-                    </div>
-                  </div>
-
-                  {/* Stock impact checklist table */}
-                  <div className="space-y-4">
-                    <h4 className="text-[11px] font-black uppercase text-slate-900 tracking-widest">📊 Impacto nos Estoques e Compra de Reposição</h4>
-                    
-                    <div className="border border-[#F0E6D2] rounded-2xl overflow-hidden font-medium">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-[#FAF9F6] border-b border-[#F0E6D2] text-[9px] font-black uppercase tracking-wider text-[#A09898]">
-                          <tr>
-                            <th className="px-5 py-4">Insumo Necessário</th>
-                            <th className="px-5 py-4 text-center">Necessário para o Lote</th>
-                            <th className="px-5 py-4 text-center">Quantidade no Estoque</th>
-                            <th className="px-5 py-4 text-center">Status</th>
-                            <th className="px-5 py-4 text-right">Falta Comprar</th>
-                            <th className="px-5 py-4 text-right">Investimento Adicional</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#F0E6D2] font-semibold">
-                          {simulatorResult.materialsNeeded.map((mat, mIdx) => {
-                            const isCritical = mat.missing > 0;
-                            return (
-                              <tr key={mIdx} className="hover:bg-[#FAF9F6]/55 transition-colors">
-                                <td className="px-5 py-4 text-slate-900 font-extrabold uppercase">{mat.name}</td>
-                                <td className="px-5 py-4 text-center text-slate-800 font-bold">{mat.required.toFixed(1)} {mat.unit}</td>
-                                <td className="px-5 py-4 text-center font-bold">{mat.available.toFixed(1)} {mat.unit}</td>
-                                <td className="px-5 py-4 text-center">
-                                  <span className={`inline-block px-3 py-1 rounded-full text-[8.5px] font-black uppercase tracking-wider ${isCritical ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-150'}`}>
-                                    {isCritical ? 'ESGOTADO / COMPRAR' : 'DISPONÍVEL'}
-                                  </span>
-                                </td>
-                                <td className="px-5 py-4 text-right text-rose-600 font-black">{isCritical ? `${mat.missing.toFixed(1)} ${mat.unit}` : '0'}</td>
-                                <td className="px-5 py-4 text-right text-slate-900 font-black">{formatCurrency(mat.costToBuy)}</td>
-                              </tr>
-                            );
-                          })}
-                          {(!simulatorResult.materialsNeeded.length) && (
-                            <tr>
-                              <td colSpan={6} className="px-5 py-6 text-center text-[#A09898] uppercase tracking-widest text-[9.5px] font-black leading-relaxed">
-                                Nenhum material ou insumo foi vinculado à formula técnica deste produto.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {simulatorResult.extraInvestmentNeeded > 0 && (
-                      <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 flex items-start gap-4 animate-in slide-in-from-bottom-2 duration-300">
-                        <AlertTriangle size={18} className="text-rose-600 mt-0.5 flex-shrink-0" />
-                        <div className="space-y-1">
-                          <h5 className="text-[11px] font-black uppercase text-rose-800 tracking-wider">Aviso de Gargalo de Produção</h5>
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-rose-700">
-                            Para concluir este pedido de {simQuantity} unidades, você precisará providenciar compras imediatas de insumos com investimento adicional líquido de <span className="underline font-black">{formatCurrency(simulatorResult.extraInvestmentNeeded)}</span>.
-                          </p>
-                        </div>
+              {executiveSummaryResult ? (
+                <div className="grid grid-cols-1 sm:grid-cols-5 gap-6 pt-2">
+                  
+                  {/* Preço Final */}
+                  <div className="p-6 bg-slate-50 border border-slate-200/60 rounded-2xl flex flex-col justify-between">
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-[#8E8E93] block">Preço Final</span>
+                      <div className="text-xl font-black text-slate-900 mt-2">
+                        {formatCurrency(executiveSummaryResult.salePrice)}
                       </div>
-                    )}
-
+                    </div>
+                    <p className="text-[9px] text-[#8E8E93] uppercase font-bold tracking-wider mt-3">Valor de Venda Unitário</p>
                   </div>
+
+                  {/* Custo Total */}
+                  <div className="p-6 bg-slate-50 border border-slate-200/60 rounded-2xl flex flex-col justify-between">
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-[#8E8E93] block">Custo Total</span>
+                      <div className="text-xl font-black text-slate-900 mt-2">
+                        {formatCurrency(executiveSummaryResult.totalCost)}
+                      </div>
+                    </div>
+                    <p className="text-[9px] text-[#8E8E93] uppercase font-bold tracking-wider mt-3">Insumos + Custos Operacionais</p>
+                  </div>
+
+                  {/* Lucro Estimado */}
+                  <div className="p-6 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex flex-col justify-between">
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600 block">Lucro Estimado</span>
+                      <div className="text-xl font-black text-emerald-800 mt-2">
+                        {formatCurrency(executiveSummaryResult.profit)}
+                      </div>
+                    </div>
+                    <p className="text-[9px] text-emerald-600 uppercase font-bold tracking-wider mt-3">Margem Líquida Unitária</p>
+                  </div>
+
+                  {/* Margem de Lucro */}
+                  <div className="p-6 bg-sky-50/50 border border-sky-100 rounded-2xl flex flex-col justify-between">
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-sky-600 block">Margem de Lucro</span>
+                      <div className="text-xl font-black text-sky-800 mt-2">
+                        {executiveSummaryResult.margin.toFixed(1)}%
+                      </div>
+                    </div>
+                    <p className="text-[9px] text-sky-600 uppercase font-bold tracking-wider mt-3">Rentabilidade do Item</p>
+                  </div>
+
+                  {/* Tempo de Produção */}
+                  <div className="p-6 bg-amber-50/50 border border-amber-100 rounded-2xl flex flex-col justify-between">
+                    <div>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-amber-700 block">Tempo de Produção</span>
+                      <div className="text-xl font-black text-amber-800 mt-2">
+                        {executiveSummaryResult.productionTime} {executiveSummaryResult.productionTime === 1 ? 'Dia' : 'Dias'}
+                      </div>
+                    </div>
+                    <p className="text-[9px] text-amber-700 uppercase font-bold tracking-wider mt-3">Tempo Médio Estimado</p>
+                  </div>
+
                 </div>
               ) : (
-                <div className="text-center p-12 text-[#A09898]">Complete as fichas para iniciar simulações</div>
+                <div className="text-center p-12 text-[#8E8E93]">Insira produtos para gerar o resumo executivo.</div>
               )}
 
             </div>
           )}
 
           {activeSubmenu === 'viability' && (
-            <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
               <div>
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest font-extrabold">🟢 Viabilidade Comercial e Ranking Automático</h3>
-                <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Classificação de rentabilidade por margem líquida com base em insumos vivos e cadastros operacionais</p>
+                <h3 className="text-sm font-medium text-slate-900 tracking-normal font-semibold">🟢 Viabilidade Comercial e Ranking Automático</h3>
+                <p className="text-[10px] font-bold text-[#8E8E93] tracking-normal mt-1">Classificação de rentabilidade por margem líquida com base em insumos vivos e cadastros operacionais</p>
               </div>
 
-              <div className="overflow-x-auto border border-[#F0E6D2] rounded-2xl font-medium">
+              <div className="overflow-x-auto border border-[#E5E5EA] rounded-2xl font-medium">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#FAF9F6] border-b border-[#F0E6D2] text-[9px] font-black uppercase tracking-wider text-[#A09898]">
+                  <thead className="bg-[#F5F5F7] border-b border-[#E5E5EA] text-[9px] font-medium uppercase tracking-wider text-[#8E8E93]">
                     <tr>
                       <th className="px-5 py-4">Ranking</th>
                       <th className="px-5 py-4">Produto</th>
@@ -1442,24 +1444,24 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                       <th className="px-5 py-4 text-right">Custo Insumos</th>
                       <th className="px-5 py-4 text-right">Custo Unit. Total</th>
                       <th className="px-5 py-4 text-right">Preço de Venda</th>
-                      <th className="px-5 py-4 text-right font-black">Lucro Unitário</th>
+                      <th className="px-5 py-4 text-right font-medium">Lucro Unitário</th>
                       <th className="px-5 py-4 text-right">Margem Líquida</th>
                       <th className="px-5 py-4 text-center">Classificação</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#F0E6D2] font-semibold">
+                  <tbody className="divide-y divide-[#E5E5EA] font-semibold">
                     {viabilityRanking.map((item, idx) => (
-                      <tr key={item.id} className="hover:bg-[#FAF9F6]/50 transition-colors">
-                        <td className="px-5 py-4 font-mono font-black text-slate-500 text-center w-12">{idx + 1}º</td>
-                        <td className="px-5 py-4 font-extrabold text-slate-900 uppercase">{item.product_name}</td>
-                        <td className="px-5 py-4 text-[10px] text-[#A09898] font-bold uppercase">{brandNames[item.company]}</td>
+                      <tr key={item.id} className="hover:bg-[#F5F5F7]/50 transition-colors">
+                        <td className="px-5 py-4 font-mono font-medium text-slate-500 text-center w-12">{idx + 1}º</td>
+                        <td className="px-5 py-4 font-semibold text-slate-900 uppercase">{item.product_name}</td>
+                        <td className="px-5 py-4 text-[10px] text-[#8E8E93] font-bold uppercase">{brandNames[item.company]}</td>
                         <td className="px-5 py-4 text-right">{formatCurrency(item.materialsCost)}</td>
                         <td className="px-5 py-4 text-right">{formatCurrency(item.totalCost)}</td>
                         <td className="px-5 py-4 text-right">{formatCurrency(item.retail_price)}</td>
-                        <td className="px-5 py-4 text-right text-emerald-700 font-black">{formatCurrency(item.profit)}</td>
-                        <td className="px-5 py-4 text-right text-slate-900 font-extrabold">{item.margin.toFixed(1)}%</td>
+                        <td className="px-5 py-4 text-right text-emerald-700 font-medium">{formatCurrency(item.profit)}</td>
+                        <td className="px-5 py-4 text-right text-slate-900 font-semibold">{item.margin.toFixed(1)}%</td>
                         <td className="px-5 py-4 text-center">
-                          <span className={`inline-block px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${item.scoreColor}`}>
+                          <span className={`inline-block px-3 py-1.5 rounded-full text-[8px] font-medium tracking-normal border ${item.scoreColor}`}>
                             {item.classification}
                           </span>
                         </td>
@@ -1472,19 +1474,19 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
           )}
 
           {activeSubmenu === 'reports' && (
-            <div className="bg-white border border-[#F0E6D2] rounded-3xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
+            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-8 space-y-6 shadow-sm animate-in fade-in duration-300">
               <div>
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">📝 Emissão do Relatório Administrativo Integral (PDF)</h3>
-                <p className="text-[10px] font-bold text-[#A09898] uppercase tracking-widest mt-1">Gere relatórios gerenciais estruturados em PDF para apresentar aos ateliês e controlar os custos operacionais</p>
+                <h3 className="text-sm font-medium text-slate-900 tracking-normal">📝 Emissão do Relatório Administrativo Integral (PDF)</h3>
+                <p className="text-[10px] font-bold text-[#8E8E93] tracking-normal mt-1">Gere relatórios gerenciais estruturados em PDF para apresentar aos ateliês e controlar os custos operacionais</p>
               </div>
 
-              <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-[#FAF9F6] border border-[#F0E6D2] rounded-3xl w-full max-w-2xl">
+              <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl w-full max-w-2xl">
                 <div className="space-y-1 flex-1">
-                  <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block">Escolha o Modelo de Produto</label>
+                  <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block">Escolha o Modelo de Produto</label>
                   <select
                     value={selectedProductIdForReport}
                     onChange={(e) => setSelectedProductIdForReport(e.target.value)}
-                    className="w-full bg-white border border-[#F0E6D2] text-xs font-bold rounded-xl px-4 py-3 outline-none uppercase cursor-pointer"
+                    className="w-full bg-white border border-[#E5E5EA] text-xs font-bold rounded-xl px-4 py-3 outline-none uppercase cursor-pointer"
                   >
                     {products.map(p => (
                       <option key={p.id} value={p.id}>{p.product_name}</option>
@@ -1494,7 +1496,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
 
                 <button
                   onClick={() => handleGeneratePDF(selectedProductIdForReport)}
-                  className="flex items-center gap-2 px-6 py-4 bg-[#C6A664] text-white rounded-xl text-[10px] font-black uppercase tracking-wider shadow-md hover:bg-[#b09054] transition-all cursor-pointer self-end w-full md:w-auto justify-center"
+                  className="flex items-center gap-2 px-6 py-4 bg-[#C6A664] text-white rounded-xl text-[10px] font-medium uppercase tracking-wider shadow-md hover:bg-[#b09054] transition-all cursor-pointer self-end w-full md:w-auto justify-center"
                 >
                   <FileDown size={16} /> Emitir Relatório PDF
                 </button>
@@ -1512,32 +1514,32 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-lg bg-white rounded-3xl border border-[#F0E6D2] shadow-2xl relative p-8 z-50 max-h-[90vh] overflow-y-auto scrollbar-hide"
+            className="w-full max-w-lg bg-white rounded-2xl border border-[#E5E5EA] shadow-2xl relative p-8 z-50 max-h-[90vh] overflow-y-auto scrollbar-hide"
           >
-            <h4 className="text-sm font-black uppercase text-slate-900 tracking-widest mb-6">
+            <h4 className="text-sm font-medium uppercase text-slate-900 tracking-widest mb-6">
               {editingMaterial?.id ? '✏️ Editar Material' : '✨ Novo Material'}
             </h4>
 
             <form onSubmit={handleSaveMaterial} className="space-y-5">
               <div>
-                <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Nome do Material/Insumo *</label>
+                <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Nome do Material/Insumo *</label>
                 <input 
                   type="text"
                   required
                   placeholder="Ex: Papel 75g"
                   value={editingMaterial?.name || ''}
                   onChange={(e) => setEditingMaterial(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none uppercase font-bold"
+                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none uppercase font-bold"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Unidade de Compra *</label>
+                  <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Unidade de Compra *</label>
                   <select 
                     value={editingMaterial?.unit || 'pct'}
                     onChange={(e) => setEditingMaterial(prev => ({ ...prev, unit: e.target.value as any }))}
-                    className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none font-bold uppercase"
+                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none font-bold uppercase"
                   >
                     <option value="pct">Pacote (pct)</option>
                     <option value="unid">Unidades (unid)</option>
@@ -1546,59 +1548,59 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Categoria</label>
+                  <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Categoria</label>
                   <input 
                     type="text"
                     placeholder="Ex: Papéis"
                     value={editingMaterial?.category || ''}
                     onChange={(e) => setEditingMaterial(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none uppercase font-bold"
+                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none uppercase font-bold"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Preço Pago Total (R$)</label>
+                  <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Preço Pago Total (R$)</label>
                   <input 
                     type="number"
                     step="0.01"
                     placeholder="0.00"
                     value={editingMaterial?.costPrice || ''}
                     onChange={(e) => setEditingMaterial(prev => ({ ...prev, costPrice: parseFloat(e.target.value) || 0 }))}
-                    className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none font-bold"
+                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none font-bold"
                   />
                 </div>
                 <div>
-                  <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Quantidade de Compra</label>
+                  <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Quantidade de Compra</label>
                   <input 
                     type="number"
                     placeholder="500"
                     value={editingMaterial?.quantity || ''}
                     onChange={(e) => setEditingMaterial(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 0 }))}
-                    className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none font-bold"
+                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none font-bold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Estoque Mínimo Crítico (Aviso)</label>
+                <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Estoque Mínimo Crítico (Aviso)</label>
                 <input 
                   type="number"
                   placeholder="20"
                   value={editingMaterial?.criticalLimit || ''}
                   onChange={(e) => setEditingMaterial(prev => ({ ...prev, criticalLimit: parseFloat(e.target.value) || 0 }))}
-                  className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none font-bold"
+                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none font-bold"
                 />
               </div>
 
               <div>
-                <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Observações escritas</label>
+                <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Observações escritas</label>
                 <textarea 
                   placeholder="Especifique dimensões, gramatura, etc."
                   value={editingMaterial?.description || ''}
                   onChange={(e) => setEditingMaterial(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none h-20"
+                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none h-20"
                 />
               </div>
 
@@ -1606,13 +1608,13 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsMaterialModalOpen(false)}
-                  className="px-5 py-3 border border-[#F0E6D2] text-[#A09898] rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-[#FAF9F6] transition-colors cursor-pointer"
+                  className="px-5 py-3 border border-[#E5E5EA] text-[#8E8E93] rounded-xl text-[10px] font-medium uppercase tracking-wider hover:bg-[#F5F5F7] transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-3 bg-[#4A4444] text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-black transition-all cursor-pointer"
+                  className="px-5 py-3 bg-[#1C1C1E] text-white rounded-xl text-[10px] font-medium uppercase tracking-wider hover:bg-black transition-all cursor-pointer"
                 >
                   Salvar Material
                 </button>
@@ -1630,66 +1632,66 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-lg bg-white rounded-3xl border border-[#F0E6D2] shadow-2xl relative p-8 z-50 max-h-[90vh] overflow-y-auto scrollbar-hide"
+            className="w-full max-w-lg bg-white rounded-2xl border border-[#E5E5EA] shadow-2xl relative p-8 z-50 max-h-[90vh] overflow-y-auto scrollbar-hide"
           >
-            <h4 className="text-sm font-black uppercase text-slate-900 tracking-widest mb-6">
+            <h4 className="text-sm font-medium uppercase text-slate-900 tracking-widest mb-6">
               {editingSupplier?.id ? '✏️ Editar Fornecedor' : '✨ Novo Fornecedor'}
             </h4>
 
             <form onSubmit={handleSaveSupplier} className="space-y-5">
               <div>
-                <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Nome do Fornecedor *</label>
+                <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Nome do Fornecedor *</label>
                 <input 
                   type="text"
                   required
                   placeholder="Ex: Kalunga Distribuidores"
                   value={editingSupplier?.name || ''}
                   onChange={(e) => setEditingSupplier(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none uppercase font-bold"
+                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none uppercase font-bold"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Tipo de Insumos fornecidos</label>
+                  <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Tipo de Insumos fornecidos</label>
                   <input 
                     type="text"
                     placeholder="Ex: Papelaria"
                     value={editingSupplier?.type || ''}
                     onChange={(e) => setEditingSupplier(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none uppercase font-bold"
+                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none uppercase font-bold"
                   />
                 </div>
                 <div>
-                  <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Contato do Fornecedor</label>
+                  <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Contato do Fornecedor</label>
                   <input 
                     type="text"
                     placeholder="Ex: sac@kalunga.com"
                     value={editingSupplier?.contact || ''}
                     onChange={(e) => setEditingSupplier(prev => ({ ...prev, contact: e.target.value }))}
-                    className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none font-bold"
+                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none font-bold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Desconto Padrão Aplicado (%)</label>
+                <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Desconto Padrão Aplicado (%)</label>
                 <input 
                   type="number"
                   placeholder="5"
                   value={editingSupplier?.defaultDiscount ?? ''}
                   onChange={(e) => setEditingSupplier(prev => ({ ...prev, defaultDiscount: parseFloat(e.target.value) || 0 }))}
-                  className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none font-bold"
+                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none font-bold"
                 />
               </div>
 
               <div>
-                <label className="text-[8.5px] font-black uppercase text-[#A09898] tracking-widest block mb-1.5">Histórico e Observações</label>
+                <label className="text-[8.5px] font-medium uppercase text-[#8E8E93] tracking-widest block mb-1.5">Histórico e Observações</label>
                 <textarea 
                   placeholder="Especifique canais de compra favoritos ou prazos de entrega..."
                   value={editingSupplier?.notes || ''}
                   onChange={(e) => setEditingSupplier(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full bg-[#FAF9F6] border border-[#F0E6D2] text-xs rounded-xl px-4 py-3 outline-none h-20"
+                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] text-xs rounded-xl px-4 py-3 outline-none h-20"
                 />
               </div>
 
@@ -1697,13 +1699,13 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsSupplierModalOpen(false)}
-                  className="px-5 py-3 border border-[#F0E6D2] text-[#A09898] rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-[#FAF9F6] transition-colors cursor-pointer"
+                  className="px-5 py-3 border border-[#E5E5EA] text-[#8E8E93] rounded-xl text-[10px] font-medium uppercase tracking-wider hover:bg-[#F5F5F7] transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-3 bg-[#4A4444] text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-black transition-all cursor-pointer"
+                  className="px-5 py-3 bg-[#1C1C1E] text-white rounded-xl text-[10px] font-medium uppercase tracking-wider hover:bg-black transition-all cursor-pointer"
                 >
                   Salvar Fornecedor
                 </button>
