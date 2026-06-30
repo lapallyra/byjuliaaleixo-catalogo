@@ -32,6 +32,8 @@ import { sendNotifications } from './services/notificationService';
 import { updateOrder, subscribeToAppConfig, subscribeToProducts } from './services/firebaseService';
 import { playSuccessSound } from './utils/audio';
 import { StudioPage } from './studiomockup/pages/StudioPage';
+import { CustomerSocialProofToast } from './components/CustomerSocialProofToast';
+import { AdminOrchestratorProvider } from './components/AdminOrchestratorSystem';
 
 // Wrapper to handle company paths
 function CompanyCatalogWrapper({ companyId, config, cart, setCart, giftList, setGiftList, allProducts }: { companyId: CompanyId, config: AppConfig, cart: CartItem[], setCart: any, giftList: Product[], setGiftList: any, allProducts: Product[] }) {
@@ -196,6 +198,15 @@ function SiteApp() {
   const effectiveConfig = config || INITIAL_CONFIG;
   const location = useLocation();
 
+  const currentCompany = useMemo(() => {
+    const path = location.pathname;
+    if (path.startsWith('/lapallyra') || path.startsWith('/pallyra')) return 'pallyra' as CompanyId;
+    if (path.startsWith('/comamorguennita') || path.startsWith('/guennita')) return 'guennita' as CompanyId;
+    if (path.startsWith('/mimadasim') || path.startsWith('/mimada')) return 'mimada' as CompanyId;
+    if (path.startsWith('/tuttymimo') || path.startsWith('/tutty')) return 'tuttymimo' as CompanyId;
+    return null;
+  }, [location.pathname]);
+
   useEffect(() => {
     const unsubConfig = subscribeToAppConfig((newConfig) => {
       setConfig(prev => ({ ...prev, ...newConfig }));
@@ -317,6 +328,7 @@ function SiteApp() {
         </Routes>
       </div>
       <Footer config={effectiveConfig} />
+      <CustomerSocialProofToast currentCompany={currentCompany} />
     </div>
   );
 }
@@ -383,7 +395,9 @@ export default function App() {
         </div>
       }>
         <BrowserRouter>
-          <MainApp />
+          <AdminOrchestratorProvider>
+            <MainApp />
+          </AdminOrchestratorProvider>
         </BrowserRouter>
       </ErrorBoundary>
     </AuthProvider>

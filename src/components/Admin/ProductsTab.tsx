@@ -45,8 +45,10 @@ import {
   uploadImage,
   compressImage,
 } from "../../services/firebaseStorageService";
+import { NewProductForm } from "./NewProductForm";
 import { Product, CompanyId, Insumo, Variation } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
+import { calculateProductCost, calculateSuggestedPrice } from "../../lib/finance";
 import { getSiteSettings, getGlobalSettings } from "../../services/firebaseService";
 
 import { ImageWithFallback } from "../ImageWithFallback";
@@ -416,6 +418,39 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
         </div>
       )}
 
+      {/* Modal - Novo Produto */}
+      {isModalOpen && !editingProduct && (
+        <NewProductForm
+          companyId={companyId}
+          components={insumos}
+          existingProducts={products}
+          onSave={async (p) => {
+              await onSaveProduct(p);
+              setIsModalOpen(false);
+          }}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+
+      {/* Existing Edit/View Modal */}
+      {isModalOpen && editingProduct && (
+        <ProductFormModal
+          editingProduct={editingProduct}
+          existingProducts={products}
+          onClose={() => {
+            setEditingProduct(null);
+            setIsModalOpen(false);
+          }}
+          onSave={async (data) => {
+            await onSaveProduct(data);
+            setIsModalOpen(false);
+          }}
+          companyId={companyId}
+          atelieres={[{ id: "pallyra", name: "La Pallyra", prefix: "LP" }]}
+          insumos={insumos}
+        />
+      )}
+
       {/* View Modal */}
       {viewingProduct && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -609,7 +644,6 @@ const ProductFormModal: React.FC<
 
   // Preços State
   const [retailPrice, setRetailPrice] = useState(editingProduct?.retail_price || 0);
-  const [costPrice, setCostPrice] = useState(editingProduct?.estimatedCost || 0);
   const [originalPrice, setOriginalPrice] = useState(editingProduct?.original_price || 0);
   const [stock, setStock] = useState(editingProduct?.stock || 0);
   const [minStock, setMinStock] = useState(editingProduct?.minStock || 0);
@@ -619,6 +653,15 @@ const ProductFormModal: React.FC<
   const [addedInsumos, setAddedInsumos] = useState<
     { insumoId: string; quantity: number }[]
   >(editingProduct?.insumos || []);
+
+  const currentCost = useMemo(() => {
+    const productForCalc = { ...editingProduct, insumos: addedInsumos } as Product;
+    return calculateProductCost(productForCalc, insumos);
+  }, [addedInsumos, insumos, editingProduct]);
+
+  const suggestedPrice = useMemo(() => calculateSuggestedPrice(currentCost), [currentCost]);
+  const modalProfit = retailPrice - currentCost;
+  const modalProfitMargin = retailPrice > 0 ? (modalProfit / retailPrice) * 100 : 0;
   const [selectedInsumoId, setSelectedInsumoId] = useState("");
   const [insumoQty, setInsumoQty] = useState(1);
 
@@ -680,7 +723,7 @@ const ProductFormModal: React.FC<
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
-  }, [productName, description, category, subcategory, collection, sku, retailPrice, costPrice, images, collectionCoverImage, tagsString, displayOrder, personalizationSettings, variations, seoTitle, slug, seoDescription, seoKeywords]);
+  }, [productName, description, category, subcategory, collection, sku, retailPrice, currentCost, images, collectionCoverImage, tagsString, displayOrder, personalizationSettings, variations, seoTitle, slug, seoDescription, seoKeywords]);
 
   // Auto-generate SEO values on title edit
   useEffect(() => {
@@ -716,7 +759,7 @@ const ProductFormModal: React.FC<
     if (collectionCoverImage !== (editingProduct?.collectionCoverImage || "")) return true;
 
     if (retailPrice !== (editingProduct?.retail_price || 0)) return true;
-    if (costPrice !== (editingProduct?.estimatedCost || 0)) return true;
+    if (currentCost !== (editingProduct?.estimatedCost || 0)) return true;
     if (originalPrice !== (editingProduct?.original_price || 0)) return true;
     if (stock !== (editingProduct?.stock || 0)) return true;
     if (minStock !== (editingProduct?.minStock || 0)) return true;
@@ -781,7 +824,7 @@ const ProductFormModal: React.FC<
         retail_price: retailPrice || 0,
         original_price: originalPrice || 0,
         current_price: retailPrice || 0,
-        estimatedCost: costPrice || 0,
+        estimatedCost: currentCost || 0,
         stock: stock || 0,
         minStock: minStock || 0,
         productionTime: productionTime || 5,
@@ -950,8 +993,7 @@ const ProductFormModal: React.FC<
   };
 
   // Profit calculations
-  const profit = retailPrice - costPrice;
-  const profitMargin = retailPrice > 0 ? (profit / retailPrice) * 100 : 0;
+  // No profit calculations needed in list view, using estimatedCost
 
   // Render sub-tabs navigation items
   const tabsConfig = [
@@ -1444,24 +1486,22 @@ const ProductFormModal: React.FC<
                     </div>
                   </div>
 
-                  {/* Preço de Custo */}
+                  {/* Preço de Custo (Calculado Automaticamente) */}
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase font-bold text-slate-400 tracking-widest ml-1">
-                      Preço de Custo (R$)
+                      Custo de Produção (Estimado)
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">
                         R$
                       </span>
-                      <input
-                        type="number"
-                        value={costPrice || ""}
-                        onChange={(e) => setCostPrice(Number(e.target.value))}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-800 outline-none focus:border-pink-300 focus:bg-white transition-all shadow-inner"
-                        placeholder="0,00"
-                        step="0.01"
-                      />
+                      <div className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-600 shadow-inner">
+                        {formatCurrency(currentCost)}
+                      </div>
                     </div>
+                    <p className="text-[10px] text-slate-400 ml-1">
+                      Sugestão de Preço: <span className="font-bold text-slate-600">{formatCurrency(suggestedPrice)}</span>
+                    </p>
                   </div>
 
                   {/* Preço Promocional (De) */}
@@ -1493,7 +1533,7 @@ const ProductFormModal: React.FC<
                         Lucro Líquido Estimado
                       </span>
                       <h4 className="text-xl font-black text-emerald-700 mt-1">
-                        {formatCurrency(profit > 0 ? profit : 0)}
+                        {formatCurrency(modalProfit > 0 ? modalProfit : 0)}
                       </h4>
                     </div>
                     <div className="p-3 bg-white/80 rounded-xl shadow-xs border border-emerald-100 text-emerald-600">
@@ -1507,11 +1547,11 @@ const ProductFormModal: React.FC<
                         Margem de Lucro Estimada
                       </span>
                       <h4 className="text-xl font-black text-sky-700 mt-1">
-                        {profitMargin > 0 ? profitMargin.toFixed(1) : "0.0"}%
+                        {modalProfitMargin > 0 ? modalProfitMargin.toFixed(1) : "0.0"}%
                       </h4>
                     </div>
                     <div className="p-3 bg-white/80 rounded-xl shadow-xs border border-sky-100 text-sky-600">
-                      <PercentageBadge value={profitMargin} />
+                      <PercentageBadge value={modalProfitMargin} />
                     </div>
                   </div>
                 </div>

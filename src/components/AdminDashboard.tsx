@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Product, CompanyId, Order, Insumo, Customer } from "../types";
+import { Product, CompanyId, Order, Componente, Insumo, Customer } from "../types";
 import {
   addProduct,
   updateProduct,
@@ -21,8 +21,9 @@ import {
   saveSale,
   subscribeToCheckoutEvents,
 } from "../services/firebaseService";
+import { startProductProduction } from "../services/productionService";
 import { db } from "../lib/firebase";
-import { doc, deleteDoc } from "firebase/firestore";
+import { doc, deleteDoc, updateDoc } from "firebase/firestore";
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -53,6 +54,8 @@ import {
   Megaphone,
   Tag,
   Truck,
+  Package,
+  Zap,
 } from "lucide-react";
 import { playSuccessSound } from "../utils/audio";
 import { useAuth } from "./AuthProvider";
@@ -82,8 +85,13 @@ import { CouponsTab } from "./Admin/CouponsTab";
 import { ExpeditionTab } from "./Admin/ExpeditionTab";
 import { IntegrationsTab } from "./Admin/IntegrationsTab";
 import { NotificationsTab } from "./Admin/NotificationsTab";
+import { ComponentsTab } from "./Admin/ComponentsTab";
+import { PurchasesTab } from "./Admin/PurchasesTab";
+import { OperationalEfficiencyTab } from "./Admin/OperationalEfficiencyTab";
+import { OrderControlCenterTab } from "./Admin/OrderControlCenterTab";
 
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
+import { useAdminOrchestrator } from "./AdminOrchestratorSystem";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
 import { safeFormatISO } from "../lib/dateUtils";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -96,7 +104,7 @@ type TabType =
   | "products"
   | "kits"
   | "clients"
-  | "finance"
+  | "financeiro"
   | "auditoria"
   | "expedition"
   | "gift-lists"
@@ -113,6 +121,10 @@ type TabType =
   | "campaigns"
   | "integrations"
   | "notifications"
+  | "componentes"
+  | "purchases"
+  | "efficiency"
+  | "control_center"
   | "coupons";
 
 interface AdminDashboardProps {
@@ -130,19 +142,27 @@ const TabLoader = () => (
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   const { user, isAdmin, loading, logout } = useAuth();
+  const orchestrator = useAdminOrchestrator();
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [selectedCompanyId, setSelectedCompanyId] =
     useState<CompanyId>("pallyra"); // Default to first
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [tabError, setTabError] = useState<string | null>(null);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
-  // Clear tab error when switching tabs
+  // Clear tab error when switching tabs and scroll to top
   useEffect(() => {
     setTabError(null);
+    orchestrator.registerInteraction();
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
   }, [activeTab]);
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Order[]>([]);
   const [insumos, setInsumos] = useState<Insumo[]>([]);
+  const [componentes, setComponentes] = useState<Componente[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
@@ -185,7 +205,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       setSales(loaded as Order[]),
     );
     const unsubSettings = subscribeToAllSettings(setSettings);
-    const unsubInsumos = subscribeToInsumos(setInsumos);
+    const unsubInsumos = subscribeToInsumos((data) => setInsumos(data as any)); // Existing
+    const unsubComponentes = subscribeToInsumos((data) => setComponentes(data as Componente[]));
     const unsubCustomers = subscribeToCustomers(setCustomers);
     const unsubSuggestions = subscribeToSuggestions(setSuggestions);
     const unsubFeedbacks = subscribeToFeedbacks(setFeedbacks);
@@ -257,13 +278,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     { id: "gift-lists", label: "Lista de Presentes", group: "Operação", icon: Gift },
     
     // Produção
+    { id: "control_center", label: "Painel de Operação", group: "Produção", icon: Zap },
     { id: "inventory", label: "Produção", group: "Produção", icon: Archive },
+    { id: "efficiency", label: "Eficiência Operacional", group: "Produção", icon: Activity },
+    { id: "componentes", label: "Componentes", group: "Suprimentos", icon: Package },
+    { id: "purchases", label: "Compras", group: "Suprimentos", icon: ShoppingBag },
     { id: "expedition", label: "Expedição", group: "Produção", icon: Truck },
+    { id: "financeiro", label: "Financeiro", group: "Financeiro", icon: DollarSign },
     { id: "auditoria", label: "Engenharia & Custos", group: "Produção", icon: FileCheck },
     { id: "kits", label: "Kits & Combos", group: "Produção", icon: PackagePlus },
 
     // Financeiro
-    { id: "finance", label: "Financeiro", group: "Financeiro", icon: DollarSign },
     { id: "funnel", label: "Checkout & Pagamentos", group: "Financeiro", icon: TrendingUp },
     { id: "reports", label: "Relatórios", group: "Financeiro", icon: BarChart3 },
 
@@ -285,6 +310,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     "Dashboard",
     "Operação",
     "Produção",
+    "Suprimentos",
     "Financeiro",
     "Marketing",
     "Sistema"
@@ -317,8 +343,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         <div className={`flex flex-col flex-1 overflow-hidden p-6 ${isSidebarCollapsed ? "px-4" : ""}`}>
           <div className="flex items-center gap-3 mb-10 px-2 shrink-0">
             <div className="w-10 h-10 rounded-2xl bg-white/50 border border-white/20 flex items-center justify-center text-[#1C1C1E] shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative backdrop-blur-sm">
-               {/* Ambient glowing dot */}
-               <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-[#34C759] rounded-full shadow-[0_0_8px_#34C759]" />
                <Sparkles size={16} className="text-[#1C1C1E] opacity-80" />
             </div>
             {!isSidebarCollapsed && (
@@ -326,12 +350,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                 <h1 className="font-sans font-medium text-sm text-[#1C1C1E] tracking-tight">
                    By Julia Aleixo
                 </h1>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <div className="w-1 h-1 bg-[#34C759] rounded-full shadow-[0_0_6px_#34C759]" />
-                  <p className="text-[10px] text-[#8E8E93] uppercase font-medium tracking-wider">
-                    Online
-                  </p>
-                </div>
               </div>
             )}
           </div>
@@ -471,19 +489,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                 <div className="flex items-center justify-between mb-10">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-2xl bg-white border border-[#E5E5EA] text-[#1C1C1E] flex items-center justify-center shadow-sm relative">
-                       <div className="absolute top-1 right-1 w-1 h-1 bg-[#34C759] rounded-full shadow-[0_0_8px_#34C759]" />
                        <Sparkles size={16} />
                     </div>
                     <div>
                       <h1 className="font-sans font-medium text-sm tracking-tight text-[#1C1C1E]">
                         By Julia Aleixo
                       </h1>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <div className="w-1 h-1 bg-[#34C759] rounded-full" />
-                        <p className="text-[10px] text-[#8E8E93] uppercase tracking-wider font-medium">
-                          Online
-                        </p>
-                      </div>
                     </div>
                   </div>
                   <button
@@ -605,50 +616,101 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-[#F5F5F7]">
         {/* Top Header Bar */}
-        <header className="h-16 bg-white/30 backdrop-blur-2xl border-b border-white/20 px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0">
-          <div className="flex items-center gap-4 flex-1">
+        {activeTab === "dashboard" ? (
+          <header className="h-16 bg-white border-b border-[#E5E5EA] px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0">
+            {/* Lado Esquerdo */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="lg:hidden p-2 text-[#8E8E93] hover:text-[#1C1C1E] transition-colors"
+              >
+                <LayoutDashboard size={18} />
+              </button>
+              
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#FAF9F6] border border-[#E5E5EA] flex items-center justify-center shadow-xs">
+                  <Sparkles size={16} className="text-[#CCA062]" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-[#1C1C1E] uppercase tracking-wider font-sans leading-none">
+                    Mimos de Ateliê
+                  </span>
+                  <span className="text-[10px] font-bold text-[#8E8E93] mt-0.5">
+                    Painel Administrativo
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Lado Direito */}
+            <div className="flex items-center gap-4">
+              {/* Pesquisa */}
+              <div className="relative hidden md:flex items-center font-sans">
+                <Search size={14} className="absolute left-3 text-[#8E8E93] pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Pesquisar no sistema..."
+                  className="w-56 pl-9 pr-4 py-1.5 bg-[#FAF9F6] border border-[#E5E5EA] rounded-xl text-xs text-[#1C1C1E] placeholder-gray-400 focus:outline-hidden focus:border-[#CCA062] focus:bg-white transition-all font-medium"
+                />
+              </div>
+
+              {/* Notificações */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsSuggestionsModalOpen(true)}
+                  className={`p-2 rounded-xl transition-all relative bg-white border border-[#E5E5EA] shadow-sm hover:shadow-md ${suggestions.some((s) => !s.read) ? "text-[#1C1C1E]" : "text-[#8E8E93]"}`}
+                >
+                  <Bell size={16} />
+                  {suggestions.filter((s) => !s.read).length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#FF3B30] rounded-full border border-white" />
+                  )}
+                </button>
+              </div>
+
+              <div className="h-6 w-px bg-[#E5E5EA]" />
+
+              {/* Perfil */}
+              <div className="flex items-center gap-3 bg-white border border-[#E5E5EA] px-3 py-1.5 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                <div className="w-7 h-7 rounded-lg bg-[#F5F5F7] border border-[#E5E5EA] overflow-hidden flex items-center justify-center">
+                  {user?.photoURL ? (
+                    <ImageWithFallback
+                      src={user.photoURL}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <User size={14} className="text-[#8E8E93]" />
+                  )}
+                </div>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="text-[10px] font-black text-[#1C1C1E] leading-none uppercase truncate max-w-[100px]">
+                    {user?.displayName || "Administrador"}
+                  </span>
+                  <span className="text-[8px] font-bold text-gray-400 tracking-wider mt-0.5 uppercase">
+                    PRO
+                  </span>
+                </div>
+              </div>
+            </div>
+          </header>
+        ) : (
+          /* Mobile-only tiny menu when header is hidden to prevent getting stuck */
+          <div className="lg:hidden h-12 px-4 flex items-center justify-between bg-white/30 backdrop-blur-md border-b border-white/20 z-50 flex-shrink-0">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 text-[#8E8E93] hover:text-[#1C1C1E] transition-colors"
+              className="p-2 text-[#8E8E93] hover:text-[#1C1C1E] transition-colors"
             >
               <LayoutDashboard size={18} />
             </button>
+            <span className="text-[9px] font-black font-mono tracking-widest text-[#1C1C1E] uppercase">
+              {activeTab}
+            </span>
           </div>
-
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <button
-                onClick={() => setIsSuggestionsModalOpen(true)}
-                className={`p-2 rounded-xl transition-all relative bg-white border border-[#E5E5EA] shadow-sm hover:shadow-md ${suggestions.some((s) => !s.read) ? "text-[#1C1C1E]" : "text-[#8E8E93]"}`}
-              >
-                <Bell size={16} />
-                {suggestions.filter((s) => !s.read).length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FF3B30] rounded-full border-2 border-white shadow-[0_0_8px_rgba(255,59,48,0.5)]" />
-                )}
-              </button>
-            </div>
-
-            <div className="h-6 w-px bg-[#E5E5EA] mx-1" />
-
-            <div className="flex items-center gap-3 bg-white border border-[#E5E5EA] px-3 py-1.5 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-              <div className="w-7 h-7 rounded-lg bg-[#F5F5F7] border border-[#E5E5EA] overflow-hidden flex items-center justify-center">
-                {user?.photoURL ? (
-                  <ImageWithFallback
-                    src={user.photoURL}
-                    alt=""
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <User size={14} className="text-[#8E8E93]" />
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
+        )}
 
         {/* Content Tabs Container */}
-        <div className="flex-1 overflow-y-auto w-full max-w-[1600px] mx-auto px-6 py-8 lg:px-10 lg:py-10 scrollbar-hide scroll-smooth h-full">
+        <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto w-full max-w-[1600px] mx-auto px-6 py-8 lg:px-10 lg:py-10 scrollbar-hide scroll-smooth">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -656,7 +718,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="pb-24 lg:pb-12"
+              className="pb-6 lg:pb-4"
             >
               <React.Suspense fallback={<TabLoader />}>
                 <ErrorBoundary
@@ -686,17 +748,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       orders={sales}
                       products={products}
                       customers={customers}
-                      monthlyGoal={
-                        settings[selectedCompanyId]?.monthly_goal || 0
-                      }
-                      onAction={(action) => {
+                      companyId={selectedCompanyId}
+                      onAction={(action: any) => {
                         if (action === "view_agenda") {
                           // Agenda tab is removed. Do nothing.
-                        } else if (action === "new_order") setActiveTab("orders");
-                        else if (action === "new_client")
-                          setActiveTab("clients");
-                        else if (action === "new_insumo")
-                          setActiveTab("inventory");
+                        } else if (action === "new_order" || action === "orders") setActiveTab("orders");
+                        else if (action === "new_client" || action === "clients") setActiveTab("clients");
+                        else if (action === "new_insumo" || action === "inventory") setActiveTab("inventory");
+                        else if (action === "products") setActiveTab("products");
+                        else if (action === "campaigns") setActiveTab("campaigns");
+                        else if (action === "coupons") setActiveTab("coupons");
+                        else if (action === "notifications") setActiveTab("notifications");
+                        else if (action === "purchases") setActiveTab("purchases");
+                        else if (action === "finance") setActiveTab("financeiro");
+                        else if (action === "go_back") onGoBack();
                       }}
                       onOpenOrder={(order) => setPrintingOrder(order)}
                     />
@@ -715,6 +780,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       customers={customers}
                       companyId={selectedCompanyId}
                       onUpdateStatus={async (id, status) => {
+                        if (status === 'production') {
+                           const order = sales.find(o => o.id === id);
+                           if (order && user) {
+                               for (const item of order.items) {
+                                   const product = products.find(p => p.id === item.productId || p.id === item.id);
+                                   if (product) {
+                                       await startProductProduction(id, product, user.uid);
+                                   }
+                               }
+                           }
+                        }
                         await updateOrderStatus(id, status);
                         if (["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(status)) {
                           playSuccessSound();
@@ -735,19 +811,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                         await deleteDoc(doc(db, "sales", id));
                       }}
                       initialOrderId={selectedOrderId}
+                      initialCustomerId={selectedCustomerId}
                     />
                   )}
-                  {activeTab === "inventory" && (
-                    <InventoryTab
-                      insumos={insumos}
-                      onSaveInsumo={async (data) => {
+                  {activeTab === "componentes" && (
+                    <ComponentsTab
+                      componentes={componentes}
+                      onSaveComponente={async (data) => {
                         if (data.id) {
-                          await updateInsumo(data.id, data);
+                          await updateInsumo(data.id, data as any);
                         } else {
                           await addInsumo(data as any);
                         }
                       }}
-                      onDeleteInsumo={(id) => deleteInsumo(id)}
+                      onDeleteComponente={async (id) => {
+                        await deleteInsumo(id);
+                      }}
+                    />
+                  )}
+                  {activeTab === "purchases" && (
+                    <PurchasesTab companyId={selectedCompanyId} />
+                  )}
+                  {activeTab === "financeiro" && (
+                    <FinanceTab
+                      orders={sales}
+                      products={products}
+                      componentes={componentes}
+                    />
+                  )}
+                  {activeTab === "inventory" && (
+                    <InventoryTab
+                      orders={sales}
+                      onUpdateOrder={async (id, data) => {
+                        await updateDoc(doc(db, "sales", id), data);
+                      }}
+                    />
+                  )}
+                  {activeTab === "efficiency" && (
+                    <OperationalEfficiencyTab
+                      orders={sales}
+                      products={products}
+                      companyId={selectedCompanyId}
+                    />
+                  )}
+                  {activeTab === "control_center" && (
+                    <OrderControlCenterTab
+                      companyId={selectedCompanyId}
+                      onOpenOrder={(order) => setPrintingOrder(order)}
                     />
                   )}
                   {activeTab === "products" && (
@@ -792,6 +902,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <ClientsTab
                       companyId={selectedCompanyId}
                       customers={customers}
+                      onNewOrder={(customerId) => {
+                        setSelectedCustomerId(customerId);
+                        setActiveTab("orders");
+                      }}
                     />
                   )}
                   {activeTab === "gift-lists" && (
@@ -799,13 +913,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   )}
                   {activeTab === "commemorative-dates" && (
                     <CommemorativeDatesTab />
-                  )}
-                  {activeTab === "finance" && (
-                    <FinanceTab
-                      companyId={selectedCompanyId}
-                      orders={sales}
-                      products={products}
-                    />
                   )}
                   {activeTab === "reports" && (
                     <ReportsTab

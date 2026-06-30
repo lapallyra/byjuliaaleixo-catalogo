@@ -32,6 +32,14 @@ import { formatCurrency } from '../../lib/currencyUtils';
 import { safeFormat } from '../../lib/dateUtils';
 import { updateOrder } from '../../services/firebaseService';
 
+const getStatusRGB = (status: string) => {
+  const s = (status || "").toLowerCase();
+  if (s === "ready" || s === "pronto") return "99, 102, 241"; // indigo-500
+  if (s === "delivery" || s === "enviado") return "14, 165, 233"; // sky-500
+  if (s === "delivered" || s === "entregue") return "16, 185, 129"; // emerald-500
+  return "245, 158, 11"; // amber-500 fallback
+};
+
 interface ExpeditionTabProps {
   companyId: CompanyId;
   orders: Order[];
@@ -253,15 +261,17 @@ export const ExpeditionTab: React.FC<ExpeditionTabProps> = ({ companyId, orders,
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className={`group relative bg-white border border-[#E5E5EA] rounded-[2.5rem] p-6 transition-all hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] hover:-translate-y-1 cursor-pointer overflow-hidden ${selectedOrderId === order.id ? 'ring-2 ring-[#1C1C1E]' : ''}`}
+                className={`group relative bg-white border rounded-xl p-5 pl-7 transition-all hover:shadow-xs cursor-pointer overflow-visible select-none ${selectedOrderId === order.id ? 'border-[#1C1C1E] shadow-sm scale-[1.005]' : 'border-gray-200 hover:border-gray-300'}`}
                 onClick={() => setSelectedOrderId(order.id)}
               >
-                {/* Visual LED status indicator */}
-                <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-3xl opacity-10 transition-colors ${
-                  order.status === 'delivered' ? 'bg-emerald-500' : 
-                  order.status === 'delivery' ? 'bg-sky-500' : 
-                  'bg-amber-500'
-                }`} />
+                {/* Left indicator line - intense neon LED glow */}
+                <div 
+                  className="absolute left-0 top-0 bottom-0 w-1.5 z-10 rounded-l-xl"
+                  style={{
+                    background: `linear-gradient(to right, rgba(255, 255, 255, 1) 0%, rgb(${getStatusRGB(order.status)}) 40%, rgb(${getStatusRGB(order.status)}) 100%)`,
+                    boxShadow: `0 0 8px rgb(${getStatusRGB(order.status)}), 0 0 16px rgb(${getStatusRGB(order.status)})`,
+                  }}
+                />
 
                 <div className="flex justify-between items-start mb-6 relative z-10">
                   <div className="flex items-center gap-3">

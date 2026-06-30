@@ -1,719 +1,474 @@
 import React, { useState, useMemo } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Search,
-  Plus,
   Filter,
-  Edit,
-  Trash2,
-  AlertTriangle,
   Package,
-  TrendingDown,
-  Archive,
-  Info,
-  Hash,
-  DollarSign,
-  X,
-  Printer,
+  Calendar,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronRight,
+  MoreVertical,
 } from "lucide-react";
-import { CSVHandler } from "./CSVHandler";
-import { Insumo } from "../../types";
-import { formatCurrency } from "../../lib/currencyUtils";
-import { exportGenericReportPDF } from "../../utils/pdfGenerator";
+import { Order } from "../../types";
 
 interface InventoryTabProps {
-  insumos: Insumo[];
-  onSaveInsumo: (insumo: Partial<Insumo>) => void;
-  onDeleteInsumo: (id: string) => void;
+  orders: Order[];
+  onUpdateOrder: (id: string, data: Partial<Order>) => Promise<void>;
 }
+
+type KanbanStage =
+  "waiting_production" | "production" | "conferencing" | "ready";
+
+const STAGES: { id: KanbanStage; label: string; color: string }[] = [
+  {
+    id: "waiting_production",
+    label: "Aguardando Produção",
+    color: "text-slate-500 bg-slate-100",
+  },
+  {
+    id: "production",
+    label: "Em Produção",
+    color: "text-amber-600 bg-amber-50",
+  },
+  {
+    id: "conferencing",
+    label: "Aguardando Conferência",
+    color: "text-purple-600 bg-purple-50",
+  },
+  {
+    id: "ready",
+    label: "Pronto para Entrega",
+    color: "text-emerald-600 bg-emerald-50",
+  },
+];
 
 export const InventoryTab: React.FC<InventoryTabProps> = ({
-  insumos,
-  onSaveInsumo,
-  onDeleteInsumo,
+  orders,
+  onUpdateOrder,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingInsumo, setEditingInsumo] = useState<Partial<Insumo> | null>(
-    null,
-  );
-  const [insumoToDelete, setInsumoToDelete] = useState<string | null>(null);
+  const [filterPriority, setFilterPriority] = useState<string>("all");
+  const [filterAtelier, setFilterAtelier] = useState<string>("all");
+  const [filterResponsavel, setFilterResponsavel] = useState<string>("all");
+  const [filterPeriod, setFilterPeriod] = useState<string>("all");
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(filtered.map(i => i.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelectOne = (id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedIds(prev => [...prev, id]);
-    } else {
-      setSelectedIds(prev => prev.filter(item => item !== id));
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    try {
-      for (const id of selectedIds) {
-        await onDeleteInsumo(id);
+  // Auto-set priority based on delivery date (urgente = delivery in < 3 days)
+  const ordersWithCalculatedPriority = useMemo(() => {
+    return orders.map((o) => {
+      let priority = o.productionPriority || "normal";
+      if (!o.productionPriority && o.deliveryDate) {
+        const dDate = new Date(o.deliveryDate + "T00:00:00");
+        const diffTime = dDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays <= 3) priority = "urgente";
+        else if (diffDays <= 7) priority = "alta";
       }
-      setSelectedIds([]);
-      setIsBulkDeleteModalOpen(false);
-      alert("Insumos excluídos com sucesso!");
-    } catch (e) {
-      console.error("Erro na exclusão em massa:", e);
-      alert("Houve um erro ao excluir um ou mais insumos.");
-    }
+      return { ...o, calculatedPriority: priority };
+    });
+  }, [orders]);
+
+  const filteredOrders = useMemo(() => {
+    return ordersWithCalculatedPriority.filter((o) => {
+      const isKanbanStage = STAGES.some((s) => s.id === o.status);
+      if (!isKanbanStage) return false;
+
+      const term = searchTerm.toLowerCase();
+      const matchSearch =
+        o.code?.toLowerCase().includes(term) ||
+        o.customerName?.toLowerCase().includes(term) ||
+        o.items.some((i) => i.product_name.toLowerCase().includes(term)) ||
+        o.observations?.toLowerCase().includes(term);
+
+      if (!matchSearch) return false;
+
+      if (filterPriority !== "all" && o.calculatedPriority !== filterPriority)
+        return false;
+      if (filterAtelier !== "all" && o.atelier !== filterAtelier) return false;
+      if (filterResponsavel !== "all" && o.assignee !== filterResponsavel)
+        return false;
+
+      if (filterPeriod === "hoje") {
+        const cDate = o.createdAt?.toDate
+          ? o.createdAt.toDate()
+          : new Date(o.createdAt);
+        if (cDate.toDateString() !== today.toDateString()) return false;
+      } else if (filterPeriod === "atrasados") {
+        if (!o.deliveryDate) return false;
+        const dDate = new Date(o.deliveryDate + "T00:00:00");
+        if (dDate < today) return false;
+      }
+
+      return true;
+    });
+  }, [
+    ordersWithCalculatedPriority,
+    searchTerm,
+    filterPriority,
+    filterAtelier,
+    filterResponsavel,
+    filterPeriod,
+  ]);
+
+  // Indicators
+  const waitingCount = ordersWithCalculatedPriority.filter(
+    (o) => o.status === "waiting_production",
+  ).length;
+  const productionCount = ordersWithCalculatedPriority.filter(
+    (o) => o.status === "production",
+  ).length;
+  const conferencingCount = ordersWithCalculatedPriority.filter(
+    (o) => o.status === "conferencing",
+  ).length;
+  const readyTodayCount = ordersWithCalculatedPriority.filter((o) => {
+    if (o.status !== "ready") return false;
+    const history = o.history || [];
+    const lastChange = history[history.length - 1];
+    if (!lastChange || !lastChange.timestamp) return false;
+    const changeDate = lastChange.timestamp.toDate
+      ? lastChange.timestamp.toDate()
+      : new Date(lastChange.timestamp);
+    return changeDate.toDateString() === today.toDateString();
+  }).length;
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, orderId: string) => {
+    e.dataTransfer.setData("orderId", orderId);
   };
 
-  const confirmDelete = () => {
-    if (insumoToDelete) {
-      onDeleteInsumo(insumoToDelete);
-      setInsumoToDelete(null);
-    }
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
   };
 
-  const criticalItems = useMemo(
-    () => insumos.filter((i) => i.quantity <= (i.criticalLimit || 5)),
-    [insumos],
+  const handleDrop = async (e: React.DragEvent, stageId: KanbanStage) => {
+    e.preventDefault();
+    const orderId = e.dataTransfer.getData("orderId");
+    if (!orderId) return;
+
+    const order = orders.find((o) => o.id === orderId);
+    if (!order || order.status === stageId) return;
+
+    await updateOrderStatus(order, stageId);
+  };
+
+  const updateOrderStatus = async (order: Order, newStatus: string) => {
+    const newHistory = [
+      ...(order.history || []),
+      {
+        status: newStatus as any,
+        timestamp: new Date(),
+        notes: `Movido para ${STAGES.find((s) => s.id === newStatus)?.label || newStatus}`,
+      },
+    ];
+
+    await onUpdateOrder(order.id, {
+      status: newStatus as any,
+      history: newHistory,
+    });
+  };
+
+  // Group by stage
+  const columns = STAGES.map((stage) => ({
+    ...stage,
+    items: filteredOrders.filter((o) => o.status === stage.id),
+  }));
+
+  const ateliers = Array.from(
+    new Set(orders.map((o) => o.atelier).filter(Boolean)),
+  );
+  const assignees = Array.from(
+    new Set(orders.map((o) => o.assignee).filter(Boolean)),
   );
 
-  const filtered = useMemo(
-    () =>
-      insumos.filter(
-        (i) =>
-          i.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (i.code && i.code.toLowerCase().includes(searchTerm.toLowerCase())),
-      ),
-    [insumos, searchTerm],
-  );
-
-  const [isDetailOpen, setIsDetailOpen] = useState<string | null>(null);
-
-  return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-6">
-      {/* Critical Alert */}
-      {criticalItems.length > 0 && (
-        <div className="bg-slate-50 border-1 border-rose-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in zoom-in-95 duration-500">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-200 animate-pulse">
-              <AlertTriangle size={24} />
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-rose-900 tracking-normal tracking-tight">
-                Estoque Crítico Detectado
-              </h3>
-              <p className="text-[10px] font-bold text-rose-600 tracking-normal mt-0.5">
-                {criticalItems.length}{" "}
-                {criticalItems.length === 1 ? "item precisa" : "itens precisam"}{" "}
-                de reposição imediata.
-              </p>
-            </div>
-          </div>
-          <div className="flex -space-x-3 overflow-hidden p-1">
-            {criticalItems.slice(0, 5).map((item, idx) => (
-              <div
-                key={`crit-${item.id}-${idx}`}
-                className="w-10 h-10 rounded-full border-2 border-white bg-white flex items-center justify-center text-[10px] font-medium text-slate-9000 shadow-sm"
-                title={item.name}
-              >
-                {item.name.charAt(0)}
-              </div>
-            ))}
-            {criticalItems.length > 5 && (
-              <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[8px] font-medium text-slate-9000 shadow-sm">
-                +{criticalItems.length - 5}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Top Bar */}
-      <div className="flex flex-col lg:flex-row gap-6 justify-between items-center bg-white p-6 rounded-2xl border border-lilac/10 shadow-sm">
-        <div className="relative w-full lg:w-96">
-          <Search
-            className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D1D1D6]"
-            size={16}
-          />
-          <input
-            type="text"
-            placeholder="BUSCAR NO ESTOQUE..."
-            className="w-full pl-14 pr-6 py-4 rounded-[1.25rem] bg-white border border-lilac/10 text-[10px] uppercase font-medium tracking-[0.2em] outline-none focus:border-lilac transition-all text-slate-900 shadow-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto justify-center lg:justify-end">
-          <CSVHandler 
-            moduleName="Insumos" 
-            data={filtered} 
-            fields={['name', 'code', 'unit', 'quantity', 'costPrice', 'description']}
-            onImport={(newData) => {
-                for (const item of newData) {
-                    onSaveInsumo({
-                        ...item,
-                        quantity: Number(item.quantity) || 0,
-                        costPrice: Number(item.costPrice) || 0,
-                    });
-                }
-            }}
-          />
-          <button
-            onClick={() => {
-              const rows = filtered.map(ins => [
-                ins.name,
-                ins.category || "---",
-                `${ins.quantity} ${ins.unit}`,
-                `R$ ${(ins.costPrice || 0).toFixed(2)}`
-              ]);
-              exportGenericReportPDF({
-                title: "Relatório de Estoque (Insumos)",
-                columns: ["Material", "Categoria", "Estoque Físico", "Custo Unit."],
-                rows,
-                filters: `Busca: ${searchTerm || 'Nenhuma'}`
-              });
-            }}
-            className="flex items-center justify-center px-6 py-4 bg-white text-slate-400 border border-slate-200 rounded-[1.25rem] hover:text-lilac hover:bg-slate-50 transition-all shadow-sm group text-[9px] font-medium tracking-normal gap-2"
-          >
-            <Printer size={16} className="group-hover:scale-110 transition-transform" /> PDF
-          </button>
-          <button
-            onClick={() => {
-              setEditingInsumo({});
-              setIsModalOpen(true);
-            }}
-            className="flex-1 md:flex-none flex items-center justify-center gap-3 bg-black text-white font-medium py-4 px-10 rounded-[1.25rem] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl text-[9px] uppercase tracking-[0.3em] border border-black/10"
-          >
-            <Plus size={18} /> Novo Insumo
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(max(300px,20%),1fr))] gap-6 pb-20">
-        {filtered.length === 0 && (
-          <div className="col-span-full py-32 text-center bg-white rounded-2xl border border-dashed border-lilac/20">
-            <p className="text-[#8E8E93] italic text-[11px] font-medium tracking-widest opacity-50 uppercase">
-              Nenhum insumo encontrado no catálogo.
-            </p>
-          </div>
-        )}
-        {filtered.map((insumo, idx) => {
-          const isCritical = insumo.quantity <= (insumo.criticalLimit || 5);
-          return (
-            <div
-              key={`ins-card-${insumo.id}-${idx}`}
-              className={`bg-white rounded-2xl border transition-all duration-300 p-8 flex flex-col gap-6 hover:shadow-xl group relative min-h-[360px] overflow-hidden ${
-                selectedIds.includes(insumo.id) ? "border-lilac ring-1 ring-lilac/20" : "border-lilac/10 hover:border-lilac/30"
-              }`}
-            >
-              {/* High intensity left LED strip */}
-              <div 
-                className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all ${isCritical ? 'animate-pulse-glow' : ''}`}
-                style={{
-                  backgroundColor: isCritical ? "rgb(244, 63, 94)" : "rgb(16, 185, 129)",
-                  boxShadow: isCritical 
-                    ? undefined 
-                    : "0 0 15px 4px rgba(16, 185, 129, 0.95), inset -1px 0 2px rgba(255, 255, 255, 0.5)",
-                  ...({ '--glow-color': isCritical ? "rgba(244, 63, 94, 0.95)" : "rgba(16, 185, 129, 0.95)" } as React.CSSProperties)
-                }}
-              />
-              {/* Checkbox Overlay */}
-              <div className="absolute top-6 left-6 z-10" onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(insumo.id)}
-                  onChange={(e) => handleSelectOne(insumo.id, e.target.checked)}
-                  className="rounded border-gray-300 text-lilac focus:ring-lilac cursor-pointer scale-110"
-                />
-              </div>
-
-              <div className="flex items-start justify-between pl-8">
-                <div className="flex flex-col gap-1">
-                  <span className="font-mono text-[9px] font-medium text-lilac tracking-widest uppercase">
-                    #{insumo.code || "---"}
-                  </span>
-                  <h4 className="text-sm font-medium text-slate-900 uppercase tracking-tight group-hover:text-lilac transition-colors">
-                    {insumo.name}
-                  </h4>
-                  <span className="text-[10px] font-medium text-[#8E8E93] tracking-normal">
-                    {insumo.category || "Geral"}
-                  </span>
-                </div>
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${
-                  isCritical ? "bg-rose-50 text-rose-500" : "bg-emerald-50 text-emerald-500"
-                }`}>
-                  <Package size={20} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-gray-50 bg-slate-50/50 rounded-2xl px-4">
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-medium text-[#8E8E93] tracking-normal mb-1">Qtd Atual</span>
-                  <span className={`text-sm font-medium ${isCritical ? "text-rose-600" : "text-slate-900"}`}>
-                    {insumo.quantity} <span className="text-[9px] text-[#8E8E93] ml-0.5">{insumo.unit}</span>
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-medium text-[#8E8E93] tracking-normal mb-1">Preço/Un.</span>
-                  <span className="text-sm font-medium text-slate-900">
-                    {formatCurrency(insumo.unitValue || 0)}
-                  </span>
-                </div>
-              </div>
-
-              {insumo.description && (
-                <p className="text-[10px] text-[#8E8E93] font-medium leading-relaxed line-clamp-2 px-2 italic">
-                  {insumo.description}
-                </p>
-              )}
-
-              <div className="flex items-center justify-between gap-3 pt-2">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setEditingInsumo(insumo);
-                      setIsModalOpen(true);
-                    }}
-                    className="p-3 rounded-xl bg-slate-50 text-[#D1D1D6] hover:text-slate-900 hover:bg-white transition-all border border-transparent hover:border-slate-200"
-                    title="Editar"
-                  >
-                    <Edit size={14} />
-                  </button>
-                  <button
-                    onClick={() => setInsumoToDelete(insumo.id || null)}
-                    className="p-3 rounded-xl bg-slate-50 text-rose-300 hover:bg-rose-500 hover:text-white transition-all border border-transparent"
-                    title="Excluir"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-                
-                <button
-                  onClick={() => setIsDetailOpen(isDetailOpen === insumo.id ? null : insumo.id)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-9000 text-white text-[9px] font-medium tracking-normal hover:scale-105 transition-all shadow-md active:scale-95"
-                >
-                  <Info size={14} /> Detalhes
-                </button>
-              </div>
-
-              {isDetailOpen === insumo.id && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="pt-4 border-t border-gray-50 space-y-3"
-                >
-                  <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100">
-                    <span className="text-[8px] font-medium tracking-normal text-[#8E8E93]">Custo Total</span>
-                    <span className="text-xs font-medium text-slate-900">
-                      {formatCurrency(insumo.costPrice || 0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-100">
-                    <span className="text-[8px] font-medium tracking-normal text-[#8E8E93]">Subcategoria</span>
-                    <span className="text-xs font-medium text-lilac">
-                      {insumo.subcategory || "---"}
-                    </span>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {isModalOpen && (
-        <InsumoFormModal
-          editingInsumo={editingInsumo}
-          existingInsumos={insumos}
-          onClose={() => setIsModalOpen(false)}
-          onSave={async (data) => {
-            await onSaveInsumo({
-              ...data,
-              id: editingInsumo?.id,
-              code:
-                editingInsumo?.code ||
-                `INS-${crypto.randomUUID().slice(0, 6).toUpperCase()}`,
-            });
-            setIsModalOpen(false);
-          }}
-        />
-      )}
-      {insumoToDelete && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-white max-w-md w-full rounded-2xl p-8 text-center animate-in zoom-in-95">
-            <Trash2 size={48} className="mx-auto text-slate-9000 mb-6" />
-            <h3 className="text-xl font-medium mb-2 uppercase">
-              Excluir Insumo?
-            </h3>
-            <p className="text-sm text-gray-500 mb-8">
-              Essa ação não pode ser desfeita.
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setInsumoToDelete(null)}
-                className="flex-1 py-4 bg-slate-100 rounded-2xl font-medium text-gray-500 uppercase text-xs"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-medium uppercase text-xs shadow-lg shadow-rose-500/30"
-              >
-                Sim, Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isBulkDeleteModalOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-white max-w-md w-full rounded-2xl p-8 text-center animate-in zoom-in-95">
-            <Trash2 size={48} className="mx-auto text-rose-500 mb-6" />
-            <h3 className="text-xl font-medium mb-2 uppercase">
-              Excluir Insumos Selecionados?
-            </h3>
-            <p className="text-sm text-gray-500 mb-8">
-              Essa ação não pode ser desfeita e excluirá {selectedIds.length} insumos selecionados de forma segura e permanente.
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setIsBulkDeleteModalOpen(false)}
-                className="flex-1 py-4 bg-slate-100 rounded-2xl font-medium text-gray-500 uppercase text-xs"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleBulkDelete}
-                className="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-medium uppercase text-xs shadow-lg shadow-rose-600/30"
-              >
-                Sim, Excluir Todos
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white border border-lilac/20 shadow-2xl rounded-2xl p-4 flex items-center gap-6 z-50 animate-in slide-in-from-bottom-2 duration-300">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-600">
-            {selectedIds.length} {selectedIds.length === 1 ? 'insumo selecionado' : 'insumos selecionados'}
-          </span>
-          <button
-            onClick={() => setIsBulkDeleteModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-rose-600 text-white font-medium text-[9px] tracking-normal hover:bg-rose-700 transition-all hover:scale-105 active:scale-95 shadow-md shadow-rose-200"
-          >
-            <Trash2 size={14} /> Excluir Selecionados
-          </button>
-          <button
-            onClick={() => setSelectedIds([])}
-            className="text-[9px] font-medium tracking-normal text-[#8E8E93] hover:text-slate-900 transition-colors"
-          >
-            Cancelar
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface InsumoFormModalProps {
-  editingInsumo: Partial<Insumo> | null;
-  onClose: () => void;
-  onSave: (data: Partial<Insumo>) => void;
-}
-
-const InsumoFormModal: React.FC<
-  InsumoFormModalProps & { existingInsumos: Insumo[] }
-> = ({ editingInsumo, onClose, onSave, existingInsumos }) => {
-  const [loading, setLoading] = useState(false);
-  const [qty, setQty] = useState(editingInsumo?.quantity || 0);
-  const [cost, setCost] = useState(editingInsumo?.costPrice || 0);
-  const [category, setCategory] = useState(editingInsumo?.category || "");
-  const [subcategory, setSubcategory] = useState(
-    editingInsumo?.subcategory || "",
-  );
-  const [newCat, setNewCat] = useState("");
-  const [newSub, setNewSub] = useState("");
-  const [showNewCatInput, setShowNewCatInput] = useState(false);
-  const [showNewSubInput, setShowNewSubInput] = useState(false);
-  const unitValRaw = qty > 0 ? cost / qty : 0;
-  const unitVal = Math.ceil(unitValRaw * 100) / 100;
-
-  const defaultInsumoCategories = [
-    "Acessórios",
-    "Espirais e Wire-o",
-    "Papéis",
-    "Papelão Cinza",
-    "Plásticos e Bolsos",
-    "Fitas e Elásticos",
-    "Ferramentas",
-    "Embalagens",
-    "Tintas e Colas"
-  ];
-  const categories = Array.from(
-    new Set([
-      ...defaultInsumoCategories,
-      ...(existingInsumos?.map((i) => i.category).filter(Boolean) || [])
-    ]),
-  );
-  const subcategories = Array.from(
-    new Set(
-      existingInsumos
-        ?.filter((i) => i.category === category)
-        .map((i) => i.subcategory)
-        .filter(Boolean) || [],
-    ),
-  );
-
-  const handleNumericInput = (val: number, setter: (v: number) => void) => {
-    if (isNaN(val)) return;
-    setter(val);
+  const getPriorityColor = (p: string) => {
+    if (p === "urgente") return "text-rose-600 bg-rose-50 border-rose-200";
+    if (p === "alta") return "text-amber-600 bg-amber-50 border-amber-200";
+    return "text-slate-500 bg-slate-50 border-slate-200";
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-      <div className="bg-white  w-full  max-w-xl  rounded-2xl border border-lilac/30 p-8 md:p-10 shadow-2xl  relative max-h-[90vh] overflow-y-auto max-h-[90vh] overflow-y-auto">
-        <button
-          onClick={onClose}
-          disabled={loading}
-          className="absolute top-8 right-8 p-1 rounded-full hover:bg-slate-100 text-[#8E8E93]"
-        >
-          <X size={24} />
-        </button>
-        <h2 className="text-xl font-medium text-slate-900 tracking-normal mb-8">
-          {editingInsumo?.id ? "Editar Insumo" : "Novo Insumo"}
-        </h2>
+    <div className="space-y-6">
+      {/* INDICADORES */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+          { label: "Aguardando", value: waitingCount, color: "text-slate-600" },
+          {
+            label: "Em Produção",
+            value: productionCount,
+            color: "text-amber-600",
+          },
+          {
+            label: "Em Conferência",
+            value: conferencingCount,
+            color: "text-purple-600",
+          },
+          {
+            label: "Concluídos Hoje",
+            value: readyTodayCount,
+            color: "text-emerald-600",
+          },
+        ].map((ind, idx) => (
+          <div
+            key={idx}
+            className="bg-white rounded-2xl border border-[#E5E5EA] shadow-xs p-5 flex flex-col justify-center"
+          >
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93] mb-1">
+              {ind.label}
+            </span>
+            <span className={`text-3xl font-extrabold ${ind.color}`}>
+              {ind.value}
+            </span>
+          </div>
+        ))}
+      </div>
 
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            setLoading(true);
-            try {
-              const formData = new FormData(e.currentTarget);
-              await onSave({
-                id: editingInsumo?.id,
-                name: formData.get("name") as string,
-                category: showNewCatInput ? newCat : category,
-                subcategory: showNewSubInput ? newSub : subcategory,
-                unit: formData.get("unit") as any,
-                quantity: Number(qty),
-                costPrice: Number(cost),
-                unitValue: unitVal,
-                description: formData.get("description") as string,
-                criticalLimit: 5,
-              });
-              onClose();
-            } catch (err) {
-              console.error("Erro ao salvar insumo:", err);
-              alert("Erro ao salvar insumo. Verifique sua conexão.");
-            } finally {
-              setLoading(false);
-            }
-          }}
-          className="space-y-6"
-        >
-          <div className="space-y-1.5 text-left">
-            <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
-              Nome do Material
-            </label>
+      {/* FILTROS E PESQUISA */}
+      <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-xs space-y-4">
+        <div className="flex flex-col lg:flex-row items-center gap-4">
+          <div className="relative flex-1 w-full">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8E93]"
+              size={16}
+            />
             <input
-              name="name"
-              defaultValue={editingInsumo?.name}
-              required
               type="text"
-              className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-slate-900"
+              placeholder="Buscar por código, cliente, produto..."
+              className="w-full pl-12 pr-4 py-3 bg-[#F5F5F7] border border-transparent rounded-xl text-xs font-medium text-[#1C1C1E] outline-none focus:border-[#E5E5EA] focus:bg-white transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
-                Categoria
-              </label>
-              {!showNewCatInput ? (
-                <div className="flex gap-2">
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="flex-1 bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-slate-900"
-                  >
-                    <option value="">Selecionar...</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setShowNewCatInput(true)}
-                    className="p-3 bg-black text-white rounded-xl hover:scale-105 transition-all"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <input
-                    autoFocus
-                    placeholder="Nova categoria"
-                    value={newCat}
-                    onChange={(e) => setNewCat(e.target.value)}
-                    className="flex-1 bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-slate-900"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewCatInput(false)}
-                    className="p-3 bg-slate-200 rounded-xl text-gray-500"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              )}
-            </div>
-            <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
-                Subcategoria
-              </label>
-              {!showNewSubInput ? (
-                <div className="flex gap-2">
-                  <select
-                    value={subcategory}
-                    onChange={(e) => setSubcategory(e.target.value)}
-                    className="flex-1 bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-slate-900"
-                  >
-                    <option value="">Selecionar...</option>
-                    {subcategories.map((sub) => (
-                      <option key={sub} value={sub}>
-                        {sub}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setShowNewSubInput(true)}
-                    className="p-3 bg-black text-white rounded-xl hover:scale-105 transition-all"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <input
-                    autoFocus
-                    placeholder="Nova subcat"
-                    value={newSub}
-                    onChange={(e) => setNewSub(e.target.value)}
-                    className="flex-1 bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none text-slate-900"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewSubInput(false)}
-                    className="p-3 bg-slate-200 rounded-xl text-gray-500"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
-                Qtd em Estoque
-              </label>
-              <input
-                type="number"
-                step="1"
-                value={qty === 0 ? "" : qty}
-                onChange={(e) =>
-                  handleNumericInput(Number(e.target.value), setQty)
-                }
-                required
-                placeholder="0"
-                className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-medium outline-none text-slate-900"
-              />
-            </div>
-            <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
-                Vlr Pago Total (R$)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={cost === 0 ? "" : cost}
-                onChange={(e) =>
-                  handleNumericInput(Number(e.target.value), setCost)
-                }
-                required
-                placeholder="0.00"
-                className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-medium outline-none text-slate-900"
-              />
-            </div>
-            <div className="space-y-1.5 text-left">
-              <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
-                Unidade
-              </label>
+          <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 hide-scrollbar">
+            <div className="flex items-center gap-2 shrink-0">
+              <Filter size={14} className="text-[#8E8E93]" />
               <select
-                name="unit"
-                defaultValue={editingInsumo?.unit || "unid"}
-                className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-medium outline-none text-slate-900 appearance-none"
+                className="bg-[#F5F5F7] border border-transparent rounded-lg px-3 py-2 text-xs font-bold text-[#1C1C1E] outline-none focus:border-[#E5E5EA] transition-all cursor-pointer"
+                value={filterPeriod}
+                onChange={(e) => setFilterPeriod(e.target.value)}
               >
-                <option value="mt">MT</option>
-                <option value="unid">UN</option>
-                <option value="pct">PCT</option>
-                <option value="cx">CX</option>
+                <option value="all">Todos os Prazos</option>
+                <option value="hoje">Hoje</option>
+                <option value="atrasados">Atrasados</option>
               </select>
+              <select
+                className="bg-[#F5F5F7] border border-transparent rounded-lg px-3 py-2 text-xs font-bold text-[#1C1C1E] outline-none focus:border-[#E5E5EA] transition-all cursor-pointer"
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+              >
+                <option value="all">Todas as Prioridades</option>
+                <option value="normal">Normal</option>
+                <option value="alta">Alta</option>
+                <option value="urgente">Urgente</option>
+              </select>
+              {ateliers.length > 0 && (
+                <select
+                  className="bg-[#F5F5F7] border border-transparent rounded-lg px-3 py-2 text-xs font-bold text-[#1C1C1E] outline-none focus:border-[#E5E5EA] transition-all cursor-pointer"
+                  value={filterAtelier}
+                  onChange={(e) => setFilterAtelier(e.target.value)}
+                >
+                  <option value="all">Todos os Ateliês</option>
+                  {ateliers.map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {assignees.length > 0 && (
+                <select
+                  className="bg-[#F5F5F7] border border-transparent rounded-lg px-3 py-2 text-xs font-bold text-[#1C1C1E] outline-none focus:border-[#E5E5EA] transition-all cursor-pointer"
+                  value={filterResponsavel}
+                  onChange={(e) => setFilterResponsavel(e.target.value)}
+                >
+                  <option value="all">Todos os Responsáveis</option>
+                  {assignees.map((a) => (
+                    <option key={a} value={a}>
+                      {a}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="p-4 rounded-xl bg-black text-white text-center border-2 border-lilac/20">
-            <p className="text-[9px] font-medium uppercase text-[#8E8E93] tracking-widest mb-1">
-              Custo por Unidade (Unidade/M/Pct)
-            </p>
-            <p className="text-xl font-mono font-medium">
-              {formatCurrency(unitVal)}
-            </p>
-          </div>
+      {/* KANBAN BOARD */}
+      <div className="flex flex-col md:flex-row gap-6 overflow-x-auto pb-4 hide-scrollbar snap-x snap-mandatory">
+        {columns.map((col) => (
+          <div
+            key={col.id}
+            className="flex-1 min-w-[320px] max-w-[400px] flex flex-col gap-4 shrink-0 snap-center"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, col.id)}
+          >
+            {/* Column Header */}
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-[#1C1C1E]">
+                  {col.label}
+                </h3>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${col.color}`}
+                >
+                  {col.items.length}
+                </span>
+              </div>
+            </div>
 
-          <div className="space-y-1.5 text-left">
-            <label className="text-[9px] uppercase font-medium tracking-widest text-[#8E8E93] pl-2">
-              Observações / Fornecedor
-            </label>
-            <textarea
-              name="description"
-              defaultValue={editingInsumo?.description}
-              className="w-full bg-slate-50 border border-lilac/20 rounded-xl px-4 py-3 text-[11px] font-bold outline-none h-20 text-slate-900 resize-none"
-            />
-          </div>
+            {/* Cards Container */}
+            <div className="flex flex-col gap-3 min-h-[200px] rounded-2xl bg-[#F5F5F7]/50 border border-[#E5E5EA] p-3">
+              {col.items.length === 0 ? (
+                <div className="flex-1 flex items-center justify-center text-center p-6 border-2 border-dashed border-[#E5E5EA] rounded-xl text-[#8E8E93] text-xs font-medium uppercase tracking-wider">
+                  Solte os pedidos aqui
+                </div>
+              ) : (
+                <AnimatePresence>
+                  {col.items.map((order) => {
+                    const cDate = order.createdAt?.toDate
+                      ? order.createdAt.toDate()
+                      : new Date(order.createdAt);
+                    const isOverdue =
+                      order.deliveryDate &&
+                      new Date(order.deliveryDate + "T00:00:00") < today;
+                    const itemsCount = order.items.reduce(
+                      (acc, i) => acc + i.quantity,
+                      0,
+                    );
 
-          <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="flex-1 py-4 border border-lilac/10 rounded-xl font-bold uppercase text-[9px] tracking-widest text-[#8E8E93]"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 py-4 bg-black text-white rounded-xl font-medium uppercase text-[9px] tracking-widest hover:scale-[1.02] transition-all disabled:opacity-50"
-            >
-              {loading ? "Salvando..." : "Salvar Insumo"}
-            </button>
+                    return (
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        key={order.id}
+                        draggable
+                        onDragStart={(e: any) => handleDragStart(e, order.id)}
+                        className="bg-white p-4 rounded-xl shadow-sm border border-[#E5E5EA] hover:border-[#1C1C1E] transition-all cursor-grab active:cursor-grabbing group"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-[#cca062] uppercase tracking-wider">
+                              #{order.code}
+                            </span>
+                            <span className="text-sm font-bold text-[#1C1C1E] line-clamp-1">
+                              {order.customerName}
+                            </span>
+                          </div>
+                          <div className="relative dropdown-container">
+                            <select
+                              value={order.status}
+                              onChange={(e) =>
+                                updateOrderStatus(order, e.target.value)
+                              }
+                              className="appearance-none text-[0px] w-6 h-6 bg-transparent cursor-pointer focus:outline-none"
+                              title="Mover para"
+                            >
+                              {STAGES.map((s) => (
+                                <option key={s.id} value={s.id}>
+                                  {s.label}
+                                </option>
+                              ))}
+                            </select>
+                            <MoreVertical
+                              size={14}
+                              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#8E8E93] pointer-events-none group-hover:text-[#1C1C1E]"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="text-[10px] text-[#8E8E93] line-clamp-2 mb-3 h-7 leading-tight">
+                          {order.items
+                            .map((i) => `${i.quantity}x ${i.product_name}`)
+                            .join(", ")}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-[10px] mb-3 relative">
+                          <div className="bg-[#F5F5F7] p-2 rounded-lg flex flex-col relative group/date">
+                            <span className="font-semibold text-[#8E8E93] uppercase tracking-wider mb-0.5 flex items-center gap-1">
+                              <Calendar size={10} /> Produção
+                            </span>
+                            <span className="font-bold text-[#1C1C1E] truncate group-hover/date:hidden">
+                              {order.productionDate
+                                ? new Date(
+                                    order.productionDate + "T00:00:00",
+                                  ).toLocaleDateString("pt-BR")
+                                : "Não def."}
+                            </span>
+                            <input
+                              type="date"
+                              value={order.productionDate || ""}
+                              onChange={(e) =>
+                                onUpdateOrder(order.id, {
+                                  productionDate: e.target.value,
+                                })
+                              }
+                              className="hidden group-hover/date:block absolute bottom-1.5 left-2 w-[calc(100%-16px)] bg-transparent text-[#1C1C1E] font-bold outline-none cursor-pointer text-[10px]"
+                            />
+                          </div>
+                          <div
+                            className={`p-2 rounded-lg flex flex-col relative group/date2 ${isOverdue ? "bg-rose-50 text-rose-700" : "bg-[#F5F5F7] text-[#1C1C1E]"}`}
+                          >
+                            <span className="font-semibold uppercase tracking-wider mb-0.5 flex items-center gap-1 opacity-70">
+                              <Clock size={10} /> Entrega
+                            </span>
+                            <span className="font-bold truncate group-hover/date2:hidden">
+                              {order.deliveryDate
+                                ? new Date(
+                                    order.deliveryDate + "T00:00:00",
+                                  ).toLocaleDateString("pt-BR")
+                                : "Não def."}
+                            </span>
+                            <input
+                              type="date"
+                              value={order.deliveryDate || ""}
+                              onChange={(e) =>
+                                onUpdateOrder(order.id, {
+                                  deliveryDate: e.target.value,
+                                })
+                              }
+                              className="hidden group-hover/date2:block absolute bottom-1.5 left-2 w-[calc(100%-16px)] bg-transparent text-[#1C1C1E] font-bold outline-none cursor-pointer text-[10px]"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-[#F2F2F7]">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-0.5 rounded border text-[9px] font-bold uppercase tracking-widest ${getPriorityColor(order.calculatedPriority as string)}`}
+                            >
+                              {order.calculatedPriority}
+                            </span>
+                            <span
+                              className="text-[9px] text-[#8E8E93] font-medium"
+                              title="Data do Pedido"
+                            >
+                              {cDate.toLocaleDateString("pt-BR")}
+                            </span>
+                            {(order.source === "catalog" ||
+                              order.marketplace) && (
+                              <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200 text-[9px] font-bold uppercase tracking-widest">
+                                {order.marketplace || "Catálogo"}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] font-bold text-[#1C1C1E] bg-[#F5F5F7] px-2 py-0.5 rounded border border-[#E5E5EA]">
+                            {itemsCount} {itemsCount === 1 ? "item" : "itens"}
+                          </span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              )}
+            </div>
           </div>
-        </form>
+        ))}
       </div>
     </div>
   );

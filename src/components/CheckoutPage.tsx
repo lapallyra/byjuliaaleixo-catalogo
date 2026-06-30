@@ -161,6 +161,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                 fetchedStatus = 'paid';
                 setIsPaid(true);
                 playSuccessSound();
+                try {
+                  const purchaseInfo = {
+                    id: fetched.id || crypto.randomUUID(),
+                    customerName: fetched.customerName || 'Cliente',
+                    productName: fetched.items?.[0]?.product_name || 'um produto especial',
+                    timeAgo: 'agora mesmo em São Paulo - SP',
+                    companyId: fetched.companyId || 'pallyra'
+                  };
+                  localStorage.setItem('pending_own_purchase_notification', JSON.stringify(purchaseInfo));
+                } catch (e) {
+                  console.error(e);
+                }
                 await updateOrder(fetched.id, { status: 'paid' });
                 // Strip the redirection search parameters
                 navigate(window.location.pathname, { replace: true });
@@ -298,6 +310,18 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
         try {
           await updateOrder(order.id!, { status: 'paid' });
           setOrder(prev => prev ? { ...prev, status: 'paid' } : null);
+          try {
+            const purchaseInfo = {
+              id: order?.id || crypto.randomUUID(),
+              customerName: customerForm.nome || order?.customerName || 'Cliente',
+              productName: items?.[0]?.product_name || order?.items?.[0]?.product_name || 'um produto especial',
+              timeAgo: 'agora mesmo em São Paulo - SP',
+              companyId: order?.companyId || 'pallyra'
+            };
+            localStorage.setItem('pending_own_purchase_notification', JSON.stringify(purchaseInfo));
+          } catch (e) {
+            console.error(e);
+          }
           setIsPaid(true);
           playSuccessSound();
           setIsPaying(false);

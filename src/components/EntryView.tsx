@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Heart, Info, Package, Mail, User, Sparkles, ArrowRight, ArrowRightLeft, Gift, ShoppingBag, Eye, Star, ChevronDown, X } from 'lucide-react';
 import { AppConfig, Product, SiteSettings, CompanyId } from '../types';
 import { useAuth } from './AuthProvider';
+import { useAdminOrchestrator } from './AdminOrchestratorSystem';
 import { subscribeToAllSettings } from '../services/firebaseService';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './ImageWithFallback';
@@ -30,6 +31,7 @@ const DelicateFlourish = () => (
 export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }) => {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
+  const orchestrator = useAdminOrchestrator();
   const [customSettings, setCustomSettings] = useState<Record<string, SiteSettings | null>>({});
   const [searchCode, setSearchCode] = useState('');
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
@@ -264,6 +266,20 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             <div 
               key={atelier.id}
               onClick={() => navigate(atelier.route)}
+              onMouseEnter={() => {
+                orchestrator.setHoverActive(true);
+                orchestrator.registerInteraction();
+              }}
+              onMouseLeave={() => {
+                orchestrator.setHoverActive(false);
+              }}
+              onFocus={() => {
+                orchestrator.setHoverActive(true);
+                orchestrator.registerInteraction();
+              }}
+              onBlur={() => {
+                orchestrator.setHoverActive(false);
+              }}
               tabIndex={0}
               className="flex flex-col items-center group cursor-pointer relative outline-none focus:outline-none"
             >

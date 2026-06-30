@@ -2,14 +2,14 @@ import { SaleNotification, CompanyId, Product } from '../types';
 import { PRODUCTS } from '../constants';
 
 const CUSTOMER_NAMES = [
-  'Maria Lins', 'João Felipe', 'Luana Mattos', 'Ana Beatriz', 'Lucas Santos',
-  'Mariana Costa', 'Guilherme Alves', 'Beatriz Silva', 'Felipe Oliveira', 'Camila Rocha',
-  'Rafael Lima', 'Juliana Souza', 'Thiago Pereira', 'Larissa Mendes', 'Breno Ferraz',
-  'Isabela Gomes', 'Vitor Hugo', 'Letícia Castro', 'Matheus Duarte', 'Gabriela Borges',
-  'Bruno Martins', 'Ricardo Fonseca', 'Fernanda Andrade', 'Patrícia Koster', 'Cláudia Monteiro',
-  'Sérgio Valente', 'Amanda Ribeiro', 'Roberto Carlos', 'Aline Moraes', 'Paulo Ricardo',
-  'Rodrigo Mello', 'Julia Azevedo', 'Renata Nogueira', 'Eduardo Torres', 'Tatiana Reis',
-  'Fábio Lins', 'Carla Machado', 'Leonardo Vieira', 'Simone Tavares', 'Henrique Bueno'
+  'Monica B.', 'Luiz Carlos N.', 'Priscila O.', 'Juliana S.', 'Guilherme M.',
+  'Ana Paula R.', 'Felipe A.', 'Camila G.', 'Matheus K.', 'Beatriz L.',
+  'Rodrigo F.', 'Patricia T.', 'Lucas H.', 'Gabriela M.', 'Thiago C.',
+  'Larissa P.', 'Breno V.', 'Isabela D.', 'Vitor Hugo S.', 'Leticia J.',
+  'Fernanda E.', 'Ricardo A.', 'Sandra M.', 'Claudio G.', 'Amanda B.',
+  'Roberto Carlos S.', 'Aline D.', 'Paulo Henrique F.', 'Renata O.', 'Eduardo J.',
+  'Tatiana C.', 'Carla B.', 'Leonardo M.', 'Simone T.', 'Henrique S.',
+  'Viviane P.', 'Diego R.', 'Vanessa G.', 'Mauricio N.', 'Julio Cesar M.'
 ];
 
 export const generateRandomNotification = (companyId: CompanyId): SaleNotification => {

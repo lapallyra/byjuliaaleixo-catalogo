@@ -32,8 +32,11 @@ import {
   Percent,
   RefreshCw,
   Sparkles,
+  History,
+  Archive,
 } from "lucide-react";
 import { CSVHandler } from "./CSVHandler";
+import { NewClientForm } from "./NewClientForm";
 import { Customer, CompanyId, Order } from "../../types";
 import {
   deleteCustomer,
@@ -48,26 +51,29 @@ import { motion, AnimatePresence } from "motion/react";
 interface ClientsTabProps {
   companyId: CompanyId;
   customers: Customer[];
+  onNewOrder?: (customerId: string) => void;
 }
 
 export const ClientsTab: React.FC<ClientsTabProps> = ({
   companyId,
   customers,
+  onNewOrder,
 }) => {
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"Todos" | "Ativos" | "Inativos">("Todos");
-  const [filterOrdersCount, setFilterOrdersCount] = useState<"Todos" | "1+" | "5+" | "10+">("Todos");
-  const [filterMinSpent, setFilterMinSpent] = useState<"Todos" | "100" | "500" | "1000">("Todos");
-  const [filterRegDate, setFilterRegDate] = useState<"Todos" | "EsteMês" | "EsteAno" | "Anterior">("Todos");
-  const [sortBy, setSortBy] = useState<"name" | "spent" | "orders" | "newest">("spent");
-  const [showFilters, setShowFilters] = useState(false);
+  const [quickFilter, setQuickFilter] = useState<"Todos" | "PF" | "PJ" | "ComPedidos" | "SemPedidos" | "Recorrentes" | "Aniversariantes">("Todos");
+  const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "newest" | "oldest" | "revenue" | "orders">("newest");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<10 | 20 | 50 | 100>(20);
 
   // Modals & Detail panels
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   // Clipboard copy state
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -127,10 +133,20 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
     const total = customers.length;
     const active = customers.filter((c) => (c.status || "Ativo") === "Ativo").length;
     const inactive = total - active;
+    
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const newCustomers = customers.filter(c => {
+      const created = c.createdAt?.toDate ? c.createdAt.toDate() : new Date(c.createdAt || 0);
+      return created >= thirtyDaysAgo;
+    }).length;
+
+    const recurrent = customers.filter(c => (c.ordersCount || 0) >= 2).length;
+
     const accumulatedRevenue = customers.reduce((acc, c) => acc + (c.totalSpent || 0), 0);
     const avgTicket = total > 0 ? accumulatedRevenue / total : 0;
     
-    return { total, active, inactive, accumulatedRevenue, avgTicket };
+    return { total, active, inactive, newCustomers, recurrent, accumulatedRevenue, avgTicket };
   }, [customers]);
 
   // Bulk selection handlers
@@ -171,77 +187,67 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
   const filteredCustomers = useMemo(() => {
     return customers
       .filter((c) => {
-        // Search query (name, email, contact, cpf/cnpj, code)
+        // Search query (name, phone, email, cpf/cnpj, city, code)
         const normSearch = searchTerm.toLowerCase();
         const cleanSearch = searchTerm.replace(/\D/g, "");
         
         const matchesSearch =
           c.name.toLowerCase().includes(normSearch) ||
           (c.email && c.email.toLowerCase().includes(normSearch)) ||
+          (c.city && c.city.toLowerCase().includes(normSearch)) ||
           (c.code && c.code.toLowerCase().includes(normSearch)) ||
           (cleanSearch && c.contact && c.contact.replace(/\D/g, "").includes(cleanSearch)) ||
           (cleanSearch && c.cpfCnpj && c.cpfCnpj.replace(/\D/g, "").includes(cleanSearch));
 
         if (!matchesSearch) return false;
 
-        // Status filter
-        const customerStatus = c.status || "Ativo";
-        if (filterStatus === "Ativos" && customerStatus !== "Ativo") return false;
-        if (filterStatus === "Inativos" && customerStatus !== "Inativo") return false;
-
-        // Orders count filter
-        const ordersCount = c.ordersCount || 0;
-        if (filterOrdersCount === "1+" && ordersCount < 1) return false;
-        if (filterOrdersCount === "5+" && ordersCount < 5) return false;
-        if (filterOrdersCount === "10+" && ordersCount < 10) return false;
-
-        // Spent filter
-        const totalSpent = c.totalSpent || 0;
-        if (filterMinSpent === "100" && totalSpent < 100) return false;
-        if (filterMinSpent === "500" && totalSpent < 500) return false;
-        if (filterMinSpent === "1000" && totalSpent < 1000) return false;
-
-        // Registration date filter
-        if (filterRegDate !== "Todos") {
-          const regDate = c.createdAt?.toDate
-            ? c.createdAt.toDate()
-            : new Date(c.createdAt || Date.now());
-          const now = new Date();
-          if (filterRegDate === "EsteMês") {
-            if (regDate.getMonth() !== now.getMonth() || regDate.getFullYear() !== now.getFullYear())
-              return false;
-          } else if (filterRegDate === "EsteAno") {
-            if (regDate.getFullYear() !== now.getFullYear()) return false;
-          } else if (filterRegDate === "Anterior") {
-            if (regDate.getFullYear() === now.getFullYear()) return false;
-          }
+        // Quick Filters
+        if (quickFilter === "PF" && c.cpfCnpj && c.cpfCnpj.length > 14) return false; // Basic PF check
+        if (quickFilter === "PJ" && c.cpfCnpj && c.cpfCnpj.length <= 14) return false; // Basic PJ check
+        if (quickFilter === "ComPedidos" && (c.ordersCount || 0) === 0) return false;
+        if (quickFilter === "SemPedidos" && (c.ordersCount || 0) > 0) return false;
+        if (quickFilter === "Recorrentes" && (c.ordersCount || 0) < 2) return false;
+        if (quickFilter === "Aniversariantes") {
+          if (!c.birthDate) return false;
+          const [, month] = c.birthDate.split("/");
+          if (parseInt(month) !== new Date().getMonth() + 1) return false;
         }
 
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === "name") {
-          return a.name.localeCompare(b.name);
-        } else if (sortBy === "orders") {
-          return (b.ordersCount || 0) - (a.ordersCount || 0);
-        } else if (sortBy === "newest") {
-          const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
-          const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
-          return dateB - dateA;
-        } else {
-          // Default or spent
-          return (b.totalSpent || 0) - (a.totalSpent || 0);
-        }
+        if (sortBy === "name_asc") return a.name.localeCompare(b.name);
+        if (sortBy === "name_desc") return b.name.localeCompare(a.name);
+        if (sortBy === "orders") return (b.ordersCount || 0) - (a.ordersCount || 0);
+        if (sortBy === "revenue") return (b.totalSpent || 0) - (a.totalSpent || 0);
+        
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
+        
+        if (sortBy === "oldest") return dateA - dateB;
+        return dateB - dateA; // newest default
       });
   }, [
     customers,
     searchTerm,
-    filterStatus,
-    filterOrdersCount,
-    filterMinSpent,
-    filterRegDate,
+    quickFilter,
     sortBy,
   ]);
+
+  const paginatedCustomers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredCustomers, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, quickFilter, sortBy, itemsPerPage]);
+
+  useEffect(() => {
+    const handleClickOutside = () => setOpenDropdownId(null);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
 
   // Birthday reminder for upcoming 7 days
   const birthdayCustomers = useMemo(() => {
@@ -721,7 +727,7 @@ Histórico de Compras:
                 title: "Relatório CRM de Clientes",
                 columns: ["Nome", "Telefone", "E-mail", "Pedidos", "Total Gasto", "Status"],
                 rows,
-                filters: `Busca: ${searchTerm || "Nenhuma"} | Status: ${filterStatus}`,
+                filters: `Busca: ${searchTerm || "Nenhuma"} | Filtro Rápido: ${quickFilter}`,
               });
             }}
             className="flex items-center gap-2 px-5 py-3 bg-white border border-[#E5E5EA] hover:border-[#1C1C1E] rounded-xl font-bold text-xs uppercase tracking-wider text-[#1C1C1E] transition-all shadow-sm active:scale-95 cursor-pointer border-b-[3px] border-b-[#E5E5EA] hover:border-b-[#1C1C1E]"
@@ -744,32 +750,24 @@ Histórico de Compras:
           <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block">Total Clientes</span>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-2xl font-extrabold text-[#1C1C1E]">{clientKPIs.total}</span>
-            <span className="text-[10px] text-emerald-500 font-bold">100%</span>
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-xs flex flex-col justify-between">
+          <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block">Novos Clientes (30 dias)</span>
+          <div className="flex items-baseline gap-2 mt-2">
+            <span className="text-2xl font-extrabold text-emerald-600">+{clientKPIs.newCustomers}</span>
           </div>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-xs flex flex-col justify-between">
           <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block">Clientes Ativos</span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl font-extrabold text-[#1C1C1E]">{clientKPIs.active}</span>
-            <span className="text-[10px] text-[#cca062] font-bold">
-              {clientKPIs.total > 0 ? `${((clientKPIs.active / clientKPIs.total) * 100).toFixed(0)}%` : "0%"}
-            </span>
+            <span className="text-2xl font-extrabold text-[#cca062]">{clientKPIs.active}</span>
           </div>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-xs flex flex-col justify-between">
-          <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block">Faturamento Acumulado</span>
+          <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block">Clientes Recorrentes</span>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-lg font-extrabold text-emerald-600">
-              R$ {clientKPIs.accumulatedRevenue.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}
-            </span>
-          </div>
-        </div>
-        <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-xs flex flex-col justify-between">
-          <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block">Ticket Médio Geral</span>
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-lg font-extrabold text-[#cca062]">
-              R$ {clientKPIs.avgTicket.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
+            <span className="text-2xl font-extrabold text-[#1C1C1E]">{clientKPIs.recurrent}</span>
           </div>
         </div>
       </div>
@@ -796,15 +794,33 @@ Histórico de Compras:
         </div>
       )}
 
-      {/* CONTROL ACTIONS BAR */}
-      <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-xs space-y-4">
-        <div className="flex flex-col lg:flex-row items-center gap-4">
-          {/* Main Search */}
+      {customers.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-[#E5E5EA] shadow-xs p-24 flex flex-col items-center justify-center text-center mt-8">
+          <div className="w-20 h-20 bg-[#F5F5F7] rounded-full flex items-center justify-center mb-6">
+            <UserPlus className="text-[#8E8E93]" size={32} />
+          </div>
+          <h2 className="text-[#1C1C1E] font-extrabold text-lg uppercase tracking-wider mb-2">Nenhum Cliente Cadastrado</h2>
+          <p className="text-sm text-[#8E8E93] max-w-md mb-8">
+            Você ainda não possui nenhum cliente registrado. Cadastre seu primeiro cliente para começar a construir seu relacionamento e registrar vendas.
+          </p>
+          <button
+            onClick={handleOpenNewForm}
+            className="flex items-center gap-2 px-8 py-4 bg-[#1C1C1E] hover:bg-black text-white rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer border-b-[3px] border-b-black"
+          >
+            <Plus size={16} /> Cadastrar Primeiro Cliente
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* CONTROL ACTIONS BAR */}
+          <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-xs space-y-4">
+            <div className="flex flex-col lg:flex-row items-center gap-4">
+              {/* Main Search */}
           <div className="relative flex-1 w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8E93]" size={16} />
             <input
               type="text"
-              placeholder="BUSCAR CLIENTE POR NOME, E-MAIL, TELEFONE OU CPF..."
+              placeholder="BUSCAR POR NOME, TELEFONE, E-MAIL, CPF/CNPJ, CIDADE OU CÓDIGO..."
               className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl pl-12 pr-4 py-3 text-xs font-bold uppercase tracking-wider outline-none focus:border-[#1C1C1E] transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -820,297 +836,252 @@ Histórico de Compras:
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
               >
-                <option value="spent">Maior Gasto</option>
-                <option value="name">Alfabético (A-Z)</option>
-                <option value="orders">Mais Pedidos</option>
-                <option value="newest">Mais Recentes</option>
+                <option value="name_asc">Nome A-Z</option>
+                <option value="name_desc">Nome Z-A</option>
+                <option value="newest">Mais recente</option>
+                <option value="oldest">Mais antigo</option>
+                <option value="revenue">Maior faturamento</option>
+                <option value="orders">Mais pedidos</option>
               </select>
             </div>
-
-            {/* Expand filters toggle */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-1.5 px-4 py-3.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                showFilters
-                  ? "bg-[#1C1C1E] text-white border-[#1C1C1E]"
-                  : "bg-white text-[#1C1C1E] border-[#E5E5EA] hover:border-[#1C1C1E]"
-              }`}
-            >
-              <Filter size={14} /> Filtros {showFilters ? "Ativos" : ""}
-            </button>
           </div>
         </div>
 
-        {/* Expandable CRM filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
+        {/* Quick Filters */}
+        <div className="flex flex-wrap items-center gap-2 pt-2">
+          {[
+            { id: "Todos", label: "Todos" },
+            { id: "PF", label: "Pessoa Física" },
+            { id: "PJ", label: "Pessoa Jurídica" },
+            { id: "ComPedidos", label: "Com Pedidos" },
+            { id: "SemPedidos", label: "Sem Pedidos" },
+            { id: "Recorrentes", label: "Recorrentes" },
+            { id: "Aniversariantes", label: "Aniversariantes do mês" }
+          ].map(f => (
+            <button
+              key={f.id}
+              onClick={() => setQuickFilter(f.id as any)}
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                quickFilter === f.id 
+                  ? "bg-[#1C1C1E] text-white border-[#1C1C1E]" 
+                  : "bg-white text-[#8E8E93] border-[#E5E5EA] hover:border-[#1C1C1E] hover:text-[#1C1C1E]"
+              }`}
             >
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-[#F2F2F7]">
-                {/* Status Filter */}
-                <div className="space-y-1">
-                  <label className="text-[9px] font-bold uppercase text-[#8E8E93] tracking-wider">Status do Cliente</label>
-                  <select
-                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-[#1C1C1E]"
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value as any)}
-                  >
-                    <option value="Todos">Todos</option>
-                    <option value="Ativos">Ativos</option>
-                    <option value="Inativos">Inativos</option>
-                  </select>
-                </div>
-
-                {/* Orders count filter */}
-                <div className="space-y-1">
-                  <label className="text-[9px] font-bold uppercase text-[#8E8E93] tracking-wider">Mínimo de Pedidos</label>
-                  <select
-                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-[#1C1C1E]"
-                    value={filterOrdersCount}
-                    onChange={(e) => setFilterOrdersCount(e.target.value as any)}
-                  >
-                    <option value="Todos">Todos os clientes</option>
-                    <option value="1+">1+ Pedidos realizados</option>
-                    <option value="5+">5+ Pedidos realizados</option>
-                    <option value="10+">Clientes VIP (10+ Pedidos)</option>
-                  </select>
-                </div>
-
-                {/* Spent filter */}
-                <div className="space-y-1">
-                  <label className="text-[9px] font-bold uppercase text-[#8E8E93] tracking-wider">Valor Gasto Mínimo</label>
-                  <select
-                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-[#1C1C1E]"
-                    value={filterMinSpent}
-                    onChange={(e) => setFilterMinSpent(e.target.value as any)}
-                  >
-                    <option value="Todos">Todos os valores</option>
-                    <option value="100">Mais de R$ 100,00</option>
-                    <option value="500">Mais de R$ 500,00</option>
-                    <option value="1000">Mais de R$ 1.000,00</option>
-                  </select>
-                </div>
-
-                {/* Registration Date Filter */}
-                <div className="space-y-1">
-                  <label className="text-[9px] font-bold uppercase text-[#8E8E93] tracking-wider">Data de Cadastro</label>
-                  <select
-                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-[#1C1C1E]"
-                    value={filterRegDate}
-                    onChange={(e) => setFilterRegDate(e.target.value as any)}
-                  >
-                    <option value="Todos">Qualquer período</option>
-                    <option value="EsteMês">Cadastrado este mês</option>
-                    <option value="EsteAno">Cadastrado este ano</option>
-                    <option value="Anterior">Anos anteriores</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Clear filters trigger */}
-              <div className="flex justify-end pt-3">
-                <button
-                  onClick={() => {
-                    setFilterStatus("Todos");
-                    setFilterOrdersCount("Todos");
-                    setFilterMinSpent("Todos");
-                    setFilterRegDate("Todos");
-                  }}
-                  className="text-[9px] font-bold uppercase tracking-widest text-rose-500 hover:text-rose-700 bg-rose-50/50 border border-rose-100 rounded-lg px-2.5 py-1"
-                >
-                  Limpar Todos os Filtros
-                </button>
-              </div>
-            </motion.div>
+              {f.label}
+            </button>
+          ))}
+          {quickFilter !== "Todos" && (
+            <button
+              onClick={() => setQuickFilter("Todos")}
+              className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-all ml-auto flex items-center gap-1"
+            >
+              <X size={12} /> Limpar Filtro
+            </button>
           )}
-        </AnimatePresence>
-      </div>
-
-      {/* CUSTOMER TABLE LISTING */}
-      <div className="bg-white rounded-2xl border border-[#E5E5EA] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#F5F5F7] border-b border-[#E5E5EA]">
-                <th className="p-4 w-12 text-center">
-                  <input
-                    type="checkbox"
-                    className="rounded text-[#1C1C1E] focus:ring-[#cca062]"
-                    checked={
-                      filteredCustomers.length > 0 && selectedIds.length === filteredCustomers.length
-                    }
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                  />
-                </th>
-                <th className="p-4 text-[9px] font-bold uppercase tracking-wider text-[#8E8E93]">Código / Foto</th>
-                <th className="p-4 text-[9px] font-bold uppercase tracking-wider text-[#8E8E93]">Nome Completo / Local</th>
-                <th className="p-4 text-[9px] font-bold uppercase tracking-wider text-[#8E8E93]">Contato & E-mail</th>
-                <th className="p-4 text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] text-center">Pedidos</th>
-                <th className="p-4 text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] text-right">Total Gasto</th>
-                <th className="p-4 text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] text-center">Status</th>
-                <th className="p-4 text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#F2F2F7]">
-              {filteredCustomers.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="p-16 text-center text-xs font-bold text-[#8E8E93] uppercase tracking-wider">
-                    Nenhum cliente atende aos critérios de pesquisa selecionados
-                  </td>
-                </tr>
-              ) : (
-                filteredCustomers.map((c) => {
-                  const isChecked = selectedIds.includes(c.id);
-                  const isCopied = copiedId === c.id;
-                  const cStatus = c.status || "Ativo";
-                  const isIncomplete = cStatus === "Cadastro Incompleto" && (!c.cpfCnpj || !c.email || !c.address || !c.city || !c.state || !c.zipCode);
-                  const metrics = customerMetricsMap.get(c.id);
-
-                  return (
-                    <tr
-                      key={c.id}
-                      className="hover:bg-[#FAF9F6]/60 transition-colors group cursor-pointer relative"
-                      onClick={() => {
-                        setSelectedCustomer(c);
-                        setIsDetailDrawerOpen(true);
-                      }}
-                    >
-                      {/* Checkbox cell with dynamic LED strip */}
-                      <td className={`p-4 text-center relative ${isIncomplete ? "border-l-[5px] border-l-amber-500" : ""}`} onClick={(e) => e.stopPropagation()}>
-                        {isIncomplete && (
-                          <div className="absolute left-0 top-0 bottom-0 w-[5px] bg-amber-500 shadow-[0_0_8px_#f59e0b,0_0_15px_#f59e0b] animate-pulse" />
-                        )}
-                        <input
-                          type="checkbox"
-                          className="rounded text-[#1C1C1E] focus:ring-[#cca062]"
-                          checked={isChecked}
-                          onChange={(e) => handleSelectOne(c.id, e.target.checked)}
-                        />
-                      </td>
-
-                      {/* Code / Avatar cell */}
-                      <td className="p-4 relative">
-                        <div className="flex items-center gap-3">
-                          <div className="relative">
-                             {renderAvatar(c.name, c.avatarUrl, "sm")}
-                             {metrics?.activeOrders ? (
-                               <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981] animate-pulse border-2 border-white" title={`${metrics.activeOrders} pedido(s) em andamento`} />
-                             ) : null}
-                          </div>
-                          <div className="flex flex-col items-start">
-                            <span className="text-[10px] font-bold text-[#cca062] uppercase tracking-wider">
-                              #{c.code || "----"}
-                            </span>
-                            {metrics?.isRecurrent && (
-                              <span className="text-[8px] font-black text-white bg-[#cca062] px-1.5 py-[1px] rounded uppercase tracking-widest mt-0.5">
-                                Recorrente
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Name / Location cell */}
-                      <td className="p-4">
-                        <div 
-                          className="space-y-0.5 group/name relative inline-block"
-                          title={`Resumo: \nPedidos: ${c.ordersCount || 0} \nGasto: R$ ${(c.totalSpent || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} \nÚltima Compra: ${metrics?.lastPurchaseDate ? metrics.lastPurchaseDate.toLocaleDateString() : "N/A"}`}
-                        >
-                          <p className="text-xs font-bold text-[#1C1C1E] group-hover:text-[#cca062] transition-colors uppercase">
-                            {c.name}
-                          </p>
-                          <p className="text-[10px] font-medium text-[#8E8E93] flex items-center gap-1">
-                            <MapPin size={10} /> {c.city || "S/Cidade"} / {c.state || "UF"}
-                          </p>
-                        </div>
-                      </td>
-
-                      {/* Contact & Email cell */}
-                      <td className="p-4">
-                        <div className="space-y-0.5">
-                          <p className="text-xs font-semibold text-[#1C1C1E]">{formatPhone(c.contact)}</p>
-                          <p className="text-[10px] text-[#8E8E93] lowercase truncate max-w-[180px]">
-                            {c.email || "sem_email@vitrine.com"}
-                          </p>
-                        </div>
-                      </td>
-
-                      {/* Total Orders cell */}
-                      <td className="p-4 text-center">
-                        <span className="text-xs font-bold text-[#1C1C1E] bg-[#F5F5F7] border border-[#E5E5EA] px-2.5 py-0.5 rounded-md">
-                          {c.ordersCount || 0}
-                        </span>
-                      </td>
-
-                      {/* Total Spent cell */}
-                      <td className="p-4 text-right">
-                        <div className="flex flex-col items-end">
-                          <span className="text-xs font-bold text-emerald-600">
-                            R$ {(c.totalSpent || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                          </span>
-                          {metrics?.lastPurchaseDate && (
-                            <span className="text-[9px] text-[#8E8E93] font-medium mt-0.5">
-                              {metrics.lastPurchaseDate.toLocaleDateString('pt-BR')}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Status indicator badge */}
-                      <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => handleToggleStatus(c)}
-                          className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest border transition-all ${
-                            cStatus === "Ativo"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                              : cStatus === "Cadastro Incompleto"
-                              ? "bg-amber-50 text-amber-700 border-amber-200"
-                              : "bg-slate-50 text-slate-400 border-slate-200"
-                          }`}
-                          title="Clique para alternar status"
-                        >
-                          {cStatus}
-                        </button>
-                      </td>
-
-                      {/* Actions quick click panel */}
-                      <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => handleCopyCustomerSummary(c)}
-                            className="p-1.5 bg-white border border-[#E5E5EA] hover:border-[#1C1C1E] rounded-lg text-[#8E8E93] hover:text-[#1C1C1E] transition-colors"
-                            title="Copiar dados"
-                          >
-                            {isCopied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
-                          </button>
-                          <button
-                            onClick={() => handleOpenEdit(c)}
-                            className="p-1.5 bg-white border border-[#E5E5EA] hover:border-[#1C1C1E] rounded-lg text-[#8E8E93] hover:text-[#1C1C1E] transition-colors"
-                            title="Editar cadastro"
-                          >
-                            <Edit2 size={12} />
-                          </button>
-                          <button
-                            onClick={() => setCustomerToDelete(c.id)}
-                            className="p-1.5 bg-white border border-[#E5E5EA] hover:bg-rose-50 rounded-lg text-[#8E8E93] hover:text-rose-600 transition-colors"
-                            title="Excluir"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
         </div>
       </div>
+
+      {/* CUSTOMER CARDS GRID */}
+      {paginatedCustomers.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-[#E5E5EA] shadow-xs p-16 flex flex-col items-center justify-center text-center">
+          <div className="w-16 h-16 bg-[#F5F5F7] rounded-full flex items-center justify-center mb-4">
+            <Search className="text-[#8E8E93]" size={24} />
+          </div>
+          <h3 className="text-[#1C1C1E] font-bold uppercase tracking-wider mb-2">Nenhum cliente encontrado</h3>
+          <p className="text-xs text-[#8E8E93] max-w-sm">
+            Não encontramos nenhum cliente que corresponda aos filtros e termos de pesquisa atuais.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {paginatedCustomers.map((c) => {
+            const metrics = customerMetricsMap.get(c.id);
+
+            return (
+              <div
+                key={c.id}
+                onClick={() => {
+                  setSelectedCustomer(c);
+                  setIsDetailDrawerOpen(true);
+                }}
+                className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-xs hover:border-[#1C1C1E] transition-all cursor-pointer group flex flex-col relative"
+              >
+                {/* Header row: Avatar + Name + Actions */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      {renderAvatar(c.name, c.avatarUrl, "md")}
+                      {metrics?.activeOrders ? (
+                        <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981] animate-pulse border-2 border-white" />
+                      ) : null}
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-[10px] font-bold text-[#cca062] uppercase tracking-wider">
+                        #{c.code || "----"}
+                      </span>
+                      <h3 className="text-sm font-bold text-[#1C1C1E] uppercase group-hover:text-[#cca062] transition-colors line-clamp-1">
+                        {c.name}
+                      </h3>
+                      {metrics?.isRecurrent && (
+                        <span className="text-[8px] font-black text-white bg-[#cca062] px-1.5 py-[1px] rounded uppercase tracking-widest mt-1">
+                          Recorrente
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions Dropdown Trigger (preventing drawer open) */}
+                  <div className="relative" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className="p-1.5 rounded-lg text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-[#F5F5F7] transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownId(openDropdownId === c.id ? null : c.id);
+                      }}
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+                    {openDropdownId === c.id && (
+                      <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-[#E5E5EA] py-1 z-50 overflow-hidden">
+                        {onNewOrder && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onNewOrder(c.id); setOpenDropdownId(null); }}
+                            className="w-full text-left px-4 py-2 text-xs font-bold text-[#1C1C1E] hover:bg-[#F5F5F7] flex items-center gap-2"
+                          >
+                            <Plus size={14} /> Novo Pedido
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenEdit(c);
+                            setOpenDropdownId(null);
+                          }}
+                          className="w-full text-left px-4 py-2 text-xs font-bold text-[#1C1C1E] hover:bg-[#F5F5F7] flex items-center gap-2"
+                        >
+                          <Edit2 size={14} /> Editar Cliente
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (c.contact) {
+                              const num = c.contact.replace(/\D/g, "");
+                              window.open(`https://wa.me/55${num}`, "_blank");
+                            }
+                            setOpenDropdownId(null);
+                          }}
+                          className="w-full text-left px-4 py-2 text-xs font-bold text-[#1C1C1E] hover:bg-[#F5F5F7] flex items-center gap-2"
+                        >
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg> Abrir WhatsApp
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCustomer(c);
+                            setIsDetailDrawerOpen(true);
+                            setDrawerTab("orders");
+                            setOpenDropdownId(null);
+                          }}
+                          className="w-full text-left px-4 py-2 text-xs font-bold text-[#1C1C1E] hover:bg-[#F5F5F7] flex items-center gap-2"
+                        >
+                          <History size={14} /> Ver Histórico
+                        </button>
+                        <div className="h-px bg-[#F2F2F7] my-1" />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCustomerToDelete(c.id);
+                            setOpenDropdownId(null);
+                          }}
+                          className="w-full text-left px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                        >
+                          <Archive size={14} /> Arquivar Cliente
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Details grid */}
+                <div className="grid grid-cols-2 gap-y-3 gap-x-2 mt-auto text-xs border-t border-[#F2F2F7] pt-3">
+                  <div>
+                    <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-wider block mb-0.5">Telefone</span>
+                    <span className="font-semibold text-[#1C1C1E]">{formatPhone(c.contact) || "N/A"}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-wider block mb-0.5">Cidade / UF</span>
+                    <span className="font-medium text-[#1C1C1E] capitalize truncate block" title={`${c.city || ""} / ${c.state || ""}`}>
+                      {c.city ? `${c.city} / ${c.state || ""}` : "Não informada"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-wider block mb-0.5">Total de Pedidos</span>
+                    <span className="font-bold text-[#1C1C1E] bg-[#F5F5F7] px-2 py-0.5 rounded-md border border-[#E5E5EA]">{c.ordersCount || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-wider block mb-0.5">Última Compra</span>
+                    <span className="font-medium text-[#1C1C1E]">
+                      {metrics?.lastPurchaseDate ? metrics.lastPurchaseDate.toLocaleDateString("pt-BR") : "Nenhum pedido"}
+                    </span>
+                  </div>
+                  <div className="col-span-2 pt-2 mt-1 border-t border-[#F2F2F7] flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-wider block">Valor Investido</span>
+                    <span className="font-extrabold text-emerald-600">
+                      R$ {(c.totalSpent || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* PAGINATION */}
+      {filteredCustomers.length > 0 && (
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 bg-white p-4 rounded-2xl border border-[#E5E5EA] shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Itens por página:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value) as any);
+                setCurrentPage(1);
+              }}
+              className="bg-[#F5F5F7] border border-[#E5E5EA] rounded-lg px-2 py-1 text-xs font-bold text-[#1C1C1E] outline-none cursor-pointer"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-4 text-xs font-bold text-[#1C1C1E] uppercase tracking-wider">
+            <span>
+              {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredCustomers.length)} de {filteredCustomers.length}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className="p-1.5 rounded-lg border border-[#E5E5EA] text-[#1C1C1E] hover:bg-[#F5F5F7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <button
+                disabled={currentPage * itemsPerPage >= filteredCustomers.length}
+                onClick={() => setCurrentPage(p => p + 1)}
+                className="p-1.5 rounded-lg border border-[#E5E5EA] text-[#1C1C1E] hover:bg-[#F5F5F7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      </>
+      )}
 
       {/* DETAIL DRAWER / SLIDE OVER PANEL (CRM SIDEBAR) */}
       <AnimatePresence>

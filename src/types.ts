@@ -84,18 +84,40 @@ export interface Variation {
   }[];
 }
 
-export interface Insumo {
+export interface Componente {
   id: string;
-  code: string;
+  code?: string;
   name: string;
-  unit: 'mt' | 'cx' | 'pct' | 'unid';
+  category: string;
+  supplier?: string;
+  brand?: string;
+  unit: 'unid' | 'folha' | 'mt' | 'cm' | 'mm' | 'rolo' | 'pct' | 'cx' | 'kg' | 'g' | 'lt' | 'ml' | 'outro';
   quantity: number;
+  minQuantity: number;
+  criticalLimit: number;
+  unitCost: number;
   costPrice: number;
   unitValue: number;
-  description: string;
-  criticalLimit: number;
-  category?: string;
-  subcategory?: string;
+  location?: string;
+  description?: string;
+  isActive: boolean;
+  updatedAt: any;
+  createdAt: any;
+}
+
+export type Insumo = Componente;
+
+export interface ComponenteMovement {
+  id: string;
+  componenteId: string;
+  date: any;
+  type: 'entrada' | 'saida' | 'ajuste';
+  quantity: number;
+  previousQuantity: number;
+  newQuantity: number;
+  origin?: string;
+  description?: string;
+  userId: string;
 }
 
 export type OrderApprovalStatus = 'pending' | 'approved' | 'adjustments_requested';
@@ -117,18 +139,25 @@ export interface Order {
   customerName: string;
   customerCpfCnpj: string;
   contact: string;
+  customerEmail?: string;
+  customerCity?: string;
   address?: string;
+  customerAddress?: string;
   items: CartItem[];
   total: number;
-  status: 'novo pedido' | 'quote' | 'approval' | 'waiting_deposit' | 'production' | 'assembly' | 'ready' | 'delivered' | 'cancelled' | 'pending' | 'delivery' | 'waiting_payment' | 'planned_payment' | 'paid' | 'waiting_remaining' | 'planned_active' | 'fully_paid';
+  discount?: number;
+  paymentMethod?: string;
+  status: 'novo pedido' | 'approved' | 'adjustments_requested' | 'quote' | 'approval' | 'waiting_deposit' | 'waiting_production' | 'production' | 'conferencing' | 'assembly' | 'ready' | 'delivered' | 'cancelled' | 'pending' | 'delivery' | 'waiting_payment' | 'planned_payment' | 'paid' | 'waiting_remaining' | 'planned_active' | 'fully_paid';
   createdAt: any; 
   deliveryDate: string;
+  productionDate?: string;
   deliveryType?: 'retirada' | 'delivery' | 'shipping';
   shippingCost?: number;
   isEmergency: boolean;
   paymentStatus?: 'pending' | 'paid' | 'cancelled' | 'partial' | 'refunded';
   paymentMode?: 'full' | 'planned';
   payment_method?: 'full' | 'planned';
+  updatedAt?: any;
   plannedMethod?: 'credit_card' | 'digital_booklet';
   remainingAmount?: number;
   remainingInstallments?: number;
@@ -159,6 +188,9 @@ export interface Order {
   currentVersion?: number;
   trackingCode?: string;
   shippingLabelUrl?: string;
+  productionPriority?: 'normal' | 'alta' | 'urgente';
+  assignee?: string;
+  atelier?: string;
 }
 
 export interface Customer {
@@ -167,14 +199,14 @@ export interface Customer {
   name: string;
   contact: string;
   email?: string;
-  cpfCnpj: string;
-  birthDate: string;
-  address: string;
-  number: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  cpfCnpj?: string;
+  birthDate?: string;
+  address?: string;
+  number?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   totalSpent: number;
   ordersCount: number;
   pendingBalance?: number;
@@ -315,6 +347,10 @@ export interface CartItem extends Product {
     text?: string;
     notes?: string;
   };
+  // Production tracking
+  productionStatus?: 'nao_iniciado' | 'em_producao' | 'concluido';
+  productionStartedAt?: any;
+  productionFinishedAt?: any;
 }
 
 export interface AppConfig {
@@ -510,6 +546,45 @@ export interface Coupon {
   appliedCollections?: string[];
   excludedProducts?: string[];
   createdAt: any;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contactName?: string;
+  phone: string;
+  email?: string;
+  cnpj?: string;
+  address?: string;
+  rating?: number;
+  tags?: string[];
+  companyId: CompanyId;
+  createdAt: any;
+}
+
+export interface PurchaseItem {
+  insumoId: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  unit: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  code: string;
+  companyId: CompanyId;
+  supplierId: string;
+  supplierName: string;
+  items: PurchaseItem[];
+  totalValue: number;
+  status: 'pendente' | 'comprado' | 'recebido' | 'cancelado';
+  notes?: string;
+  orderDate: any;
+  deliveryDate?: any;
+  createdAt: any;
+  updatedAt: any;
 }
 
 
