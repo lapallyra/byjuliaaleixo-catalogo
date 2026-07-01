@@ -19,7 +19,8 @@ import {
   ChevronRight,
   Download,
   Calendar,
-  DollarSign
+  DollarSign,
+  Package
 } from "lucide-react";
 import { 
   CompanyId, 
@@ -41,17 +42,20 @@ import {
   doc, 
   serverTimestamp,
   increment,
-  deleteDoc
+  deleteDoc,
+  setDoc
 } from "firebase/firestore";
 import { SupplierForm } from "./SupplierForm";
 import { PurchaseOrderForm } from "./PurchaseOrderForm";
+import { InsumoFormModal } from "./InsumoFormModal";
+import { ComponentsTab } from "./ComponentsTab";
 
 interface PurchasesTabProps {
   companyId: CompanyId;
 }
 
 export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
-  const [activeTab, setActiveTab] = useState<'suggestions' | 'manual' | 'history' | 'suppliers'>('suggestions');
+  const [activeTab, setActiveTab] = useState<'items' | 'suggestions' | 'manual' | 'history' | 'suppliers'>('items');
   const [insumos, setInsumos] = useState<Componente[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
@@ -63,10 +67,11 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
   const [isSupplierModalOpen, setIsSupplierModalOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [isInsumoModalOpen, setIsInsumoModalOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<PurchaseOrder | null>(null);
 
   useEffect(() => {
-    const qInsumos = query(collection(db, "componentes"), where("isActive", "==", true));
+    const qInsumos = query(collection(db, "componentes"));
     const unsubInsumos = onSnapshot(qInsumos, (snap) => {
       setInsumos(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Componente)));
     });
@@ -188,13 +193,19 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
       {/* Header & Stats */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Compras & Reposição</h1>
-          <p className="text-slate-500 text-sm">Inteligência de estoque e gestão de fornecedores</p>
+          <h1 className="text-2xl font-bold text-slate-900">Insumos & Reposição</h1>
+          <p className="text-slate-500 text-sm">Gestão de insumos, materiais e reposições</p>
         </div>
         <div className="flex items-center gap-3">
           <button 
+            onClick={() => setIsInsumoModalOpen(true)}
+            className="flex items-center gap-2 bg-[#8E5BF5] hover:bg-[#7946E0] text-white px-4 py-2.5 rounded-xl font-extrabold transition-all text-sm shadow-md"
+          >
+            <Plus size={18} /> + (NOVO) Insumo
+          </button>
+          <button 
             onClick={() => setIsPurchaseModalOpen(true)}
-            className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-all text-sm"
+            className="flex items-center gap-2 bg-slate-950 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-all text-sm"
           >
             <Plus size={18} /> Novo Pedido de Compra
           </button>
@@ -204,8 +215,17 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200">
         <button 
+          onClick={() => setActiveTab('items')}
+          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'items' ? 'border-[#8E5BF5] text-[#8E5BF5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+        >
+          <div className="flex items-center gap-2">
+            <Package size={18} />
+            Estoque de Insumos
+          </div>
+        </button>
+        <button 
           onClick={() => setActiveTab('suggestions')}
-          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'suggestions' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'suggestions' ? 'border-[#8E5BF5] text-[#8E5BF5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
         >
           <div className="flex items-center gap-2">
             <TrendingDown size={18} />
@@ -219,7 +239,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
         </button>
         <button 
           onClick={() => setActiveTab('history')}
-          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'history' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'history' ? 'border-[#8E5BF5] text-[#8E5BF5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
         >
           <div className="flex items-center gap-2">
             <History size={18} />
@@ -228,7 +248,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
         </button>
         <button 
           onClick={() => setActiveTab('suppliers')}
-          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'suppliers' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'suppliers' ? 'border-[#8E5BF5] text-[#8E5BF5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
         >
           <div className="flex items-center gap-2">
             <Truck size={18} />
@@ -239,6 +259,47 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
 
       {/* Content */}
       <div className="space-y-4">
+        {activeTab === 'items' && (
+          <ComponentsTab
+            componentes={insumos}
+            onSaveComponente={async (data) => {
+              try {
+                let docId = data.id;
+                const payload = {
+                  ...data,
+                  isActive: data.isActive !== undefined ? data.isActive : true,
+                  updatedAt: serverTimestamp()
+                };
+                
+                if (!docId) {
+                  const newDocRef = doc(collection(db, "insumos"));
+                  docId = newDocRef.id;
+                  payload.id = docId;
+                  payload.createdAt = serverTimestamp();
+                }
+                
+                // Save to both collections with exact same ID for bulletproof system sync
+                await setDoc(doc(db, "insumos", docId), payload);
+                await setDoc(doc(db, "componentes", docId), payload);
+              } catch (err) {
+                console.error("Error saving insumo: ", err);
+                alert("Erro ao salvar insumo. Tente novamente.");
+              }
+            }}
+            onDeleteComponente={async (id) => {
+              try {
+                if (confirm("Tem certeza que deseja excluir este insumo?")) {
+                  await deleteDoc(doc(db, "insumos", id));
+                  await deleteDoc(doc(db, "componentes", id));
+                }
+              } catch (err) {
+                console.error("Error deleting insumo: ", err);
+                alert("Erro ao excluir insumo.");
+              }
+            }}
+          />
+        )}
+
         {activeTab === 'suggestions' && (
           <div className="grid grid-cols-1 gap-4">
             {/* Quick Alerts */}
@@ -502,6 +563,36 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
           suppliers={suppliers}
           insumos={insumos}
           onClose={() => setIsPurchaseModalOpen(false)}
+        />
+      )}
+
+      {isInsumoModalOpen && (
+        <InsumoFormModal
+          editing={null}
+          onClose={() => setIsInsumoModalOpen(false)}
+          onSave={async (data) => {
+            try {
+              const newDocRef = doc(collection(db, "insumos"));
+              const docId = newDocRef.id;
+              
+              const payload = {
+                ...data,
+                id: docId,
+                isActive: true,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              };
+              
+              // Save to both collections with exact same ID for bulletproof system sync
+              await setDoc(doc(db, "insumos", docId), payload);
+              await setDoc(doc(db, "componentes", docId), payload);
+              
+              setIsInsumoModalOpen(false);
+            } catch (err) {
+              console.error("Error adding insumo: ", err);
+              alert("Erro ao cadastrar insumo. Tente novamente.");
+            }
+          }}
         />
       )}
 

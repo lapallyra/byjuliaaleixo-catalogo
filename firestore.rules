@@ -78,6 +78,11 @@ service cloud.firestore {
 
       // somente admin pode listar/deletar
       allow list, delete: if isAdmin();
+
+      // Historico de Versoes do Pedido
+      match /versions/{versionId} {
+        allow read, write: if isAdmin();
+      }
     }
 
     // ----------------------------------------------------
@@ -257,6 +262,51 @@ service cloud.firestore {
     match /coupons/{couponId} {
       allow list, get: if true;
       allow write: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // CHECKLIST & EVENTS
+    // ----------------------------------------------------
+    match /checklist/{itemId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /events/{eventId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // AUDIT LOGS
+    // ----------------------------------------------------
+    match /audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // MANUFACTURING & SUPPLIES (ADMIN ONLY)
+    // ----------------------------------------------------
+    match /componentes/{componentId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /purchase_orders/{purchaseId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /suppliers/{supplierId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /componente_movements/{movementId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /productionBatches/{batchId} {
+      allow read, write: if isAdmin();
     }
   }
 }

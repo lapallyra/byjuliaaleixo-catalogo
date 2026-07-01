@@ -8,6 +8,7 @@ import { OrderDetailsView } from "./OrderDetailsView";
 import { OrderFormModal } from "./OrderFormModal";
 import { OrderWizardModal } from "./OrderWizardModal";
 import { OrderReceiptModal } from "./OrderReceiptModal";
+import { HorizontalScroll } from "../shared/HorizontalScroll";
 
 interface OrdersTabProps {
   orders: Order[];
@@ -131,21 +132,36 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
 
   const getStatusInfo = (status: string) => {
     const s = status.toLowerCase();
-    const map: Record<string, { label: string; color: string; bgLight: string; text: string }> = {
-      "novo pedido": { label: "Novo", color: "bg-gray-500", text: "text-gray-700", bgLight: "bg-gray-100" },
-      "quote": { label: "Orçamento", color: "bg-gray-500", text: "text-gray-700", bgLight: "bg-gray-100" },
-      "waiting_payment": { label: "Pagamento Pendente", color: "bg-gray-500", text: "text-gray-700", bgLight: "bg-gray-100" },
-      "waiting_deposit": { label: "Aguardando Sinal", color: "bg-gray-500", text: "text-gray-700", bgLight: "bg-gray-100" },
-      "approval": { label: "Arte / Aprovação", color: "bg-blue-500", text: "text-blue-700", bgLight: "bg-blue-100" },
-      "production": { label: "Em Produção", color: "bg-blue-500", text: "text-blue-700", bgLight: "bg-blue-100" },
-      "assembly": { label: "Montagem", color: "bg-blue-500", text: "text-blue-700", bgLight: "bg-blue-100" },
-      "ready": { label: "Pronto", color: "bg-purple-500", text: "text-purple-700", bgLight: "bg-purple-100" },
-      "delivery": { label: "Enviado", color: "bg-green-500", text: "text-green-700", bgLight: "bg-green-100" },
-      "delivered": { label: "Concluído", color: "bg-green-500", text: "text-green-700", bgLight: "bg-green-100" },
-      "fully_paid": { label: "Concluído", color: "bg-green-500", text: "text-green-700", bgLight: "bg-green-100" },
-      "cancelled": { label: "Cancelado", color: "bg-red-500", text: "text-red-700", bgLight: "bg-red-100" }
+    const map: Record<string, { label: string; color: string; shadow: string; bgLight: string; text: string }> = {
+      "orçamento": { label: "Orçamento", color: "bg-[#7FFF00]", shadow: "shadow-[2px_0_20px_rgba(127,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "novo pedido": { label: "Novo Pedido", color: "bg-[#37FD12]", shadow: "shadow-[2px_0_20px_rgba(55,253,18,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "aguardando sinal": { label: "Aguardando Sinal", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "aguardando aprovação cliente": { label: "Aprovação Cliente", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "em produção": { label: "Em Produção", color: "bg-[#FFD100]", shadow: "shadow-[2px_0_20px_rgba(255,209,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "montagem": { label: "Montagem", color: "bg-[#BD02FC]", shadow: "shadow-[2px_0_20px_rgba(189,2,252,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "pronto para entregar": { label: "Pronto p/ Entregar", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "enviado": { label: "Enviado", color: "bg-[#FFFFFF]", shadow: "shadow-[2px_0_20px_rgba(255,255,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "recebido": { label: "Recebido", color: "bg-[#3FFF00]", shadow: "shadow-[2px_0_20px_rgba(63,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "aguardando o pagamento restante": { label: "Aguardando Pagto", color: "bg-[#FFFF66]", shadow: "shadow-[2px_0_20px_rgba(255,255,102,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "concluído (pagamento completo)": { label: "Concluído", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "cancelled": { label: "Cancelado", color: "bg-[#EC7216]", shadow: "shadow-[2px_0_20px_rgba(236,114,22,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      
+      "pending": { label: "Pendente", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "adjustments_requested": { label: "Ajustes", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      
+      // Fallbacks para compatibilidade
+      "quote": { label: "Orçamento", color: "bg-[#7FFF00]", shadow: "shadow-[2px_0_20px_rgba(127,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "waiting_payment": { label: "Pagamento Pendente", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "waiting_deposit": { label: "Aguardando Sinal", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "approval": { label: "Arte / Aprovação", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "production": { label: "Em Produção", color: "bg-[#FFD100]", shadow: "shadow-[2px_0_20px_rgba(255,209,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "assembly": { label: "Montagem", color: "bg-[#BD02FC]", shadow: "shadow-[2px_0_20px_rgba(189,2,252,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "ready": { label: "Pronto", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "delivery": { label: "Enviado", color: "bg-[#FFFFFF]", shadow: "shadow-[2px_0_20px_rgba(255,255,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "delivered": { label: "Concluído", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "fully_paid": { label: "Concluído", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" }
     };
-    return map[s] || { label: status, color: "bg-gray-500", text: "text-gray-700", bgLight: "bg-gray-100" };
+    return map[s] || { label: status, color: "bg-gray-500", shadow: "shadow-[2px_0_20px_rgba(107,114,128,0.7)]", text: "text-gray-700", bgLight: "bg-gray-100" };
   };
 
   // Top Cards Stats
@@ -208,83 +224,88 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
 
   // Otherwise, render the main Orders operational center
   return (
-    <div className="flex flex-col h-full bg-[#FAF9F6] animate-in fade-in duration-300 relative z-0 overflow-hidden">
+    <div className="flex flex-col h-full bg-[#F5F5F7] animate-in fade-in duration-300 relative z-0 overflow-hidden">
       
       {/* Top Header & Stats */}
-      <div className="px-6 pt-6 pb-4 bg-white border-b border-gray-200 z-10 shrink-0">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Pedidos</h1>
+      <div className="px-6 pt-6 pb-6 glass-3d border-b border-[#E5E5EA]/50 z-10 shrink-0 mx-6 mt-6 rounded-[2.5rem] shadow-3d-soft">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-black text-[#1C1C1E] tracking-tight uppercase">Centro de Pedidos</h1>
+            <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest mt-1">Gestão Completa do Fluxo Comercial</p>
+          </div>
           <button
             onClick={() => setIsWizardOpen(true)}
-            className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-[#1C1C1E] text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-3d-soft elevated-3d"
           >
-            <Plus size={16} /> Novo Pedido
+            <Plus size={16} strokeWidth={3} /> Novo Pedido
           </button>
         </div>
 
         {/* Top Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col justify-between hover:border-gray-300 transition-colors">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pedidos Hoje</span>
-            <span className="text-2xl font-bold text-gray-900">{todayCount}</span>
+          <div className="bg-white border border-[#E5E5EA] rounded-[1.8rem] p-5 flex flex-col justify-between hover:border-[#1C1C1E]/20 transition-all shadow-3d-soft elevated-3d group">
+            <span className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest mb-3 group-hover:text-[#1C1C1E] transition-colors">Pedidos Hoje</span>
+            <span className="text-2xl font-black text-[#1C1C1E] tracking-tighter">{todayCount}</span>
           </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col justify-between hover:border-gray-300 transition-colors">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Em Produção</span>
-            <span className="text-2xl font-bold text-blue-600">{productionCount}</span>
+          <div className="bg-white border border-[#E5E5EA] rounded-[1.8rem] p-5 flex flex-col justify-between hover:border-blue-200 transition-all shadow-3d-soft elevated-3d group">
+            <span className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest mb-3 group-hover:text-blue-600 transition-colors">Em Produção</span>
+            <span className="text-2xl font-black text-blue-600 tracking-tighter">{productionCount}</span>
           </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col justify-between hover:border-gray-300 transition-colors">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Aguardando Pgto</span>
-            <span className="text-2xl font-bold text-amber-600">{pendingPaymentCount}</span>
+          <div className="bg-white border border-[#E5E5EA] rounded-[1.8rem] p-5 flex flex-col justify-between hover:border-amber-200 transition-all shadow-3d-soft elevated-3d group">
+            <span className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest mb-3 group-hover:text-amber-600 transition-colors">Aguardando Pgto</span>
+            <span className="text-2xl font-black text-amber-600 tracking-tighter">{pendingPaymentCount}</span>
           </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col justify-between hover:border-gray-300 transition-colors">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Enviados</span>
-            <span className="text-2xl font-bold text-green-600">{shippedCount}</span>
+          <div className="bg-white border border-[#E5E5EA] rounded-[1.8rem] p-5 flex flex-col justify-between hover:border-green-200 transition-all shadow-3d-soft elevated-3d group">
+            <span className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest mb-3 group-hover:text-green-600 transition-colors">Enviados</span>
+            <span className="text-2xl font-black text-green-600 tracking-tighter">{shippedCount}</span>
           </div>
         </div>
       </div>
 
       {/* Filters and Search Bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex flex-col md:flex-row gap-4 items-center justify-between z-10 shrink-0">
+      <div className="glass-3d border-b border-[#E5E5EA]/30 px-6 py-4 flex flex-col md:flex-row gap-6 items-center justify-between z-10 shrink-0 mx-6 mt-6 rounded-[2rem] shadow-3d-soft">
         
         {/* Quick Filters */}
-        <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide">
-          {[
-            { id: "all", label: "Todos" },
-            { id: "today", label: "Hoje" },
-            { id: "week", label: "Esta semana" },
-            { id: "month", label: "Este mês" },
-            { id: "production", label: "Produção" },
-            { id: "pending_payment", label: "Pgto Pendente" },
-            { id: "shipped", label: "Enviado" },
-            { id: "completed", label: "Concluído" },
-            { id: "cancelled", label: "Cancelado" },
-          ].map(f => (
-            <button
-              key={f.id}
-              onClick={() => setSelectedFilter(f.id)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-colors ${selectedFilter === f.id ? 'bg-gray-100 text-black' : 'text-gray-500 hover:text-black hover:bg-gray-50'}`}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="w-full md:w-auto">
+          <HorizontalScroll className="gap-2 pb-2 md:pb-0">
+            {[
+              { id: "all", label: "Todos" },
+              { id: "today", label: "Hoje" },
+              { id: "week", label: "Esta semana" },
+              { id: "month", label: "Este mês" },
+              { id: "production", label: "Produção" },
+              { id: "pending_payment", label: "Pgto Pendente" },
+              { id: "shipped", label: "Enviado" },
+              { id: "completed", label: "Concluído" },
+              { id: "cancelled", label: "Cancelado" },
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setSelectedFilter(f.id)}
+                className={`px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all elevated-3d ${selectedFilter === f.id ? 'bg-[#1C1C1E] text-white shadow-3d-soft' : 'text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white/60'}`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </HorizontalScroll>
         </div>
 
         {/* Search & Sort */}
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-72 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8E93] group-focus-within:text-[#1C1C1E] transition-colors" size={14} />
             <input
               type="text"
               placeholder="Pesquisar pedido..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-black transition-colors text-gray-900 placeholder:text-gray-500"
+              className="w-full pl-11 pr-4 py-2.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-xs outline-none focus:bg-white focus:border-[#1C1C1E]/20 transition-all text-[#1C1C1E] placeholder:text-[#AEAEB2] shadow-inner"
             />
           </div>
           <select
             value={sortOption}
             onChange={(e) => setSortOption(e.target.value)}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 outline-none focus:border-black transition-colors"
+            className="px-4 py-2.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-xs font-bold text-[#1C1C1E] outline-none focus:bg-white transition-all shadow-inner cursor-pointer"
           >
             <option value="newest">Mais recente</option>
             <option value="oldest">Mais antigo</option>
@@ -296,14 +317,19 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
       </div>
 
         {/* Orders List Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 relative z-0">
+      <div className="flex-1 overflow-y-auto p-6 md:p-10 relative z-0 scrollbar-hide">
         {filteredOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4 py-20">
-            <Package size={48} className="text-gray-300" />
-            <p className="text-sm font-semibold uppercase tracking-wider">Nenhum pedido encontrado</p>
+          <div className="flex flex-col items-center justify-center h-full text-[#AEAEB2] space-y-6 py-20 animate-in fade-in zoom-in duration-500">
+            <div className="w-24 h-24 rounded-[2.5rem] bg-white border border-[#E5E5EA] flex items-center justify-center shadow-3d-soft elevated-3d">
+              <Package size={40} className="text-[#AEAEB2]" strokeWidth={1.5} />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-black text-[#1C1C1E] uppercase tracking-widest">Nenhum pedido encontrado</p>
+              <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest mt-1">Refine sua busca ou filtros</p>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-[1400px] mx-auto pb-20">
             {filteredOrders.map(order => (
               <OrderCard
                 key={order.id}

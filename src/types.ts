@@ -42,6 +42,8 @@ export interface Product {
   kitItems?: { type: 'product' | 'insumo' | 'addon'; id: string; quantity: number }[];
   kitDiscountPercentage?: number;
   price?: number;
+  type?: 'fabricado' | 'revenda' | 'kit' | 'digital' | 'servico';
+  main_image?: string; // Legacy or alternative field used in some components
   
   // Custom properties for advanced editor tabs
   brand?: string;
@@ -67,6 +69,12 @@ export interface Product {
     options?: string[];
   }[];
   productionTime?: number;
+  weight?: number;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+  };
 }
 
 export interface Variation {
@@ -103,6 +111,8 @@ export interface Componente {
   isActive: boolean;
   updatedAt: any;
   createdAt: any;
+  classification?: "componente" | "variacao" | "insumo";
+  investimento?: number;
 }
 
 export type Insumo = Componente;
@@ -147,7 +157,7 @@ export interface Order {
   total: number;
   discount?: number;
   paymentMethod?: string;
-  status: 'novo pedido' | 'approved' | 'adjustments_requested' | 'quote' | 'approval' | 'waiting_deposit' | 'waiting_production' | 'production' | 'conferencing' | 'assembly' | 'ready' | 'delivered' | 'cancelled' | 'pending' | 'delivery' | 'waiting_payment' | 'planned_payment' | 'paid' | 'waiting_remaining' | 'planned_active' | 'fully_paid';
+  status: 'novo pedido' | 'approved' | 'adjustments_requested' | 'quote' | 'approval' | 'waiting_deposit' | 'waiting_production' | 'production' | 'conferencing' | 'assembly' | 'ready' | 'packaging' | 'delivered' | 'cancelled' | 'pending' | 'delivery' | 'waiting_payment' | 'planned_payment' | 'paid' | 'waiting_remaining' | 'planned_active' | 'fully_paid' | 'finalized';
   createdAt: any; 
   deliveryDate: string;
   productionDate?: string;
@@ -178,6 +188,19 @@ export interface Order {
   marketplaceTax?: number;
   couponCode?: string;
   discountAmount?: number;
+  deliveryChecklist?: {
+    productsChecked: boolean;
+    quantityCorrect: boolean;
+    packagingApplied: boolean;
+    personalizationChecked: boolean;
+    internalNoteValidated: boolean;
+  };
+  deliveryRating?: {
+    quality: number;
+    time: number;
+    margin: number;
+    notes?: string;
+  };
   history?: {
     status: Order['status'];
     timestamp: any;
@@ -191,6 +214,31 @@ export interface Order {
   productionPriority?: 'normal' | 'alta' | 'urgente';
   assignee?: string;
   atelier?: string;
+  batchId?: string;
+}
+
+export interface ProductionBatch {
+  id: string;
+  code: string; // LOTE-0001
+  companyId: CompanyId;
+  orderIds: string[];
+  productIds: string[];
+  productNames: string[];
+  totalQuantity: number;
+  status: 'aberto' | 'em_producao' | 'em_separacao' | 'concluido';
+  createdAt: any;
+  updatedAt: any;
+  startedAt?: any;
+  finishedAt?: any;
+  estimatedProductionTime?: number; // in minutes
+  notes?: string;
+  consolidatedInsumos?: { insumoId: string; quantity: number; name: string; unit: string }[];
+  history?: {
+    status: ProductionBatch['status'];
+    timestamp: any;
+    updatedBy?: string;
+    notes?: string;
+  }[];
 }
 
 export interface Customer {
@@ -394,6 +442,7 @@ export interface SaleNotification {
   customerName: string;
   productName: string;
   timeAgo: string;
+  cityState?: string;
   companyId: CompanyId;
 }
 
@@ -512,19 +561,6 @@ export interface ProductModel extends Product {
   canvasHeight: number;
 }
 
-export interface ActivityLog {
-  id: string;
-  actionType: 'criado' | 'editado' | 'atualizado' | 'excluido' | 'login' | 'logout' | 'aprovado' | 'finalizado' | 'cadastrado';
-  entityType: 'Produto' | 'Pedido' | 'Cliente' | 'Insumo' | 'Campanha' | 'Coleção' | 'Configuração' | 'Cupom' | 'Financeiro';
-  entityName: string;
-  userId: string;
-  userName?: string;
-  timestamp: any;
-  details?: string;
-  module?: string;
-  ip?: string;
-}
-
 export interface Coupon {
   id: string;
   companyId: CompanyId;
@@ -585,6 +621,55 @@ export interface PurchaseOrder {
   deliveryDate?: any;
   createdAt: any;
   updatedAt: any;
+}
+
+export type AuditModule = 
+  | 'Clientes' 
+  | 'Produtos' 
+  | 'Pedidos' 
+  | 'Produção' 
+  | 'Estoque' 
+  | 'Compras' 
+  | 'Financeiro' 
+  | 'Entregas' 
+  | 'Configurações' 
+  | 'Usuários';
+
+export type AuditActionType = 
+  | 'Criação' 
+  | 'Alteração' 
+  | 'Exclusão Lógica' 
+  | 'Mudança de Status' 
+  | 'Registro de Pagamento' 
+  | 'Entrada de Estoque' 
+  | 'Saída de Estoque'
+  | 'Cancelamento' 
+  | 'Aprovação' 
+  | 'Alteração de Preço' 
+  | 'Alteração de Ficha Técnica' 
+  | 'Alteração de Prazo';
+
+export interface AuditLog {
+  id?: string;
+  correlationId: string;
+  timestamp: any;
+  date: string;
+  time: string;
+  user: {
+    uid: string;
+    email: string;
+    name?: string;
+    role: 'Administrador' | 'Gerente' | 'Funcionário';
+  };
+  module: AuditModule;
+  action: AuditActionType;
+  resourceId: string;
+  resourceName: string;
+  oldData?: any;
+  newData?: any;
+  origin: 'Web' | 'Sistema' | 'API' | 'Automação';
+  companyId?: CompanyId;
+  details?: any;
 }
 
 

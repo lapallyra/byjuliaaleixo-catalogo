@@ -3,13 +3,13 @@ import { Order, Product } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { safeFormatISO } from "../../lib/dateUtils";
 import { formatPhone } from "../../utils/masks";
-import { Box, MoreVertical, Printer, Copy, MessageSquare, Tag, Eye, RefreshCw } from "lucide-react";
+import { Box, MoreVertical, Printer, Copy, MessageSquare, Tag, Eye, RefreshCw, Calendar } from "lucide-react";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface OrderCardProps {
   order: Order;
   productInfo: { image: string | null | undefined; name: string; count: number };
-  statusInfo: { label: string; color: string; bgLight: string; text: string };
+  statusInfo: { label: string; color: string; shadow: string; bgLight: string; text: string };
   onViewDetails: (id: string) => void;
   onChangeStatusRequest: (order: Order) => void;
   onUpdateStatus: (id: string, status: Order["status"]) => void;
@@ -50,7 +50,6 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   };
 
   const menuItems = [
-    { label: "Ver Resumo", icon: <Eye size={14} />, action: () => onViewDetails(order.id!) },
     { label: "Alterar Status", icon: <RefreshCw size={14} />, action: () => onChangeStatusRequest(order) },
     { label: "Imprimir", icon: <Printer size={14} />, action: () => onPrint(order) },
     { label: "Copiar Pedido", icon: <Copy size={14} />, action: () => onDuplicate(order) },
@@ -59,80 +58,73 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   ];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-all duration-150 relative group">
-      <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
+    <div 
+      onClick={() => {
+        orchestrator.registerInteraction();
+        onViewDetails(order.id!);
+      }}
+      className={`clean-3d-card bg-white p-4 md:p-5 group flex flex-col md:flex-row items-start md:items-center justify-between relative pl-8 md:pl-10 ${isMenuOpen ? 'z-50' : 'z-10'} gap-4 md:gap-5 cursor-pointer hover:shadow-lg transition-all`}
+    >
+      {/* Faixa LED Lateral - Apenas a cor sólida e o brilho para fora */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-[28px] ${statusInfo.color} z-20`} style={{ boxShadow: '-6px 0 20px 2px ' + statusInfo.color.replace('bg-[', '').replace(']', '') + '80' }} />
+      
+      <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between w-full">
         {/* Left Section: Order & Client Info */}
-        <div className="flex items-center gap-4 flex-1 w-full md:w-auto">
-          <div className="w-14 h-14 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center shrink-0 overflow-hidden relative">
-            {productInfo.image ? (
-              <img src={productInfo.image} alt="Produto" className="w-full h-full object-cover" />
-            ) : (
-              <Box size={20} className="text-gray-400" />
-            )}
-            {productInfo.count > 1 && (
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
-                {productInfo.count}
-              </div>
-            )}
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-bold text-gray-900 truncate">{order.customerName || "Cliente não informado"}</span>
-              <span className="text-xs text-gray-500 font-mono">#{order.code}</span>
+        <div className="flex items-center gap-4 flex-1 w-full min-w-0">
+          <div className="flex-1 min-w-0 pr-2">
+            <div className="mb-0.5">
+              <span className="text-[10px] text-[#8E8E93] font-mono bg-[#F5F5F7] px-1.5 py-0.5 rounded inline-block">#{order.code}</span>
             </div>
-            <p className="text-sm text-gray-600 truncate">{productInfo.name}</p>
-            <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
-              <span className="truncate">{order.contact ? formatPhone(order.contact) : "Sem contato"}</span>
-              <span>•</span>
-              <span className="truncate">{order.customerCity || "Cidade não informada"}</span>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-black text-[#1C1C1E] truncate uppercase text-sm tracking-tight">{order.customerName || "Cliente não informado"}</span>
+            </div>
+            <p className="text-[11px] text-[#8E8E93] font-medium truncate">{productInfo.name} {productInfo.count > 1 ? `(${productInfo.count}x)` : ''}</p>
+            <div className="flex items-center gap-3 mt-1.5 text-[10px] font-bold text-[#AEAEB2] truncate">
+              <span className="shrink-0">{order.contact ? formatPhone(order.contact) : "Sem contato"}</span>
+              <span className="shrink-0">•</span>
+              <span className="truncate uppercase">{order.customerCity || "Cidade não informada"}</span>
             </div>
           </div>
         </div>
 
         {/* Middle Section: Value, Date, Payment */}
-        <div className="flex flex-col gap-1 md:w-48 shrink-0">
-          <div className="text-sm font-bold text-gray-900">{formatCurrency(Number(order.total) || 0)}</div>
-          <div className="text-xs text-gray-500">
+        <div className="flex flex-col gap-1 shrink-0 md:items-end">
+          <div className="text-sm font-black text-[#1C1C1E] tracking-tighter">{formatCurrency(Number(order.total) || 0)}</div>
+          <div className="text-[10px] font-bold text-[#8E8E93] flex items-center gap-1.5">
+            <Calendar size={10} />
             {order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy") : "--/--/--"}
           </div>
-          <div className="text-xs text-gray-500 capitalize">
+          <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-1">
             {order.paymentMethod || "Não informado"}
           </div>
         </div>
 
         {/* Right Section: Status and Actions */}
-        <div className="flex items-center justify-between w-full md:w-auto gap-4 shrink-0">
-          <span className={`px-3 py-1 text-[11px] font-semibold uppercase tracking-wider rounded-md ${getStatusColor(order.status)}`}>
+        <div className="flex items-center justify-start md:justify-end gap-3 shrink-0 flex-wrap md:flex-nowrap">
+          <span className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full shadow-xs border border-white/20 ${statusInfo.bgLight} ${statusInfo.text} truncate max-w-[100px]`}>
             {statusInfo.label}
           </span>
           
           <div className="flex items-center gap-2 relative">
-            <button 
-              onClick={() => {
-                orchestrator.registerInteraction();
-                onViewDetails(order.id!);
-              }}
-              className="px-4 py-2 bg-black text-white text-xs font-semibold rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              Ver Resumo
-            </button>
-
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 text-gray-500 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMenuOpen(!isMenuOpen);
+              }}
+              className="p-2 text-gray-500 hover:text-black hover:bg-gray-100 rounded-lg transition-colors shrink-0"
             >
               <MoreVertical size={16} />
             </button>
 
             {isMenuOpen && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+                <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setIsMenuOpen(false); }} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1 z-50 animate-in fade-in zoom-in-95 duration-150">
                   {menuItems.map((item, idx) => (
                     <button
                       key={idx}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         item.action();
                         setIsMenuOpen(false);
                       }}

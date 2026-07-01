@@ -1,23 +1,40 @@
 import express from "express";
+import http from "node:http";
 
 const app = express();
-try {
-  app.get('/(.*)', (req, res) => res.send("ok"));
-  console.log("Regex param worked!");
-} catch (e) {
-  console.error("Regex param failed:", e.message);
-}
 
-try {
-  app.get('*all', (req, res) => res.send("ok"));
-  console.log("*all param worked!");
-} catch (e) {
-  console.error("*all param failed:", e.message);
-}
+// Set up the catch-all route as defined in server.ts
+app.get('*all', (req, res) => {
+  res.send("HTML_CONTENT_SERVED");
+});
 
-try {
-  app.get('*', (req, res) => res.send("ok"));
-  console.log("* param worked!");
-} catch (e) {
-  console.error("* param failed:", e.message);
-}
+const server = app.listen(0, "127.0.0.1", () => {
+  const address = server.address() as any;
+  const port = address.port;
+  console.log(`Test server running on port ${port}`);
+
+  const testPath = (path: string) => {
+    return new Promise<void>((resolve) => {
+      http.get(`http://127.0.0.1:${port}${path}`, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          console.log(`Path: ${path} -> Status: ${res.statusCode}, Body: ${data}`);
+          resolve();
+        });
+      }).on('error', (err) => {
+        console.error(`Error requesting ${path}:`, err.message);
+        resolve();
+      });
+    });
+  };
+
+  Promise.all([
+    testPath('/'),
+    testPath('/admin'),
+    testPath('/admin/login'),
+    testPath('/some/nested/deep/path')
+  ]).then(() => {
+    server.close();
+  });
+});

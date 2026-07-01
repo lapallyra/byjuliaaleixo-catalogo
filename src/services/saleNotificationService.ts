@@ -1,55 +1,50 @@
 import { SaleNotification, CompanyId, Product } from '../types';
-import { PRODUCTS } from '../constants';
 
-const CUSTOMER_NAMES = [
-  'Monica B.', 'Luiz Carlos N.', 'Priscila O.', 'Juliana S.', 'Guilherme M.',
-  'Ana Paula R.', 'Felipe A.', 'Camila G.', 'Matheus K.', 'Beatriz L.',
-  'Rodrigo F.', 'Patricia T.', 'Lucas H.', 'Gabriela M.', 'Thiago C.',
-  'Larissa P.', 'Breno V.', 'Isabela D.', 'Vitor Hugo S.', 'Leticia J.',
-  'Fernanda E.', 'Ricardo A.', 'Sandra M.', 'Claudio G.', 'Amanda B.',
-  'Roberto Carlos S.', 'Aline D.', 'Paulo Henrique F.', 'Renata O.', 'Eduardo J.',
-  'Tatiana C.', 'Carla B.', 'Leonardo M.', 'Simone T.', 'Henrique S.',
-  'Viviane P.', 'Diego R.', 'Vanessa G.', 'Mauricio N.', 'Julio Cesar M.'
+const BRAZILIAN_NAMES = [
+  'Ana Clara', 'Beatriz', 'Camila', 'Daniela', 'Fernanda', 
+  'Gabriela', 'Helena', 'Isabella', 'Juliana', 'Larissa',
+  'Maria V.', 'Mariana', 'Natalia', 'Patricia', 'Renata',
+  'Sofia', 'Thais', 'Vitoria', 'Yasmin', 'Amanda'
 ];
 
-export const generateRandomNotification = (companyId: CompanyId): SaleNotification => {
-  const name = CUSTOMER_NAMES[Math.floor(Math.random() * CUSTOMER_NAMES.length)];
-  const seconds = Math.floor(Math.random() * 16) + 5; // 5 to 20 seconds
+const PR_CITIES = [
+  'Querência do Norte - PR', 'Curitiba - PR', 'Londrina - PR', 'Maringá - PR', 
+  'Ponta Grossa - PR', 'Cascavel - PR', 'São José dos Pinhais - PR', 'Foz do Iguaçu - PR',
+  'Colombo - PR', 'Guarapuava - PR', 'Paranaguá - PR', 'Apucarana - PR', 'Toledo - PR',
+  'Araucária - PR', 'Pinhais - PR', 'Campo Largo - PR', 'Almirante Tamandaré - PR', 'Piraquara - PR',
+  'Umuarama - PR', 'Cambé - PR'
+];
+
+const OTHER_CITIES = [
+  'São Paulo - SP', 'Rio de Janeiro - RJ', 'Belo Horizonte - MG', 
+  'Salvador - BA', 'Porto Alegre - RS', 'Brasília - DF', 'Fortaleza - CE', 
+  'Manaus - AM', 'Recife - PE', 'Goiânia - GO', 'Guarulhos - SP', 'Campinas - SP'
+];
+
+export const generateRandomNotification = (companyId: CompanyId, products: Product[] = []): SaleNotification => {
+  const randomName = BRAZILIAN_NAMES[Math.floor(Math.random() * BRAZILIAN_NAMES.length)];
   
-  const regions = [
-    'São Paulo - SP', 'Rio de Janeiro - RJ', 'Curitiba - PR', 'Florianópolis - SC', 
-    'Belo Horizonte - MG', 'Goiânia - GO', 'Brasília - DF', 'Porto Alegre - RS',
-    'Salvador - BA', 'Fortaleza - CE', 'Recife - PE', 'Manaus - AM', 'Vitória - ES'
-  ];
-  const region = regions[Math.floor(Math.random() * regions.length)];
-
-  const productsInCompany = Object.values(PRODUCTS).filter(p => p.company === companyId);
-  const genericItems = {
-    pallyra: ['Placa de Porta Maternidade', 'Kit Higiene Luxo', 'Álbum do Bebê Bordado', 'Quadro de Nascimento', 'Lembrancinha Batizado'],
-    guennita: ['Planner 2026', 'Caderno de Receitas', 'Diário Devocional', 'Box Colecionador', 'Pasta Executiva', 'Caderneta Cinderela Luxo'],
-    mimada: ['Sacola Personalizada', 'Papel de Seda Premium', 'Lacre de Cera', 'Etiqueta Adesiva Ouro', 'Cartão de Agradecimento']
-  };
-
-  const pool = productsInCompany.length > 0 ? productsInCompany.map(p => p.product_name) : (genericItems[companyId as keyof typeof genericItems] || ['um item especial']);
-  const product = pool[Math.floor(Math.random() * pool.length)];
+  // 70% chance of being from Paraná
+  const isParana = Math.random() < 0.7;
+  const citiesArray = isParana ? PR_CITIES : OTHER_CITIES;
+  const randomCity = citiesArray[Math.floor(Math.random() * citiesArray.length)];
   
-  return {
-    id: crypto.randomUUID(),
-    customerName: name,
-    productName: product, // just the product name now
-    timeAgo: `há ${seconds} segundos em ${region}`,
-    companyId
-  };
-};
+  const randomSeconds = Math.floor(Math.random() * 50) + 5; // 5 to 54 seconds
+  
+  let productName = 'um item exclusivo';
+  if (products.length > 0) {
+    const companyProducts = products.filter(p => p.company === companyId);
+    if (companyProducts.length > 0) {
+      productName = companyProducts[Math.floor(Math.random() * companyProducts.length)].product_name;
+    }
+  }
 
-export const createRealNotification = (name: string, products: string[], companyId: CompanyId): SaleNotification => {
-  const regions = ['São Paulo - SP', 'Rio de Janeiro - RJ', 'Curitiba - PR', 'Belo Horizonte - MG'];
-  const region = regions[Math.floor(Math.random() * regions.length)];
   return {
-    id: crypto.randomUUID(),
-    customerName: name,
-    productName: products.join(', '),
-    timeAgo: `há 1 segundo em ${region}`, // Simulating the region slightly for real notifications if we don't have it
-    companyId
+    id: Math.random().toString(36).substring(2, 9),
+    customerName: randomName,
+    productName: productName,
+    timeAgo: `há ${randomSeconds} segundos`,
+    cityState: randomCity,
+    companyId: companyId
   };
 };

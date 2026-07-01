@@ -44,6 +44,7 @@ import {
   PieChart,
   Pie
 } from "recharts";
+import { calculateOrderPriority } from "../../utils/priorityUtils";
 
 interface OperationalEfficiencyTabProps {
   orders: Order[];
@@ -108,6 +109,7 @@ export const OperationalEfficiencyTab: React.FC<OperationalEfficiencyTabProps> =
     let countFulfillment = 0;
 
     const stageBottlenecks: Record<string, number> = {};
+    const priorityDistribution: Record<string, number> = { 'URGENTE': 0, 'ALTA': 0, 'NORMAL': 0, 'BAIXA': 0 };
     const productDurations: Record<string, { name: string; totalHours: number; count: number }> = {};
     const lateOrders: any[] = [];
     let finishedCount = 0;
@@ -115,6 +117,13 @@ export const OperationalEfficiencyTab: React.FC<OperationalEfficiencyTabProps> =
     const now = new Date();
 
     orders.forEach(order => {
+      const priorityInfo = calculateOrderPriority(order);
+      const currentStatus = order.status || 'novo pedido';
+      
+      if (!['delivered', 'cancelled', 'fully_paid'].includes(currentStatus)) {
+        priorityDistribution[priorityInfo.priority] = (priorityDistribution[priorityInfo.priority] || 0) + 1;
+      }
+
       const history = order.history || [];
       const createdDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
       
@@ -144,7 +153,6 @@ export const OperationalEfficiencyTab: React.FC<OperationalEfficiencyTabProps> =
       }
 
       // Bottlenecks (Current state distribution)
-      const currentStatus = order.status || 'novo pedido';
       if (!['delivered', 'cancelled', 'fully_paid'].includes(currentStatus)) {
         stageBottlenecks[currentStatus] = (stageBottlenecks[currentStatus] || 0) + 1;
       }
@@ -176,6 +184,7 @@ export const OperationalEfficiencyTab: React.FC<OperationalEfficiencyTabProps> =
       avgFulfillmentHours: countFulfillment > 0 ? fulfillmentTime / countFulfillment : 0,
       avgTotalHours: countTotal > 0 ? totalLeadTime / countTotal : 0,
       stageBottlenecks,
+      priorityDistribution,
       lateOrders: lateOrders.sort((a, b) => b.delayDays - a.delayDays),
       finishedCount,
       productivityRate: filteredOrders.length > 0 ? (finishedCount / filteredOrders.length) * 100 : 0
@@ -191,6 +200,19 @@ export const OperationalEfficiencyTab: React.FC<OperationalEfficiencyTabProps> =
           name === 'approval' ? 'Arte' : name,
     value
   })).sort((a, b) => b.value - a.value);
+
+  // Chart Data: Priorities
+  const priorityData = Object.entries(stats.priorityDistribution).map(([name, value]) => ({
+    name,
+    value
+  })).filter(d => d.value > 0);
+
+  const PRIORITY_COLORS: Record<string, string> = {
+    'URGENTE': '#e11d48',
+    'ALTA': '#ea580c',
+    'NORMAL': '#2563eb',
+    'BAIXA': '#64748b'
+  };
 
   // Alertas
   const alerts = useMemo(() => {
@@ -339,6 +361,44 @@ export const OperationalEfficiencyTab: React.FC<OperationalEfficiencyTabProps> =
            </div>
 
            {/* Productivity Trends - Optional Bar Chart */}
+           <div className="bg-white border border-slate-100 rounded-3xl p-8 mb-8 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Carga por Prioridade</h4>
+                <TrendingUp size={16} className="text-slate-400" />
+              </div>
+              <div className="flex flex-wrap gap-8 items-center">
+                <div className="h-40 w-40">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={priorityData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={65}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {priorityData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={PRIORITY_COLORS[entry.name] || '#cbd5e1'} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex-1 grid grid-cols-2 gap-4">
+                  {priorityData.map((entry) => (
+                    <div key={entry.name} className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: PRIORITY_COLORS[entry.name] }} />
+                        <span className="text-[10px] font-black text-slate-400 uppercase">{entry.name}</span>
+                      </div>
+                      <span className="text-lg font-black text-slate-900">{entry.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+           </div>
            <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                  <BarChart3 size={18} className="text-emerald-600" /> Alertas Operacionais

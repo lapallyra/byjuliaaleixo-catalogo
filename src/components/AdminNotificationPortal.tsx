@@ -84,6 +84,29 @@ export const AdminNotificationPortal: React.FC = () => {
     if (newNotif) {
       setNotifications(prev => [newNotif, ...prev].slice(0, 3));
       
+      // Play high-pitched crystal "plim" sound for sales and orders
+      if (newNotif.type === 'sale' || newNotif.type === 'order') {
+        try {
+          const AudioContext = (window as any).AudioContext || (window as any).webkitAudioContext;
+          if (AudioContext) {
+            const audioCtx = new AudioContext();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(1567.98, audioCtx.currentTime); // G6
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.02, audioCtx.currentTime + 0.005);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.5);
+          }
+        } catch (e) {
+          console.warn('Audio feedback failed', e);
+        }
+      }
+
       // Automatic removal duration scales down in performance/focus mode
       const displayDuration = orchestrator.performanceMode ? 4000 : 8000;
       setTimeout(() => removeNotification(id), displayDuration);

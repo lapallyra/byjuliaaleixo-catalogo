@@ -85,12 +85,27 @@ async function startServer() {
     console.log("Vite dev server created.");
     app.use(vite.middlewares);
   } else {
-    // Production static serving
-    const distPath = path.join(process.cwd(), 'dist');
+    // Production static serving with robust path resolution
+    let distPath = path.join(process.cwd(), 'dist');
+    
+    // Support running from inside 'dist' directly or via custom bundlers
+    if (process.cwd().endsWith('dist') || process.cwd().endsWith('dist/')) {
+      distPath = process.cwd();
+    } else if (typeof __dirname !== 'undefined') {
+      distPath = __dirname.endsWith('dist') ? __dirname : path.join(__dirname, 'dist');
+    }
+
+    console.log(`Production mode: serving static files from resolved path: "${distPath}"`);
+
     app.use(express.static(distPath));
     // In Express 5, use *all for the final catch-all
     app.get('*all', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+      res.sendFile(path.join(distPath, 'index.html'), (err) => {
+        if (err) {
+          console.error(`Error sending index.html from "${distPath}":`, err);
+          res.status(404).send("Error: index.html not found. Please ensure the app is fully built.");
+        }
+      });
     });
   }
 

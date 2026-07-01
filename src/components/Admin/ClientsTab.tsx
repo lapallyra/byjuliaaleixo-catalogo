@@ -46,6 +46,7 @@ import {
 } from "../../services/firebaseService";
 import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
+import { HorizontalScroll } from "../shared/HorizontalScroll";
 import { motion, AnimatePresence } from "motion/react";
 
 interface ClientsTabProps {
@@ -1156,7 +1157,7 @@ Histórico de Compras:
               </div>
 
               {/* Navigation Tabs inside Drawer */}
-              <div className="flex border-b border-[#E5E5EA] bg-white text-xs shrink-0 overflow-x-auto">
+              <HorizontalScroll className="border-b border-[#E5E5EA] bg-white text-xs shrink-0 w-full">
                 {[
                   { id: "details", label: "Dados Gerais" },
                   { id: "orders", label: `Pedidos (${customerOrders.length})` },
@@ -1176,7 +1177,7 @@ Histórico de Compras:
                     {tab.label}
                   </button>
                 ))}
-              </div>
+              </HorizontalScroll>
 
               {/* Drawer Content */}
               <div className="flex-1 overflow-y-auto p-6 bg-[#FAF9F6]/30">

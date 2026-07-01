@@ -198,12 +198,21 @@ function SiteApp() {
   const effectiveConfig = config || INITIAL_CONFIG;
   const location = useLocation();
 
+  const isHomeOrCatalog = useMemo(() => {
+    const path = location.pathname;
+    if (path === '/') return true;
+    const catalogs = ['/lapallyra', '/pallyra', '/comamorguennita', '/guennita', '/mimadasim', '/mimada', '/tuttymimo', '/tutty'];
+    return catalogs.some(c => path.startsWith(c));
+  }, [location.pathname]);
+
   const currentCompany = useMemo(() => {
     const path = location.pathname;
     if (path.startsWith('/lapallyra') || path.startsWith('/pallyra')) return 'pallyra' as CompanyId;
     if (path.startsWith('/comamorguennita') || path.startsWith('/guennita')) return 'guennita' as CompanyId;
     if (path.startsWith('/mimadasim') || path.startsWith('/mimada')) return 'mimada' as CompanyId;
     if (path.startsWith('/tuttymimo') || path.startsWith('/tutty')) return 'tuttymimo' as CompanyId;
+    // For Home Page (/) return a default or random company to show toasts
+    if (path === '/') return 'pallyra' as CompanyId;
     return null;
   }, [location.pathname]);
 
@@ -328,7 +337,7 @@ function SiteApp() {
         </Routes>
       </div>
       <Footer config={effectiveConfig} />
-      <CustomerSocialProofToast currentCompany={currentCompany} />
+      {isHomeOrCatalog && <CustomerSocialProofToast currentCompany={currentCompany} products={allProducts} />}
     </div>
   );
 }

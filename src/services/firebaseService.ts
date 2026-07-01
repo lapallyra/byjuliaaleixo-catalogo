@@ -17,7 +17,8 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { sendTelegramNotification } from './telegramService';
-import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig, Coupon } from '../types';
+import { createAuditLog } from './auditService';
+import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig, Coupon, ProductionBatch, AuditActionType, AuditLog } from '../types';
 
 export enum OperationType {
   CREATE = 'create',
@@ -161,9 +162,11 @@ export const addProduct = async (productData: Product) => {
 
     if (id) {
       await setDoc(doc(db, path, id), sanitizedData);
+      await createAuditLog('Produtos', 'Criação', id, productData.product_name, { newData: sanitizedData }, productData.company);
       return id;
     } else {
       const docRef = await addDoc(collection(db, path), sanitizedData);
+      await createAuditLog('Produtos', 'Criação', docRef.id, productData.product_name, { newData: sanitizedData }, productData.company);
       return docRef.id;
     }
   } catch (error) {
@@ -175,7 +178,28 @@ export const updateProduct = async (id: string, productData: Partial<Product>) =
   const path = `products/${id}`;
   const { id: _, ...dataWithoutId } = productData as any;
   try {
-    await updateDoc(doc(db, 'products', id), sanitize(dataWithoutId));
+    const prodRef = doc(db, 'products', id);
+    const snap = await getDoc(prodRef);
+    const oldData = snap.exists() ? snap.data() : {};
+    
+    await updateDoc(prodRef, sanitize(dataWithoutId));
+    
+    await createAuditLog(
+      'Produtos', 
+      'Alteração', 
+      id, 
+      (productData.product_name || oldData.product_name || id), 
+      { 
+        oldData: oldData, 
+        newData: { ...oldData, ...dataWithoutId },
+        details: {
+          observations: productData.current_price !== undefined && oldData.current_price !== productData.current_price 
+            ? `Alteração de preço: R$ ${oldData.current_price} -> R$ ${productData.current_price}` 
+            : undefined
+        }
+      }, 
+      (productData.company || oldData.company)
+    );
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
@@ -184,7 +208,20 @@ export const updateProduct = async (id: string, productData: Partial<Product>) =
 export const deleteProduct = async (id: string) => {
   const path = `products/${id}`;
   try {
-    await deleteDoc(doc(db, 'products', id));
+    const prodRef = doc(db, 'products', id);
+    const snap = await getDoc(prodRef);
+    const oldData = snap.exists() ? snap.data() : {};
+    
+    await deleteDoc(prodRef);
+    
+    await createAuditLog(
+      'Produtos', 
+      'Exclusão Lógica', 
+      id, 
+      (oldData.product_name || id), 
+      { oldData: oldData }, 
+      oldData.company
+    );
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -208,6 +245,7 @@ export const addInsumo = async (data: Omit<Insumo, 'id'>) => {
       ...data,
       createdAt: serverTimestamp()
     }));
+    await createAuditLog('Estoque', 'Criação', docRef.id, data.name, { newData: data });
     return docRef.id;
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, path);
@@ -218,7 +256,25 @@ export const updateInsumo = async (id: string, data: Partial<Insumo>) => {
   const path = `insumos/${id}`;
   const { id: _, ...dataWithoutId } = data as any;
   try {
-    await updateDoc(doc(db, 'insumos', id), sanitize(dataWithoutId));
+    const insumoRef = doc(db, 'insumos', id);
+    const snap = await getDoc(insumoRef);
+    const oldData = snap.exists() ? snap.data() : {};
+
+    await updateDoc(insumoRef, sanitize(dataWithoutId));
+    
+    const action: AuditActionType = data.quantity !== undefined ? 'Entrada de Estoque' : 'Alteração';
+
+    await createAuditLog(
+      'Estoque', 
+      action, 
+      id, 
+      (data.name || oldData.name || id), 
+      { 
+        oldData: oldData, 
+        newData: { ...oldData, ...dataWithoutId },
+        details: { observations: data.quantity !== undefined ? `Alteração de estoque: ${oldData.quantity || 0} -> ${data.quantity}` : undefined }
+      }
+    );
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
@@ -305,6 +361,34 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
 
     await updateDoc(doc(db, 'sales', orderId), sanitize(finalData));
 
+    // Audit Log for status change
+    if (data.status && orderSnap.exists() && orderSnap.data().status !== data.status) {
+      await createAuditLog(
+        'Pedidos', 
+        'Mudança de Status', 
+        orderId, 
+        (orderData.code || orderId), 
+        { 
+          oldData: orderSnap.data().status, 
+          newData: data.status,
+          details: { observations: `Status alterado de ${orderSnap.data().status} para ${data.status}` }
+        }, 
+        orderData.companyId
+      );
+    } else {
+      await createAuditLog(
+        'Pedidos', 
+        'Alteração', 
+        orderId, 
+        (orderData.code || orderId), 
+        { 
+          oldData: orderSnap.exists() ? orderSnap.data() : {}, 
+          newData: finalData 
+        }, 
+        orderData.companyId
+      );
+    }
+
     // Telegram Notifications for status change
     try {
       if (data.status && orderSnap.exists() && orderSnap.data().status !== data.status) {
@@ -355,6 +439,8 @@ export const saveSale = async (data: any) => {
     try {
       await setDoc(docRef, saleData);
       console.log('✅ Document successfully added to sales collection:', docRef.id);
+      
+      await createAuditLog('Pedidos', 'Criação', docRef.id, saleData.code, { newData: saleData }, saleData.companyId);
       
       // Auto-update Gift List items to 'presenteado' if they originated from a list
       if (data.items && Array.isArray(data.items)) {
@@ -671,6 +757,8 @@ export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdA
       ordersCount: data.ordersCount || 0
     }));
 
+    await createAuditLog('Clientes', 'Criação', docRef.id, data.name, { newData: data }, data.companyId);
+
     try {
       sendTelegramNotification('new_client', `👤 NOVO CLIENTE\n\nNome:\n${data.name || 'Cliente sem nome'}\n\nContato:\n${data.contact || 'S/C'}`);
     } catch(e){}
@@ -695,7 +783,20 @@ export const updateCustomer = async (id: string, data: Partial<Customer>) => {
   const path = `customers/${id}`;
   const { id: _, ...dataWithoutId } = data as any;
   try {
-    await updateDoc(doc(db, 'customers', id), sanitize(dataWithoutId));
+    const custRef = doc(db, 'customers', id);
+    const snap = await getDoc(custRef);
+    const oldData = snap.exists() ? snap.data() : {};
+    
+    await updateDoc(custRef, sanitize(dataWithoutId));
+    
+    await createAuditLog(
+      'Clientes', 
+      'Alteração', 
+      id, 
+      (data.name || oldData.name || id), 
+      { oldData: oldData, newData: { ...oldData, ...dataWithoutId } }, 
+      (data.companyId || oldData.companyId)
+    );
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
@@ -704,7 +805,13 @@ export const updateCustomer = async (id: string, data: Partial<Customer>) => {
 export const deleteCustomer = async (id: string) => {
   const path = `customers/${id}`;
   try {
-    await deleteDoc(doc(db, 'customers', id));
+    const custRef = doc(db, 'customers', id);
+    const snap = await getDoc(custRef);
+    const oldData = snap.exists() ? snap.data() : {};
+    
+    await deleteDoc(custRef);
+    
+    await createAuditLog('Clientes', 'Exclusão Lógica', id, (oldData.name || id), { oldData: oldData }, oldData.companyId);
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -720,10 +827,44 @@ export const subscribeToFinance = (callback: (entries: FinanceEntry[]) => void, 
   }, (error) => handleFirestoreError(error, OperationType.LIST, 'finance', false));
 };
 
+export const createFinanceEntry = async (data: Omit<FinanceEntry, 'id'>) => {
+  const path = 'finance';
+  try {
+    const docRef = await addDoc(collection(db, 'finance'), sanitize({
+      ...data,
+      createdAt: serverTimestamp()
+    }));
+    await createAuditLog('Financeiro', 'Criação', docRef.id, `Lançamento ${docRef.id} - ${data.description}`, { newData: data }, data.companyId);
+    return docRef.id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+  }
+};
+
+export const deleteFinanceEntry = async (id: string, companyId?: CompanyId) => {
+  const path = `finance/${id}`;
+  try {
+    const finRef = doc(db, 'finance', id);
+    const snap = await getDoc(finRef);
+    const oldData = snap.exists() ? snap.data() : {};
+    
+    await deleteDoc(finRef);
+    await createAuditLog('Financeiro', 'Exclusão Lógica', id, `Lançamento ${id}`, { oldData: oldData }, companyId || (oldData as any).companyId);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+};
+
 export const updateFinanceEntry = async (id: string, data: Partial<FinanceEntry>) => {
   const path = `finance/${id}`;
   try {
-    await updateDoc(doc(db, 'finance', id), sanitize(data));
+    const finRef = doc(db, 'finance', id);
+    const snap = await getDoc(finRef);
+    const oldData = snap.exists() ? snap.data() : {};
+    
+    await updateDoc(finRef, sanitize(data));
+    
+    await createAuditLog('Financeiro', 'Alteração', id, `Lançamento ${id}`, { oldData: oldData, newData: { ...oldData, ...data } }, (data.companyId || (oldData as any).companyId));
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
@@ -777,15 +918,27 @@ export const getGlobalSettings = async (): Promise<any> => {
 
 export const saveGlobalSettings = async (data: any) => {
   try {
-    await setDoc(doc(db, 'settings', 'global'), sanitize(data), { merge: true });
+    const settingsRef = doc(db, 'settings', 'global');
+    const snap = await getDoc(settingsRef);
+    const oldData = snap.exists() ? snap.data() : {};
+    
+    await setDoc(settingsRef, sanitize(data), { merge: true });
+    
+    await createAuditLog('Configurações', 'Alteração', 'global', 'Configurações Globais', { oldData: oldData, newData: data });
   } catch (error) {
-    console.error('Error saving global settings:', error);
+    console.error('Error fetching global settings:', error);
   }
 };
 
 export const saveSiteSettings = async (companyId: CompanyId, data: Partial<SiteSettings>) => {
   try {
-    await setDoc(doc(db, 'settings', companyId), sanitize(data), { merge: true });
+    const settingsRef = doc(db, 'settings', companyId);
+    const snap = await getDoc(settingsRef);
+    const oldData = snap.exists() ? snap.data() : {};
+    
+    await setDoc(settingsRef, sanitize(data), { merge: true });
+    
+    await createAuditLog('Configurações', 'Alteração', companyId, `Configurações ${companyId}`, { oldData: oldData, newData: data }, companyId);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, `settings/${companyId}`);
   }
@@ -1431,13 +1584,19 @@ export const saveCampaign = async (data: any) => {
   try {
     if (data.id) {
       const { id, ...rest } = data;
-      await setDoc(doc(db, path, id), sanitize(rest), { merge: true });
+      const camRef = doc(db, path, id);
+      const snap = await getDoc(camRef);
+      const oldData = snap.exists() ? snap.data() : {};
+      
+      await setDoc(camRef, sanitize(rest), { merge: true });
+      await createAuditLog('Configurações', 'Alteração', id, data.name || 'Campanha', { oldData: oldData, newData: data });
       return id;
     } else {
       const docRef = await addDoc(collection(db, path), sanitize({
         ...data,
         createdAt: serverTimestamp()
       }));
+      await createAuditLog('Configurações', 'Criação', docRef.id, data.name || 'Campanha', { newData: data });
       return docRef.id;
     }
   } catch (error) {
@@ -1474,13 +1633,19 @@ export const saveCoupon = async (data: Partial<Coupon>) => {
   try {
     if (data.id) {
       const { id, ...rest } = data;
-      await setDoc(doc(db, path, id), sanitize(rest), { merge: true });
+      const coupRef = doc(db, path, id);
+      const snap = await getDoc(coupRef);
+      const oldData = snap.exists() ? snap.data() : {};
+      
+      await setDoc(coupRef, sanitize(rest), { merge: true });
+      await createAuditLog('Configurações', 'Alteração', id, data.code || 'Cupom', { oldData: oldData, newData: data }, data.companyId);
       return id;
     } else {
       const docRef = await addDoc(collection(db, path), sanitize({
         ...data,
         createdAt: serverTimestamp()
       }));
+      await createAuditLog('Configurações', 'Criação', docRef.id, data.code || 'Cupom', { newData: data }, data.companyId);
       return docRef.id;
     }
   } catch (error) {
@@ -1510,6 +1675,72 @@ export const getCoupons = async (companyId?: CompanyId): Promise<Coupon[]> => {
     return [];
   }
 };
+
+export const createProductionBatch = async (batch: Omit<ProductionBatch, 'id'>) => {
+  try {
+    const docRef = await addDoc(collection(db, 'productionBatches'), {
+      ...batch,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    
+    // Update linked orders with the batchId
+    for (const orderId of batch.orderIds) {
+      const orderRef = doc(db, 'sales', orderId); // Fix: collection was 'orders', should be 'sales' likely
+      await updateDoc(orderRef, { batchId: docRef.id });
+    }
+    
+    await createAuditLog('Produção', 'Criação', docRef.id, `Lote #${docRef.id.substring(0,6)}`, { newData: batch }, batch.companyId);
+    
+    return docRef.id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, 'productionBatches');
+    return null;
+  }
+};
+
+export const updateProductionBatch = async (batchId: string, data: Partial<ProductionBatch>) => {
+  try {
+    const docRef = doc(db, 'productionBatches', batchId);
+    const snap = await getDoc(docRef);
+    const oldData = snap.exists() ? snap.data() : {};
+    
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: serverTimestamp()
+    });
+    
+    await createAuditLog('Produção', 'Alteração', batchId, `Lote #${batchId.substring(0,6)}`, { oldData: oldData, newData: { ...oldData, ...data } });
+    
+    return true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `productionBatches/${batchId}`);
+    return false;
+  }
+};
+
+export const subscribeToProductionBatches = (companyId: CompanyId, callback: (batches: ProductionBatch[]) => void) => {
+  const q = companyId === 'all' as any 
+    ? collection(db, 'productionBatches')
+    : query(collection(db, 'productionBatches'), where('companyId', '==', companyId));
+    
+  return onSnapshot(q, (snapshot) => {
+    const batches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ProductionBatch));
+    callback(batches);
+  });
+};
+
+export const subscribeToAuditLogs = (callback: (logs: AuditLog[]) => void, companyId?: CompanyId) => {
+  const path = 'audit_logs';
+  const q = companyId && (companyId as string) !== 'all'
+    ? query(collection(db, path), where('companyId', '==', companyId), orderBy('createdAt', 'desc'))
+    : query(collection(db, path), orderBy('createdAt', 'desc'));
+  
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuditLog)));
+  }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
+};
+
 
 
 

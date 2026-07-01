@@ -15,7 +15,17 @@ import {
   ChevronRight,
   Package,
   Activity,
-  ArrowRight
+  ArrowRight,
+  Truck,
+  Plus,
+  Trash2,
+  Sun,
+  Cloud,
+  Moon,
+  Sparkles,
+  Zap,
+  Target,
+  X
 } from "lucide-react";
 import { 
   format, 
@@ -24,7 +34,10 @@ import {
   startOfMonth, 
   endOfMonth, 
   isWithinInterval,
-  subMonths
+  subMonths,
+  addDays,
+  isAfter,
+  isBefore
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { 
@@ -43,14 +56,25 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell,
-  Legend
+  ResponsiveContainer
 } from "recharts";
-import { db } from "../../lib/firebase";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db, auth } from "../../lib/firebase";
+import { 
+  collection, 
+  query, 
+  where, 
+  onSnapshot, 
+  addDoc, 
+  deleteDoc, 
+  doc, 
+  updateDoc,
+  serverTimestamp,
+  getDocs,
+  orderBy
+} from "firebase/firestore";
+import { motion, AnimatePresence } from "framer-motion";
+import { HorizontalScroll } from "../shared/HorizontalScroll";
+import { commemorativeDateService } from "../../services/commemorativeDateService";
 
 interface DashboardTabProps {
   orders: Order[];
@@ -61,7 +85,19 @@ interface DashboardTabProps {
   onOpenOrder: (order: Order) => void;
 }
 
-type TimePeriod = 'today' | '7d' | '30d' | 'thisMonth' | 'lastMonth';
+interface ChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  companyId: string;
+}
+
+interface EventItem {
+  id: string;
+  title: string;
+  date: Date;
+  category: 'global' | 'nacional' | 'regional' | 'personalizado';
+}
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({
   orders = [],
@@ -71,567 +107,644 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onAction,
   onOpenOrder,
 }) => {
-  const [period, setPeriod] = useState<TimePeriod>('30d');
-  const [purchases, setPurchases] = useState<PurchaseOrder[]>([]);
-  const [insumos, setInsumos] = useState<Componente[]>([]);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [newChecklistItem, setNewChecklistItem] = useState("");
+  const [user, setUser] = useState(auth.currentUser);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({ title: '', date: '', category: 'personalizado' as 'global' | 'nacional' | 'regional' | 'personalizado' });
 
-  // Fetch additional data needed for consolidated view
+  // Dynamic Greeting
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return "Bom dia";
+    if (hour >= 12 && hour < 18) return "Boa tarde";
+    return "Boa noite";
+  }, []);
+
+  const todayFormatted = format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+
+  // Fetch Checklist
   useEffect(() => {
-    const qPurchases = query(collection(db, "purchase_orders"), where("companyId", "==", companyId));
-    const unsubPurchases = onSnapshot(qPurchases, (snap) => {
-      setPurchases(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PurchaseOrder)));
+    if (!companyId) return;
+    const q = query(collection(db, "checklist"), where("companyId", "==", companyId));
+    const unsub = onSnapshot(q, (snap) => {
+      setChecklist(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChecklistItem)));
+    });
+    return () => unsub();
+  }, [companyId]);
+
+  // Fetch Events (Mocked base + custom from Firestore + commemorative dates)
+  useEffect(() => {
+    if (!companyId) return;
+
+    let systemCommemorativeDates: any[] = [];
+    
+    // Subscribe to commemorative dates
+    const unsubCommemorative = commemorativeDateService.subscribe((dates) => {
+        systemCommemorativeDates = dates;
+        updateEvents();
     });
 
-    const qInsumos = query(collection(db, "componentes"), where("isActive", "==", true));
-    const unsubInsumos = onSnapshot(qInsumos, (snap) => {
-      setInsumos(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Componente)));
+    let customEvents: EventItem[] = [];
+
+    const q = query(collection(db, "events"), where("companyId", "==", companyId));
+    const unsubEvents = onSnapshot(q, (snap) => {
+      customEvents = snap.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data(),
+        date: doc.data().date?.toDate() ? doc.data().date.toDate() : new Date(doc.data().date)
+      } as EventItem));
+      updateEvents();
     });
+
+    const updateEvents = () => {
+      const currentYear = new Date().getFullYear();
+      
+      const mapCommemorativeDates = (year: number) => {
+          return systemCommemorativeDates.map(c => {
+             const month = c.month.toString().padStart(2, '0');
+             const day = c.day.toString().padStart(2, '0');
+             return {
+                 id: `commemorative-${c.id}-${year}`,
+                 title: c.name,
+                 date: new Date(`${year}-${month}-${day}T00:00:00`),
+                 category: c.categoryId === 'global' ? 'global' : c.categoryId === 'national' ? 'nacional' : 'regional'
+             }
+          });
+      };
+
+      const generateBaseEvents = (year: number): EventItem[] => [
+        // Globais
+        { id: `c-anonovo-${year}`, title: 'Confraternização Universal (Ano Novo)', date: new Date(`${year}-01-01`), category: 'global' },
+        { id: `c-diamulher-${year}`, title: 'Dia Internacional da Mulher', date: new Date(`${year}-03-08`), category: 'global' },
+        { id: `c-consumidor-${year}`, title: 'Dia do Consumidor', date: new Date(`${year}-03-15`), category: 'global' },
+        { id: `c-trabalhador-${year}`, title: 'Dia do Trabalhador', date: new Date(`${year}-05-01`), category: 'global' },
+        { id: `c-amigo-${year}`, title: 'Dia do Amigo', date: new Date(`${year}-07-20`), category: 'global' },
+        { id: `c-halloween-${year}`, title: 'Halloween', date: new Date(`${year}-10-31`), category: 'global' },
+        { id: `c-natal-${year}`, title: 'Natal', date: new Date(`${year}-12-25`), category: 'global' },
+        { id: `c-reveillon-${year}`, title: 'Véspera de Ano Novo', date: new Date(`${year}-12-31`), category: 'global' },
+        
+        // Nacionais
+        { id: `c-indio-${year}`, title: 'Dia dos Povos Indígenas', date: new Date(`${year}-04-19`), category: 'nacional' },
+        { id: `c-tiradentes-${year}`, title: 'Tiradentes', date: new Date(`${year}-04-21`), category: 'nacional' },
+        { id: `c-descobrimento-${year}`, title: 'Descobrimento do Brasil', date: new Date(`${year}-04-22`), category: 'nacional' },
+        { id: `c-maes-${year}`, title: 'Dia das Mães', date: new Date(`${year}-05-10`), category: 'nacional' },
+        { id: `c-namorados-${year}`, title: 'Dia dos Namorados', date: new Date(`${year}-06-12`), category: 'nacional' },
+        { id: `c-saojoao-${year}`, title: 'Dia de São João', date: new Date(`${year}-06-24`), category: 'nacional' },
+        { id: `c-avos-${year}`, title: 'Dia dos Avós', date: new Date(`${year}-07-26`), category: 'nacional' },
+        { id: `c-pais-${year}`, title: 'Dia dos Pais', date: new Date(`${year}-08-09`), category: 'nacional' },
+        { id: `c-independencia-${year}`, title: 'Independência do Brasil', date: new Date(`${year}-09-07`), category: 'nacional' },
+        { id: `c-cliente-${year}`, title: 'Dia do Cliente', date: new Date(`${year}-09-15`), category: 'nacional' },
+        { id: `c-arvore-${year}`, title: 'Dia da Árvore', date: new Date(`${year}-09-21`), category: 'nacional' },
+        { id: `c-criancas-${year}`, title: 'Nossa Senhora Aparecida / Crianças', date: new Date(`${year}-10-12`), category: 'nacional' },
+        { id: `c-professores-${year}`, title: 'Dia do Professor', date: new Date(`${year}-10-15`), category: 'nacional' },
+        { id: `c-finados-${year}`, title: 'Finados', date: new Date(`${year}-11-02`), category: 'nacional' },
+        { id: `c-republica-${year}`, title: 'Proclamação da República', date: new Date(`${year}-11-15`), category: 'nacional' },
+        { id: `c-bandeira-${year}`, title: 'Dia da Bandeira', date: new Date(`${year}-11-19`), category: 'nacional' },
+        { id: `c-consciencia-${year}`, title: 'Dia da Consciência Negra', date: new Date(`${year}-11-20`), category: 'nacional' },
+        
+        // Profissões
+        { id: `c-jornalista-${year}`, title: 'Dia do Jornalista', date: new Date(`${year}-04-07`), category: 'nacional' },
+        { id: `c-enfermagem-${year}`, title: 'Dia da Enfermagem', date: new Date(`${year}-05-12`), category: 'nacional' },
+        { id: `c-advogado-${year}`, title: 'Dia do Advogado', date: new Date(`${year}-08-11`), category: 'nacional' },
+        { id: `c-psicologo-${year}`, title: 'Dia do Psicólogo', date: new Date(`${year}-08-27`), category: 'nacional' },
+        { id: `c-veterinario-${year}`, title: 'Dia do Médico Veterinário', date: new Date(`${year}-09-09`), category: 'nacional' },
+        { id: `c-secretaria-${year}`, title: 'Dia da Secretária', date: new Date(`${year}-09-30`), category: 'nacional' },
+        { id: `c-medico-${year}`, title: 'Dia do Médico', date: new Date(`${year}-10-18`), category: 'nacional' },
+        { id: `c-dentista-${year}`, title: 'Dia do Dentista', date: new Date(`${year}-10-25`), category: 'nacional' },
+        { id: `c-arquiteto-${year}`, title: 'Dia do Arquiteto', date: new Date(`${year}-12-15`), category: 'nacional' },
+        
+        // Regional (Querência do Norte - PR)
+        { id: `c-qn-aniversario-${year}`, title: 'Aniversário de Querência do Norte - PR', date: new Date(`${year}-11-26`), category: 'regional' },
+        { id: `c-qn-padroeiro-${year}`, title: 'Padroeiro de Querência do Norte - PR', date: new Date(`${year}-08-15`), category: 'regional' },
+      ];
+
+      const baseEvents = [
+        ...generateBaseEvents(currentYear),
+        ...generateBaseEvents(currentYear + 1),
+        ...mapCommemorativeDates(currentYear),
+        ...mapCommemorativeDates(currentYear + 1)
+      ];
+
+      // Remove duplicates by title and date
+      const uniqueEventsMap = new Map();
+      [...baseEvents, ...customEvents].forEach(e => {
+        const key = `${e.title}-${e.date.getTime()}`;
+        uniqueEventsMap.set(key, e);
+      });
+
+      const allEvents = Array.from(uniqueEventsMap.values())
+        .filter(e => {
+          const sixtyDaysFromNow = addDays(new Date(), 60);
+          return isAfter(e.date, subDays(new Date(), 1)) && isBefore(e.date, sixtyDaysFromNow);
+        })
+        .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      setEvents(allEvents);
+    };
 
     return () => {
-      unsubPurchases();
-      unsubInsumos();
+        unsubCommemorative();
+        unsubEvents();
     };
   }, [companyId]);
 
-  // Filter orders based on period
-  const filteredOrders = useMemo(() => {
-    const now = new Date();
-    let start: Date;
-    let end: Date = now;
-
-    switch (period) {
-      case 'today':
-        start = startOfDay(now);
-        break;
-      case '7d':
-        start = startOfDay(subDays(now, 7));
-        break;
-      case '30d':
-        start = startOfDay(subDays(now, 30));
-        break;
-      case 'thisMonth':
-        start = startOfMonth(now);
-        end = endOfMonth(now);
-        break;
-      case 'lastMonth':
-        start = startOfMonth(subMonths(now, 1));
-        end = endOfMonth(subMonths(now, 1));
-        break;
-      default:
-        start = subDays(now, 30);
-    }
-
-    return orders.filter(o => {
-      const orderDate = o.createdAt?.toDate ? o.createdAt.toDate() : (o.createdAt ? new Date(o.createdAt) : null);
-      if (!orderDate) return false;
-      return isWithinInterval(orderDate, { start, end }) && o.status !== 'cancelled';
-    });
-  }, [orders, period]);
-
-  // Metrics Calculation
-  const metrics = useMemo(() => {
-    let revenue = 0;
-    let cost = 0;
-    let productionCount = 0;
-    let pendingCount = 0;
-
-    filteredOrders.forEach(order => {
-      revenue += Number(order.total) || 0;
-      
-      // Calculate production cost for this order
-      order.items?.forEach(item => {
-        // Fallback to estimatedCost if available
-        const product = products.find(p => p.id === (item.productId || item.id));
-        const itemCost = product?.estimatedCost || 0;
-        cost += itemCost * (item.quantity || 1);
-      });
-
-      if (['production', 'in_production', 'assembly'].includes(order.status)) {
-        productionCount++;
-      }
-      if (['novo pedido', 'pending', 'waiting_payment', 'approval'].includes(order.status)) {
-        pendingCount++;
-      }
-    });
-
-    const profit = revenue - cost;
-    const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
-
-    return {
-      revenue,
-      cost,
-      profit,
-      margin,
-      productionCount,
-      pendingCount
-    };
-  }, [filteredOrders, products]);
-
-  // Chart Data
-  const chartData = useMemo(() => {
-    const dataMap: { [key: string]: { date: string; revenue: number; cost: number; profit: number } } = {};
+  // Metrics: Monthly Goal (R$ 2.500,00)
+  const monthlyMetrics = useMemo(() => {
+    const start = startOfMonth(new Date());
+    const end = endOfMonth(new Date());
     
-    // Fill last 30 days if period is 30d
-    const days = period === '7d' ? 7 : 30;
-    for (let i = days - 1; i >= 0; i--) {
-      const d = format(subDays(new Date(), i), 'dd/MM');
-      dataMap[d] = { date: d, revenue: 0, cost: 0, profit: 0 };
-    }
-
-    filteredOrders.forEach(order => {
-      const d = format(order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt), 'dd/MM');
-      if (dataMap[d]) {
-        const orderRev = Number(order.total) || 0;
-        let orderCost = 0;
-        order.items?.forEach(item => {
-          const product = products.find(p => p.id === (item.productId || item.id));
-          orderCost += (product?.estimatedCost || 0) * (item.quantity || 1);
-        });
-
-        dataMap[d].revenue += orderRev;
-        dataMap[d].cost += orderCost;
-        dataMap[d].profit += (orderRev - orderCost);
-      }
-    });
-
-    return Object.values(dataMap);
-  }, [filteredOrders, products, period]);
-
-  // Top Products
-  const topProducts = useMemo(() => {
-    const productStats: { [key: string]: { name: string; qty: number; revenue: number; profit: number } } = {};
-
-    filteredOrders.forEach(order => {
-      order.items?.forEach(item => {
-        const id = item.productId || item.id;
-        if (!productStats[id]) {
-          productStats[id] = { name: item.product_name || "Desconhecido", qty: 0, revenue: 0, profit: 0 };
-        }
-        const qty = item.quantity || 1;
-        const price = Number(item.current_price || item.price || 0);
-        const product = products.find(p => p.id === id);
-        const cost = (product?.estimatedCost || 0) * qty;
-        
-        productStats[id].qty += qty;
-        productStats[id].revenue += price * qty;
-        productStats[id].profit += (price * qty) - cost;
-      });
-    });
-
-    return Object.values(productStats)
-      .sort((a, b) => b.qty - a.qty)
-      .slice(0, 5);
-  }, [filteredOrders, products]);
-
-  // Top Customers
-  const topCustomers = useMemo(() => {
-    const customerStats: { [key: string]: { name: string; totalSpent: number; ordersCount: number; lastPurchase: any } } = {};
-
-    filteredOrders.forEach(order => {
-      const name = order.customerName || "Desconhecido";
-      if (!customerStats[name]) {
-        customerStats[name] = { name, totalSpent: 0, ordersCount: 0, lastPurchase: null };
-      }
-      customerStats[name].totalSpent += Number(order.total) || 0;
-      customerStats[name].ordersCount += 1;
-      const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
-      if (!customerStats[name].lastPurchase || orderDate > customerStats[name].lastPurchase) {
-        customerStats[name].lastPurchase = orderDate;
-      }
-    });
-
-    return Object.values(customerStats)
-      .sort((a, b) => b.totalSpent - a.totalSpent)
-      .slice(0, 5);
-  }, [filteredOrders]);
-
-  // Critical Stock
-  const criticalStock = useMemo(() => {
-    return insumos
-      .filter(i => i.quantity <= i.minQuantity)
-      .sort((a, b) => (a.quantity / a.minQuantity) - (b.quantity / b.minQuantity))
-      .slice(0, 5);
-  }, [insumos]);
-
-  // Alerts
-  const alerts = useMemo(() => {
-    const list = [];
-    if (metrics.margin < 30 && metrics.revenue > 0) {
-      list.push({ type: 'warning', message: `Margem média abaixo do esperado (${metrics.margin.toFixed(1)}%)`, icon: <TrendingDown size={14} /> });
-    }
-    if (criticalStock.length > 0) {
-      list.push({ type: 'error', message: `${criticalStock.length} itens com estoque crítico ou zerado`, icon: <AlertTriangle size={14} /> });
-    }
-    // Check for late orders (older than 7 days and not delivered)
-    const lateOrders = orders.filter(o => {
+    const monthOrders = orders.filter(o => {
       const date = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
-      const isOld = (Date.now() - date.getTime()) > (7 * 24 * 60 * 60 * 1000);
-      return isOld && !['delivered', 'cancelled'].includes(o.status);
+      return isWithinInterval(date, { start, end }) && o.status !== 'cancelled';
     });
-    if (lateOrders.length > 0) {
-      list.push({ type: 'info', message: `${lateOrders.length} pedidos em atraso ou aguardando há mais de 7 dias`, icon: <Clock size={14} /> });
-    }
-    return list;
-  }, [metrics, criticalStock, orders]);
+
+    const reached = monthOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+    const goal = 2500;
+    const percent = Math.min(100, (reached / goal) * 100);
+    const remaining = Math.max(0, goal - reached);
+
+    return { reached, goal, percent, remaining };
+  }, [orders]);
+
+  // Total Sales and Faturamento
+  const totalMetrics = useMemo(() => {
+    const completedOrders = orders.filter(o => !['cancelled', 'pending'].includes(o.status));
+    const count = completedOrders.length;
+    const revenue = completedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+    return { count, revenue };
+  }, [orders]);
+
+  const activeOrders = useMemo(() => {
+    return orders
+      .filter(o => ['novo pedido', 'approval', 'waiting_payment', 'production', 'in_production', 'assembly', 'packaging', 'delivery'].includes(o.status))
+      .sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      });
+  }, [orders]);
+
+  const handleAddChecklistItem = async () => {
+    if (!newChecklistItem.trim()) return;
+    await addDoc(collection(db, "checklist"), {
+      text: newChecklistItem,
+      completed: false,
+      companyId,
+      createdAt: serverTimestamp()
+    });
+    setNewChecklistItem("");
+  };
+
+  const toggleChecklistItem = async (item: ChecklistItem) => {
+    await updateDoc(doc(db, "checklist", item.id), {
+      completed: !item.completed
+    });
+  };
+
+  const deleteChecklistItem = async (id: string) => {
+    await deleteDoc(doc(db, "checklist", id));
+  };
+
+  const handleCreateEvent = async () => {
+    if (!newEvent.title || !newEvent.date) return;
+    await addDoc(collection(db, "events"), {
+      title: newEvent.title,
+      date: new Date(newEvent.date),
+      category: newEvent.category,
+      companyId,
+      createdAt: serverTimestamp()
+    });
+    setNewEvent({ title: '', date: '', category: 'personalizado' });
+    setIsEventModalOpen(false);
+  };
+
 
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-500">
-      {/* CEO Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-10 pb-12 font-sans selection:bg-indigo-100 selection:text-indigo-900 relative">
+      {/* Background ambient blobs for glassmorphism */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-300/20 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none mix-blend-multiply" />
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-emerald-300/20 rounded-full blur-[140px] translate-x-1/3 translate-y-1/3 pointer-events-none mix-blend-multiply" />
+      
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Visão Geral do Negócio</h1>
-          <p className="text-slate-500 font-medium text-sm">Dashboard Estratégico & KPIs em Tempo Real</p>
-        </div>
-        <div className="flex items-center gap-2 bg-white border border-slate-200 p-1 rounded-2xl shadow-sm">
-          {(['today', '7d', '30d', 'thisMonth', 'lastMonth'] as TimePeriod[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                period === p 
-                  ? 'bg-slate-900 text-white shadow-md' 
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-              }`}
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-2xl font-black text-slate-900 tracking-tight">
+              {greeting}, Julia Aleixo
+            </span>
+            <motion.div
+              animate={{ rotate: [0, 15, -15, 0] }}
+              transition={{ repeat: Infinity, duration: 4 }}
             >
-              {p === 'today' ? 'Hoje' : p === '7d' ? '7 Dias' : p === '30d' ? '30 Dias' : p === 'thisMonth' ? 'Mês Atual' : 'Mês Anterior'}
-            </button>
-          ))}
+              <Sparkles className="text-amber-400" size={24} />
+            </motion.div>
+          </div>
+          <p className="text-slate-500 font-bold text-sm capitalize">{todayFormatted}</p>
+        </div>
+
+        {/* Weather Mock */}
+        <div className="flex items-center gap-4 clean-3d-card p-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-inner relative z-10">
+            <Sun size={24} />
+          </div>
+          <div className="text-right relative z-10">
+            <div className="text-lg font-black text-slate-900 drop-shadow-sm">28°C</div>
+            <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ensolarado</div>
+          </div>
         </div>
       </div>
 
-      {/* Smart Alerts */}
-      {alerts.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {alerts.map((alert, idx) => (
-            <div key={idx} className={`flex items-center gap-3 p-3 rounded-2xl border ${
-              alert.type === 'error' ? 'bg-rose-50 border-rose-100 text-rose-700' :
-              alert.type === 'warning' ? 'bg-orange-50 border-orange-100 text-orange-700' :
-              'bg-blue-50 border-blue-100 text-blue-700'
-            }`}>
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
-                alert.type === 'error' ? 'bg-rose-100' :
-                alert.type === 'warning' ? 'bg-orange-100' :
-                'bg-blue-100'
-              }`}>
-                {alert.icon}
-              </div>
-              <p className="text-xs font-bold leading-tight">{alert.message}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Main KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <KPICard 
-          title="Faturamento" 
-          value={formatCurrency(metrics.revenue)} 
-          icon={<DollarSign size={20} />} 
-          trend="+12%" 
-          color="slate" 
-        />
-        <KPICard 
-          title="Lucro Líquido" 
-          value={formatCurrency(metrics.profit)} 
-          icon={<TrendingUp size={20} />} 
-          trend="+8.4%" 
-          color="emerald" 
-        />
-        <KPICard 
-          title="Custo Produção" 
-          value={formatCurrency(metrics.cost)} 
-          icon={<Package size={20} />} 
-          trend="-2.1%" 
-          color="rose" 
-        />
-        <KPICard 
-          title="Margem Média" 
-          value={`${metrics.margin.toFixed(1)}%`} 
-          icon={<Activity size={20} />} 
-          trend="Estável" 
-          color="blue" 
-        />
-        <KPICard 
-          title="Em Produção" 
-          value={metrics.productionCount.toString()} 
-          icon={<Archive size={20} />} 
-          trend="Ativos" 
-          color="indigo" 
-        />
-        <KPICard 
-          title="Pendentes" 
-          value={metrics.pendingCount.toString()} 
-          icon={<Clock size={20} />} 
-          trend="Aguardando" 
-          color="amber" 
-        />
-      </div>
-
-      {/* Main Row: Chart & Top Products */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Performance Chart */}
-        <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-             <div>
-                <h3 className="font-bold text-slate-900">Performance de Vendas</h3>
-                <p className="text-xs text-slate-500 font-medium">Receita vs Custo vs Lucro</p>
-             </div>
-             <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-900"></span> Receita</div>
-                <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Lucro</div>
-                <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-400"></span> Custo</div>
-             </div>
-          </div>
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0f172a" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#0f172a" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="date" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
-                  dy={10}
+        
+        {/* BLOCO 01: META DO MÊS */}
+        <div className="lg:col-span-2 clean-3d-card p-8 flex flex-col justify-between relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50/50 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none group-hover:bg-emerald-100/50 transition-colors" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-3d-deep">
+                  <Target size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">Meta do Mês</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Faturamento mensal planejado</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-2xl font-black text-slate-900">{monthlyMetrics.percent.toFixed(0)}%</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alcançado</p>
+                <p className="text-xl font-black text-emerald-600">{formatCurrency(monthlyMetrics.reached)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Restante</p>
+                <p className="text-xl font-black text-slate-900">{formatCurrency(monthlyMetrics.remaining)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Objetivo</p>
+                <p className="text-xl font-black text-slate-400">{formatCurrency(monthlyMetrics.goal)}</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="w-full h-4 bg-slate-50 rounded-full border border-slate-100 overflow-hidden p-0.5 shadow-inner">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${monthlyMetrics.percent}%` }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
                 />
-                <YAxis 
-                  hide 
-                />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                  labelStyle={{ fontWeight: 800, marginBottom: '8px', color: '#1e293b' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#0f172a" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorRevenue)" 
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="profit" 
-                  stroke="#10b981" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorProfit)" 
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="cost" 
-                  stroke="#fb7185" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  fill="none" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+              </div>
+              {monthlyMetrics.reached >= monthlyMetrics.goal && (
+                <motion.p 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center text-xs font-black text-emerald-600 uppercase tracking-widest"
+                >
+                  Meta alcançada 🎉
+                </motion.p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Top Products */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-slate-900">Top Produtos</h3>
-            <span className="text-[10px] font-black uppercase text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">Volume</span>
+        {/* BLOCO 02: AÇÕES RÁPIDAS */}
+        <div className="clean-3d-card p-8 flex flex-col">
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Ações Rápidas</h3>
+          <div className="grid grid-cols-1 gap-4">
+            <button onClick={() => onAction('orders')} className="clean-3d-button w-full justify-start">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <ShoppingBag size={16} />
+              </div>
+              Novo Pedido
+            </button>
+            <button onClick={() => onAction('customers')} className="clean-3d-button w-full justify-start">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <Users size={16} />
+              </div>
+              Novo Cliente
+            </button>
+            <button onClick={() => onAction('stock')} className="clean-3d-button w-full justify-start">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Package size={16} />
+              </div>
+              Novo Insumo
+            </button>
+            <button onClick={() => onAction('products')} className="clean-3d-button w-full justify-start">
+              <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center">
+                <Archive size={16} />
+              </div>
+              Novo Produto
+            </button>
           </div>
-          <div className="flex-1 space-y-4">
-             {topProducts.length === 0 ? (
-               <div className="h-full flex flex-col items-center justify-center text-slate-400 gap-2">
-                 <ShoppingBag size={24} />
-                 <p className="text-xs font-bold uppercase tracking-wider">Sem dados de vendas</p>
-               </div>
-             ) : (
-               topProducts.map((p, idx) => (
-                 <div key={idx} className="flex items-center justify-between group cursor-default">
-                    <div className="flex items-center gap-3">
-                       <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-900 font-bold text-xs">
-                          #{idx + 1}
-                       </div>
-                       <div>
-                          <p className="text-sm font-bold text-slate-900 truncate max-w-[140px] group-hover:text-indigo-600 transition-colors">{p.name}</p>
-                          <p className="text-[10px] text-slate-400 font-bold">{p.qty} vendas</p>
-                       </div>
+        </div>
+      </div>
+
+      {/* BLOCO 03: PEDIDOS ATIVOS & CHECKLIST */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* ESQUERDA: PEDIDOS ATIVOS */}
+        <div className="clean-3d-card p-8 flex flex-col h-[500px]">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-3d-deep">
+                <Zap size={20} />
+              </div>
+              <h3 className="text-lg font-black text-slate-900">Pedidos Ativos</h3>
+            </div>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{activeOrders.length} EM ANDAMENTO</span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto scrollbar-hide space-y-4 pr-2">
+            <AnimatePresence mode="popLayout">
+              {activeOrders.map((order) => (
+                <motion.div
+                  layout
+                  key={order.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  onClick={() => onOpenOrder(order)}
+                  className="relative clean-3d-card bg-white p-5 pl-8 border-l-0 group cursor-pointer hover:shadow-lg transition-all"
+                >
+                  <div className={`led-strip rounded-l-[28px] ${
+                    ['em produção', 'production', 'in_production'].includes(order.status?.toLowerCase()) ? 'bg-[#FFD100] shadow-[-6px_0_20px_2px_rgba(255,209,0,0.7)]' :
+                    ['montagem', 'assembly'].includes(order.status?.toLowerCase()) ? 'bg-[#BD02FC] shadow-[-6px_0_20px_2px_rgba(189,2,252,0.7)]' :
+                    ['aguardando sinal', 'waiting_payment', 'waiting_deposit', 'pending'].includes(order.status?.toLowerCase()) ? 'bg-[#0080FF] shadow-[-6px_0_20px_2px_rgba(0,128,255,0.7)]' :
+                    ['enviado', 'delivery'].includes(order.status?.toLowerCase()) ? 'bg-[#FFFFFF] shadow-[-6px_0_20px_2px_rgba(255,255,255,0.7)]' :
+                    ['novo pedido'].includes(order.status?.toLowerCase()) ? 'bg-[#37FD12] shadow-[-6px_0_20px_2px_rgba(55,253,18,0.7)]' :
+                    'bg-[#7FFF00] shadow-[-6px_0_20px_2px_rgba(127,255,0,0.7)]'
+                  }`} />
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="mb-0.5">
+                        <span className="text-[10px] text-[#8E8E93] font-mono bg-[#F5F5F7] px-1.5 py-0.5 rounded inline-block">#{order.code}</span>
+                      </div>
+                      <h4 className="text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{order.customerName}</h4>
                     </div>
                     <div className="text-right">
-                       <p className="text-sm font-black text-slate-900">{formatCurrency(p.revenue)}</p>
-                       <p className="text-[10px] text-emerald-600 font-bold">+{formatCurrency(p.profit)}</p>
+                      <p className="text-sm font-black text-slate-900">{formatCurrency(order.total)}</p>
                     </div>
-                 </div>
-               ))
-             )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            {activeOrders.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center opacity-20 py-12">
+                <Zap size={48} className="mb-4" />
+                <p className="text-xs font-black uppercase tracking-widest">Nenhum pedido ativo</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* DIREITA: CHECKLIST DIÁRIO */}
+        <div className="clean-3d-card p-8 flex flex-col h-[500px]">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-3d-deep">
+                <CheckCircle2 size={20} />
+              </div>
+              <h3 className="text-lg font-black text-slate-900">Checklist Diário</h3>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto scrollbar-hide space-y-3 mb-6">
+            <AnimatePresence mode="popLayout">
+              {checklist.sort((a, b) => Number(a.completed) - Number(b.completed)).map((item) => (
+                <motion.div
+                  layout
+                  key={item.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="flex items-center gap-3 group"
+                >
+                  <button 
+                    onClick={() => toggleChecklistItem(item)}
+                    className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
+                      item.completed 
+                        ? 'bg-emerald-600 border-emerald-600 text-white' 
+                        : 'bg-white border-slate-200 text-transparent hover:border-emerald-500'
+                    }`}
+                  >
+                    <CheckCircle2 size={14} />
+                  </button>
+                  <span className={`text-sm font-medium flex-1 ${item.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                    {item.text}
+                  </span>
+                  <button 
+                    onClick={() => deleteChecklistItem(item.id)}
+                    className="p-2 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            {checklist.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center opacity-20 py-12">
+                <CheckCircle2 size={48} className="mb-4" />
+                <p className="text-xs font-black uppercase tracking-widest">Sua lista está vazia</p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input 
+              type="text"
+              value={newChecklistItem}
+              onChange={(e) => setNewChecklistItem(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddChecklistItem()}
+              placeholder="Adicionar novo item..."
+              className="flex-1 h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-300 focus:bg-white transition-all shadow-inner"
+            />
+            <button 
+              onClick={handleAddChecklistItem}
+              className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg active:scale-95"
+            >
+              <Plus size={20} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* BLOCO 04: PRÓXIMOS EVENTOS */}
+      <div className="clean-3d-card p-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-3d-deep">
+              <Calendar size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-900">Próximos Eventos</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Calendário estratégico dos próximos 60 dias</p>
+            </div>
           </div>
           <button 
-            onClick={() => onAction('products')}
-            className="w-full mt-6 py-3 bg-slate-50 text-slate-900 rounded-2xl text-xs font-bold hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
+             onClick={() => setIsEventModalOpen(true)}
+             className="clean-3d-button !h-10 !px-4 text-xs"
           >
-            Ver todos os produtos <ArrowRight size={14} />
+            <Plus size={14} /> Novo Evento
           </button>
         </div>
+
+        <HorizontalScroll className="gap-4 pb-4">
+          {events.map((event) => (
+            <div key={event.id} className="min-w-[180px] clean-3d-card p-5 bg-white border border-slate-100 flex flex-col justify-between hover:border-amber-200">
+              <div>
+                <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest mb-3 inline-block ${
+                  event.category === 'global' ? 'bg-indigo-50 text-indigo-600' :
+                  event.category === 'nacional' ? 'bg-emerald-50 text-emerald-600' :
+                  event.category === 'regional' ? 'bg-sky-50 text-sky-600' :
+                  'bg-amber-50 text-amber-600'
+                }`}>
+                  {event.category}
+                </span>
+                <h4 className="text-xs font-black text-slate-900 line-clamp-2">{event.title}</h4>
+              </div>
+              <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between">
+                <span className="text-[10px] font-black text-slate-400 uppercase">{format(event.date, "dd MMM", { locale: ptBR })}</span>
+                <Clock size={12} className="text-slate-300" />
+              </div>
+            </div>
+          ))}
+          {events.length === 0 && (
+             <div className="flex items-center justify-center w-full py-8 opacity-20">
+                <p className="text-xs font-black uppercase tracking-widest">Nenhum evento próximo</p>
+             </div>
+          )}
+        </HorizontalScroll>
       </div>
 
-      {/* Bottom Grid: Customers, Production, Stock */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* BLOCO 05: TOTAL VENDAS & FATURAMENTO (FLIP CLOCK STYLE) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* Top Customers */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-           <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-slate-900">Principais Clientes</h3>
-              <Users size={18} className="text-slate-400" />
-           </div>
-           <div className="space-y-4">
-              {topCustomers.map((c, idx) => (
-                <div key={idx} className="flex items-center justify-between">
-                   <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-black text-xs">
-                         {c.name.charAt(0)}
-                      </div>
-                      <div>
-                         <p className="text-sm font-bold text-slate-900">{c.name}</p>
-                         <p className="text-[10px] text-slate-400 font-bold">{c.ordersCount} pedidos</p>
-                      </div>
-                   </div>
-                   <div className="text-right">
-                      <p className="text-sm font-black text-slate-900">{formatCurrency(c.totalSpent)}</p>
-                      <p className="text-[10px] text-slate-400 font-bold">LTV</p>
-                   </div>
-                </div>
-              ))}
-              {topCustomers.length === 0 && <p className="text-center py-8 text-xs text-slate-400 font-bold uppercase tracking-widest">Aguardando dados</p>}
-           </div>
+        {/* ESQUERDA: TOTAL DE VENDAS */}
+        <div className="clean-3d-card p-10 flex flex-col items-center justify-center relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/20 to-transparent pointer-events-none" />
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-12 relative z-10">Total de Pedidos Concluídos</h3>
+          
+          <div className="flex items-center gap-2 relative z-10">
+            {totalMetrics.count.toString().padStart(4, '0').split('').map((digit, i) => (
+              <FlipDigit key={i} digit={digit} />
+            ))}
+          </div>
+          
+          <div className="mt-12 flex items-center gap-2 relative z-10">
+            <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Histórico Consolidado</span>
+          </div>
         </div>
 
-        {/* Ongoing Production */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-           <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-slate-900">Produção Ativa</h3>
-              <Activity size={18} className="text-blue-500" />
-           </div>
-           <div className="space-y-3">
-              {filteredOrders.filter(o => ['production', 'assembly'].includes(o.status)).slice(0, 5).map((order) => (
-                <div key={order.id} onClick={() => onOpenOrder(order)} className="p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:border-slate-300 transition-all cursor-pointer group">
-                   <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-black text-slate-400 uppercase">#{order.code}</span>
-                      <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-blue-100 text-blue-700 rounded-md">
-                         {order.status === 'assembly' ? 'Montagem' : 'Produzindo'}
-                      </span>
-                   </div>
-                   <p className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{order.customerName}</p>
-                   <p className="text-[10px] text-slate-400 font-medium mt-1">Previsão: {order.deliveryDate || 'N/A'}</p>
-                </div>
-              ))}
-              {filteredOrders.filter(o => ['production', 'assembly'].includes(o.status)).length === 0 && (
-                 <div className="text-center py-12">
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Fábrica em pausa</p>
-                 </div>
-              )}
-           </div>
-        </div>
+        {/* DIREITA: FATURAMENTO TOTAL */}
+        <div className="clean-3d-card p-10 flex flex-col items-center justify-center relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/20 to-transparent pointer-events-none" />
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-12 relative z-10">Faturamento Total Acumulado</h3>
+          
+          <div className="flex items-center gap-2 relative z-10">
+            <span className="text-3xl font-black text-slate-300 mr-2">R$</span>
+            {Math.floor(totalMetrics.revenue).toString().padStart(6, '0').split('').map((digit, i) => (
+              <FlipDigit key={i} digit={digit} color="emerald" />
+            ))}
+          </div>
 
-        {/* Critical Stock */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-           <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-slate-900">Estoque Crítico</h3>
-              <AlertTriangle size={18} className="text-rose-500" />
-           </div>
-           <div className="space-y-4">
-              {criticalStock.map((item) => (
-                <div key={item.id} className="flex items-center justify-between">
-                   <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${item.quantity === 0 ? 'bg-rose-100 text-rose-600' : 'bg-orange-100 text-orange-600'}`}>
-                         <Package size={16} />
-                      </div>
-                      <div>
-                         <p className="text-sm font-bold text-slate-900">{item.name}</p>
-                         <div className="flex items-center gap-2">
-                           <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full rounded-full ${item.quantity === 0 ? 'bg-rose-500' : 'bg-orange-500'}`} 
-                                style={{ width: `${Math.min(100, (item.quantity / item.minQuantity) * 100)}%` }}
-                              />
-                           </div>
-                           <span className="text-[10px] text-slate-400 font-bold">{item.quantity}{item.unit}</span>
-                         </div>
-                      </div>
-                   </div>
-                   <div className="text-right">
-                      <button 
-                        onClick={() => onAction('purchases')}
-                        className="text-[10px] font-black text-slate-900 bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded-lg transition-all"
-                      >
-                         COMPRAR
-                      </button>
-                   </div>
-                </div>
-              ))}
-              {criticalStock.length === 0 && (
-                 <div className="text-center py-12">
-                    <CheckCircle2 size={24} className="mx-auto text-emerald-500 mb-2" />
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Estoque Saudável</p>
-                 </div>
-              )}
-           </div>
+          <div className="mt-12 flex items-center gap-2 relative z-10">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Calculado em Tempo Real</span>
+          </div>
         </div>
       </div>
+
+      {/* EVENT MODAL */}
+      <AnimatePresence>
+        {isEventModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100"
+            >
+              <div className="p-6 border-b border-slate-50 flex items-center justify-between">
+                <h2 className="text-lg font-black text-slate-900">Novo Evento</h2>
+                <button
+                  onClick={() => setIsEventModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Título</label>
+                  <input
+                    type="text"
+                    value={newEvent.title}
+                    onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                    className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-300 focus:bg-white transition-all shadow-inner"
+                    placeholder="Ex: Lançamento de Inverno"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Data</label>
+                  <input
+                    type="date"
+                    value={newEvent.date}
+                    onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                    className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-300 focus:bg-white transition-all shadow-inner text-slate-700"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Categoria</label>
+                  <select
+                    value={newEvent.category}
+                    onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value as any })}
+                    className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-300 focus:bg-white transition-all shadow-inner text-slate-700"
+                  >
+                    <option value="personalizado">Personalizado</option>
+                    <option value="global">Global</option>
+                    <option value="nacional">Nacional</option>
+                    <option value="regional">Regional</option>
+                  </select>
+                </div>
+                <button
+                  onClick={handleCreateEvent}
+                  className="w-full h-12 bg-indigo-600 text-white rounded-xl font-bold mt-4 shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 transition-colors"
+                >
+                  Salvar Evento
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-interface KPICardProps {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  trend: string;
-  color: 'slate' | 'emerald' | 'rose' | 'blue' | 'indigo' | 'amber';
-}
+// COMPONENTES AUXILIARES
 
-const KPICard: React.FC<KPICardProps> = ({ title, value, icon, trend, color }) => {
-  const colorMap = {
-    slate: 'bg-slate-900 text-white',
-    emerald: 'bg-emerald-50 border-emerald-100 text-emerald-900',
-    rose: 'bg-rose-50 border-rose-100 text-rose-900',
-    blue: 'bg-blue-50 border-blue-100 text-blue-900',
-    indigo: 'bg-indigo-50 border-indigo-100 text-indigo-900',
-    amber: 'bg-amber-50 border-amber-100 text-amber-900'
-  };
-
-  const iconColorMap = {
-    slate: 'text-slate-400',
-    emerald: 'text-emerald-500',
-    rose: 'text-rose-500',
-    blue: 'text-blue-500',
-    indigo: 'text-indigo-500',
-    amber: 'text-amber-500'
-  };
-
+const FlipDigit = ({ digit, color = 'indigo' }: { digit: string, color?: 'indigo' | 'emerald' | 'slate' }) => {
   return (
-    <div className={`p-4 rounded-3xl border flex flex-col justify-between h-32 transition-all hover:shadow-lg hover:-translate-y-1 ${color === 'slate' ? colorMap.slate : 'bg-white border-slate-200'}`}>
-      <div className="flex items-center justify-between">
-        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color === 'slate' ? 'bg-slate-800' : colorMap[color]}`}>
-          {icon}
-        </div>
-        <span className={`text-[10px] font-black uppercase tracking-wider ${color === 'slate' ? 'text-slate-400' : 'text-slate-400'}`}>
-          {trend}
-        </span>
-      </div>
-      <div>
-        <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 ${color === 'slate' ? 'text-slate-400' : 'text-slate-400'}`}>
-          {title}
-        </span>
-        <span className="text-lg font-black tracking-tight font-mono truncate block">
-          {value}
-        </span>
-      </div>
-    </div>
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className={`w-14 h-20 rounded-2xl flex items-center justify-center text-4xl font-black shadow-3d-soft border border-slate-100 ${
+        color === 'indigo' ? 'bg-indigo-600 text-white' :
+        color === 'emerald' ? 'bg-emerald-600 text-white' :
+        'bg-slate-900 text-white'
+      }`}
+    >
+      {digit}
+    </motion.div>
   );
 };

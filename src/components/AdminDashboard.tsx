@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Product, CompanyId, Order, Componente, Insumo, Customer } from "../types";
+import { Product, CompanyId, Order, Componente, Insumo, Customer, AuditLog } from "../types";
 import {
   addProduct,
   updateProduct,
@@ -20,6 +20,7 @@ import {
   updateOrder,
   saveSale,
   subscribeToCheckoutEvents,
+  subscribeToAuditLogs,
 } from "../services/firebaseService";
 import { startProductProduction } from "../services/productionService";
 import { db } from "../lib/firebase";
@@ -77,7 +78,7 @@ import { PrizesTab } from "./Admin/PrizesTab";
 import { FeedbacksTab } from "./Admin/FeedbacksTab";
 import { FunnelLogsTab } from "./Admin/FunnelLogsTab";
 import { AuditoriaTab } from "./Admin/AuditoriaTab";
-import { ActivityLogTab } from "./Admin/ActivityLogTab";
+import { AuditTimelineTab } from "./Admin/AuditTimelineTab";
 import { CollectionsTab } from "./Admin/CollectionsTab";
 import { MediaCenterTab } from "./Admin/MediaCenterTab";
 import { CampaignsTab } from "./Admin/CampaignsTab";
@@ -89,6 +90,7 @@ import { ComponentsTab } from "./Admin/ComponentsTab";
 import { PurchasesTab } from "./Admin/PurchasesTab";
 import { OperationalEfficiencyTab } from "./Admin/OperationalEfficiencyTab";
 import { OrderControlCenterTab } from "./Admin/OrderControlCenterTab";
+import { DeliveriesTab } from "./Admin/DeliveriesTab";
 
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
 import { useAdminOrchestrator } from "./AdminOrchestratorSystem";
@@ -106,7 +108,7 @@ type TabType =
   | "clients"
   | "financeiro"
   | "auditoria"
-  | "expedition"
+  | "deliveries"
   | "gift-lists"
   | "commemorative-dates"
   | "reports"
@@ -161,6 +163,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   }, [activeTab]);
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Order[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [insumos, setInsumos] = useState<Insumo[]>([]);
   const [componentes, setComponentes] = useState<Componente[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -211,6 +214,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     const unsubSuggestions = subscribeToSuggestions(setSuggestions);
     const unsubFeedbacks = subscribeToFeedbacks(setFeedbacks);
     const unsubFunnel = subscribeToCheckoutEvents(setCheckoutEvents);
+    const unsubAudit = subscribeToAuditLogs(setAuditLogs);
 
     return () => {
       window.removeEventListener('edit-order', handleEditOrder);
@@ -222,6 +226,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       unsubSuggestions();
       unsubFeedbacks();
       unsubFunnel();
+      unsubAudit();
     };
   }, [isAdmin, user]);
 
@@ -281,9 +286,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     { id: "control_center", label: "Painel de Operação", group: "Produção", icon: Zap },
     { id: "inventory", label: "Produção", group: "Produção", icon: Archive },
     { id: "efficiency", label: "Eficiência Operacional", group: "Produção", icon: Activity },
-    { id: "componentes", label: "Componentes", group: "Suprimentos", icon: Package },
-    { id: "purchases", label: "Compras", group: "Suprimentos", icon: ShoppingBag },
-    { id: "expedition", label: "Expedição", group: "Produção", icon: Truck },
+    { id: "purchases", label: "Estoque", group: "Estoque", icon: Package },
+    { id: "deliveries", label: "Entregas", group: "Produção", icon: Truck },
     { id: "financeiro", label: "Financeiro", group: "Financeiro", icon: DollarSign },
     { id: "auditoria", label: "Engenharia & Custos", group: "Produção", icon: FileCheck },
     { id: "kits", label: "Kits & Combos", group: "Produção", icon: PackagePlus },
@@ -310,7 +314,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     "Dashboard",
     "Operação",
     "Produção",
-    "Suprimentos",
+    "Estoque",
     "Financeiro",
     "Marketing",
     "Sistema"
@@ -328,11 +332,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
 
       {/* Sidebar navigation - Desktop */}
       <aside
-        className={`bg-white/30 backdrop-blur-2xl border-r border-white/20 flex flex-col hidden lg:flex flex-shrink-0 relative z-[60] transition-all duration-300 ${isSidebarCollapsed ? "w-20 items-center" : "w-64"}`}
+        className={`bg-white/60 backdrop-blur-2xl border-r border-[#E5E5EA]/60 flex flex-col hidden lg:flex flex-shrink-0 relative z-[60] transition-all duration-300 ${isSidebarCollapsed ? "w-20 items-center" : "w-64"}`}
       >
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-3 top-10 bg-white border border-[#E5E5EA] w-6 h-6 flex items-center justify-center rounded-full z-50 text-[#8E8E93] hover:text-[#1C1C1E] shadow-sm transition-all"
+          className="absolute -right-3 top-10 bg-white border border-[#E5E5EA] w-6 h-6 flex items-center justify-center rounded-full z-50 text-[#8E8E93] hover:text-[#1C1C1E] shadow-3d-soft transition-all elevated-3d"
         >
           <ChevronRight
             size={12}
@@ -341,19 +345,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         </button>
 
         <div className={`flex flex-col flex-1 overflow-hidden p-6 ${isSidebarCollapsed ? "px-4" : ""}`}>
-          <div className="flex items-center gap-3 mb-10 px-2 shrink-0">
-            <div className="w-10 h-10 rounded-2xl bg-white/50 border border-white/20 flex items-center justify-center text-[#1C1C1E] shadow-[0_2px_10px_rgba(0,0,0,0.02)] relative backdrop-blur-sm">
-               <Sparkles size={16} className="text-[#1C1C1E] opacity-80" />
-            </div>
-            {!isSidebarCollapsed && (
-              <div>
-                <h1 className="font-sans font-medium text-sm text-[#1C1C1E] tracking-tight">
-                   By Julia Aleixo
-                </h1>
-              </div>
-            )}
-          </div>
-
           <div className="flex-1 overflow-y-auto scrollbar-hide px-0 py-2">
             <nav className="space-y-3 pb-10">
               {menuGroups.map((groupName) => {
@@ -368,20 +359,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <button
                       key={item.id}
                       onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative group overflow-hidden mb-6 ${isActive ? "text-[#1C1C1E] bg-white shadow-[0_8px_20px_rgba(0,0,0,0.04)] border border-white/80" : "text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white/40"}`}
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative group overflow-hidden mb-6 ${isActive ? "text-white bg-[#FF1493]" : "text-[#8E8E93] hover:text-[#FF1493] hover:bg-white/40"}`}
                     >
                       {isActive && (
-                        <div className="absolute left-0 w-1 h-6 bg-[#1C1C1E] rounded-r-full shadow-[0_0_10px_#1C1C1E]" />
+                        <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full" />
                       )}
                       <div className="relative z-10 flex items-center justify-center w-5 h-5">
                          <item.icon
                            size={18}
                            strokeWidth={isActive ? 2.5 : 2}
-                           className={`${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93] group-hover:text-[#1C1C1E]"} transition-colors duration-300`}
+                           className={`${isActive ? "text-white" : "text-[#8E8E93] group-hover:text-[#FF1493]"} transition-colors duration-300`}
                          />
                       </div>
                       {!isSidebarCollapsed && (
-                        <span className={`text-[11px] font-bold uppercase tracking-[0.15em] relative z-10 ${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93]"}`}>
+                        <span className={`text-[11px] font-bold uppercase tracking-[0.15em] relative z-10 ${isActive ? "text-white" : "text-[#8E8E93]"}`}>
                           {groupName}
                         </span>
                       )}
@@ -393,10 +384,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   <div key={groupName} className="space-y-1.5">
                     <button
                       onClick={() => !isSidebarCollapsed && setExpandedGroup(expandedGroup === groupName ? null : groupName)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group ${expandedGroup === groupName ? "text-[#1C1C1E] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] border border-white/60" : "text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white/20"}`}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group ${expandedGroup === groupName ? "text-white bg-[#FF1493]" : "text-[#8E8E93] hover:text-[#FF1493] hover:bg-white/20"}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`flex items-center justify-center w-5 h-5 transition-colors duration-300 ${expandedGroup === groupName ? "text-[#1C1C1E]" : "text-[#8E8E93] group-hover:text-[#1C1C1E]"}`}>
+                        <div className={`flex items-center justify-center w-5 h-5 transition-colors duration-300 ${expandedGroup === groupName ? "text-white" : "text-[#8E8E93] group-hover:text-[#FF1493]"}`}>
                           {groupName === "Operação" && <ShoppingBag size={16} />}
                           {groupName === "Produção" && <Box size={16} />}
                           {groupName === "Financeiro" && <DollarSign size={16} />}
@@ -431,15 +422,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                                 <button
                                   key={item.id}
                                   onClick={() => setActiveTab(item.id)}
-                                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative group ${isActive ? "text-[#1C1C1E] bg-[#F5F5F7]/80" : "text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-[#F5F5F7]/40"}`}
+                                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative group ${isActive ? "text-[#FF1493] bg-[#FF1493]/10" : "text-[#8E8E93] hover:text-[#FF1493] hover:bg-[#F5F5F7]/40"}`}
                                 >
                                   {isActive && (
                                     <motion.div
                                       layoutId="activeSubNavIndicator"
-                                      className="absolute left-1 w-1 h-1 bg-[#1C1C1E] rounded-full shadow-[0_0_8px_#1C1C1E]"
+                                      className="absolute left-1 w-1 h-1 bg-[#FF1493] rounded-full shadow-[0_0_8px_#FF1493]"
                                     />
                                   )}
-                                  <span className={`text-[11px] font-semibold tracking-wide transition-colors duration-300 ${isActive ? "text-[#1C1C1E]" : "text-[#8E8E93] group-hover:text-[#1C1C1E]"}`}>
+                                  <span className={`text-[11px] font-semibold tracking-wide transition-colors duration-300 ${isActive ? "text-[#FF1493]" : "text-[#8E8E93] group-hover:text-[#FF1493]"}`}>
                                     {item.label}
                                   </span>
                                 </button>
@@ -486,17 +477,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               className="fixed left-0 top-0 bottom-0 w-72 bg-[#F5F5F7] z-[110] lg:hidden border-r border-[#E5E5EA] flex flex-col shadow-2xl"
             >
               <div className="p-6 flex flex-col h-full">
-                <div className="flex items-center justify-between mb-10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-white border border-[#E5E5EA] text-[#1C1C1E] flex items-center justify-center shadow-sm relative">
-                       <Sparkles size={16} />
-                    </div>
-                    <div>
-                      <h1 className="font-sans font-medium text-sm tracking-tight text-[#1C1C1E]">
-                        By Julia Aleixo
-                      </h1>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-end mb-10">
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="p-2 bg-white rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] shadow-sm transition-all"
@@ -521,12 +502,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                             setActiveTab(item.id);
                             setIsMobileMenuOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative mb-2 ${isActive ? "bg-white text-[#1C1C1E] shadow-[0_4px_12px_rgba(0,0,0,0.04)] border border-white/60" : "text-[#8E8E93] hover:text-[#1C1C1E]"}`}
+                          className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative mb-2 ${isActive ? "bg-[#FF1493] text-white" : "text-[#8E8E93] hover:text-[#FF1493]"}`}
                         >
                           <item.icon
                             size={16}
                             strokeWidth={isActive ? 2.5 : 2}
-                            className={isActive ? "text-[#1C1C1E]" : "text-[#8E8E93]"}
+                            className={isActive ? "text-white" : "text-[#8E8E93]"}
                           />
                           <span className="text-[11px] font-bold uppercase tracking-wider">
                             {groupName}
@@ -539,7 +520,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       <div key={`mob-group-${groupName}`} className="space-y-1.5">
                         <button
                           onClick={() => setExpandedGroup(expandedGroup === groupName ? null : groupName)}
-                          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${isExpanded ? "bg-white/60 text-[#1C1C1E] shadow-[0_2px_8px_rgba(0,0,0,0.02)]" : "text-[#8E8E93] hover:text-[#1C1C1E]"}`}
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${isExpanded ? "bg-[#FF1493] text-white" : "text-[#8E8E93] hover:text-[#FF1493]"}`}
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-5 h-5 flex items-center justify-center">
@@ -575,10 +556,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                                         setActiveTab(item.id);
                                         setIsMobileMenuOpen(false);
                                       }}
-                                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative ${isActive ? "text-[#1C1C1E] font-bold bg-[#F5F5F7]/80" : "text-[#8E8E93]"}`}
+                                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative ${isActive ? "text-[#FF1493] font-bold bg-[#FF1493]/10" : "text-[#8E8E93]"}`}
                                     >
                                       {isActive && (
-                                        <div className="absolute left-1 w-1 h-1 bg-[#1C1C1E] rounded-full shadow-[0_0_8px_#1C1C1E]" />
+                                        <div className="absolute left-1 w-1 h-1 bg-[#FF1493] rounded-full shadow-[0_0_8px_#FF1493]" />
                                       )}
                                       <span className="text-[11px] tracking-wide">
                                         {item.label}
@@ -614,10 +595,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-[#F5F5F7]">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-gradient-to-br from-[#f0f4f8] to-[#e2e8f0]">
         {/* Top Header Bar */}
         {activeTab === "dashboard" ? (
-          <header className="h-16 bg-white border-b border-[#E5E5EA] px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0">
+          <header className="h-16 bg-white/40 backdrop-blur-xl border-b border-white/60 px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0 mx-6 mt-6 rounded-3xl shadow-3d-soft">
             {/* Lado Esquerdo */}
             <div className="flex items-center gap-4">
               <button
@@ -626,34 +607,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               >
                 <LayoutDashboard size={18} />
               </button>
-              
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#FAF9F6] border border-[#E5E5EA] flex items-center justify-center shadow-xs">
-                  <Sparkles size={16} className="text-[#CCA062]" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-black text-[#1C1C1E] uppercase tracking-wider font-sans leading-none">
-                    Mimos de Ateliê
-                  </span>
-                  <span className="text-[10px] font-bold text-[#8E8E93] mt-0.5">
-                    Painel Administrativo
-                  </span>
-                </div>
-              </div>
             </div>
 
             {/* Lado Direito */}
             <div className="flex items-center gap-4">
-              {/* Pesquisa */}
-              <div className="relative hidden md:flex items-center font-sans">
-                <Search size={14} className="absolute left-3 text-[#8E8E93] pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder="Pesquisar no sistema..."
-                  className="w-56 pl-9 pr-4 py-1.5 bg-[#FAF9F6] border border-[#E5E5EA] rounded-xl text-xs text-[#1C1C1E] placeholder-gray-400 focus:outline-hidden focus:border-[#CCA062] focus:bg-white transition-all font-medium"
-                />
-              </div>
-
               {/* Notificações */}
               <div className="relative">
                 <button
@@ -665,32 +622,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#FF3B30] rounded-full border border-white" />
                   )}
                 </button>
-              </div>
-
-              <div className="h-6 w-px bg-[#E5E5EA]" />
-
-              {/* Perfil */}
-              <div className="flex items-center gap-3 bg-white border border-[#E5E5EA] px-3 py-1.5 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-                <div className="w-7 h-7 rounded-lg bg-[#F5F5F7] border border-[#E5E5EA] overflow-hidden flex items-center justify-center">
-                  {user?.photoURL ? (
-                    <ImageWithFallback
-                      src={user.photoURL}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <User size={14} className="text-[#8E8E93]" />
-                  )}
-                </div>
-                <div className="hidden sm:flex flex-col text-left">
-                  <span className="text-[10px] font-black text-[#1C1C1E] leading-none uppercase truncate max-w-[100px]">
-                    {user?.displayName || "Administrador"}
-                  </span>
-                  <span className="text-[8px] font-bold text-gray-400 tracking-wider mt-0.5 uppercase">
-                    PRO
-                  </span>
-                </div>
               </div>
             </div>
           </header>
@@ -837,11 +768,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       orders={sales}
                       products={products}
                       componentes={componentes}
+                      companyId={selectedCompanyId}
                     />
                   )}
                   {activeTab === "inventory" && (
                     <InventoryTab
                       orders={sales}
+                      products={products}
+                      insumos={insumos}
                       onUpdateOrder={async (id, data) => {
                         await updateDoc(doc(db, "sales", id), data);
                       }}
@@ -864,6 +798,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <ProductsTab
                       products={products}
                       insumos={insumos}
+                      orders={sales}
+                      auditLogs={auditLogs}
                       companyId={selectedCompanyId}
                       onSaveProduct={async (p) => {
                         if (p.id) {
@@ -923,7 +859,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       insumos={insumos}
                     />
                   )}
-                  {activeTab === "auditoria" && (
+                  { activeTab === "auditoria" && (
                     <AuditoriaTab
                       companyId={selectedCompanyId}
                       orders={sales}
@@ -931,11 +867,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       insumos={insumos}
                     />
                   )}
-                  {activeTab === "expedition" && (
-                    <ExpeditionTab
+                  {activeTab === "deliveries" && (
+                    <DeliveriesTab
                       companyId={selectedCompanyId}
                       orders={sales}
-                      products={products}
                     />
                   )}
                   {activeTab === "settings" && (
@@ -960,7 +895,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <NotificationsTab />
                   )}
                   {activeTab === "activity-logs" && (
-                    <ActivityLogTab />
+                    <AuditTimelineTab />
                   )}
                 </ErrorBoundary>
               </React.Suspense>

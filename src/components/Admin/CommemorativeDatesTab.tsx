@@ -44,6 +44,7 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getMobileDateOccurrence } from "../../lib/commemorativeDateUtils";
+import { HorizontalScroll } from "../shared/HorizontalScroll";
 
 const categories: {
   id: CategoryId;
@@ -347,7 +348,7 @@ export function CommemorativeDatesTab() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2">
+        <HorizontalScroll className="items-center gap-2 pb-2">
           <button
             onClick={() => setSelectedCategory("all")}
             className={`px-6 py-3 rounded-full text-xs font-medium tracking-normal whitespace-nowrap transition-all border ${selectedCategory === "all" ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-[#E5E5EA] text-slate-500 hover:bg-slate-50"}`}
@@ -364,7 +365,7 @@ export function CommemorativeDatesTab() {
               {cat.label}
             </button>
           ))}
-        </div>
+        </HorizontalScroll>
       </div>
 
       {/* Visualização de Lista/Cards */}

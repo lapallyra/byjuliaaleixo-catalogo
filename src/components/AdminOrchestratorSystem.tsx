@@ -192,6 +192,7 @@ export const AdminOrchestratorProvider: React.FC<{ children: React.ReactNode }> 
   // 4. Firestore Live Feed Subscription (Admin Only)
   useEffect(() => {
     let unsubscribeSales = () => {};
+    let simulationInterval: NodeJS.Timeout | null = null;
 
     if (!isAdmin) {
       console.log('[Orchestrator] User is not Admin. Firestore live feed subscription is blocked.');
@@ -234,6 +235,8 @@ export const AdminOrchestratorProvider: React.FC<{ children: React.ReactNode }> 
           });
         }
       }, undefined);
+
+      // 5. Periodic Simulation (Purchase Toasts) removed - now handled independently in SiteApp
     } catch (err) {
       console.error('[Orchestrator] Failed to connect to Firestore.', err);
       setFirestoreStatus('failed');
@@ -241,8 +244,9 @@ export const AdminOrchestratorProvider: React.FC<{ children: React.ReactNode }> 
 
     return () => {
       unsubscribeSales();
+      if (simulationInterval) clearInterval(simulationInterval);
     };
-  }, [isAdmin]);
+  }, [isAdmin, performanceMode]);
 
   // Expose context properties
   const value = useMemo(() => ({

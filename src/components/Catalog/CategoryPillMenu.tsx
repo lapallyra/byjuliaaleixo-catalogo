@@ -2,6 +2,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkle, Palette, Stamp, CupSoda as Cup, ShoppingBasket, Diamond, Heart, Briefcase, Flower2, Coffee } from 'lucide-react';
+import { HorizontalScroll } from '../shared/HorizontalScroll';
 
 interface CategoryPillMenuProps {
   categories: string[];
@@ -27,8 +28,8 @@ export const CategoryPillMenu: React.FC<CategoryPillMenuProps> = ({ categories, 
   const allCategories = ['Todos', ...categories];
 
   return (
-    <div className="flex justify-start my-8 px-4 md:px-8">
-      <div className="bg-[#FAF9F6]/80 backdrop-blur-md p-1.5 rounded-full border border-[#e8dcc8]/60 flex items-center gap-1.5 overflow-x-auto scrollbar-none shadow-sm max-w-full">
+    <div className="flex justify-start my-8 px-4 md:px-8 max-w-full">
+      <HorizontalScroll className="bg-[#FAF9F6]/80 backdrop-blur-md p-1.5 rounded-full border border-[#e8dcc8]/60 gap-1.5 shadow-sm max-w-full">
         {allCategories.map((cat, index) => {
           // Resolve correct icon with fallbacks
           const IconComponent = iconMap[cat] || Sparkle;
@@ -77,7 +78,7 @@ export const CategoryPillMenu: React.FC<CategoryPillMenuProps> = ({ categories, 
             </motion.button>
           );
         })}
-      </div>
+      </HorizontalScroll>
     </div>
   );
 };

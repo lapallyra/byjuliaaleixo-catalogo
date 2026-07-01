@@ -31,6 +31,7 @@ import { Order, CompanyId, Product } from '../../types';
 import { formatCurrency } from '../../lib/currencyUtils';
 import { safeFormat } from '../../lib/dateUtils';
 import { updateOrder } from '../../services/firebaseService';
+import { HorizontalScroll } from '../shared/HorizontalScroll';
 
 const getStatusRGB = (status: string) => {
   const s = (status || "").toLowerCase();
@@ -226,7 +227,7 @@ export const ExpeditionTab: React.FC<ExpeditionTabProps> = ({ companyId, orders,
       </div>
 
       {/* Quick Filters */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide">
+      <HorizontalScroll className="items-center gap-2 pb-4">
         {[
           { id: 'all', label: 'Todos', icon: ClipboardList },
           { id: 'waiting_expedition', label: 'Aguardando Expedição', icon: Clock },
@@ -248,7 +249,7 @@ export const ExpeditionTab: React.FC<ExpeditionTabProps> = ({ companyId, orders,
             {filter.label}
           </button>
         ))}
-      </div>
+      </HorizontalScroll>
 
       {/* Orders Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
