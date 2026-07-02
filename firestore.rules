@@ -10,7 +10,8 @@ service cloud.firestore {
     }
     
     function isAdmin() { 
-      return request.auth != null && (
+      return request.auth != null && 
+             request.auth.token.email_verified == true && (
                request.auth.token.email == 'juualleixo@gmail.com' ||
                request.auth.token.email == 'lapallyra@gmail.com'
              );
@@ -58,9 +59,9 @@ service cloud.firestore {
     }
 
     // ----------------------------------------------------
-    // SALES / ORDERS
+    // ORDERS
     // ----------------------------------------------------
-    match /sales/{saleId} {
+    match /orders/{orderId} {
       // criar pedido público
       allow create: if true;
       allow get: if true; // allow fetching specific order by ID (code)
@@ -73,7 +74,8 @@ service cloud.firestore {
           "whatsappSent",
           "thankYouShown",
           "updatedAt",
-          "status"
+          "status",
+          "batchId"
         ]);
 
       // somente admin pode listar/deletar
@@ -286,10 +288,6 @@ service cloud.firestore {
     // MANUFACTURING & SUPPLIES (ADMIN ONLY)
     // ----------------------------------------------------
     match /componentes/{componentId} {
-      allow read, write: if isAdmin();
-    }
-
-    match /orders/{orderId} {
       allow read, write: if isAdmin();
     }
 

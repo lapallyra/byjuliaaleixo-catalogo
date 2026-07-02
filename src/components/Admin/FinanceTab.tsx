@@ -130,7 +130,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
     };
   }, [companyId]);
 
-  // Unified Transaction List (Orders + Real database entries + Virtual)
+  // Unified Transaction List (Real database entries only)
   const unifiedTransactions = useMemo(() => {
     const list: (FinanceEntry & { customerName?: string; code?: string; user?: string })[] = [];
 
@@ -143,37 +143,6 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
         code: order?.code || entry.description.split(" ")[1] || "N/A",
         user: (entry as any).user || "Sistema",
       });
-    });
-
-    // Synthesize virtual entries for completed or paid orders that are not in database yet
-    orders.forEach((order) => {
-      if (order.status === "cancelled") return;
-      const alreadyHas = financeEntries.some((fe) => fe.orderId === order.id || fe.description.includes(order.code));
-      if (!alreadyHas) {
-        const dateStr = order.createdAt
-          ? order.createdAt.toDate
-            ? order.createdAt.toDate().toISOString().split("T")[0]
-            : new Date(order.createdAt).toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0];
-
-        // We synthesize a dynamic revenue transaction
-        const isPaid = order.paymentStatus === "paid" || order.status === "fully_paid";
-        list.push({
-          id: `virtual-order-${order.id}`,
-          type: "revenue",
-          category: "Venda de Produto",
-          description: `Pedido ${order.code} - ${order.customerName}`,
-          value: order.total,
-          date: dateStr,
-          status: isPaid ? "paid" : "pending",
-          companyId: order.companyId,
-          orderId: order.id,
-          paymentMethod: order.paymentMethod || "Não informado",
-          customerName: order.customerName,
-          code: order.code,
-          user: "Sistema",
-        });
-      }
     });
 
     // Sort chronologically desc
@@ -1398,15 +1367,13 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
                 </h3>
               </div>
               <div className="flex items-center gap-2">
-                {!selectedItem.id.startsWith("virtual-") && (
-                  <button
-                    onClick={() => handleDeleteEntry(selectedItem.id)}
-                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                    title="Excluir Lançamento"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
+                <button
+                  onClick={() => handleDeleteEntry(selectedItem.id)}
+                  className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                  title="Excluir Lançamento"
+                >
+                  <Trash2 size={16} />
+                </button>
                 <button
                   onClick={() => setSelectedItem(null)}
                   className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"

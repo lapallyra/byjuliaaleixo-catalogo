@@ -595,31 +595,58 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-gradient-to-br from-[#f0f4f8] to-[#e2e8f0]">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-white">
         {/* Top Header Bar */}
         {activeTab === "dashboard" ? (
-          <header className="h-16 bg-white/40 backdrop-blur-xl border-b border-white/60 px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0 mx-6 mt-6 rounded-3xl shadow-3d-soft">
-            {/* Lado Esquerdo */}
-            <div className="flex items-center gap-4">
+          <header className="h-20 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0 mx-6 mt-6 rounded-3xl shadow-3d-soft border border-slate-100">
+            {/* Lado Esquerdo - Mobile Menu Toggle */}
+            <div className="flex items-center gap-4 lg:hidden">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 text-[#8E8E93] hover:text-[#1C1C1E] transition-colors"
+                className="p-2 text-slate-400 hover:text-slate-900 transition-colors"
               >
-                <LayoutDashboard size={18} />
+                <LayoutDashboard size={20} />
               </button>
             </div>
 
-            {/* Lado Direito */}
+            {/* CENTRAL - Quick Action Buttons */}
+            <div className="hidden md:flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+              <button 
+                onClick={() => setActiveTab("orders")}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-all shadow-sm border border-slate-100 active:scale-95"
+              >
+                <ShoppingBag size={14} className="text-pink-500" /> Novo Pedido
+              </button>
+              <button 
+                onClick={() => setActiveTab("clients")}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-emerald-500 transition-all shadow-sm border border-slate-100 active:scale-95"
+              >
+                <User size={14} className="text-emerald-500" /> Novo Cliente
+              </button>
+              <button 
+                onClick={() => setActiveTab("inventory")}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-amber-500 transition-all shadow-sm border border-slate-100 active:scale-95"
+              >
+                <Package size={14} className="text-amber-500" /> Novo Insumo
+              </button>
+              <button 
+                onClick={() => setActiveTab("products")}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-sky-500 transition-all shadow-sm border border-slate-100 active:scale-95"
+              >
+                <Box size={14} className="text-sky-500" /> Novo Produto
+              </button>
+            </div>
+
+            {/* Lado Direito - Notificações */}
             <div className="flex items-center gap-4">
-              {/* Notificações */}
               <div className="relative">
                 <button
                   onClick={() => setIsSuggestionsModalOpen(true)}
-                  className={`p-2 rounded-xl transition-all relative bg-white border border-[#E5E5EA] shadow-sm hover:shadow-md ${suggestions.some((s) => !s.read) ? "text-[#1C1C1E]" : "text-[#8E8E93]"}`}
+                  className="w-10 h-10 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-400 hover:text-pink-500 hover:border-pink-200 transition-all relative group"
                 >
-                  <Bell size={16} />
+                  <Bell size={18} />
                   {suggestions.filter((s) => !s.read).length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-[#FF3B30] rounded-full border border-white" />
+                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-pink-500 rounded-full border-2 border-white shadow-[0_0_8px_rgba(236,72,153,0.5)]" />
                   )}
                 </button>
               </div>
@@ -739,7 +766,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                         }
                       }}
                       onDeleteOrder={async (id) => {
-                        await deleteDoc(doc(db, "sales", id));
+                        await deleteDoc(doc(db, "orders", id));
                       }}
                       initialOrderId={selectedOrderId}
                       initialCustomerId={selectedCustomerId}
@@ -777,7 +804,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       products={products}
                       insumos={insumos}
                       onUpdateOrder={async (id, data) => {
-                        await updateDoc(doc(db, "sales", id), data);
+                        await updateDoc(doc(db, "orders", id), data);
                       }}
                     />
                   )}

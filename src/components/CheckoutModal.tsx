@@ -308,7 +308,7 @@ export function CheckoutModal({
       try {
         const { collection, getDocs } = await import('firebase/firestore');
         const { db } = await import('../lib/firebase');
-        const salesRef = collection(db, 'sales');
+        const salesRef = collection(db, 'orders');
         const querySnapshot = await getDocs(salesRef);
         const slots: string[] = [];
         querySnapshot.forEach((doc) => {

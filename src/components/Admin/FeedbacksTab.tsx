@@ -1,11 +1,17 @@
-import React from 'react';
-import { Star, MessageSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, MessageSquare, Plus, X, Trash2, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { addFeedback, deleteFeedback, updateFeedbackStatus } from '../../services/firebaseService';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FeedbacksTabProps {
   feedbacks: any[];
 }
 
 export const FeedbacksTab: React.FC<FeedbacksTabProps> = ({ feedbacks = [] }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newFeedback, setNewFeedback] = useState({ name: '', text: '', stars: 5 });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const totalCount = feedbacks.length;
   
   const averageStars = totalCount > 0
@@ -43,8 +49,42 @@ export const FeedbacksTab: React.FC<FeedbacksTabProps> = ({ feedbacks = [] }) =>
     }
   };
 
+  const toggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'approved' ? 'pending' : 'approved';
+    try {
+      await updateFeedbackStatus(id, newStatus);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFeedback.name || !newFeedback.text) return;
+    
+    setIsSubmitting(true);
+    try {
+      await addFeedback(newFeedback.name, newFeedback.text, newFeedback.stars);
+      setNewFeedback({ name: '', text: '', stars: 5 });
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error adding feedback:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Tem certeza que deseja excluir este depoimento?")) return;
+    try {
+      await deleteFeedback(id);
+    } catch (error) {
+      console.error("Error deleting feedback:", error);
+    }
+  };
+
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8 max-w-7xl mx-auto pb-12">
       {/* Title Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -53,9 +93,17 @@ export const FeedbacksTab: React.FC<FeedbacksTabProps> = ({ feedbacks = [] }) =>
             Feedback de Clientes
           </h2>
           <p className="text-[10px] uppercase font-black text-[#A09898] tracking-widest mt-1">
-            Parede de Amor - Todos os feedbacks enviados no início da loja
+            Parede de Amor - Todos os feedbacks e depoimentos do WhatsApp
           </p>
         </div>
+        
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20 active:scale-95"
+        >
+          <Plus size={16} />
+          Novo Depoimento (WhatsApp)
+        </button>
       </div>
 
       {/* Metrics Row */}
@@ -96,12 +144,45 @@ export const FeedbacksTab: React.FC<FeedbacksTabProps> = ({ feedbacks = [] }) =>
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-full pointer-events-none" />
               
               <div className="flex items-center justify-between mb-4">
-                <span className="font-serif text-sm font-semibold text-slate-800 uppercase tracking-wider">
-                  {fb.name || "Anônimo"}
-                </span>
-                <span className="text-[9px] uppercase font-black text-[#A09898] tracking-widest">
-                  {getFormattedDate(fb.createdAt)}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="font-serif text-sm font-semibold text-slate-800 uppercase tracking-wider">
+                    {fb.name || "Anônimo"}
+                  </span>
+                  
+                  <button
+                    onClick={() => toggleStatus(fb.id, fb.status)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${
+                      fb.status === 'approved' 
+                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100' 
+                        : 'bg-slate-100 text-slate-400 border border-slate-200 hover:bg-slate-200'
+                    }`}
+                  >
+                    {fb.status === 'approved' ? (
+                      <>
+                        <CheckCircle2 size={10} />
+                        Validado
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle size={10} />
+                        Pendente
+                      </>
+                    )}
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] uppercase font-black text-[#A09898] tracking-widest">
+                    {getFormattedDate(fb.createdAt)}
+                  </span>
+                  <button 
+                    onClick={() => handleDelete(fb.id)}
+                    className="p-1.5 text-slate-200 hover:text-red-500 transition-colors"
+                    title="Excluir"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
               </div>
 
               {/* Star Rating Display */}
@@ -124,6 +205,95 @@ export const FeedbacksTab: React.FC<FeedbacksTabProps> = ({ feedbacks = [] }) =>
           ))}
         </div>
       )}
+
+      {/* Modal for adding feedback */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden border border-amber-100"
+            >
+              <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-amber-50/30">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900">Novo Depoimento</h2>
+                  <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mt-1">Cadastrar feedback do WhatsApp</p>
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-10 h-10 rounded-2xl bg-white border border-amber-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors shadow-sm"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Nome do Cliente</label>
+                  <input
+                    type="text"
+                    required
+                    value={newFeedback.name}
+                    onChange={(e) => setNewFeedback({ ...newFeedback, name: e.target.value })}
+                    className="w-full h-14 bg-slate-50 border border-slate-100 rounded-2xl px-5 text-sm font-bold focus:outline-none focus:border-amber-300 focus:bg-white transition-all shadow-inner"
+                    placeholder="Ex: Maria Oliveira"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Avaliação (Estrelas)</label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setNewFeedback({ ...newFeedback, stars: star })}
+                        className={`p-3 rounded-xl border transition-all ${
+                          newFeedback.stars >= star 
+                            ? "bg-amber-50 border-amber-200 text-amber-500 shadow-sm scale-105" 
+                            : "bg-slate-50 border-slate-100 text-slate-300"
+                        }`}
+                      >
+                        <Star size={20} fill={newFeedback.stars >= star ? "currentColor" : "none"} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Depoimento</label>
+                  <textarea
+                    required
+                    value={newFeedback.text}
+                    onChange={(e) => setNewFeedback({ ...newFeedback, text: e.target.value })}
+                    className="w-full h-32 bg-slate-50 border border-slate-100 rounded-2xl p-5 text-sm font-bold focus:outline-none focus:border-amber-300 focus:bg-white transition-all shadow-inner resize-none"
+                    placeholder="Cole aqui o depoimento enviado pelo cliente..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-full h-14 bg-amber-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-500/30 flex items-center justify-center gap-3 transition-all hover:bg-amber-600 active:scale-95 ${
+                    isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Send size={16} />
+                      Salvar Depoimento
+                    </>
+                  )}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

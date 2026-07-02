@@ -15,7 +15,7 @@ export const ClientCheckout: React.FC = () => {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const q = query(collection(db, "sales"), where("code", "==", code?.toUpperCase()));
+        const q = query(collection(db, "orders"), where("code", "==", code?.toUpperCase()));
         const snapshot = await getDocs(q);
         if (!snapshot.empty) {
           const docData = snapshot.docs[0];

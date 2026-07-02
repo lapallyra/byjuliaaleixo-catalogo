@@ -316,9 +316,9 @@
       "schema": "Product",
       "description": "Catalog products"
     },
-    "/sales/{saleId}": {
+    "/orders/{orderId}": {
       "schema": "Sale",
-      "description": "Processed sales"
+      "description": "Processed orders"
     },
     "/insumos/{insumoId}": {
       "schema": "Insumo",

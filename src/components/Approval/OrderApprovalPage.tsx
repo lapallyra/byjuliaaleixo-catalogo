@@ -20,7 +20,7 @@ export const OrderApprovalPage: React.FC = () => {
 
     const fetchOrder = async () => {
       try {
-        const q = query(collection(db, 'sales'), where('code', '==', code.toUpperCase()));
+        const q = query(collection(db, 'orders'), where('code', '==', code.toUpperCase()));
         const querySnapshot = await getDocs(q);
         if (querySnapshot.empty) {
           setError('Pedido não encontrado.');
@@ -30,12 +30,12 @@ export const OrderApprovalPage: React.FC = () => {
         const orderData = { id: orderDoc.id, ...orderDoc.data() } as Order;
         setOrder(orderData);
 
-        const versionsQ = query(collection(db, 'sales', orderDoc.id, 'versions'), orderBy('version', 'desc'));
+        const versionsQ = query(collection(db, 'orders', orderDoc.id, 'versions'), orderBy('version', 'desc'));
         const versionsSnapshot = await getDocs(versionsQ);
         const versionsData = versionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OrderVersion));
         setVersions(versionsData);
       } catch (e) {
-        handleFirestoreError(e, OperationType.GET, 'sales');
+        handleFirestoreError(e, OperationType.GET, 'orders');
         setError('Erro ao carregar pedido.');
       } finally {
         setLoading(false);
@@ -47,10 +47,10 @@ export const OrderApprovalPage: React.FC = () => {
   const handleApprove = async () => {
     if (!order) return;
     try {
-      await updateDoc(doc(db, 'sales', order.id), { approvalStatus: 'approved', status: 'waiting_payment' });
+      await updateDoc(doc(db, 'orders', order.id), { approvalStatus: 'approved', status: 'waiting_payment' });
       setOrder({ ...order, approvalStatus: 'approved', status: 'waiting_payment' });
     } catch (e) {
-      handleFirestoreError(e, OperationType.UPDATE, `sales/${order.id}`);
+      handleFirestoreError(e, OperationType.UPDATE, `orders/${order.id}`);
     }
   };
 
@@ -58,7 +58,7 @@ export const OrderApprovalPage: React.FC = () => {
     if (!order) return;
     try {
       const nextVersion = (order.currentVersion || 1) + 1;
-      await addDoc(collection(db, 'sales', order.id, 'versions'), {
+      await addDoc(collection(db, 'orders', order.id, 'versions'), {
         orderId: order.id,
         version: nextVersion,
         data: order,
@@ -66,14 +66,14 @@ export const OrderApprovalPage: React.FC = () => {
         author: 'customer',
         createdAt: serverTimestamp()
       });
-      await updateDoc(doc(db, 'sales', order.id), { 
+      await updateDoc(doc(db, 'orders', order.id), { 
         approvalStatus: 'adjustments_requested',
         currentVersion: nextVersion 
       });
       setOrder({ ...order, approvalStatus: 'adjustments_requested', currentVersion: nextVersion });
       setIsAdjusting(false);
     } catch (e) {
-      handleFirestoreError(e, OperationType.CREATE, `sales/${order.id}/versions`);
+      handleFirestoreError(e, OperationType.CREATE, `orders/${order.id}/versions`);
     }
   };
 

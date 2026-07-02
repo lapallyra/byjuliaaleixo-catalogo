@@ -27,7 +27,7 @@ export const TrackingView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
     try {
       const q = query(
-        collection(db, 'sales'),
+        collection(db, 'orders'),
         where('code', '==', searchCode)
       );
       const snapshot = await getDocs(q);

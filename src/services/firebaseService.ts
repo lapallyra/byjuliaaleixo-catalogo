@@ -304,7 +304,7 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
   try {
     let finalData = { ...dataWithoutId };
     
-    const orderRef = doc(db, 'sales', orderId);
+    const orderRef = doc(db, 'orders', orderId);
     let orderData = (data as Order); // Fallback
     const orderSnap = await getDoc(orderRef);
     if (orderSnap.exists()) {
@@ -359,7 +359,7 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
       }
     }
 
-    await updateDoc(doc(db, 'sales', orderId), sanitize(finalData));
+    await updateDoc(doc(db, 'orders', orderId), sanitize(finalData));
 
     // Audit Log for status change
     if (data.status && orderSnap.exists() && orderSnap.data().status !== data.status) {
@@ -415,7 +415,7 @@ export const updateOrderStatus = async (orderId: string, newStatus: Order['statu
 };
 
 export const saveSale = async (data: any) => {
-  const path = 'sales';
+  const path = 'orders';
   try {
     const today = new Date();
     const deliveryDate = calculateDeliveryDate(today, 7);
@@ -435,7 +435,7 @@ export const saveSale = async (data: any) => {
       insumosDeducted: true // Already deducted on catalog purchase below
     });
     
-    let docRef = doc(db, 'sales', saleData.code);
+    let docRef = doc(db, 'orders', saleData.code);
     try {
       await setDoc(docRef, saleData);
       console.log('✅ Document successfully added to sales collection:', docRef.id);
@@ -455,7 +455,7 @@ export const saveSale = async (data: any) => {
         }
       }
     } catch (dbError) {
-      console.error('❌ Firestore setDoc ERROR for path "sales":', dbError);
+      console.error('❌ Firestore setDoc ERROR for path "orders":', dbError);
       throw dbError;
     }
     
@@ -875,7 +875,7 @@ export const getOrderByCode = async (code: string): Promise<Order | null> => {
     const uppercaseCode = code.toUpperCase();
     
     try {
-      const docSnap = await getDoc(doc(db, 'sales', uppercaseCode));
+      const docSnap = await getDoc(doc(db, 'orders', uppercaseCode));
       if (docSnap.exists()) {
         return { id: docSnap.id, ...docSnap.data() } as Order;
       }
@@ -1177,7 +1177,7 @@ export const subscribeToGiftLists = (callback: (lists: any[]) => void, companyId
 };
 
 export const subscribeToSales = (callback: (sales: any[]) => void, companyId?: CompanyId) => {
-  const path = 'sales';
+  const path = 'orders';
   let q;
   if (companyId) {
     q = query(collection(db, path), where('companyId', '==', companyId), orderBy('createdAt', 'desc'), limit(300));
@@ -1243,17 +1243,36 @@ export const markSuggestionAsRead = async (id: string) => {
   await updateDoc(doc(db, 'suggestions', id), { read: true });
 };
 
-export const addFeedback = async (name: string, text: string, stars: number) => {
+export const addFeedback = async (name: string, text: string, stars: number, status: 'pending' | 'approved' = 'approved') => {
   const path = 'feedbacks';
   try {
     await addDoc(collection(db, path), sanitize({
       name,
       text,
       stars,
+      status,
       createdAt: serverTimestamp()
     }));
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, path);
+  }
+};
+
+export const updateFeedbackStatus = async (id: string, status: 'pending' | 'approved') => {
+  const path = `feedbacks/${id}`;
+  try {
+    await updateDoc(doc(db, 'feedbacks', id), { status });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+};
+
+export const deleteFeedback = async (id: string) => {
+  const path = `feedbacks/${id}`;
+  try {
+    await deleteDoc(doc(db, 'feedbacks', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 };
 
@@ -1432,7 +1451,7 @@ export const performSystemReset = async (): Promise<void> => {
     'products',
     'insumos',
     'insumo_movements',
-    'sales',
+    'orders',
     'finance',
     'monthly_profit_history',
     'checkout_funnel_logs',
@@ -1686,7 +1705,7 @@ export const createProductionBatch = async (batch: Omit<ProductionBatch, 'id'>) 
     
     // Update linked orders with the batchId
     for (const orderId of batch.orderIds) {
-      const orderRef = doc(db, 'sales', orderId); // Fix: collection was 'orders', should be 'sales' likely
+      const orderRef = doc(db, 'orders', orderId);
       await updateDoc(orderRef, { batchId: docRef.id });
     }
     

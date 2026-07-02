@@ -3,7 +3,7 @@ import { Search, Heart, Info, Package, Mail, User, Sparkles, ArrowRight, ArrowRi
 import { AppConfig, Product, SiteSettings, CompanyId } from '../types';
 import { useAuth } from './AuthProvider';
 import { useAdminOrchestrator } from './AdminOrchestratorSystem';
-import { subscribeToAllSettings } from '../services/firebaseService';
+import { subscribeToAllSettings, subscribeToFeedbacks } from '../services/firebaseService';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './ImageWithFallback';
 import { ProductCard } from './ui/ProductCard';
@@ -37,6 +37,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
   const [isStoryOpen, setIsStoryOpen] = useState(false);
   const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
+  const [realFeedbacks, setRealFeedbacks] = useState<any[]>([]);
 
   // Anti-printscreen & Ctrl+P prevention effect
   useEffect(() => {
@@ -59,34 +60,52 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
     };
   }, [isAdmin, user]);
 
-  const feedbacksDynamic = React.useMemo(() => [
-    {
-      stars: 5,
-      text: '"O kit maternidade da Tutty Mimo superou todas as minhas expectativas. O enxoval possui uma maciez indescritível e cada pequeno ponto transborda amor. Ficou lindo demais!"',
-      author: 'Mariana S.',
-      atelier: 'Tutty Mimo',
-      colorTagBg: 'bg-[#d4bda1]/15',
-      colorTagText: 'text-[#a88258]'
-    },
-    {
-      stars: 5,
-      text: '"Encomendei os cadernos e agendas da La Pallyra para presentear minhas madrinhas de casamento. O acabamento artesanal em cartonagem é o legítimo luxo com afeto."',
-      author: 'Beatriz F.',
-      atelier: 'La Pallyra',
-      colorTagBg: 'bg-[#cca062]/15',
-      colorTagText: 'text-[#cca062]'
-    },
-    {
-      stars: 5,
-      text: '"As rosas de cetim do ateliê com amor, Guennita parecem reais. O capricho nas embalagens e o carinho com que as flores são moldadas me fez chorar quando peguei o pacote."',
-      author: 'Camila R.',
-      atelier: 'com amor, Guennita',
-      colorTagBg: 'bg-[#5b2122]/10',
-      colorTagText: 'text-[#5b2122]'
+  const feedbacksDynamic = React.useMemo(() => {
+    if (realFeedbacks.length > 0) {
+      const approved = realFeedbacks
+        .filter(fb => fb.status === 'approved')
+        .map(fb => ({
+          stars: fb.stars || 5,
+          text: `"${fb.text}"`,
+          author: fb.name || "Cliente",
+          atelier: "Depoimento Real",
+          colorTagBg: 'bg-emerald-50',
+          colorTagText: 'text-emerald-600'
+        }));
+      
+      if (approved.length > 0) return approved;
     }
-  ], []);
+
+    return [
+      {
+        stars: 5,
+        text: '"O kit maternidade da Tutty Mimo superou todas as minhas expectativas. O enxoval possui uma maciez indescritível e cada pequeno ponto transborda amor. Ficou lindo demais!"',
+        author: 'Mariana S.',
+        atelier: 'Tutty Mimo',
+        colorTagBg: 'bg-[#d4bda1]/15',
+        colorTagText: 'text-[#a88258]'
+      },
+      {
+        stars: 5,
+        text: '"Encomendei os cadernos e agendas da La Pallyra para presentear minhas madrinhas de casamento. O acabamento artesanal em cartonagem é o legítimo luxo com afeto."',
+        author: 'Beatriz F.',
+        atelier: 'La Pallyra',
+        colorTagBg: 'bg-[#cca062]/15',
+        colorTagText: 'text-[#cca062]'
+      },
+      {
+        stars: 5,
+        text: '"As rosas de cetim do ateliê com amor, Guennita parecem reais. O capricho nas embalagens e o carinho com que as flores são moldadas me fez chorar quando peguei o pacote."',
+        author: 'Camila R.',
+        atelier: 'com amor, Guennita',
+        colorTagBg: 'bg-[#5b2122]/10',
+        colorTagText: 'text-[#5b2122]'
+      }
+    ];
+  }, [realFeedbacks]);
 
   useEffect(() => {
+    if (feedbacksDynamic.length === 0) return;
     const timer = setInterval(() => {
       setActiveFeedbackIndex((prev) => (prev + 1) % feedbacksDynamic.length);
     }, 5000);
@@ -94,9 +113,18 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
   }, [feedbacksDynamic.length]);
 
   useEffect(() => {
-    return subscribeToAllSettings((results) => {
+    const unsubSettings = subscribeToAllSettings((results) => {
       setCustomSettings(results);
     });
+    
+    const unsubFeedbacks = subscribeToFeedbacks((results) => {
+      setRealFeedbacks(results);
+    });
+
+    return () => {
+      unsubSettings();
+      unsubFeedbacks();
+    };
   }, []);
 
   useEffect(() => {
@@ -450,12 +478,12 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
               </div>
               <p className="text-[13px] sm:text-[14.5px] font-tahoma font-light text-[#6d5443] leading-relaxed italic mb-5">
-                {feedbacksDynamic[activeFeedbackIndex].text}
+                {feedbacksDynamic[activeFeedbackIndex]?.text || ""}
               </p>
               <div className="flex items-center justify-between pt-4 border-t border-[#e8dcc8]/20">
-                <span className="font-poppins font-semibold text-xs sm:text-sm text-[#3A312D]">{feedbacksDynamic[activeFeedbackIndex].author}</span>
-                <span className={`text-[8px] sm:text-[9px] uppercase tracking-widest font-bold ${feedbacksDynamic[activeFeedbackIndex].colorTagBg} ${feedbacksDynamic[activeFeedbackIndex].colorTagText} px-2.5 py-0.5 rounded-full font-poppins`}>
-                  {feedbacksDynamic[activeFeedbackIndex].atelier}
+                <span className="font-poppins font-semibold text-xs sm:text-sm text-[#3A312D]">{feedbacksDynamic[activeFeedbackIndex]?.author || ""}</span>
+                <span className={`text-[8px] sm:text-[9px] uppercase tracking-widest font-bold ${feedbacksDynamic[activeFeedbackIndex]?.colorTagBg || ""} ${feedbacksDynamic[activeFeedbackIndex]?.colorTagText || ""} px-2.5 py-0.5 rounded-full font-poppins`}>
+                  {feedbacksDynamic[activeFeedbackIndex]?.atelier || ""}
                 </span>
               </div>
             </div>
