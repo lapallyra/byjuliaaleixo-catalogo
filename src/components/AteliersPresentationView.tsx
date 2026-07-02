@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, ArrowRight } from 'lucide-react';
 import { subscribeToAllSettings } from '../services/firebaseService';
 import { ImageWithFallback } from './ImageWithFallback';
+import { AtelierCard } from './ui/AtelierCard';
 
 export const AteliersPresentationView: React.FC = () => {
   const navigate = useNavigate();
@@ -109,70 +110,12 @@ export const AteliersPresentationView: React.FC = () => {
             const isImageLogo = logo.startsWith('http') || logo.startsWith('data:') || logo.includes('/');
 
             return (
-              <motion.div
+              <AtelierCard
                 key={atelier.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                className="bg-white border border-[#e8dcc8]/60 rounded-3xl p-8 md:p-12 shadow-sm relative overflow-hidden flex flex-col lg:flex-row gap-8 items-center lg:items-stretch"
-              >
-                <div className="absolute top-0 right-0 w-48 h-48 bg-[#cca062]/5 rounded-bl-full blur-xl pointer-events-none" />
-                
-                {/* Visual Logo / Design Image */}
-                <div className="flex flex-col justify-center items-center p-6 bg-gradient-to-br from-white to-[#faf8f5] rounded-3xl border border-[#e8dcc8]/40 w-48 h-48 shrink-0 shadow-inner">
-                  {isImageLogo ? (
-                    <div className="w-28 h-28 rounded-full border border-[#e8dcc8]/40 bg-white flex items-center justify-center overflow-hidden p-1 shadow-xs">
-                      <ImageWithFallback src={logo} alt={atelier.name} className="w-full h-full object-contain" />
-                    </div>
-                  ) : (
-                    <div className="w-28 h-28 rounded-full border border-[#e8dcc8]/40 bg-white flex items-center justify-center text-4xl shadow-xs">
-                      {logo}
-                    </div>
-                  )}
-                  <span className="font-serif text-[10px] font-black uppercase tracking-widest mt-3 text-[#cca062]/80">
-                    {atelier.id === 'guennita' ? 'Guennita' : atelier.id === 'pallyra' ? 'La Pallyra' : atelier.id === 'mimada' ? 'Mimada Sim' : 'Tutty Mimo'}
-                  </span>
-                </div>
-
-                {/* Text Info */}
-                <div className="flex flex-col justify-between flex-1 text-center lg:text-left">
-                  <div>
-                    <h2 className="font-beauty text-2xl sm:text-3xl font-normal leading-tight mb-1" style={{ color: atelier.accentColor }}>
-                      {atelier.name}
-                    </h2>
-                    <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-500 mb-6">
-                      {atelier.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 leading-relaxed max-w-2xl mb-6">
-                      {atelier.description}
-                    </p>
-                    
-                    <div className="bg-[#faf8f5] border border-[#e8dcc8]/40 rounded-xl p-4 mb-8 text-xs max-w-2xl">
-                      <span className="font-bold text-[#cca062] block mb-1 uppercase tracking-wider">Acabamentos e Diferenciais:</span>
-                      <span className="text-[#6d5443]/80 leading-relaxed">{atelier.details}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto">
-                    <p className="font-cursive text-2xl leading-none" style={{ color: atelier.accentColor }}>
-                      &ldquo;{atelier.tagline}&rdquo;
-                    </p>
-                    
-                    <button
-                      onClick={() => navigate(atelier.route)}
-                      className="flex items-center gap-3 text-white font-bold tracking-widest text-xs uppercase px-8 py-3.5 rounded-full transition-all hover:scale-105 active:scale-95 shadow-md cursor-pointer"
-                      style={{ 
-                        backgroundColor: atelier.accentColor,
-                        boxShadow: `0 4px 14px ${atelier.accentColor}25`
-                      }}
-                    >
-                      Ver Catálogo
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
+                atelier={{ ...atelier, logo }}
+                index={index}
+                onClick={() => navigate(atelier.route)}
+              />
             );
           })}
         </div>

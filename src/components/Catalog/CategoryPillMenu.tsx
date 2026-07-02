@@ -28,8 +28,8 @@ export const CategoryPillMenu: React.FC<CategoryPillMenuProps> = ({ categories, 
   const allCategories = ['Todos', ...categories];
 
   return (
-    <div className="flex justify-start my-8 px-4 md:px-8 max-w-full">
-      <HorizontalScroll className="bg-[#FAF9F6]/80 backdrop-blur-md p-1.5 rounded-full border border-[#e8dcc8]/60 gap-1.5 shadow-sm max-w-full">
+    <div className="flex justify-center my-8 px-4 max-w-full">
+      <HorizontalScroll className="flex flex-row flex-nowrap bg-[#F5F1E6] text-[#3A312D] p-1.5 rounded-full border border-[#E8DCC8] gap-1.5 shadow-sm w-fit">
         {allCategories.map((cat, index) => {
           // Resolve correct icon with fallbacks
           const IconComponent = iconMap[cat] || Sparkle;
@@ -39,26 +39,26 @@ export const CategoryPillMenu: React.FC<CategoryPillMenuProps> = ({ categories, 
             <motion.button
               key={cat}
               onClick={() => onSelectCategory(cat === 'Todos' ? null : cat)}
-              className={`relative flex items-center justify-center rounded-full py-2.5 px-4 cursor-pointer outline-none transition-colors duration-300 select-none ${
+              className={`relative flex items-center justify-center rounded-full py-3 px-5 cursor-pointer outline-none transition-colors duration-300 select-none shrink-0 ${
                 isSelected 
                   ? 'text-white' 
-                  : 'text-[#3A312D] hover:bg-[#3A312D]/5'
+                  : 'text-[#3A312D] hover:text-[#cca062]'
               }`}
             >
               {/* Active Slide Background */}
               {isSelected && (
                 <motion.div
                   layoutId="activeCategoryPill"
-                  className="absolute inset-0 bg-[#3A312D] rounded-full z-0"
+                  className="absolute inset-0 bg-[#cca062] rounded-full z-0"
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                 />
               )}
 
               {/* Icon and Label Container */}
-              <div className="relative z-10 flex items-center">
+              <div className="relative z-10 flex items-center gap-2">
                 <IconComponent 
-                  size={18} 
-                  className={`transition-transform duration-300 ${isSelected ? 'scale-110 text-white' : 'text-[#3A312D]/80'}`}
+                  size={16} 
+                  className={`transition-transform duration-300 ${isSelected ? 'scale-110 text-white' : 'text-[#3A312D]'}`}
                 />
                 
                 {/* Expand and Pin Active Category Name */}
@@ -67,10 +67,10 @@ export const CategoryPillMenu: React.FC<CategoryPillMenuProps> = ({ categories, 
                   animate={{ 
                     width: isSelected ? 'auto' : 0, 
                     opacity: isSelected ? 1 : 0,
-                    marginLeft: isSelected ? 8 : 0
+                    marginLeft: isSelected ? 4 : 0
                   }}
                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-xs md:text-sm font-semibold tracking-wide whitespace-nowrap overflow-hidden uppercase font-poppins"
+                  className="text-xs font-medium tracking-wide whitespace-nowrap overflow-hidden uppercase"
                 >
                   {cat}
                 </motion.span>

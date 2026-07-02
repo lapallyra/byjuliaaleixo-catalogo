@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Sparkles } from 'lucide-react';
 import { Product } from '../types';
 import { ImageWithFallback } from './ImageWithFallback';
-import { CatalogProductCard } from './Catalog/CatalogProductCard';
+import { ProductCard } from './ui/ProductCard';
 import { themes, getTheme } from '../lib/theme';
 import { subscribeToAllSettings } from '../services/firebaseService';
 
@@ -160,7 +160,7 @@ const AtelierCarousel = ({
           ) : (
             products.map((prod) => (
               <div key={prod.id} className="min-w-[280px] shrink-0">
-                <CatalogProductCard 
+                <ProductCard 
                   product={prod}
                   theme={getTheme(prod.company)}
                   onAddToCart={() => onNavigate()}

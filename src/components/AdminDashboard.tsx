@@ -327,7 +327,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   }, {} as Record<string, typeof menuItems>);
 
   return (
-    <div className="h-screen bg-[#F5F5F7] text-[#1C1C1E] flex font-sans overflow-hidden relative selection:bg-[#E5E5EA] selection:text-[#1C1C1E]">
+    <div className="h-screen bg-[#F5F5F7] text-[#1C1C1E] flex font-sans overflow-hidden relative selection:bg-[#E5E5EA] selection:text-[#1C1C1E] admin-wrapper">
       <AdminNotificationPortal />
 
       {/* Sidebar navigation - Desktop */}

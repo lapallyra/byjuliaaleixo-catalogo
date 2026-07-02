@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { PRODUCTS } from '../constants';
 import { Product } from '../types';
-import { CatalogProductCard } from './Catalog/CatalogProductCard';
+import { ProductCard } from './ui/ProductCard';
 import { themes } from '../lib/theme';
 import { useNavigate } from 'react-router-dom';
 
@@ -71,7 +71,7 @@ export function VitrinePage() {
         <section>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {filteredProducts.map(p => (
-              <CatalogProductCard 
+              <ProductCard 
                 key={p.id}
                 product={p}
                 theme={themes[p.company || 'pallyra']}

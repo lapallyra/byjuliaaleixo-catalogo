@@ -98,8 +98,8 @@ async function startServer() {
     console.log(`Production mode: serving static files from resolved path: "${distPath}"`);
 
     app.use(express.static(distPath));
-    // In Express 5, use *all for the final catch-all
-    app.get('*all', (req, res) => {
+    // Use regex catch-all to guarantee direct navigation to SPA paths (e.g. /admin) never 404
+    app.get(/.*/, (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'), (err) => {
         if (err) {
           console.error(`Error sending index.html from "${distPath}":`, err);

@@ -235,29 +235,29 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
           </div>
           <button
             onClick={() => setIsWizardOpen(true)}
-            className="flex items-center gap-2 bg-[#1C1C1E] text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-3d-soft elevated-3d"
+            className="clean-3d-button w-full md:w-auto"
           >
-            <Plus size={16} strokeWidth={3} /> Novo Pedido
+            <Plus size={18} strokeWidth={3} /> Novo Pedido
           </button>
         </div>
 
         {/* Top Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white border border-[#E5E5EA] rounded-[1.8rem] p-5 flex flex-col justify-between hover:border-[#1C1C1E]/20 transition-all shadow-3d-soft elevated-3d group">
-            <span className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest mb-3 group-hover:text-[#1C1C1E] transition-colors">Pedidos Hoje</span>
-            <span className="text-2xl font-black text-[#1C1C1E] tracking-tighter">{todayCount}</span>
+          <div className="clean-3d-card p-6 flex flex-col justify-between hover:border-slate-300 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover:text-indigo-600 transition-colors">Pedidos Hoje</span>
+            <span className="text-3xl font-black text-slate-900 tracking-tighter">{todayCount}</span>
           </div>
-          <div className="bg-white border border-[#E5E5EA] rounded-[1.8rem] p-5 flex flex-col justify-between hover:border-blue-200 transition-all shadow-3d-soft elevated-3d group">
-            <span className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest mb-3 group-hover:text-blue-600 transition-colors">Em Produção</span>
-            <span className="text-2xl font-black text-blue-600 tracking-tighter">{productionCount}</span>
+          <div className="clean-3d-card p-6 flex flex-col justify-between hover:border-blue-300 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover:text-blue-600 transition-colors">Em Produção</span>
+            <span className="text-3xl font-black text-slate-900 tracking-tighter">{productionCount}</span>
           </div>
-          <div className="bg-white border border-[#E5E5EA] rounded-[1.8rem] p-5 flex flex-col justify-between hover:border-amber-200 transition-all shadow-3d-soft elevated-3d group">
-            <span className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest mb-3 group-hover:text-amber-600 transition-colors">Aguardando Pgto</span>
-            <span className="text-2xl font-black text-amber-600 tracking-tighter">{pendingPaymentCount}</span>
+          <div className="clean-3d-card p-6 flex flex-col justify-between hover:border-amber-300 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover:text-amber-600 transition-colors">Aguardando Pgto</span>
+            <span className="text-3xl font-black text-slate-900 tracking-tighter">{pendingPaymentCount}</span>
           </div>
-          <div className="bg-white border border-[#E5E5EA] rounded-[1.8rem] p-5 flex flex-col justify-between hover:border-green-200 transition-all shadow-3d-soft elevated-3d group">
-            <span className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest mb-3 group-hover:text-green-600 transition-colors">Enviados</span>
-            <span className="text-2xl font-black text-green-600 tracking-tighter">{shippedCount}</span>
+          <div className="clean-3d-card p-6 flex flex-col justify-between hover:border-emerald-300 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover:text-emerald-600 transition-colors">Enviados</span>
+            <span className="text-3xl font-black text-slate-900 tracking-tighter">{shippedCount}</span>
           </div>
         </div>
       </div>

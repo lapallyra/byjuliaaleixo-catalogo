@@ -42,7 +42,7 @@ import { ProductDetailPage } from './ProductDetailPage';
 import { ColecoesView } from './ColecoesView';
 import { CategoryPillMenu } from './Catalog/CategoryPillMenu';
 import { FestiveBanner } from './Catalog/FestiveBanner';
-import { CatalogProductCard } from './Catalog/CatalogProductCard';
+import { ProductCard } from './ui/ProductCard';
 
 
 import { CatalogHeader } from './Catalog/CatalogHeader';
@@ -760,7 +760,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           const createdAtDate = product.createdAt?.toMillis ? new Date(product.createdAt.toMillis()) : product.createdAt instanceof Date ? product.createdAt : new Date();
                           
                           return (
-                            <CatalogProductCard 
+                            <ProductCard 
                               key={`prod-${product.id}-${idx}`}
                               product={product}
                               theme={theme}
@@ -831,14 +831,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           <p className="text-[9px] leading-relaxed font-medium font-sans text-neutral-500 max-w-5xl mx-auto text-center px-4">
             Ao realizar um pedido em nossa plataforma, você consente com os termos regulados de confecção artesanal exclusiva. O ciclo de produção e entrega dos produtos sob encomenda respeita o prazo especificado em cada item, dependendo da especificidade, complexidade e ordem de fila de solicitações do ateliê. As fotografias são meramente ilustrativas e editoriais; cores e acabamentos podem sofrer mudanças de cor dependendo da configuração de seu dispositivo. Dados de faturamento coletados operam sob conformidade e proteção legal vigentes.
           </p>
-          <div className={`mt-10 pt-6 border-t ${theme.borderLine} flex flex-col md:flex-row justify-between items-center gap-4`}>
-              <span className="text-[9px] font-sans font-bold tracking-widest text-neutral-400 uppercase">
-                © 2025 {companyName} • Todos os direitos reservados
-              </span>
-              <span className="text-[9px] font-sans font-bold tracking-widest text-neutral-400 uppercase flex items-center gap-1.5">
-                Desenvolvido com <Heart size={10} className="text-rose-500 fill-rose-500" /> por Ateliês da Ju
-              </span>
-          </div>
         </div>
     </footer>
 

@@ -292,7 +292,7 @@ function SiteApp() {
   }, []);
 
   return (
-    <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen">
+    <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen neumo-bg">
       <TopAnnouncementBar />
       <div className="flex-grow flex flex-col">
         <Routes>

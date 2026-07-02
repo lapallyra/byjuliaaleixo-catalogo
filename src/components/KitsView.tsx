@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product, CartItem } from '../types';
 import { CatalogHeader } from './Catalog/CatalogHeader';
-import { CatalogProductCard } from './Catalog/CatalogProductCard';
+import { ProductCard } from './ui/ProductCard';
 import { themes } from '../lib/theme';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
@@ -22,7 +22,7 @@ export const KitsView: React.FC<KitsViewProps> = ({ allProducts }) => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {kits.map(kit => (
-            <CatalogProductCard 
+            <ProductCard 
               key={kit.id}
               product={kit}
               theme={themes[kit.company || 'pallyra']}

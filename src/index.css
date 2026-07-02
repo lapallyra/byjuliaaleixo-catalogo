@@ -739,6 +739,66 @@ html {
   }
 }
 
+/* Vitrine Design System - Official */
+  .vitrine-wrapper {
+    --v-color-primary: 190 160 100;
+    --v-color-secondary: 210 190 150;
+    --v-color-bg: 248 248 246;
+    --v-color-surface: 255 255 255;
+    --v-color-text: 28 28 30;
+    --v-color-accent: 190 160 100;
+  }
+
+  .vitrine-card {
+    @apply bg-[rgb(var(--v-color-surface))] rounded-3xl border border-[rgba(var(--v-color-text),0.05)] transition-all duration-300;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  }
+  
+  .vitrine-button {
+    @apply px-6 py-3 rounded-2xl bg-[rgb(var(--v-color-primary))] text-white font-medium transition-all duration-200 hover:opacity-90 active:scale-95;
+  }
+
+  /* Vitrine (Standard UI) - Neumorphic */
+  .neumo-bg { @apply bg-[#EBEBEB]; }
+  .neumo-card { @apply bg-[#EBEBEB] rounded-3xl p-4 shadow-[6px_6px_12px_#D1D1D1,-6px_-6px_12px_#FFFFFF]; }
+  .neumo-button { @apply bg-[#EBEBEB] rounded-full flex items-center justify-center transition-all shadow-[4px_4px_8px_#D1D1D1,-4px_-4px_8px_#FFFFFF] active:shadow-[inset_4px_4px_8px_#D1D1D1,inset_-4px_-4px_8px_#FFFFFF]; }
+  .neumo-input { @apply bg-[#EBEBEB] rounded-full px-4 py-2 shadow-[inset_2px_2px_4px_#D1D1D1,inset_-2px_-2px_4px_#FFFFFF]; }
+
+  /* Scoped Admin Premium Design System (Clean Glassy 3D) */
+  .admin-wrapper .clean-3d-card {
+    @apply bg-white/90 backdrop-blur-md border border-white/80 rounded-[28px] transition-all duration-300 relative;
+    box-shadow: 
+      0 4px 6px -1px rgba(0,0,0,0.02),
+      0 2px 4px -2px rgba(0,0,0,0.02),
+      inset 0 1px 1px 0 rgba(255,255,255,1);
+  }
+  .admin-wrapper .clean-3d-card:hover {
+    @apply -translate-y-0.5 bg-white;
+    box-shadow: 
+      0 10px 20px -5px rgba(0,0,0,0.04),
+      0 4px 6px -2px rgba(0,0,0,0.02),
+      inset 0 1px 2px 0 rgba(255,255,255,1);
+  }
+  
+  .admin-wrapper .clean-3d-button {
+    @apply h-[46px] px-6 rounded-[16px] bg-white/80 backdrop-blur-xl border border-white/90 text-slate-900 font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300;
+    box-shadow: 
+      0 4px 10px -2px rgba(0,0,0,0.03),
+      inset 0 1px 1.5px 0 rgba(255,255,255,1);
+  }
+  .admin-wrapper .clean-3d-button:hover {
+    @apply -translate-y-0.5 bg-white text-indigo-700;
+    box-shadow: 
+      0 8px 20px -4px rgba(0,0,0,0.06),
+      inset 0 1px 2px 0 rgba(255,255,255,1);
+  }
+  .admin-wrapper .clean-3d-button:active {
+    @apply translate-y-0 scale-[0.98] bg-white/60;
+    box-shadow: 
+      inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+
 /* Formato Discreto de Scrollbar (para Desktop/Notebook) */
 * {
   scrollbar-width: thin;
@@ -779,4 +839,27 @@ html {
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none !important;
+}
+
+/* New Atelier Card Hover Effects */
+.new-atelier-card {
+  @apply relative transition-all duration-300 border-2 border-transparent rounded-3xl;
+}
+.new-atelier-card:hover {
+  box-shadow: 0 0 20px -5px var(--glow-color);
+  border-color: var(--glow-color);
+}
+.new-glass-overlay {
+  @apply absolute inset-0 bg-white/50 backdrop-blur-md opacity-0 scale-95 transition-all duration-200 flex flex-col items-center justify-center p-8 text-center rounded-3xl z-10 pointer-events-none;
+}
+.new-atelier-card:hover .new-glass-overlay {
+  opacity: 1;
+  scale: 1;
+  pointer-events: auto;
+}
+.new-isotipo-container {
+  @apply transition-all duration-300;
+}
+.new-atelier-card:hover .new-isotipo-container {
+  @apply blur-[2px] opacity-80;
 }

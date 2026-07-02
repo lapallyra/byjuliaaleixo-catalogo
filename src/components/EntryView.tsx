@@ -6,7 +6,7 @@ import { useAdminOrchestrator } from './AdminOrchestratorSystem';
 import { subscribeToAllSettings } from '../services/firebaseService';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './ImageWithFallback';
-import { CatalogProductCard } from './Catalog/CatalogProductCard';
+import { ProductCard } from './ui/ProductCard';
 import { FeaturedProductCard } from './Catalog/FeaturedProductCard';
 import { LogoAndSignature } from './ui/LogoAndSignature';
 import { themes, getTheme } from '../lib/theme';
@@ -283,36 +283,11 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               tabIndex={0}
               className="flex flex-col items-center group cursor-pointer relative outline-none focus:outline-none"
             >
-              {/* Floating Sparkles around the card */}
-              <div className="absolute inset-0 pointer-events-none z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <Sparkles 
-                  className="absolute -top-4 -left-2 text-white animate-star-pop" 
-                  size={16} 
-                  style={{ color: atelier.accentColor, filter: `drop-shadow(0 0 8px ${atelier.accentColor})`, fill: 'currentColor' } as any}
-                />
-                <Sparkles 
-                  className="absolute top-0 -right-4 text-white animate-star-pop" 
-                  size={12} 
-                  style={{ animationDelay: '0.4s', color: atelier.accentColor, filter: `drop-shadow(0 0 6px ${atelier.accentColor})`, fill: 'currentColor' } as any}
-                />
-                <Sparkles 
-                  className="absolute -bottom-4 -right-2 text-white animate-star-pop" 
-                  size={14} 
-                  style={{ animationDelay: '0.8s', color: atelier.accentColor, filter: `drop-shadow(0 0 8px ${atelier.accentColor})`, fill: 'currentColor' } as any}
-                />
-                <Sparkles 
-                  className="absolute bottom-0 -left-4 text-white animate-star-pop" 
-                  size={18} 
-                  style={{ animationDelay: '1.2s', color: atelier.accentColor, filter: `drop-shadow(0 0 10px ${atelier.accentColor})`, fill: 'currentColor' } as any}
-                />
-              </div>
-
-              {/* Card Body - Square with slightly rounded corners */}
               <div 
                 className="relative w-full aspect-square rounded-2xl bg-white p-1 transition-all duration-500 overflow-hidden shadow-sm flex flex-col z-10 
-                           group-hover:animate-sparkle group-focus:animate-sparkle"
+                           group-hover:shadow-[0_0_20px_-5px_var(--glow-color)] group-focus:shadow-[0_0_20px_-5px_var(--glow-color)] group-hover:border-[var(--glow-color)] group-focus:border-[var(--glow-color)]"
                 style={{ 
-                  border: `2px solid ${atelier.accentColor}`,
+                  border: `2px solid transparent`,
                   '--glow-color': atelier.accentColor
                 } as any}
               >
@@ -385,7 +360,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               </p>
             ) : (
               kits.map((kit) => (
-                <CatalogProductCard
+                <ProductCard
                   key={kit.id}
                   product={kit}
                   theme={getTheme(kit.company)}

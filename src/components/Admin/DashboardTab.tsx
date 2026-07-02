@@ -217,7 +217,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         
         // Regional (Querência do Norte - PR)
         { id: `c-qn-aniversario-${year}`, title: 'Aniversário de Querência do Norte - PR', date: new Date(`${year}-11-26`), category: 'regional' },
-        { id: `c-qn-padroeiro-${year}`, title: 'Padroeiro de Querência do Norte - PR', date: new Date(`${year}-08-15`), category: 'regional' },
+        { id: `c-qn-padroeiro-${year}`, title: 'Padroeiro de Querência do Norte - PR', date: new Date(`${year}-06-26`), category: 'regional' },
       ];
 
       const baseEvents = [
@@ -227,11 +227,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         ...mapCommemorativeDates(currentYear + 1)
       ];
 
-      // Remove duplicates by title and date
+      // Remove duplicates by title, keeping the first occurrence (earliest date)
+      const allPossibleEvents = [...baseEvents, ...customEvents];
+      allPossibleEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
+
       const uniqueEventsMap = new Map();
-      [...baseEvents, ...customEvents].forEach(e => {
-        const key = `${e.title}-${e.date.getTime()}`;
-        uniqueEventsMap.set(key, e);
+      allPossibleEvents.forEach(e => {
+        if (!uniqueEventsMap.has(e.title)) {
+          uniqueEventsMap.set(e.title, e);
+        }
       });
 
       const allEvents = Array.from(uniqueEventsMap.values())
@@ -597,18 +601,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
           </button>
         </div>
 
-        <HorizontalScroll className="gap-4 pb-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           {events.map((event) => (
-            <div key={event.id} className="min-w-[180px] clean-3d-card p-5 bg-white border border-slate-100 flex flex-col justify-between hover:border-amber-200">
+            <div key={event.id} className="clean-3d-card p-3 bg-white border border-slate-100 flex flex-col justify-between hover:border-amber-200">
               <div>
-                <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest mb-3 inline-block ${
-                  event.category === 'global' ? 'bg-indigo-50 text-indigo-600' :
-                  event.category === 'nacional' ? 'bg-emerald-50 text-emerald-600' :
-                  event.category === 'regional' ? 'bg-sky-50 text-sky-600' :
-                  'bg-amber-50 text-amber-600'
-                }`}>
-                  {event.category}
-                </span>
                 <h4 className="text-xs font-black text-slate-900 line-clamp-2">{event.title}</h4>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between">
@@ -622,7 +618,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 <p className="text-xs font-black uppercase tracking-widest">Nenhum evento próximo</p>
              </div>
           )}
-        </HorizontalScroll>
+        </div>
       </div>
 
       {/* BLOCO 05: TOTAL VENDAS & FATURAMENTO (FLIP CLOCK STYLE) */}
