@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, ArrowRight } from 'lucide-react';
 import { subscribeToAllSettings } from '../services/firebaseService';
+import { getPublicAtelierImage } from '../utils/atelierImage';
 import { ImageWithFallback } from './ImageWithFallback';
 import { AtelierCard } from './ui/AtelierCard';
 
@@ -12,20 +13,13 @@ export const AteliersPresentationView: React.FC = () => {
 
   useEffect(() => {
     return subscribeToAllSettings((results) => {
+      console.log('Settings UPDATED:', results);
       setCustomSettings(results);
     });
   }, []);
 
   const getAtelierLogo = (id: string) => {
-    const customIsotipo = customSettings[id]?.store_isotipo;
-    if (customIsotipo) return customIsotipo;
-    const customLogo = customSettings[id]?.store_logo;
-    if (customLogo) return customLogo;
-    
-    if (id === 'pallyra') return '📓';
-    if (id === 'guennita') return '👑';
-    if (id === 'tuttymimo') return '🍼';
-    return '💅';
+    return getPublicAtelierImage(customSettings[id]);
   };
 
   const ateliers = [

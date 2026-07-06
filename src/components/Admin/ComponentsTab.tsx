@@ -1,3 +1,4 @@
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -36,6 +37,7 @@ import { formatCurrency } from "../../lib/currencyUtils";
 import { InsumoFormModal } from "./InsumoFormModal";
 import { db } from "../../lib/firebase";
 import { 
+
   collection, 
   query, 
   where, 
@@ -49,16 +51,19 @@ import {
 } from "firebase/firestore";
 
 interface ComponentsTabProps {
+  products: Product[];
   componentes: Componente[];
   onSaveComponente: (componente: Partial<Componente>) => Promise<void>;
   onDeleteComponente: (id: string) => Promise<void>;
 }
 
-export const ComponentsTab: React.FC<ComponentsTabProps> = ({
+export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
+  products,
   componentes,
   onSaveComponente,
   onDeleteComponente,
 }) => {
+  const orchestrator = useAdminOrchestrator();
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingComponente, setEditingComponente] = useState<Partial<Componente> | null>(null);
@@ -70,7 +75,6 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = ({
   // Selected item for Summary view (Resumo do Item)
   const [selectedItem, setSelectedItem] = useState<Componente | null>(null);
   const [itemMovements, setItemMovements] = useState<any[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [loadingMovements, setLoadingMovements] = useState(false);
 
   // Quick Action Modal state (Entrada / Saída rápida)
@@ -86,14 +90,6 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = ({
   const [quickCost, setQuickCost] = useState<string>("0");
 
   // Load all products to detect which ones use this inventory item
-  useEffect(() => {
-    const qProducts = query(collection(db, "products"));
-    const unsubProducts = onSnapshot(qProducts, (snap) => {
-      setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-    });
-    return unsubProducts;
-  }, []);
-
   // Fetch movements for the selected item dynamically
   useEffect(() => {
     if (!selectedItem) {
@@ -172,7 +168,15 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = ({
     const qty = parseFloat(quickQty) || 0;
 
     if (!item || !type || qty <= 0) {
-      alert("Por favor, preencha os dados corretamente.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Por favor, preencha os dados corretamente.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
       return;
     }
 
@@ -185,7 +189,15 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = ({
       } else {
         newQty = currentQty - qty;
         if (newQty < 0) {
-          alert("Erro: O estoque não pode ficar negativo!");
+          orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro: O estoque não pode ficar negativo!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
           return;
         }
       }
@@ -232,7 +244,15 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = ({
 
     } catch (err) {
       console.error("Error executing quick stock action: ", err);
-      alert("Erro ao salvar a movimentação.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar a movimentação.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
@@ -255,7 +275,15 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = ({
       }
     } catch (err) {
       console.error("Error toggling active status: ", err);
-      alert("Erro ao alterar status do item.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao alterar status do item.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
@@ -955,4 +983,4 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = ({
 
     </div>
   );
-};
+});

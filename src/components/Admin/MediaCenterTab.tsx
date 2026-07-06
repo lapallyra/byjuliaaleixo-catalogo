@@ -38,6 +38,8 @@ import {
 import { uploadImage, deleteImage } from "../../services/firebaseStorageService";
 import { ImageWithFallback } from "../ImageWithFallback";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 // Interfaces
 interface MediaFolder {
   id: string;
@@ -58,12 +60,13 @@ interface MediaFile {
   createdAt?: any;
 }
 
-export const MediaCenterTab: React.FC = () => {
+interface MediaCenterTabProps { products: any[]; }
+export const MediaCenterTab: React.FC<MediaCenterTabProps> = React.memo(({ products }) => {
+  const orchestrator = useAdminOrchestrator();
   // DB States
   const [folders, setFolders] = useState<MediaFolder[]>([]);
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Layout & Navigation
@@ -119,16 +122,11 @@ export const MediaCenterTab: React.FC = () => {
       setCollections(data);
     });
 
-    const unsubProds = subscribeToProducts((data) => {
-      setProducts(data);
-    });
-
     return () => {
       unsubFolders();
       unsubFiles();
       unsubCols();
-      unsubProds();
-    };
+      };
   }, []);
 
   // Update selected file references if lists update
@@ -189,7 +187,15 @@ export const MediaCenterTab: React.FC = () => {
       setIsNewFolderOpen(false);
     } catch (err) {
       console.error(err);
-      alert("Erro ao criar pasta.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao criar pasta.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
@@ -208,7 +214,15 @@ export const MediaCenterTab: React.FC = () => {
       setRenamingName("");
     } catch (err) {
       console.error(err);
-      alert("Erro ao renomear.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao renomear.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
@@ -220,7 +234,15 @@ export const MediaCenterTab: React.FC = () => {
       if (movingItem.type === "folder") {
         // Prevent moving a folder into itself
         if (movingItem.item.id === targetFolderId) {
-          alert("Não é possível mover uma pasta para dentro de si mesma.");
+          orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Não é possível mover uma pasta para dentro de si mesma.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
           return;
         }
         await saveMediaFolder({ ...movingItem.item, parentId: targetFolderId });
@@ -230,7 +252,15 @@ export const MediaCenterTab: React.FC = () => {
       setMovingItem(null);
     } catch (err) {
       console.error(err);
-      alert("Erro ao mover.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao mover.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
@@ -249,7 +279,15 @@ export const MediaCenterTab: React.FC = () => {
       await saveMediaFile(duplicated);
     } catch (err) {
       console.error(err);
-      alert("Erro ao duplicar arquivo.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao duplicar arquivo.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
@@ -291,7 +329,15 @@ export const MediaCenterTab: React.FC = () => {
       }
     } catch (err) {
       console.error(err);
-      alert("Erro ao excluir.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao excluir.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
@@ -403,7 +449,15 @@ export const MediaCenterTab: React.FC = () => {
   // Copy URL
   const handleCopyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
-    alert("URL copiada para a área de transferência!");
+    orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "URL copiada para a área de transferência!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
   };
 
   // Filtering and Searching
@@ -1217,4 +1271,4 @@ export const MediaCenterTab: React.FC = () => {
       </AnimatePresence>
     </div>
   );
-};
+});

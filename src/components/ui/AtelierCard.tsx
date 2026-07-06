@@ -41,19 +41,16 @@ export const AtelierCard: React.FC<AtelierCardProps> = ({ atelier, onClick, inde
       <div className="absolute top-0 right-0 w-48 h-48 bg-[#cca062]/5 rounded-bl-full blur-xl pointer-events-none" />
       
       {/* Visual Logo / Design Image */}
-      <div className="flex flex-col justify-center items-center p-6 bg-gradient-to-br from-white to-[#faf8f5] rounded-3xl border border-[#e8dcc8]/40 w-48 h-48 shrink-0 shadow-inner new-isotipo-container">
+      <div className="flex flex-col justify-center items-center p-4 bg-white rounded-3xl border border-[#e8dcc8]/40 w-full lg:w-64 h-64 shrink-0 shadow-inner new-isotipo-container">
         {isImageLogo ? (
-          <div className="w-28 h-28 rounded-full border border-[#e8dcc8]/40 bg-white flex items-center justify-center overflow-hidden p-1 shadow-xs">
+          <div className="w-full h-full rounded-2xl border border-[#e8dcc8]/40 bg-white flex items-center justify-center overflow-hidden p-2 shadow-sm">
             <ImageWithFallback src={atelier.logo!} alt={atelier.name} className="w-full h-full object-contain" />
           </div>
         ) : (
-          <div className="w-28 h-28 rounded-full border border-[#e8dcc8]/40 bg-white flex items-center justify-center text-4xl shadow-xs">
+          <div className="w-full h-full rounded-2xl border border-[#e8dcc8]/40 bg-white flex items-center justify-center text-4xl shadow-sm">
             {atelier.logo}
           </div>
         )}
-        <span className="font-serif text-[10px] font-black uppercase tracking-widest mt-3 text-[#cca062]/80">
-          {atelier.id === 'guennita' ? 'Guennita' : atelier.id === 'pallyra' ? 'La Pallyra' : atelier.id === 'mimada' ? 'Mimada Sim' : 'Tutty Mimo'}
-        </span>
       </div>
 
       {/* Text Info */}

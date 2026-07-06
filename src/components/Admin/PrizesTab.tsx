@@ -20,6 +20,8 @@ import {
 import { CompanyId } from "../../types";
 import { ImageWithFallback } from "../ImageWithFallback";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface Prize {
   id: string;
   name: string;
@@ -30,9 +32,10 @@ interface Prize {
   companyId: string;
 }
 
-export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({
+export const PrizesTab: React.FC<{ companyId: CompanyId }> = React.memo(({
   companyId,
 }) => {
+  const orchestrator = useAdminOrchestrator();
   const [prizes, setPrizes] = useState<Prize[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,9 +55,25 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({
       (prizes.length >= 7 && !editingPrize.id)
     ) {
       if (prizes.length >= 7 && !editingPrize?.id) {
-        alert("Limite máximo de 7 brindes atingido.");
+        orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Limite máximo de 7 brindes atingido.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
       } else {
-        alert("Preencha os campos obrigatórios.");
+        orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Preencha os campos obrigatórios.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Aviso' }
+    });
       }
       return;
     }
@@ -105,7 +124,15 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({
         <button
           onClick={() => {
             if (prizes.length >= 7) {
-              alert("O sistema permite no máximo 7 brindes para a roleta.");
+              orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "O sistema permite no máximo 7 brindes para a roleta.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
               return;
             }
             setEditingPrize({ type: "special", weight: 1 });
@@ -327,4 +354,4 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = ({
       </AnimatePresence>
     </div>
   );
-};
+});

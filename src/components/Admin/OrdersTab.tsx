@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, Search, Filter, SortDesc, Calendar, Box, Package, FileText, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Filter, SortDesc, Calendar, Box, Package, FileText, CheckCircle2, Trash2 } from "lucide-react";
 import { Order, CompanyId, Product, Insumo, SiteSettings, Customer } from "../../types";
 import { getSiteSettings } from "../../services/firebaseService";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
@@ -17,13 +17,13 @@ interface OrdersTabProps {
   customers: Customer[];
   companyId: CompanyId;
   onUpdateStatus: (id: string, status: Order["status"]) => void;
-  onSaveOrder: (order: Partial<Order>) => void;
+  onSaveOrder: (order: Partial<Order>) => Promise<string | void>;
   onDeleteOrder: (id: string) => void;
   initialOrderId?: string | null;
   initialCustomerId?: string | null;
 }
 
-export const OrdersTab: React.FC<OrdersTabProps> = ({
+export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
   orders,
   products,
   insumos,
@@ -52,11 +52,75 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
   const [receiptType, setReceiptType] = useState<"coupon" | "receipt">("coupon");
   
   useEffect(() => {
-    getSiteSettings(companyId).then(setSettings);
-  }, [companyId]);
+    const handleNewOrder = () => setIsWizardOpen(true);
+    const handleClose = () => {
+        setIsWizardOpen(false);
+        setIsFormModalOpen(false);
+        setReceiptOrder(null);
+    };
+    window.addEventListener('trigger-new-order', handleNewOrder);
+    window.addEventListener('trigger-close-modals', handleClose);
+    return () => {
+        window.removeEventListener('trigger-new-order', handleNewOrder);
+        window.removeEventListener('trigger-close-modals', handleClose);
+    };
+  }, []);
+  
+  // Selection Logic
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const toggleOrder = (id: string) => {
+    setSelectedOrderIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+  const toggleSelectAll = () => {
+    if (selectedOrderIds.length === filteredOrders.length) setSelectedOrderIds([]);
+    else setSelectedOrderIds(filteredOrders.map(o => o.id!));
+  };
+  const clearSelection = () => setSelectedOrderIds([]);
+
+  // Barcode Scanner State
+  const [isScanning, setIsScanning] = useState(false);
+  const [barcode, setBarcode] = useState("");
+  const [toast, setToast] = useState<{ message: string } | null>(null);
+
+  useEffect(() => {
+    if (!isScanning) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        const found = orders.find(o => o.code === barcode);
+        if (found) {
+          setSelectedOrderId(found.id);
+        } else {
+          setToast({ message: "Produto não localizado." });
+          setTimeout(() => setToast(null), 3000);
+        }
+        setBarcode("");
+        setIsScanning(false);
+      } else if (e.key.length === 1) {
+        setBarcode(prev => prev + e.key);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isScanning, barcode, orders]);
+
+  // Batch Handlers
+  const handleBatchDelete = () => {
+    if (window.confirm(`Deseja realmente excluir os ${selectedOrderIds.length} pedidos selecionados?`)) {
+      selectedOrderIds.forEach(onDeleteOrder);
+      clearSelection();
+    }
+  };
+  
+  // ... existing code ...
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Filtering Logic
-  const filteredOrders = useMemo(() => {
+  const { filteredOrders, paginatedOrders, totalPages } = useMemo(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const weekAgo = today - 7 * 24 * 60 * 60 * 1000;
@@ -114,8 +178,15 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
       }
     });
 
-    return result;
-  }, [orders, searchTerm, selectedFilter, sortOption]);
+    const totalPages = Math.ceil(result.length / rowsPerPage);
+    const paginatedOrders = result.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+
+    return { filteredOrders: result, paginatedOrders, totalPages };
+  }, [orders, searchTerm, selectedFilter, sortOption, currentPage, rowsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedFilter, sortOption]);
 
   const getProductInfo = (order: Order) => {
     if (order.items && order.items.length > 0) {
@@ -198,9 +269,18 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
             setIsFormModalOpen(true); // Re-using OrderFormModal for editing since status is inside it.
           }}
           onSave={onSaveOrder}
+          onUpdateStatus={onUpdateStatus}
           onPrint={(o) => {
             setReceiptType("coupon");
             setReceiptOrder(o);
+          }}
+          onDelete={(id) => {
+            onDeleteOrder(id);
+            setSelectedOrderId(null);
+          }}
+          onDuplicate={async (o) => {
+            await handleDuplicate(o);
+            setSelectedOrderId(null);
           }}
         />
         {isFormModalOpen && (
@@ -229,17 +309,59 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
       {/* Top Header & Stats */}
       <div className="px-6 pt-6 pb-6 glass-3d border-b border-[#E5E5EA]/50 z-10 shrink-0 mx-6 mt-6 rounded-[2.5rem] shadow-3d-soft">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-black text-[#1C1C1E] tracking-tight uppercase">Centro de Pedidos</h1>
-            <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest mt-1">Gestão Completa do Fluxo Comercial</p>
+          <div className="flex items-center gap-4">
+              <input type="checkbox" checked={selectedOrderIds.length === filteredOrders.length && filteredOrders.length > 0} onChange={toggleSelectAll} className="w-4 h-4 rounded border-gray-300" />
+              <div>
+                <h1 className="text-2xl font-black text-[#1C1C1E] tracking-tight uppercase">Centro de Pedidos</h1>
+                <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest mt-1">Gestão Completa do Fluxo Comercial</p>
+              </div>
+            </div>
+          <div className="flex gap-2">
+            <div className="flex flex-col">
+              <button
+                onClick={() => setIsScanning(!isScanning)}
+                className={`clean-3d-button ${isScanning ? 'bg-indigo-600 text-white shadow-3d-soft-active' : ''}`}
+              >
+                {isScanning ? "Aguardando leitura..." : "Bipar Código"}
+              </button>
+              {isScanning && (
+                <input
+                  type="text"
+                  placeholder="Testar código (Enter)..."
+                  className="mt-2 px-3 py-1.5 text-xs border rounded-lg"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        const found = orders.find(o => o.code === barcode);
+                        if (found) {
+                          setSelectedOrderId(found.id);
+                        } else {
+                          setToast({ message: "Produto não localizado." });
+                          setTimeout(() => setToast(null), 3000);
+                        }
+                        setBarcode("");
+                        setIsScanning(false);
+                    }
+                  }}
+                  onChange={(e) => setBarcode(e.target.value)}
+                  value={barcode}
+                />
+              )}
+            </div>
+            <button
+              onClick={() => setIsWizardOpen(true)}
+              className="clean-3d-button w-full md:w-auto"
+            >
+              <Plus size={18} strokeWidth={3} /> Novo Pedido
+            </button>
           </div>
-          <button
-            onClick={() => setIsWizardOpen(true)}
-            className="clean-3d-button w-full md:w-auto"
-          >
-            <Plus size={18} strokeWidth={3} /> Novo Pedido
-          </button>
         </div>
+
+        {/* Toast */}
+        {toast && (
+          <div className="fixed bottom-4 right-4 bg-rose-500 text-white px-6 py-3 rounded-2xl shadow-3d-soft z-50 animate-in slide-in-from-bottom-4">
+            {toast.message}
+          </div>
+        )}
 
         {/* Top Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -329,33 +451,65 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-[1400px] mx-auto pb-20">
-            {filteredOrders.map(order => (
-              <OrderCard
-                key={order.id}
-                order={order}
-                productInfo={getProductInfo(order)}
-                statusInfo={getStatusInfo(order.status)}
-                onViewDetails={(id) => setSelectedOrderId(id)}
-                onChangeStatusRequest={(o) => {
-                  setEditingOrder(o);
-                  setIsFormModalOpen(true); // Re-using OrderFormModal for editing since status is inside it.
-                }}
-                onUpdateStatus={onUpdateStatus}
-                onDuplicate={handleDuplicate}
-                onPrint={(o) => {
-                  setReceiptType("coupon");
-                  setReceiptOrder(o);
-                }}
-                onGenerateLabel={(o) => {
-                  setReceiptType("receipt");
-                  setReceiptOrder(o);
-                }}
-              />
-            ))}
+          <div className="flex flex-col gap-8 max-w-[1400px] mx-auto pb-20">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {paginatedOrders.map(order => (
+                <OrderCard
+                  key={order.id}
+                  order={order}
+                  productInfo={getProductInfo(order)}
+                  statusInfo={getStatusInfo(order.status)}
+                  onViewDetails={(id) => setSelectedOrderId(id)}
+                  onChangeStatusRequest={(o) => {
+                    setEditingOrder(o);
+                    setIsFormModalOpen(true); // Re-using OrderFormModal for editing since status is inside it.
+                  }}
+                  onUpdateStatus={onUpdateStatus}
+                  onDuplicate={handleDuplicate}
+                  onPrint={(o) => {
+                    setReceiptType("coupon");
+                    setReceiptOrder(o);
+                  }}
+                  onGenerateLabel={(o) => {
+                    setReceiptType("receipt");
+                    setReceiptOrder(o);
+                  }}
+                  isSelected={selectedOrderIds.includes(order.id!)}
+                  onToggleSelect={() => toggleOrder(order.id!)}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-[#E5E5EA]">
+              <div className="text-xs text-[#8E8E93]">
+                Exibindo {((currentPage - 1) * rowsPerPage) + 1} - {Math.min(currentPage * rowsPerPage, filteredOrders.length)} de {filteredOrders.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={rowsPerPage}
+                  onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                  className="px-2 py-1 text-xs border rounded-lg"
+                >
+                  {[10, 25, 50].map(v => <option key={v} value={v}>{v} por página</option>)}
+                </select>
+                <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1 text-xs border rounded-lg disabled:opacity-50">Anterior</button>
+                <span className="text-xs font-bold">{currentPage} de {totalPages}</span>
+                <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="px-3 py-1 text-xs border rounded-lg disabled:opacity-50">Próximo</button>
+              </div>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Batch Action Bar */}
+      {selectedOrderIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-3d-soft animate-in slide-in-from-bottom-4">
+          <span className="text-xs font-bold mr-2">{selectedOrderIds.length} selecionados</span>
+          <button onClick={handleBatchDelete} className="p-2 hover:bg-white/10 rounded-lg"><Trash2 size={16} className="text-rose-400"/></button>
+          <button onClick={clearSelection} className="p-2 hover:bg-white/10 rounded-lg">Cancelar</button>
+        </div>
+      )}
 
       {/* Modals */}
       {isWizardOpen && (
@@ -380,4 +534,4 @@ export const OrdersTab: React.FC<OrdersTabProps> = ({
       )}
     </div>
   );
-};
+});

@@ -23,6 +23,8 @@ import { formatCurrency } from "../../lib/currencyUtils";
 import { calculateProductCost } from "../../lib/finance";
 import { motion, AnimatePresence } from "motion/react";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface NewProductFormProps {
   companyId: CompanyId;
   components: Componente[];
@@ -40,6 +42,7 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
   existingProducts,
   editingProduct
 }) => {
+  const orchestrator = useAdminOrchestrator();
   const [activeSection, setActiveSection] = useState<number>(1);
   const [formData, setFormData] = useState({
     name: editingProduct?.product_name || "",
@@ -83,7 +86,15 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.category) {
-      alert("Nome e Categoria são obrigatórios!");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Nome e Categoria são obrigatórios!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Aviso' }
+    });
       return;
     }
 
@@ -109,7 +120,15 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
       onClose();
     } catch (error) {
       console.error(error);
-      alert("Erro ao salvar produto.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar produto.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setLoading(false);
     }

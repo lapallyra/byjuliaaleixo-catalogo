@@ -45,7 +45,7 @@ interface CouponsTabProps {
   products: Product[];
 }
 
-export const CouponsTab: React.FC<CouponsTabProps> = ({
+export const CouponsTab: React.FC<CouponsTabProps> = React.memo(({
   companyId,
   orders,
   products
@@ -1452,4 +1452,4 @@ export const CouponsTab: React.FC<CouponsTabProps> = ({
 
     </div>
   );
-};
+});

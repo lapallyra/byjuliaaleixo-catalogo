@@ -43,6 +43,8 @@ import { formatCurrency } from "../../lib/currencyUtils";
 import { db } from "../../lib/firebase";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface InventoryTabProps {
   orders: Order[];
   products: Product[];
@@ -91,12 +93,13 @@ const STAGES: { id: KanbanStage; label: string; color: string; border: string; b
   },
 ];
 
-export const InventoryTab: React.FC<InventoryTabProps> = ({
+export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
   orders,
   products,
   insumos,
   onUpdateOrder,
 }) => {
+  const orchestrator = useAdminOrchestrator();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "hoje" | "amanha" | "atrasados" | "alta_prioridade" | "meu_setor">("all");
   const [filterAtelier, setFilterAtelier] = useState<string>("all");
@@ -399,10 +402,26 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
     try {
       await onUpdateOrder(selectedItem.id, { observations: tempObservations });
       setSelectedItem({ ...selectedItem, observations: tempObservations });
-      alert("Observações salvas com sucesso!");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Observações salvas com sucesso!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
     } catch (err) {
       console.error(err);
-      alert("Erro ao salvar observações.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar observações.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setIsSavingObservations(false);
     }
@@ -1479,4 +1498,4 @@ export const InventoryTab: React.FC<InventoryTabProps> = ({
 
     </div>
   );
-};
+});

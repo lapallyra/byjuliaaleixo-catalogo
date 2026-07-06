@@ -106,22 +106,6 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
       return;
     }
 
-    // First check hardcoded fallbacks
-    const fallbackCoupons: Record<string, number> = {
-      'ARTESANAL10': 0.10,
-      'DESCONTO15': 0.15,
-      'PROMO20': 0.20,
-    };
-
-    if (fallbackCoupons[code] !== undefined) {
-      setAppliedCoupon({
-        code,
-        discountType: 'percentage',
-        discountValue: fallbackCoupons[code] * 100,
-      });
-      return;
-    }
-
     // Check database coupons
     const realCoupon = couponsList.find(c => c.code?.toUpperCase() === code);
     if (!realCoupon) {

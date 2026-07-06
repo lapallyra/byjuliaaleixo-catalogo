@@ -57,13 +57,14 @@ import {
 } from "../../services/firebaseService";
 
 interface FinanceTabProps {
+  auditLogs: AuditLog[];
   orders: Order[];
   products: Product[];
   componentes: Componente[];
   companyId: CompanyId;
 }
 
-export const FinanceTab: React.FC<FinanceTabProps> = ({
+export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
   orders,
   products,
   componentes,
@@ -71,7 +72,6 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
 }) => {
   // Database subscriptions state
   const [financeEntries, setFinanceEntries] = useState<FinanceEntry[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loadingEntries, setLoadingEntries] = useState(true);
 
   // Filter States
@@ -126,8 +126,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
 
     return () => {
       unsubFinance();
-      unsubAudit();
-    };
+      };
   }, [companyId]);
 
   // Unified Transaction List (Real database entries only)
@@ -1879,4 +1878,4 @@ export const FinanceTab: React.FC<FinanceTabProps> = ({
 
     </div>
   );
-};
+});

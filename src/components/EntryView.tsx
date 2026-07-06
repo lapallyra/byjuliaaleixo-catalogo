@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Heart, Info, Package, Mail, User, Sparkles, ArrowRight, ArrowRightLeft, Gift, ShoppingBag, Eye, Star, ChevronDown, X } from 'lucide-react';
-import { AppConfig, Product, SiteSettings, CompanyId } from '../types';
+import { AppConfig, Product, SiteSettings, CompanyId, Campaign } from '../types';
 import { useAuth } from './AuthProvider';
 import { useAdminOrchestrator } from './AdminOrchestratorSystem';
-import { subscribeToAllSettings, subscribeToFeedbacks } from '../services/firebaseService';
+import { subscribeToAllSettings, subscribeToApprovedFeedbacks, subscribeToCampaigns } from '../services/firebaseService';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './ImageWithFallback';
 import { ProductCard } from './ui/ProductCard';
 import { FeaturedProductCard } from './Catalog/FeaturedProductCard';
 import { LogoAndSignature } from './ui/LogoAndSignature';
 import { themes, getTheme } from '../lib/theme';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface EntryViewProps {
   config: AppConfig;
@@ -38,6 +39,35 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
   const [isStoryOpen, setIsStoryOpen] = useState(false);
   const [activeFeedbackIndex, setActiveFeedbackIndex] = useState(0);
   const [realFeedbacks, setRealFeedbacks] = useState<any[]>([]);
+  const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
+
+  // Filter campaigns for home
+  const homeCampaigns = React.useMemo(() => {
+    const now = new Date();
+    return activeCampaigns
+      .filter(c => 
+        c.active && 
+        c.targetPages?.includes('home') &&
+        (!c.startDate || new Date(c.startDate) <= now) &&
+        (!c.endDate || new Date(c.endDate) >= now)
+      )
+      .sort((a, b) => (b.priority || 0) - (a.priority || 0));
+  }, [activeCampaigns]);
+
+  // Main banner campaign
+  const mainBannerCampaign = React.useMemo(() => 
+    homeCampaigns.find(c => c.type === 'banner' || c.type === 'seasonal_campaign'), 
+  [homeCampaigns]);
+
+  // Featured products from campaigns
+  const campaignFeaturedProducts = React.useMemo(() => {
+    const highlightCampaigns = homeCampaigns.filter(c => c.type === 'product_highlight' || c.type === 'carousel');
+    const productIds = highlightCampaigns.flatMap(c => c.items || []);
+    if (productIds.length > 0) {
+      return allProducts.filter(p => productIds.includes(p.id));
+    }
+    return null;
+  }, [homeCampaigns, allProducts]);
 
   // Anti-printscreen & Ctrl+P prevention effect
   useEffect(() => {
@@ -62,8 +92,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
   const feedbacksDynamic = React.useMemo(() => {
     if (realFeedbacks.length > 0) {
-      const approved = realFeedbacks
-        .filter(fb => fb.status === 'approved')
+      return realFeedbacks
         .map(fb => ({
           stars: fb.stars || 5,
           text: `"${fb.text}"`,
@@ -72,36 +101,9 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           colorTagBg: 'bg-emerald-50',
           colorTagText: 'text-emerald-600'
         }));
-      
-      if (approved.length > 0) return approved;
     }
 
-    return [
-      {
-        stars: 5,
-        text: '"O kit maternidade da Tutty Mimo superou todas as minhas expectativas. O enxoval possui uma maciez indescritível e cada pequeno ponto transborda amor. Ficou lindo demais!"',
-        author: 'Mariana S.',
-        atelier: 'Tutty Mimo',
-        colorTagBg: 'bg-[#d4bda1]/15',
-        colorTagText: 'text-[#a88258]'
-      },
-      {
-        stars: 5,
-        text: '"Encomendei os cadernos e agendas da La Pallyra para presentear minhas madrinhas de casamento. O acabamento artesanal em cartonagem é o legítimo luxo com afeto."',
-        author: 'Beatriz F.',
-        atelier: 'La Pallyra',
-        colorTagBg: 'bg-[#cca062]/15',
-        colorTagText: 'text-[#cca062]'
-      },
-      {
-        stars: 5,
-        text: '"As rosas de cetim do ateliê com amor, Guennita parecem reais. O capricho nas embalagens e o carinho com que as flores são moldadas me fez chorar quando peguei o pacote."',
-        author: 'Camila R.',
-        atelier: 'com amor, Guennita',
-        colorTagBg: 'bg-[#5b2122]/10',
-        colorTagText: 'text-[#5b2122]'
-      }
-    ];
+    return [];
   }, [realFeedbacks]);
 
   useEffect(() => {
@@ -117,13 +119,18 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       setCustomSettings(results);
     });
     
-    const unsubFeedbacks = subscribeToFeedbacks((results) => {
+    const unsubFeedbacks = subscribeToApprovedFeedbacks((results) => {
       setRealFeedbacks(results);
+    });
+
+    const unsubCampaigns = subscribeToCampaigns((results) => {
+      setActiveCampaigns(results);
     });
 
     return () => {
       unsubSettings();
       unsubFeedbacks();
+      unsubCampaigns();
     };
   }, []);
 
@@ -213,6 +220,67 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           <LogoAndSignature small={false} />
         </div>
       </div>
+
+      {/* DYNAMIC CAMPAIGN BANNER */}
+      {mainBannerCampaign && (
+        <div 
+          className="w-full relative aspect-[21/9] md:aspect-[3/1] lg:aspect-[4/1] overflow-hidden group cursor-pointer"
+          onClick={() => {
+            if (mainBannerCampaign.highlightProductId) {
+              const p = allProducts.find(prod => prod.id === mainBannerCampaign.highlightProductId);
+              if (p) {
+                const route = p.company === 'pallyra' ? '/lapallyra' : p.company === 'guennita' ? '/comamorguennita' : p.company === 'mimada' ? '/mimadasim' : '/tuttymimo';
+                navigate(`${route}?product=${p.id}`);
+              }
+            }
+          }}
+        >
+          <img 
+            src={window.innerWidth < 768 && mainBannerCampaign.mobileImageUrl ? mainBannerCampaign.mobileImageUrl : (mainBannerCampaign.imageUrl || "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=2070&auto=format&fit=crop")} 
+            alt={mainBannerCampaign.title}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-center p-6 text-white backdrop-blur-[1px]">
+            <motion.span 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-[10px] md:text-xs font-bold tracking-[0.4em] uppercase mb-2 text-[#cca062]"
+            >
+              Exclusividade Ateliê
+            </motion.span>
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="font-parisienne text-3xl md:text-5xl lg:text-7xl mb-4"
+              style={{ color: mainBannerCampaign.colorTheme || 'inherit' }}
+            >
+              {mainBannerCampaign.title}
+            </motion.h1>
+            {mainBannerCampaign.description && (
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-xs md:text-base font-light max-w-2xl opacity-90 font-sans tracking-wide"
+              >
+                {mainBannerCampaign.description}
+              </motion.p>
+            )}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mt-8"
+            >
+              <button className="px-8 py-3 bg-white text-[#3A312D] text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-[#3A312D] hover:text-[#cca062] transition-all shadow-lg">
+                Explorar Coleção
+              </button>
+            </motion.div>
+          </div>
+        </div>
+      )}
 
       {/* LUXURY ACTIVE NAVIGATION BAR */}
       <div className="w-full border-b border-[#e8dcc8]/25 bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-3xs">
@@ -433,15 +501,17 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       {/* PRODUTOS (VITRINE DIRETA DE PRODUTOS PREMIUM COM MAPEAMENTO DE ATELIÊS) */}
       <section id="produtos" className="scroll-mt-24 py-12 px-4 sm:px-5 max-w-[1440px] mx-auto">
         <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-[42px] font-parisienne font-normal text-[#3A312D] tracking-normal mt-1 mb-2">Vitrine de Destaques</h2>
+          <h2 className="text-3xl sm:text-[42px] font-parisienne font-normal text-[#3A312D] tracking-normal mt-1 mb-2">
+            {campaignFeaturedProducts ? "Destaques da Campanha" : "Vitrine de Destaques"}
+          </h2>
           <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
           <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
-            Produtos mais queridos
+            {campaignFeaturedProducts ? "Produtos selecionados especialmente para você" : "Produtos mais queridos"}
           </p>
         </div>
         
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 max-w-7xl mx-auto px-2">
-          {featuredProducts.map((prod) => {
+          {(campaignFeaturedProducts || featuredProducts).map((prod) => {
             const targetRoute = prod.company === 'pallyra' ? '/lapallyra' 
                               : prod.company === 'guennita' ? '/comamorguennita' 
                               : prod.company === 'mimada' ? '/mimadasim' 

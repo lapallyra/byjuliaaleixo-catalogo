@@ -33,6 +33,8 @@ import { safeFormat } from '../../lib/dateUtils';
 import { updateOrder } from '../../services/firebaseService';
 import { HorizontalScroll } from '../shared/HorizontalScroll';
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 const getStatusRGB = (status: string) => {
   const s = (status || "").toLowerCase();
   if (s === "ready" || s === "pronto") return "99, 102, 241"; // indigo-500
@@ -50,6 +52,7 @@ interface ExpeditionTabProps {
 type ExpeditionStatus = 'all' | 'waiting_expedition' | 'ready_for_shipping' | 'shipped' | 'delivered' | 'store_pickup';
 
 export const ExpeditionTab: React.FC<ExpeditionTabProps> = ({ companyId, orders, products }) => {
+  const orchestrator = useAdminOrchestrator();
   const [activeFilter, setActiveFilter] = useState<ExpeditionStatus>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -394,7 +397,15 @@ export const ExpeditionTab: React.FC<ExpeditionTabProps> = ({ companyId, orders,
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <button 
                     onClick={() => {
-                      alert('Funcionalidade de geração de etiqueta em preparação para integração com Melhor Envio/Correios.');
+                      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: 'Funcionalidade de geração de etiqueta em preparação para integração com Melhor Envio/Correios.',
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
                     }}
                     className="flex flex-col items-center justify-center gap-2 p-4 bg-white border border-[#E5E5EA] rounded-3xl hover:shadow-md transition-all group"
                   >

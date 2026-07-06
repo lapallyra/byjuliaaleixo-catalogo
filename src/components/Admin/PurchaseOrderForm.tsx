@@ -5,6 +5,8 @@ import { db } from "../../lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { formatCurrency } from "../../lib/currencyUtils";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface PurchaseOrderFormProps {
   companyId: CompanyId;
   suppliers: Supplier[];
@@ -18,6 +20,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
   insumos,
   onClose 
 }) => {
+  const orchestrator = useAdminOrchestrator();
   const [selectedSupplierId, setSelectedSupplierId] = useState("");
   const [items, setItems] = useState<PurchaseItem[]>([]);
   const [notes, setNotes] = useState("");
@@ -69,11 +72,27 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSupplierId) {
-      alert("Selecione um fornecedor!");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Selecione um fornecedor!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Aviso' }
+    });
       return;
     }
     if (items.length === 0) {
-      alert("Adicione pelo menos um item!");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Adicione pelo menos um item!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
       return;
     }
 
@@ -99,7 +118,15 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
       onClose();
     } catch (error) {
       console.error("Error saving purchase order:", error);
-      alert("Erro ao salvar pedido de compra.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar pedido de compra.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setLoading(false);
     }

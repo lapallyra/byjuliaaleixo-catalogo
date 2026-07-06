@@ -4,6 +4,8 @@ import { CompanyId, Supplier } from "../../types";
 import { db } from "../../lib/firebase";
 import { collection, addDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface SupplierFormProps {
   companyId: CompanyId;
   editingSupplier?: Supplier | null;
@@ -15,6 +17,7 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
   editingSupplier, 
   onClose 
 }) => {
+  const orchestrator = useAdminOrchestrator();
   const [formData, setFormData] = useState({
     name: editingSupplier?.name || "",
     contactName: editingSupplier?.contactName || "",
@@ -30,7 +33,15 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phone) {
-      alert("Nome e Telefone são obrigatórios!");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Nome e Telefone são obrigatórios!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Aviso' }
+    });
       return;
     }
 
@@ -54,7 +65,15 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
       onClose();
     } catch (error) {
       console.error("Error saving supplier:", error);
-      alert("Erro ao salvar fornecedor.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar fornecedor.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setLoading(false);
     }

@@ -289,6 +289,31 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "url", "format", "size"]
+    },
+    "Campaign": {
+      "title": "Campaign",
+      "description": "Marketing campaign with banners and featured products",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["banner", "carousel", "product_highlight", "seasonal_campaign"] },
+        "active": { "type": "boolean" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "priority": { "type": "number" },
+        "companyId": { "type": "string" },
+        "items": { "type": "array", "items": { "type": "string" } },
+        "targetPages": { "type": "array", "items": { "type": "string" } },
+        "highlightProductId": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "mobileImageUrl": { "type": "string" },
+        "colorTheme": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "type", "active", "priority", "companyId"]
     }
   },
   "firestore": {
@@ -307,6 +332,10 @@
     "/product_campaigns/{campaignId}": {
       "schema": "ProductCampaign",
       "description": "Seasonal promotional campaigns"
+    },
+    "/campaigns/{campaignId}": {
+      "schema": "Campaign",
+      "description": "Marketing and showcase campaigns"
     },
     "/addons/{addonId}": {
       "schema": "Addon",

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { User, Phone, Mail, MapPin, Hash, Clipboard, Check, X } from "lucide-react";
 import { Customer, CompanyId } from "../../types";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface NewClientFormProps {
   companyId: CompanyId;
   onSave: (clientData: any) => Promise<void>;
@@ -11,6 +13,7 @@ interface NewClientFormProps {
 }
 
 export const NewClientForm: React.FC<NewClientFormProps> = ({ companyId, onSave, onClose, existingCustomers, selectedCustomer }) => {
+  const orchestrator = useAdminOrchestrator();
   const [formData, setFormData] = useState({
     name: selectedCustomer?.name || "",
     type: "PF" as "PF" | "PJ",
@@ -47,7 +50,15 @@ export const NewClientForm: React.FC<NewClientFormProps> = ({ companyId, onSave,
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.contact) {
-      alert("Nome e Telefone são obrigatórios!");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Nome e Telefone são obrigatórios!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Aviso' }
+    });
       return;
     }
 
@@ -59,7 +70,15 @@ export const NewClientForm: React.FC<NewClientFormProps> = ({ companyId, onSave,
         );
     
         if (isDuplicate) {
-          alert("Cliente já cadastrado com estes dados!");
+          orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Cliente já cadastrado com estes dados!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
           return;
         }
     }
@@ -78,7 +97,15 @@ export const NewClientForm: React.FC<NewClientFormProps> = ({ companyId, onSave,
       onClose();
     } catch (error) {
       console.error(error);
-      alert("Erro ao salvar cliente.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar cliente.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setLoading(false);
     }

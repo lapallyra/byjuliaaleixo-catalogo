@@ -31,10 +31,10 @@ import { subscribeToAuditLogs } from '../../services/auditService';
 import { safeFormat } from '../../lib/dateUtils';
 import { formatCurrency } from '../../lib/currencyUtils';
 
-export const AuditTimelineTab: React.FC = () => {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+export const AuditTimelineTab: React.FC<{ companyId: CompanyId, auditLogs: AuditLog[] }> = React.memo(({ companyId, auditLogs }) => {
+  const logs = auditLogs;
+  const loading = false;
+const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -427,4 +427,4 @@ export const AuditTimelineTab: React.FC = () => {
       </div>
     </div>
   );
-};
+});

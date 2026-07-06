@@ -42,6 +42,7 @@ import {
   AppConfig 
 } from "../types";
 import { useAuth } from "./AuthProvider";
+import { getPublicAtelierImage } from "../utils/atelierImage";
 
 interface CheckoutPageProps {
   config: AppConfig;
@@ -212,7 +213,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
               setBrandTheme({
                 primary: settings.theme_primary_color || brandTheme.primary,
                 secondary: settings.theme_accent_color || brandTheme.secondary,
-                logo: settings.store_logo || ""
+                logo: getPublicAtelierImage(settings) || ""
               });
             }
             const gSettings = await getGlobalSettings();

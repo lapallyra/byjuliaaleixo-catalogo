@@ -166,21 +166,6 @@ export function CheckoutModal({
       return;
     }
 
-    const fallbackCoupons: Record<string, number> = {
-      'ARTESANAL10': 0.10,
-      'DESCONTO15': 0.15,
-      'PROMO20': 0.20,
-      'GANHEI10': 0.10,
-    };
-
-    if (fallbackCoupons[code] !== undefined) {
-      setCouponFeedback({
-        type: 'success',
-        message: `Cupom ${code} aplicado: ${fallbackCoupons[code] * 100}% de desconto.`
-      });
-      return;
-    }
-
     const realCoupon = couponsList.find(c => c.code?.toUpperCase() === code);
     if (!realCoupon) {
       setCouponFeedback({
@@ -374,18 +359,6 @@ export function CheckoutModal({
   const discount: number = useMemo(() => {
     const code = cupom.trim().toUpperCase();
     if (!code) return 0;
-
-    // First check hardcoded ones as fallback
-    const fallbackCoupons: Record<string, number> = {
-      'ARTESANAL10': 0.10,
-      'DESCONTO15': 0.15,
-      'PROMO20': 0.20,
-      'GANHEI10': 0.10,
-    };
-
-    if (fallbackCoupons[code] !== undefined) {
-      return subtotal * fallbackCoupons[code];
-    }
 
     // Now check real database coupons
     const realCoupon = couponsList.find(c => c.code?.toUpperCase() === code);

@@ -4,6 +4,8 @@ import { Product, Customer, Order, CompanyId } from "../../types";
 import { addCustomer } from "../../services/firebaseService";
 import { safeFormatISO } from "../../lib/dateUtils";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface OrderWizardModalProps {
   products: Product[];
   customers: Customer[];
@@ -20,6 +22,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   onSave,
   initialCustomerId,
 }) => {
+  const orchestrator = useAdminOrchestrator();
   // --- Form State ---
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(initialCustomerId || null);
   const [customerSearch, setCustomerSearch] = useState("");
@@ -103,7 +106,15 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
       }
     } catch (err) {
       console.error(err);
-      alert("Erro ao cadastrar cliente.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao cadastrar cliente.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setIsRegisteringCustomer(false);
     }
@@ -112,7 +123,15 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCustomerId) {
-      alert("Por favor, selecione ou cadastre um cliente.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Por favor, selecione ou cadastre um cliente.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Aviso' }
+    });
       return;
     }
 
@@ -137,7 +156,15 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
       await onSave(orderData);
     } catch (err) {
       console.error(err);
-      alert("Erro ao salvar o pedido.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar o pedido.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setIsSaving(false);
     }

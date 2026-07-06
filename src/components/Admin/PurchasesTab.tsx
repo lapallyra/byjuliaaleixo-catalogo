@@ -50,14 +50,17 @@ import { PurchaseOrderForm } from "./PurchaseOrderForm";
 import { InsumoFormModal } from "./InsumoFormModal";
 import { ComponentsTab } from "./ComponentsTab";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface PurchasesTabProps {
+  orders: Order[];
   companyId: CompanyId;
 }
 
-export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
+export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId, orders }) => {
+  const orchestrator = useAdminOrchestrator();
   const [activeTab, setActiveTab] = useState<'items' | 'suggestions' | 'manual' | 'history' | 'suppliers'>('items');
   const [insumos, setInsumos] = useState<Componente[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,16 +72,12 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isInsumoModalOpen, setIsInsumoModalOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState<PurchaseOrder | null>(null);
+  const activePurchase = useMemo(() => purchaseOrders.find(p => p.id === selectedPurchase?.id) || selectedPurchase, [purchaseOrders, selectedPurchase]);
 
   useEffect(() => {
     const qInsumos = query(collection(db, "componentes"));
     const unsubInsumos = onSnapshot(qInsumos, (snap) => {
       setInsumos(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Componente)));
-    });
-
-    const qOrders = query(collection(db, "orders"), where("companyId", "==", companyId));
-    const unsubOrders = onSnapshot(qOrders, (snap) => {
-      setOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
     });
 
     const qPurchases = query(collection(db, "purchase_orders"), where("companyId", "==", companyId));
@@ -94,7 +93,6 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
     setLoading(false);
     return () => {
       unsubInsumos();
-      unsubOrders();
       unsubPurchases();
       unsubSuppliers();
     };
@@ -283,7 +281,15 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
                 await setDoc(doc(db, "componentes", docId), payload);
               } catch (err) {
                 console.error("Error saving insumo: ", err);
-                alert("Erro ao salvar insumo. Tente novamente.");
+                orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar insumo. Tente novamente.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
               }
             }}
             onDeleteComponente={async (id) => {
@@ -294,7 +300,15 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
                 }
               } catch (err) {
                 console.error("Error deleting insumo: ", err);
-                alert("Erro ao excluir insumo.");
+                orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao excluir insumo.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
               }
             }}
           />
@@ -590,13 +604,21 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
               setIsInsumoModalOpen(false);
             } catch (err) {
               console.error("Error adding insumo: ", err);
-              alert("Erro ao cadastrar insumo. Tente novamente.");
+              orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao cadastrar insumo. Tente novamente.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
             }
           }}
         />
       )}
 
-      {selectedPurchase && (
+      {activePurchase && (
         <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
@@ -605,8 +627,8 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
                     <FileText size={20} />
                   </div>
                   <div>
-                     <h2 className="text-lg font-bold text-slate-900 leading-none">Pedido {selectedPurchase.code}</h2>
-                     <p className="text-xs text-slate-500 mt-1">{selectedPurchase.supplierName}</p>
+                     <h2 className="text-lg font-bold text-slate-900 leading-none">Pedido {activePurchase.code}</h2>
+                     <p className="text-xs text-slate-500 mt-1">{activePurchase.supplierName}</p>
                   </div>
                </div>
                <button onClick={() => setSelectedPurchase(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
@@ -618,12 +640,12 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
                <div className="grid grid-cols-2 gap-4">
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p>
-                     <p className="text-sm font-bold text-slate-900 uppercase">{selectedPurchase.status}</p>
+                     <p className="text-sm font-bold text-slate-900 uppercase">{activePurchase.status}</p>
                   </div>
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Data do Pedido</p>
                      <p className="text-sm font-bold text-slate-900">
-                       {selectedPurchase.orderDate?.toDate ? selectedPurchase.orderDate.toDate().toLocaleDateString() : 'N/A'}
+                       {activePurchase.orderDate?.toDate ? activePurchase.orderDate.toDate().toLocaleDateString() : 'N/A'}
                      </p>
                   </div>
                </div>
@@ -631,7 +653,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
                <div>
                   <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Itens Comprados</h3>
                   <div className="space-y-2">
-                     {selectedPurchase.items.map((item, idx) => (
+                     {activePurchase.items.map((item, idx) => (
                         <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                            <div>
                               <p className="text-sm font-bold text-slate-900">{item.name}</p>
@@ -643,11 +665,11 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
                   </div>
                </div>
 
-               {selectedPurchase.notes && (
+               {activePurchase.notes && (
                  <div>
                     <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Observações</h3>
                     <p className="text-sm text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 italic">
-                       "{selectedPurchase.notes}"
+                       "{activePurchase.notes}"
                     </p>
                  </div>
                )}
@@ -656,20 +678,20 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
             <div className="p-6 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between">
                <div className="flex flex-col">
                   <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Total do Pedido</span>
-                  <span className="text-2xl font-black text-slate-900">{formatCurrency(selectedPurchase.totalValue)}</span>
+                  <span className="text-2xl font-black text-slate-900">{formatCurrency(activePurchase.totalValue)}</span>
                </div>
                <div className="flex gap-2">
-                  {selectedPurchase.status === 'pendente' && (
+                  {activePurchase.status === 'pendente' && (
                     <button 
-                      onClick={() => handleUpdateStatus(selectedPurchase.id, 'comprado')}
+                      onClick={() => handleUpdateStatus(activePurchase.id, 'comprado')}
                       className="px-6 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
                     >
                       Marcar como Comprado
                     </button>
                   )}
-                  {selectedPurchase.status === 'comprado' && (
+                  {activePurchase.status === 'comprado' && (
                     <button 
-                      onClick={() => handleUpdateStatus(selectedPurchase.id, 'recebido')}
+                      onClick={() => handleUpdateStatus(activePurchase.id, 'recebido')}
                       className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
                     >
                       Receber Mercadoria
@@ -682,7 +704,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = ({ companyId }) => {
       )}
     </div>
   );
-};
+});
 
 const Box = ({ size, className }: { size: number; className?: string }) => (
   <svg 

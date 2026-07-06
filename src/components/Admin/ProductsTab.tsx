@@ -35,6 +35,7 @@ import { Product, CompanyId, Insumo, Order, AuditLog } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { calculateProductCost } from "../../lib/finance";
 import { ImageWithFallback } from "../ImageWithFallback";
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface ProductsTabProps {
   products: Product[];
@@ -46,7 +47,7 @@ interface ProductsTabProps {
   onDeleteProduct: (id: string) => Promise<void>;
 }
 
-export const ProductsTab: React.FC<ProductsTabProps> = ({
+export const ProductsTab: React.FC<ProductsTabProps> = React.memo(({
   products,
   insumos,
   orders,
@@ -60,13 +61,16 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
   const [filterStatus, setFilterStatus] = useState<string>("all"); // all, active, inactive
   const [sortBy, setSortBy] = useState<string>("name"); // name, date, price, margin, best_sellers, last_update
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const activeProduct = useMemo(() => products.find(p => p.id === selectedProduct?.id) || selectedProduct, [products, selectedProduct]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
-  const filteredProducts = useMemo(() => {
+  const { filteredProducts, paginatedProducts, totalPages } = useMemo(() => {
     let result = products.filter(p => {
       const s = searchTerm.toLowerCase();
       const matchesSearch = !s || 
@@ -106,8 +110,15 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
       }
     });
 
-    return result;
-  }, [products, searchTerm, filterType, filterStatus, sortBy, insumos]);
+    const totalPages = Math.ceil(result.length / rowsPerPage);
+    const paginatedProducts = result.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+
+    return { filteredProducts: result, paginatedProducts, totalPages };
+  }, [products, searchTerm, filterType, filterStatus, sortBy, insumos, currentPage, rowsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterType, filterStatus, sortBy]);
 
   const handleOpenDetails = (product: Product) => {
     setSelectedProduct(product);
@@ -243,7 +254,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
         viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 px-4">
             <AnimatePresence mode="popLayout">
-              {filteredProducts.map((product) => {
+              {paginatedProducts.map((product) => {
                 const cost = calculateProductCost(product, insumos);
                 const marginVal = product.retail_price ? ((product.retail_price - cost) / product.retail_price) * 100 : 0;
                 
@@ -317,6 +328,27 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                 );
               })}
             </AnimatePresence>
+            {/* Pagination Controls */}
+            <div className="col-span-full flex items-center justify-between p-4 bg-white rounded-2xl border border-[#E5E5EA]">
+              <div className="text-xs text-[#8E8E93]">
+                Exibindo {((currentPage - 1) * rowsPerPage) + 1} - {Math.min(currentPage * rowsPerPage, filteredProducts.length)} de {filteredProducts.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={rowsPerPage}
+                  onChange={(e) => {
+                    setRowsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-2 py-1 text-xs border rounded-lg"
+                >
+                  {[10, 20, 50, 100].map(v => <option key={v} value={v}>{v} por página</option>)}
+                </select>
+                <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1 text-xs border rounded-lg disabled:opacity-50">Anterior</button>
+                <span className="text-xs font-bold">{currentPage} de {Math.max(1, totalPages)}</span>
+                <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)} className="px-3 py-1 text-xs border rounded-lg disabled:opacity-50">Próximo</button>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="px-4 overflow-hidden">
@@ -333,7 +365,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F5F5F7]">
-                  {filteredProducts.map((product) => {
+                  {paginatedProducts.map((product) => {
                     const cost = calculateProductCost(product, insumos);
                     const marginVal = product.retail_price ? ((product.retail_price - cost) / product.retail_price) * 100 : 0;
                     
@@ -402,6 +434,27 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
                   })}
                 </tbody>
               </table>
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-between p-4 bg-white border-t border-[#E5E5EA]">
+                <div className="text-xs text-[#8E8E93]">
+                  Exibindo {((currentPage - 1) * rowsPerPage) + 1} - {Math.min(currentPage * rowsPerPage, filteredProducts.length)} de {filteredProducts.length}
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={rowsPerPage}
+                    onChange={(e) => {
+                      setRowsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="px-2 py-1 text-xs border rounded-lg"
+                  >
+                    {[10, 20, 50, 100].map(v => <option key={v} value={v}>{v} por página</option>)}
+                  </select>
+                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1 text-xs border rounded-lg disabled:opacity-50">Anterior</button>
+                  <span className="text-xs font-bold">{currentPage} de {Math.max(1, totalPages)}</span>
+                  <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)} className="px-3 py-1 text-xs border rounded-lg disabled:opacity-50">Próximo</button>
+                </div>
+              </div>
             </div>
           </div>
         )
@@ -433,9 +486,9 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
         />
       )}
 
-      {selectedProduct && (
+      {activeProduct && (
         <ProductDetailsView
-          product={selectedProduct}
+          product={activeProduct}
           insumos={insumos}
           onClose={() => setSelectedProduct(null)}
           onEdit={(p) => {
@@ -449,7 +502,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
             setSelectedProduct(prev => prev ? { ...prev, isVisible: status } : null);
           }}
           orders={orders}
-          auditLogs={auditLogs.filter(log => log.resourceId === selectedProduct.id)}
+          auditLogs={auditLogs.filter(log => log.resourceId === activeProduct.id)}
         />
       )}
 
@@ -493,4 +546,4 @@ export const ProductsTab: React.FC<ProductsTabProps> = ({
       </AnimatePresence>
     </div>
   );
-};
+});

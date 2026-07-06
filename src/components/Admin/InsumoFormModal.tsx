@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { X, Save, DollarSign, Package, Percent, ChevronRight, ChevronLeft, MapPin, Tag, Box, Info } from "lucide-react";
 import { Componente } from "../../types";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface InsumoFormModalProps {
   editing: Partial<Componente> | null;
   onClose: () => void;
@@ -13,6 +15,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const orchestrator = useAdminOrchestrator();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [formData, setFormData] = useState<Partial<Componente>>({
     name: "",
@@ -62,7 +65,15 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
   const handleNext = () => {
     if (step === 1) {
       if (!formData.name?.trim()) {
-        alert("Por favor, informe o nome do item.");
+        orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Por favor, informe o nome do item.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
         return;
       }
       setStep(2);
@@ -80,7 +91,15 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name?.trim()) {
-      alert("Por favor, informe o nome do item.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Por favor, informe o nome do item.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
       return;
     }
     onSave(formData);

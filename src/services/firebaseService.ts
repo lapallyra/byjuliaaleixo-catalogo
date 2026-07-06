@@ -18,7 +18,7 @@ import {
 import { db, auth } from '../lib/firebase';
 import { sendTelegramNotification } from './telegramService';
 import { createAuditLog } from './auditService';
-import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig, Coupon, ProductionBatch, AuditActionType, AuditLog } from '../types';
+import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig, Coupon, ProductionBatch, AuditActionType, AuditLog, Campaign } from '../types';
 
 export enum OperationType {
   CREATE = 'create',
@@ -1297,6 +1297,30 @@ export const subscribeToFeedbacks = (callback: (feedbacks: any[]) => void) => {
   });
 };
 
+export const subscribeToApprovedFeedbacks = (callback: (feedbacks: any[]) => void) => {
+  const path = 'feedbacks';
+  const q = query(collection(db, path), where('status', '==', 'approved'), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (error) => {
+    console.warn("Ordered approved feedbacks failed, falling back to client filter", error);
+    // If composite index is missing, we fallback to all and let client filter if needed, 
+    // but better to just try without order first
+    const fallbackQ = query(collection(db, path), where('status', '==', 'approved'));
+    onSnapshot(fallbackQ, (fallbackSnap) => {
+      const results = fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      results.sort((a: any, b: any) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+        return timeB - timeA;
+      });
+      callback(results);
+    }, (fallbackError) => {
+      handleFirestoreError(fallbackError, OperationType.GET, path, false);
+    });
+  });
+};
+
 export const subscribeToAddons = (callback: (addons: any[]) => void, companyId: CompanyId) => {
   const path = 'addons';
   const q = query(collection(db, path), where('companyId', '==', companyId));
@@ -1590,16 +1614,24 @@ export const deleteMediaFile = async (id: string) => {
 // CAMPAIGNS (CAMPANHAS)
 // ----------------------------------------------------
 
-export const subscribeToCampaigns = (callback: (campaigns: any[]) => void) => {
-  const path = 'product_campaigns';
-  const q = query(collection(db, path));
+export const subscribeToCampaigns = (callback: (campaigns: Campaign[]) => void, companyId?: CompanyId) => {
+  const path = 'campaigns';
+  let q = query(collection(db, path));
+  
+  if (companyId && (companyId as string) !== 'all') {
+    q = query(collection(db, path), where('companyId', 'in', [companyId, 'all']));
+  }
+  
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campaign));
+    // Sort manually if orderBy is suspected to cause issues
+    results.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    callback(results);
   }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
 };
 
-export const saveCampaign = async (data: any) => {
-  const path = 'product_campaigns';
+export const saveCampaign = async (data: Partial<Campaign>) => {
+  const path = 'campaigns';
   try {
     if (data.id) {
       const { id, ...rest } = data;
@@ -1607,15 +1639,16 @@ export const saveCampaign = async (data: any) => {
       const snap = await getDoc(camRef);
       const oldData = snap.exists() ? snap.data() : {};
       
-      await setDoc(camRef, sanitize(rest), { merge: true });
-      await createAuditLog('Configurações', 'Alteração', id, data.name || 'Campanha', { oldData: oldData, newData: data });
+      await setDoc(camRef, sanitize({ ...rest, updatedAt: serverTimestamp() }), { merge: true });
+      await createAuditLog('Configurações', 'Alteração', id, data.title || 'Campanha', { oldData: oldData, newData: data }, data.companyId as CompanyId);
       return id;
     } else {
       const docRef = await addDoc(collection(db, path), sanitize({
         ...data,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       }));
-      await createAuditLog('Configurações', 'Criação', docRef.id, data.name || 'Campanha', { newData: data });
+      await createAuditLog('Configurações', 'Criação', docRef.id, data.title || 'Campanha', { newData: data }, data.companyId as CompanyId);
       return docRef.id;
     }
   } catch (error) {
@@ -1624,9 +1657,9 @@ export const saveCampaign = async (data: any) => {
 };
 
 export const deleteCampaign = async (id: string) => {
-  const path = `product_campaigns/${id}`;
+  const path = `campaigns/${id}`;
   try {
-    await deleteDoc(doc(db, 'product_campaigns', id));
+    await deleteDoc(doc(db, 'campaigns', id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }

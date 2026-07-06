@@ -7,6 +7,8 @@ import { uploadImage, compressImage } from "../../services/firebaseStorageServic
 import { motion, AnimatePresence } from "motion/react";
 import { formatCurrency } from "../../lib/currencyUtils";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface KitsTabProps {
   products: Product[];
   insumos: Insumo[];
@@ -14,6 +16,7 @@ interface KitsTabProps {
 }
 
 export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }) => {
+  const orchestrator = useAdminOrchestrator();
   const [addons, setAddons] = useState<CheckoutAddon[]>([]);
   const kits = products.filter(p => p.company === companyId && p.isKit);
   const normalProducts = products.filter(p => !p.isKit && p.company === companyId);
@@ -46,9 +49,33 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
   }, [companyId]);
 
   const handleSave = async () => {
-    if (!formData.product_name || formData.product_name.length < 3) return alert('Nome do kit muito curto');
-    if (!formData.image) return alert('É obrigatório adicionar uma foto ao kit');
-    if (!formData.kitItems || formData.kitItems.length === 0) return alert('Adicione itens ao kit');
+    if (!formData.product_name || formData.product_name.length < 3) return orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: 'Nome do kit muito curto',
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
+    if (!formData.image) return orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: 'É obrigatório adicionar uma foto ao kit',
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Aviso' }
+    });
+    if (!formData.kitItems || formData.kitItems.length === 0) return orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: 'Adicione itens ao kit',
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
 
     setSaving(true);
     try {
@@ -93,7 +120,15 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
       setIsModalOpen(false);
     } catch (err) {
       console.error(err);
-      alert('Erro ao salvar kit');
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: 'Erro ao salvar kit',
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setSaving(false);
     }

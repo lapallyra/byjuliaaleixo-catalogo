@@ -63,7 +63,7 @@ const STATUS_FLOW: Record<string, string> = {
   'delivery': 'delivered'
 };
 
-export const OrderControlCenterTab: React.FC<OrderControlCenterTabProps> = ({ companyId, onOpenOrder }) => {
+export const OrderControlCenterTab: React.FC<OrderControlCenterTabProps> = React.memo(({ companyId, onOpenOrder }) => {
   const [orders, setOrders] = useState<(Order & { priorityInfo: PriorityResult })[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -349,4 +349,4 @@ export const OrderControlCenterTab: React.FC<OrderControlCenterTabProps> = ({ co
       </div>
     </div>
   );
-};
+});

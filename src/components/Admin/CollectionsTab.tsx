@@ -31,11 +31,13 @@ import {
 import { ImageUpload } from "./ImageUpload";
 import { ImageWithFallback } from "../ImageWithFallback";
 
-interface CollectionsTabProps {}
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
-export const CollectionsTab: React.FC<CollectionsTabProps> = () => {
+interface CollectionsTabProps { products: Product[]; }
+
+export const CollectionsTab: React.FC<CollectionsTabProps> = React.memo(({ products }) => {
+  const orchestrator = useAdminOrchestrator();
   const [collections, setCollections] = useState<any[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   
@@ -60,14 +62,9 @@ export const CollectionsTab: React.FC<CollectionsTabProps> = () => {
       setLoading(false);
     });
 
-    const unsubProd = subscribeToProducts((data) => {
-      setProducts(data);
-    });
-
     return () => {
       unsubCol();
-      unsubProd();
-    };
+      };
   }, []);
 
   // Generate slug from name
@@ -116,7 +113,15 @@ export const CollectionsTab: React.FC<CollectionsTabProps> = () => {
       await saveCollection(duplicated);
     } catch (err) {
       console.error(err);
-      alert("Erro ao duplicar coleção");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao duplicar coleção",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
@@ -128,7 +133,15 @@ export const CollectionsTab: React.FC<CollectionsTabProps> = () => {
       });
     } catch (err) {
       console.error(err);
-      alert("Erro ao alterar status da coleção");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao alterar status da coleção",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
@@ -138,14 +151,30 @@ export const CollectionsTab: React.FC<CollectionsTabProps> = () => {
       await deleteCollection(id);
     } catch (err) {
       console.error(err);
-      alert("Erro ao excluir coleção");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao excluir coleção",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCollection?.name || !editingCollection?.slug) {
-      alert("Nome e Slug são obrigatórios.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Nome e Slug são obrigatórios.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Aviso' }
+    });
       return;
     }
 
@@ -156,7 +185,15 @@ export const CollectionsTab: React.FC<CollectionsTabProps> = () => {
       setEditingCollection(null);
     } catch (err) {
       console.error(err);
-      alert("Erro ao salvar coleção");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar coleção",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setSaving(false);
     }
@@ -1046,4 +1083,4 @@ export const CollectionsTab: React.FC<CollectionsTabProps> = () => {
       </AnimatePresence>
     </div>
   );
-};
+});

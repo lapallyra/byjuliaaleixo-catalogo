@@ -11,7 +11,8 @@ export type OrchestratedEventType =
   | 'NEW_ORDER' 
   | 'STATUS_UPDATE' 
   | 'FEED_ANIMATION' 
-  | 'SECONDARY_EFFECT';
+  | 'SECONDARY_EFFECT'
+  | 'FEEDBACK';
 
 export interface OrchestratedEvent {
   id: string;

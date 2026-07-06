@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Order, Product, Insumo } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { calculateProductCost } from "../../lib/finance";
@@ -7,8 +7,11 @@ import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
 import { 
   ArrowLeft, Edit, FileText, MoreVertical, MessageSquare, History, 
   Plus, Trash2, Paperclip, Upload, File as FileIcon, CreditCard, 
-  Package, Calendar, Check, X, Clock, MapPin, User, ChevronRight, Save, Eye, Download, Activity
+  Package, Calendar, Check, X, Clock, MapPin, User, ChevronRight, Save, Eye, Download, Activity, FilePlus, Copy
 } from "lucide-react";
+import { OrderPrintA6Modal } from "./OrderPrintA6Modal";
+
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface OrderDetailsViewProps {
   order: Order;
@@ -17,15 +20,50 @@ interface OrderDetailsViewProps {
   onBack: () => void;
   onEdit: (order: Order) => void;
   onSave?: (order: Partial<Order>) => void;
+  onUpdateStatus?: (id: string, status: Order["status"]) => void;
   onPrint?: (order: Order) => void;
+  onDelete?: (id: string) => void;
+  onDuplicate?: (order: Order) => void;
 }
 
 export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({ 
-  order, products, insumos, onBack, onEdit, onSave, onPrint 
+  order, products, insumos, onBack, onEdit, onSave, onUpdateStatus, onPrint, onDelete, onDuplicate 
 }) => {
+  const orchestrator = useAdminOrchestrator();
   const [observations, setObservations] = useState(order.observations || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"geral" | "cliente" | "produtos" | "financeiro" | "producao" | "arquivos" | "historico">("geral");
+
+  useEffect(() => {
+    const handlePrintCoupon = () => { if(onPrint) onPrint(order); };
+    const handlePrintEtiqueta = () => setIsLabelModalOpen(true);
+    window.addEventListener('trigger-print-coupon', handlePrintCoupon);
+    window.addEventListener('trigger-print-etiqueta', handlePrintEtiqueta);
+    return () => {
+        window.removeEventListener('trigger-print-coupon', handlePrintCoupon);
+        window.removeEventListener('trigger-print-etiqueta', handlePrintEtiqueta);
+    };
+  }, [order, onPrint]);
+
+  const statusSequence: Order["status"][] = [
+    'waiting_production',
+    'production',
+    'conferencing',
+    'packaging',
+    'ready',
+    'delivered'
+  ];
+
+  const advanceStatus = () => {
+    if (!onUpdateStatus) return;
+    const currentIndex = statusSequence.indexOf(order.status);
+    if (currentIndex >= 0 && currentIndex < statusSequence.length - 1) {
+      onUpdateStatus(order.id, statusSequence[currentIndex + 1]);
+    }
+  };
 
   // Parse items
   const items = order.items || [];
@@ -63,10 +101,10 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
   };
 
   const getStatusInfo = (status: string) => {
-    const s = status.toLowerCase();
+    const s = (status || "").toLowerCase();
     const map: Record<string, { label: string; color: string; border: string }> = {
-      "novo pedido": { label: "Novo Pedido", color: "bg-gray-100 text-gray-700", border: "border-gray-200" },
-      "quote": { label: "Orçamento", color: "bg-gray-100 text-gray-700", border: "border-gray-200" },
+      "novo pedido": { label: "Novo Pedido", color: "bg-slate-100 text-slate-700", border: "border-slate-200" },
+      "quote": { label: "Orçamento", color: "bg-slate-100 text-slate-700", border: "border-slate-200" },
       "waiting_payment": { label: "Aguardando Pagamento", color: "bg-amber-100 text-amber-700", border: "border-amber-200" },
       "waiting_deposit": { label: "Sinal Pendente", color: "bg-amber-100 text-amber-700", border: "border-amber-200" },
       "approval": { label: "Aprovação de Arte", color: "bg-blue-100 text-blue-700", border: "border-blue-200" },
@@ -78,13 +116,13 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
       "fully_paid": { label: "Concluído", color: "bg-emerald-100 text-emerald-700", border: "border-emerald-200" },
       "cancelled": { label: "Cancelado", color: "bg-rose-100 text-rose-700", border: "border-rose-200" }
     };
-    return map[s] || { label: status, color: "bg-gray-100 text-gray-700", border: "border-gray-200" };
+    return map[s] || { label: status, color: "bg-slate-100 text-slate-700", border: "border-slate-200" };
   };
 
   const getStatusBadge = (status: string) => {
     const info = getStatusInfo(status);
     return (
-      <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border ${info.color} ${info.border}`}>
+      <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded border ${info.color} ${info.border}`}>
         {info.label}
       </span>
     );
@@ -97,12 +135,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
     window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
   };
 
-  // Mock History
-  const historyEntries = [
-    { date: order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy") : "--", time: order.createdAt ? safeFormatISO(order.createdAt, "HH:mm") : "--", user: "Sistema", text: "Pedido criado" },
-    { date: order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy") : "--", time: "14:40", user: "Sistema", text: "Aguardando pagamento" }
-  ];
-
+  // Chronological timeline steps derived from order status
   const timelineSteps = ["Pedido", "Pagamento", "Produção", "Pronto", "Entregue"];
   let currentStepIndex = 0;
   if (["delivered", "fully_paid"].includes(order.status)) currentStepIndex = 4;
@@ -112,478 +145,653 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
 
   const currentStatusInfo = getStatusInfo(order.status);
 
+  // Chronological log
+  const historyEntries = useMemo(() => {
+    const defaultEntries = [
+      { date: order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy") : "--", time: order.createdAt ? safeFormatISO(order.createdAt, "HH:mm") : "--", user: "Sistema", text: "Pedido criado" },
+      { date: order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy") : "--", time: "14:40", user: "Sistema", text: "Status atualizado para: " + currentStatusInfo.label }
+    ];
+    if (order.history && order.history.length > 0) {
+      return order.history.map(h => ({
+        date: h.timestamp ? safeFormatISO(h.timestamp, "dd/MM/yyyy") : "--",
+        time: h.timestamp ? safeFormatISO(h.timestamp, "HH:mm") : "--",
+        user: h.updatedBy || "Membro da Equipe",
+        text: `Status alterado para ${getStatusInfo(h.status).label}` + (h.notes ? ` (${h.notes})` : "")
+      }));
+    }
+    return defaultEntries;
+  }, [order, currentStatusInfo.label]);
+
   return (
-    <div className="flex flex-col h-full bg-[#FAF9F6] animate-in fade-in duration-300 relative z-0">
+    <div className="flex flex-col h-full bg-slate-50 animate-in fade-in duration-200 relative z-0">
       
-      {/* Header (Sticky) */}
-      <div className="bg-white/80 backdrop-blur-xl border-b border-[#E5E5EA] px-6 py-4 flex items-center justify-between sticky top-0 z-20 shrink-0">
-        <div className="flex items-center gap-4">
+      {/* HEADER OPERACIONAL */}
+      <div className="bg-white border-b border-slate-200/80 px-6 py-3 flex flex-wrap items-center justify-between sticky top-0 z-20 shrink-0 gap-3">
+        <div className="flex items-center gap-3">
           <button 
             onClick={onBack}
-            className="p-2 hover:bg-[#F5F5F7] rounded-xl transition-colors text-[#8E8E93] hover:text-[#1C1C1E]"
+            className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 hover:text-slate-900"
             title="Voltar"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} />
           </button>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-[#1C1C1E] tracking-tight">Pedido #{order.code}</h1>
-            {getStatusBadge(order.status)}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-400">PEDIDO</span>
+              <h1 className="text-base font-black text-slate-900 tracking-tight">#{order.code}</h1>
+              {getStatusBadge(order.status)}
+            </div>
+            <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+              <span className="font-semibold">{order.customerName}</span>
+              <span className="w-1 h-1 rounded-full bg-slate-300" />
+              <span>Total: <strong className="text-slate-900">{formatCurrency(total)}</strong></span>
+              <span className="w-1 h-1 rounded-full bg-slate-300" />
+              <span>Entrega: <strong className="text-slate-900">{order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy") : "A combinar"}</strong></span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-2 relative">
           <button 
             onClick={() => onEdit(order)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E5E5EA] hover:bg-[#F5F5F7] text-[#1C1C1E] rounded-xl text-sm font-semibold transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition-all shadow-sm"
           >
-            <Edit size={16} /> <span className="hidden sm:inline">Editar Pedido</span>
+            <Edit size={14} /> <span>Editar</span>
           </button>
-          {onPrint && (
+          {statusSequence.includes(order.status) && order.status !== 'delivered' && (
             <button 
-              onClick={() => onPrint(order)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-[#E5E5EA] hover:bg-[#F5F5F7] text-[#1C1C1E] rounded-xl text-sm font-semibold transition-colors shadow-sm"
+              onClick={advanceStatus}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold transition-all shadow-sm"
             >
-              <FileText size={16} /> <span className="hidden sm:inline">gerar PDF</span>
+              <ChevronRight size={14} /> <span>Avançar Status</span>
             </button>
           )}
-          <button className="p-2 bg-white border border-[#E5E5EA] hover:bg-[#F5F5F7] text-[#1C1C1E] rounded-xl transition-colors shadow-sm">
-            <MoreVertical size={20} />
+          
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg transition-all shadow-sm"
+            title="Mais Opções"
+          >
+            <MoreVertical size={16} />
           </button>
+
+          {/* DROPDOWN MENU ⋮ */}
+          {isMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)} />
+              <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                <button 
+                  onClick={() => { setIsMenuOpen(false); setIsPaymentModalOpen(true); }}
+                  className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                >
+                  <CreditCard size={14} className="text-emerald-500" />
+                  <span>Registrar pagamento</span>
+                </button>
+                <button 
+                  onClick={() => { setIsMenuOpen(false); onEdit(order); }}
+                  className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                >
+                  <Edit size={14} className="text-blue-500" />
+                  <span>Editar pedido</span>
+                </button>
+                {onPrint && (
+                  <button 
+                    onClick={() => { setIsMenuOpen(false); onPrint(order); }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <FileText size={14} className="text-slate-500" />
+                    <span>Imprimir Cupom Não Fiscal</span>
+                  </button>
+                )}
+                <button 
+                  onClick={() => { setIsMenuOpen(false); setIsLabelModalOpen(true); }}
+                  className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                >
+                  <Package size={14} className="text-purple-500" />
+                  <span>Imprimir Etiqueta</span>
+                </button>
+                {onDuplicate && (
+                  <button 
+                    onClick={() => { setIsMenuOpen(false); onDuplicate(order); }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100 pt-1.5"
+                  >
+                    <FilePlus size={14} className="text-amber-500" />
+                    <span>Duplicar pedido</span>
+                  </button>
+                )}
+                {onDelete && (
+                  <button 
+                    onClick={() => { 
+                      setIsMenuOpen(false); 
+                      if (window.confirm("Deseja realmente excluir este pedido permanentemente?")) {
+                        onDelete(order.id);
+                      }
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100 pt-1.5"
+                  >
+                    <Trash2 size={14} />
+                    <span>Excluir pedido</span>
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8">
-        <div className="max-w-5xl mx-auto space-y-6">
+      {/* ABAS OPERACIONAIS (PILLS) */}
+      <div className="bg-white border-b border-slate-200 px-6 py-1.5 flex gap-1 overflow-x-auto scrollbar-hide shrink-0">
+        {(["geral", "cliente", "produtos", "financeiro", "producao", "arquivos", "historico"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all capitalize whitespace-nowrap ${
+              activeTab === tab 
+                ? "bg-slate-900 text-white shadow-sm" 
+                : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
-          {/* TIMELINE */}
-          <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm overflow-x-auto">
-            <div className="flex items-center min-w-max">
-              {timelineSteps.map((step, idx) => {
-                const isCompleted = idx < currentStepIndex;
-                const isCurrent = idx === currentStepIndex;
-                const isPending = idx > currentStepIndex;
+      {/* ÁREA DE CONTEÚDO DENSE */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="max-w-4xl mx-auto space-y-4">
+          
+          {/* TAB: GERAL */}
+          {activeTab === "geral" && (
+            <div className="space-y-4 animate-in fade-in duration-150">
+              
+              {/* TIMELINE DE STATUS */}
+              <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm overflow-x-auto">
+                <div className="flex items-center min-w-[500px]">
+                  {timelineSteps.map((step, idx) => {
+                    const isCompleted = idx < currentStepIndex;
+                    const isCurrent = idx === currentStepIndex;
 
-                return (
-                  <React.Fragment key={idx}>
-                    <div className="flex flex-col items-center gap-3 relative">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 z-10 ${
-                        isCompleted ? "bg-[#1C1C1E] text-white shadow-md" :
-                        isCurrent ? "bg-white border-2 border-[#1C1C1E] text-[#1C1C1E] shadow-sm" :
-                        "bg-[#F5F5F7] border border-[#E5E5EA] text-[#8E8E93]"
-                      }`}>
-                        {isCompleted ? <Check size={18} /> : (idx + 1)}
-                      </div>
-                      <span className={`text-xs font-bold uppercase tracking-wider ${
-                        isCurrent ? "text-[#1C1C1E]" :
-                        isCompleted ? "text-[#1C1C1E]" :
-                        "text-[#8E8E93]"
-                      }`}>
-                        {step}
+                    return (
+                      <React.Fragment key={idx}>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] transition-all duration-300 shrink-0 ${
+                            isCompleted ? "bg-slate-900 text-white" :
+                            isCurrent ? "bg-white border-2 border-slate-900 text-slate-900" :
+                            "bg-slate-100 border border-slate-200 text-slate-400"
+                          }`}>
+                            {isCompleted ? <Check size={12} /> : (idx + 1)}
+                          </div>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                            isCurrent ? "text-slate-900 font-extrabold" : "text-slate-400"
+                          }`}>
+                            {step}
+                          </span>
+                        </div>
+                        {idx < timelineSteps.length - 1 && (
+                          <div className="flex-1 h-0.5 mx-3 bg-slate-200" />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* INFO CENTRAL */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* DADOS PRINCIPAIS */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Ficha do Pedido</h3>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-slate-400 font-medium block">Origem</span>
+                      <span className="font-bold text-slate-800 capitalize">{order.source || "admin"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-medium block">Criado em</span>
+                      <span className="font-bold text-slate-800">
+                        {order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy HH:mm") : "--"}
                       </span>
                     </div>
-                    {idx < timelineSteps.length - 1 && (
-                      <div className="flex-1 h-0.5 mx-4 mt-[-24px] bg-[#E5E5EA]">
-                        <div className={`h-full transition-all duration-500 ${isCompleted ? "bg-[#1C1C1E]" : "bg-transparent"}`} style={{ width: "100%" }} />
-                      </div>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* CARD STATUS E DESTAQUE */}
-          <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${currentStatusInfo.color} ${currentStatusInfo.border}`}>
-                <Activity size={24} />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Status Atual</p>
-                <h2 className="text-lg font-bold text-[#1C1C1E]">{currentStatusInfo.label}</h2>
-              </div>
-            </div>
-            <div className="text-right">
-               <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Última Atualização</p>
-               <p className="text-sm font-semibold text-[#1C1C1E]">
-                 {order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy") : "--"} às {order.createdAt ? safeFormatISO(order.createdAt, "HH:mm") : "--"}
-               </p>
-            </div>
-          </div>
-
-          {/* Row 1: Client & Finance */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* CARD 01 - CLIENTE */}
-            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2 text-[#1C1C1E]">
-                    <div className="w-8 h-8 rounded-lg bg-[#F5F5F7] flex items-center justify-center">
-                      <User size={16} className="text-[#8E8E93]" />
-                    </div>
-                    <h3 className="font-bold tracking-tight">Cliente</h3>
-                  </div>
-                  <button className="text-[11px] font-bold text-[#8E8E93] hover:text-[#1C1C1E] uppercase tracking-wider flex items-center gap-1 transition-colors">
-                    <History size={12} /> Histórico
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Nome</p>
-                      <p className="text-sm font-semibold text-[#1C1C1E] truncate">{order.customerName}</p>
+                      <span className="text-slate-400 font-medium block">Tipo de Entrega</span>
+                      <span className="font-bold text-slate-800 capitalize">
+                        {order.deliveryType === 'retirada' ? 'Retirada' : order.deliveryType === 'delivery' ? 'Delivery' : 'Correios/Envio'}
+                      </span>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">CPF/CNPJ</p>
-                      <p className="text-sm text-[#1C1C1E]">{order.customerCpfCnpj ? formatCPFOrCNPJ(order.customerCpfCnpj) : "---"}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Telefone</p>
-                      <p className="text-sm text-[#1C1C1E]">{order.contact ? formatPhone(order.contact) : "---"}</p>
+                      <span className="text-slate-400 font-medium block">Previsão</span>
+                      <span className="font-bold text-slate-800">
+                        {order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy") : "A combinar"}
+                      </span>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">E-mail</p>
-                      <p className="text-sm text-[#1C1C1E] truncate">{order.customerEmail || "---"}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Cidade</p>
-                      <p className="text-sm text-[#1C1C1E] truncate">---</p>
+                      <span className="text-slate-400 font-medium block">Responsável</span>
+                      <span className="font-bold text-slate-800">{order.assignee || "Não designado"}</span>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Estado</p>
-                      <p className="text-sm text-[#1C1C1E]">---</p>
+                      <span className="text-slate-400 font-medium block">Prioridade</span>
+                      <span className="font-bold text-slate-800 capitalize">{order.productionPriority || "Normal"}</span>
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Endereço completo</p>
-                    <p className="text-sm text-[#1C1C1E] truncate">{order.customerAddress || order.address || "Não informado"}</p>
                   </div>
                 </div>
+
+                {/* OBSERVACAO BOX COM AUTO SAVE */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Observações Operacionais</h3>
+                    <textarea
+                      value={observations}
+                      onChange={(e) => setObservations(e.target.value)}
+                      placeholder="Instruções de produção, embalagem, cores específicas..."
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs outline-none focus:bg-white focus:border-slate-800 transition-all text-slate-800 resize-none h-24"
+                    />
+                  </div>
+                  <div className="flex justify-end mt-2">
+                    <button 
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[11px] font-bold shadow-sm hover:bg-black transition-all disabled:opacity-50"
+                    >
+                      <Save size={12} /> {isSaving ? "Salvando..." : "Salvar Notas"}
+                    </button>
+                  </div>
+                </div>
+
               </div>
 
-              <div className="mt-6 pt-6 border-t border-[#F2F2F7] flex gap-3">
+            </div>
+          )}
+
+          {/* TAB: CLIENTE */}
+          {activeTab === "cliente" && (
+            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Dados Cadastrais do Cliente</h3>
                 <button 
                   onClick={handleWhatsApp}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#F5F5F7] hover:bg-[#E5E5EA] text-[#1C1C1E] rounded-xl text-xs font-bold transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all"
                 >
-                  <MessageSquare size={14} /> WhatsApp
-                </button>
-                <button 
-                  onClick={() => onEdit(order)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#F5F5F7] hover:bg-[#E5E5EA] text-[#1C1C1E] rounded-xl text-xs font-bold transition-colors"
-                >
-                  <Edit size={14} /> Editar
+                  <MessageSquare size={12} /> WhatsApp
                 </button>
               </div>
-            </div>
 
-            {/* CARD 03 - RESUMO FINANCEIRO */}
-            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-[#1C1C1E] mb-6">
-                  <div className="w-8 h-8 rounded-lg bg-[#F5F5F7] flex items-center justify-center">
-                    <CreditCard size={16} className="text-[#8E8E93]" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="text-slate-400 font-medium block mb-0.5">Nome Completo</span>
+                  <p className="font-bold text-slate-800">{order.customerName}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-medium block mb-0.5">CPF / CNPJ</span>
+                  <p className="font-semibold text-slate-800">{order.customerCpfCnpj ? formatCPFOrCNPJ(order.customerCpfCnpj) : "Não cadastrado"}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-medium block mb-0.5">Telefone de Contato</span>
+                  <p className="font-semibold text-slate-800">{order.contact ? formatPhone(order.contact) : "Não informado"}</p>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-medium block mb-0.5">E-mail</span>
+                  <p className="font-semibold text-slate-800">{order.customerEmail || "Não cadastrado"}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <span className="text-slate-400 font-medium block mb-0.5">Endereço de Entrega</span>
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center justify-between gap-4">
+                    <p className="font-medium text-slate-700">{order.customerAddress || order.address || "Sem endereço (Retirada no Ateliê)"}</p>
+                    {(order.customerAddress || order.address) && (
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(order.customerAddress || order.address || "");
+                          orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Endereço copiado para a área de transferência!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
+                        }}
+                        className="p-1 hover:bg-slate-200 rounded text-slate-500 hover:text-slate-800 shrink-0 transition-colors"
+                        title="Copiar Endereço"
+                      >
+                        <Copy size={14} />
+                      </button>
+                    )}
                   </div>
-                  <h3 className="font-bold tracking-tight">Resumo Financeiro</h3>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: PRODUTOS */}
+          {activeTab === "produtos" && (
+            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4 animate-in fade-in duration-150">
+              <div className="border-b border-slate-100 pb-2">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Itens e Detalhes do Pedido</h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100">
+                      <th className="pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Produto</th>
+                      <th className="pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Qtd</th>
+                      <th className="pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Valor Un.</th>
+                      <th className="pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {items.map((item, idx) => {
+                      const price = item.retail_price || item.current_price || 0;
+                      const qty = item.quantity || 1;
+                      return (
+                        <tr key={idx} className="hover:bg-slate-50/50">
+                          <td className="py-2.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                                {item.image ? (
+                                  <img src={item.image} alt={item.product_name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <Package size={14} className="text-slate-400" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-800">{item.product_name}</p>
+                                {item.selectedVariation && <p className="text-[10px] text-slate-400 mt-0.5">{item.selectedVariation}</p>}
+                                {item.observations && <p className="text-[10px] text-amber-600 italic mt-0.5">Obs: {item.observations}</p>}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-2.5 text-center">
+                            <span className="inline-block px-1.5 py-0.5 bg-slate-100 rounded font-bold text-[11px] text-slate-700">
+                              {qty}
+                            </span>
+                          </td>
+                          <td className="py-2.5 text-right font-medium text-slate-500">{formatCurrency(price)}</td>
+                          <td className="py-2.5 text-right font-bold text-slate-800">{formatCurrency(price * qty)}</td>
+                        </tr>
+                      );
+                    })}
+                    {items.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-6 text-center text-slate-400 italic">Nenhum produto adicionado.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* PERSONALIZAÇÃO EXTRA (IF EXIST) */}
+              {(order.giftName || order.giftTheme || order.giftColors) && (
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Informações de Personalização</h4>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    {order.giftName && (
+                      <div>
+                        <span className="text-slate-400 block">Nome</span>
+                        <span className="font-bold text-slate-800">{order.giftName}</span>
+                      </div>
+                    )}
+                    {order.giftTheme && (
+                      <div>
+                        <span className="text-slate-400 block">Tema</span>
+                        <span className="font-bold text-slate-800">{order.giftTheme}</span>
+                      </div>
+                    )}
+                    {order.giftColors && (
+                      <div>
+                        <span className="text-slate-400 block">Cores</span>
+                        <span className="font-bold text-slate-800">{order.giftColors}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB: FINANCEIRO */}
+          {activeTab === "financeiro" && (
+            <div className="space-y-4 animate-in fade-in duration-150">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                {/* FLUXO DE PAGAMENTO */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-4">
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Resumo do Faturamento</h3>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between items-center pb-1 border-b border-slate-100">
+                        <span className="text-slate-500">Subtotal</span>
+                        <span className="font-bold text-slate-800">{formatCurrency(subtotal)}</span>
+                      </div>
+                      {discount > 0 && (
+                        <div className="flex justify-between items-center pb-1 border-b border-slate-100 text-rose-500">
+                          <span>Desconto</span>
+                          <span className="font-bold">-{formatCurrency(discount)}</span>
+                        </div>
+                      )}
+                      {shipping > 0 && (
+                        <div className="flex justify-between items-center pb-1 border-b border-slate-100">
+                          <span className="text-slate-500">Frete</span>
+                          <span className="font-bold text-slate-800">{formatCurrency(shipping)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center text-sm pt-1.5">
+                        <span className="font-bold text-slate-800">Total do Pedido</span>
+                        <span className="font-black text-slate-900">{formatCurrency(total)}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-100">
+                      <div>
+                        <span className="text-slate-400 block">Sinal Pago</span>
+                        <span className="font-bold text-emerald-600">{formatCurrency(paid)}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block">Saldo Restante</span>
+                        <span className="font-bold text-amber-600">{formatCurrency(remaining)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-4">
+                    <div className="text-xs">
+                      <span className="text-slate-400 block">Método</span>
+                      <span className="font-bold text-slate-700 capitalize">{order.paymentMethod || "Não informado"}</span>
+                    </div>
+                    <button 
+                      onClick={() => setIsPaymentModalOpen(true)}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 text-white hover:bg-black rounded-lg text-xs font-bold shadow-sm transition-all"
+                    >
+                      <CreditCard size={12} /> Registrar Pagamento
+                    </button>
+                  </div>
+                </div>
+
+                {/* LUCRATIVIDADE */}
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4">
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Auditoria de Lucratividade</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div className="bg-slate-50 border border-slate-200/60 rounded-lg p-2.5">
+                      <span className="text-slate-400 block">Receita Bruta</span>
+                      <span className="text-sm font-bold text-slate-800">{formatCurrency(total)}</span>
+                    </div>
+                    <div className="bg-slate-50 border border-slate-200/60 rounded-lg p-2.5">
+                      <span className="text-slate-400 block">Custo de Insumos</span>
+                      <span className="text-sm font-bold text-rose-600">{formatCurrency(costTotal)}</span>
+                    </div>
+                    <div className="bg-slate-50 border border-slate-200/60 rounded-lg p-2.5">
+                      <span className="text-slate-400 block">Margem Bruta %</span>
+                      <span className="text-sm font-bold text-emerald-600">{margin.toFixed(1)}%</span>
+                    </div>
+                    <div className="bg-slate-50 border border-slate-200/60 rounded-lg p-2.5">
+                      <span className="text-slate-400 block">Lucro Líquido Est.</span>
+                      <span className="text-sm font-bold text-emerald-600">{formatCurrency(profit)}</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* TAB: PRODUÇÃO */}
+          {activeTab === "producao" && (
+            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4 animate-in fade-in duration-150 text-xs">
+              <div className="border-b border-slate-100 pb-2">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Centro de Operações e Produção</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-slate-400 block mb-0.5">Status de Produção</span>
+                    <span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg font-bold">
+                      {currentStatusInfo.label}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block mb-0.5">Responsável Designado</span>
+                    <p className="font-bold text-slate-800">{order.assignee || "Sem responsável atribuído"}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block mb-0.5">Prioridade Operacional</span>
+                    <span className={`inline-block font-bold capitalize ${order.productionPriority === 'urgente' ? 'text-rose-600' : order.productionPriority === 'alta' ? 'text-amber-500' : 'text-slate-700'}`}>
+                      {order.productionPriority || "Normal"}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-[#8E8E93]">Subtotal</span>
-                    <span className="font-medium text-[#1C1C1E]">{formatCurrency(subtotal)}</span>
+                  <div>
+                    <span className="text-slate-400 block mb-0.5">Data de Início da Produção</span>
+                    <p className="font-semibold text-slate-800">{order.productionDate ? safeFormatISO(order.productionDate, "dd/MM/yyyy") : "Pendente de início"}</p>
                   </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-[#8E8E93]">Desconto / Cupom</span>
-                      <span className="font-medium text-rose-500">-{formatCurrency(discount)}</span>
-                    </div>
-                  )}
-                  {shipping > 0 && (
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-[#8E8E93]">Frete</span>
-                      <span className="font-medium text-[#1C1C1E]">{formatCurrency(shipping)}</span>
-                    </div>
-                  )}
-                  <div className="pt-3 border-t border-[#F2F2F7] flex justify-between items-center">
-                    <span className="font-bold text-[#1C1C1E]">Total Geral</span>
-                    <span className="font-bold text-lg text-[#1C1C1E]">{formatCurrency(total)}</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-6 border-t border-[#F2F2F7] grid grid-cols-2 gap-4">
-                   <div>
-                    <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Valor Pago</p>
-                    <p className="text-sm font-bold text-emerald-600">{formatCurrency(paid)}</p>
-                  </div>
-                   <div>
-                    <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Valor Restante</p>
-                    <p className="text-sm font-bold text-amber-600">{formatCurrency(remaining)}</p>
+                  <div>
+                    <span className="text-slate-400 block mb-0.5">Data Limite de Produção</span>
+                    <p className="font-semibold text-slate-800">{order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy") : "Pendente"}</p>
                   </div>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div>
-                <div className="mt-6 pt-6 border-t border-[#F2F2F7] flex justify-between items-center">
-                  <div>
-                    <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Forma de Pagamento</p>
-                    <p className="text-xs font-semibold text-[#1C1C1E] capitalize">{order.paymentMethod || "Não informado"}</p>
+          {/* TAB: ARQUIVOS */}
+          {activeTab === "arquivos" && (
+            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4 animate-in fade-in duration-150 text-xs">
+              <div className="border-b border-slate-100 pb-2 flex items-center justify-between">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Centro de Documentação e Anexos</h3>
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Arquivos Anexados</span>
+              </div>
+
+              {/* Categorized file listing and tools */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                
+                {/* CUPOM NÃO FISCAL DOCUMENT ROW */}
+                <div className="p-3 border border-slate-200/80 rounded-lg bg-slate-50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-500">
+                      <FileText size={16} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800">Cupom Não Fiscal</p>
+                      <p className="text-[10px] text-slate-400">Gere e salve a via do cliente</p>
+                    </div>
                   </div>
-                  <div>
-                     <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1 text-right">Status</p>
-                     <p className={`text-xs font-bold text-right ${remaining === 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                       {remaining === 0 ? "Pago Integral" : (paid > 0 ? "Parcial (Sinal)" : "Pendente")}
-                     </p>
-                  </div>
+                  {onPrint ? (
+                    <button 
+                      onClick={() => onPrint(order)}
+                      className="p-1.5 hover:bg-slate-200 rounded text-slate-700 transition-colors"
+                      title="Gerar/Imprimir"
+                    >
+                      <Download size={14} />
+                    </button>
+                  ) : (
+                    <span className="text-[10px] text-slate-400">Indisponível</span>
+                  )}
                 </div>
-                <div className="mt-4 flex">
+
+                {/* ETIQUETA DOCUMENT ROW */}
+                <div className="p-3 border border-slate-200/80 rounded-lg bg-slate-50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-500">
+                      <Package size={16} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800">Etiqueta de Envio (A6)</p>
+                      <p className="text-[10px] text-slate-400">Etiqueta de identificação da caixa</p>
+                    </div>
+                  </div>
                   <button 
-                    onClick={() => setIsPaymentModalOpen(true)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1C1C1E] text-white rounded-xl text-xs font-bold transition-all hover:bg-black"
+                    onClick={() => setIsLabelModalOpen(true)}
+                    className="p-1.5 hover:bg-slate-200 rounded text-slate-700 transition-colors"
+                    title="Gerar/Imprimir"
                   >
-                    Registrar Pagamento
+                    <Download size={14} />
                   </button>
                 </div>
-              </div>
-            </div>
 
-            {/* CARD - RESUMO DE LUCRATIVIDADE */}
-            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
-              <div className="flex items-center gap-2 text-[#1C1C1E] mb-6">
-                <div className="w-8 h-8 rounded-lg bg-[#F5F5F7] flex items-center justify-center">
-                  <Activity size={16} className="text-[#8E8E93]" />
-                </div>
-                <h3 className="font-bold tracking-tight">Resumo de Lucratividade</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Receita Total</p>
-                  <p className="text-sm font-bold text-[#1C1C1E]">{formatCurrency(total)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Custo Produção</p>
-                  <p className="text-sm font-bold text-rose-600">{formatCurrency(costTotal)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Lucro Estimado</p>
-                  <p className="text-sm font-bold text-emerald-600">{formatCurrency(profit)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider mb-1">Margem</p>
-                  <p className="text-sm font-bold text-emerald-600">{margin.toFixed(1)}%</p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Row 2: Items */}
-          {/* CARD 02 - ITENS DO PEDIDO */}
-          <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center gap-2 text-[#1C1C1E] mb-6">
-              <div className="w-8 h-8 rounded-lg bg-[#F5F5F7] flex items-center justify-center">
-                <Package size={16} className="text-[#8E8E93]" />
-              </div>
-              <h3 className="font-bold tracking-tight">Itens do Pedido</h3>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#E5E5EA]">
-                    <th className="pb-3 text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider font-sans">Produto</th>
-                    <th className="pb-3 text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider font-sans text-center">Qtd</th>
-                    <th className="pb-3 text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider font-sans text-right">Valor Un.</th>
-                    <th className="pb-3 text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider font-sans text-right">Subtotal</th>
-                    <th className="pb-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F2F2F7]">
-                  {items.map((item, idx) => {
-                    const price = item.retail_price || item.current_price || 0;
-                    const qty = item.quantity || 1;
-                    return (
-                      <tr key={idx} className="group">
-                        <td className="py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-[#F5F5F7] border border-[#E5E5EA] overflow-hidden shrink-0 flex items-center justify-center">
-                              {item.image ? (
-                                <img src={item.image} alt={item.product_name} className="w-full h-full object-cover" />
-                              ) : (
-                                <Package size={16} className="text-[#8E8E93]" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-[#1C1C1E]">{item.product_name}</p>
-                              {item.selectedVariation && <p className="text-xs text-[#8E8E93]">{item.selectedVariation}</p>}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 text-center">
-                          <span className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 bg-[#F5F5F7] rounded-md text-xs font-bold text-[#1C1C1E]">
-                            {qty}
-                          </span>
-                        </td>
-                        <td className="py-4 text-right text-sm font-medium text-[#8E8E93]">{formatCurrency(price)}</td>
-                        <td className="py-4 text-right text-sm font-bold text-[#1C1C1E]">{formatCurrency(price * qty)}</td>
-                        <td className="py-4 text-right">
-                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                             <button className="p-1.5 text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-[#F5F5F7] rounded-md transition-colors">
-                               <Edit size={14} />
-                             </button>
-                             <button className="p-1.5 text-[#8E8E93] hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors">
-                               <Trash2 size={14} />
-                             </button>
-                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {items.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-sm text-[#8E8E93]">Nenhum item cadastrado.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-[#F2F2F7]">
-              <button className="flex items-center gap-2 text-xs font-bold text-[#1C1C1E] hover:text-[#8E8E93] uppercase tracking-wider transition-colors">
-                <Plus size={14} /> Adicionar Item
-              </button>
-            </div>
-          </div>
-
-          {/* Row 3: Deadlines & Observations */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* CARD 04 - PRAZOS */}
-            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm flex flex-col">
-              <div className="flex items-center gap-2 text-[#1C1C1E] mb-6">
-                <div className="w-8 h-8 rounded-lg bg-[#F5F5F7] flex items-center justify-center">
-                  <Calendar size={16} className="text-[#8E8E93]" />
-                </div>
-                <h3 className="font-bold tracking-tight">Prazos</h3>
-              </div>
-
-              <div className="space-y-4 flex-1">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[#F5F5F7] border border-[#E5E5EA]">
-                  <span className="text-xs font-bold text-[#8E8E93] uppercase tracking-wider">Data do Pedido</span>
-                  <span className="text-sm font-semibold text-[#1C1C1E]">
-                    {order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy") : "--"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50 border border-blue-100">
-                  <span className="text-xs font-bold text-blue-500 uppercase tracking-wider">Prev. Produção</span>
-                  <span className="text-sm font-semibold text-blue-700">
-                     --/--/----
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-purple-50 border border-purple-100">
-                  <span className="text-xs font-bold text-purple-500 uppercase tracking-wider">Prev. Entrega</span>
-                  <span className="text-sm font-semibold text-purple-700">
-                    {order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy") : "A combinar"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* CARD 05 - OBSERVAÇÕES */}
-            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-[#1C1C1E]">
-                  <div className="w-8 h-8 rounded-lg bg-[#F5F5F7] flex items-center justify-center">
-                    <MessageSquare size={16} className="text-[#8E8E93]" />
-                  </div>
-                  <h3 className="font-bold tracking-tight">Observações</h3>
-                </div>
-              </div>
-              <textarea
-                value={observations}
-                onChange={(e) => setObservations(e.target.value)}
-                placeholder="Ex.: Tema, cores, nomes, datas, informações importantes..."
-                className="flex-1 w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl p-4 text-sm outline-none focus:bg-white focus:border-[#1C1C1E] transition-all text-[#1C1C1E] resize-none min-h-[120px]"
-              />
-            </div>
-          </div>
-
-          {/* Row 4: Files & History */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* CARD 06 - ARQUIVOS */}
-            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center gap-2 text-[#1C1C1E] mb-6">
-                <div className="w-8 h-8 rounded-lg bg-[#F5F5F7] flex items-center justify-center">
-                  <Paperclip size={16} className="text-[#8E8E93]" />
-                </div>
-                <h3 className="font-bold tracking-tight">Arquivos</h3>
-              </div>
-              
-              <div className="border-2 border-dashed border-[#E5E5EA] rounded-xl p-6 flex flex-col items-center justify-center gap-3 bg-[#FAF9F6] hover:bg-[#F5F5F7] transition-colors cursor-pointer mb-4">
-                <Upload size={24} className="text-[#8E8E93]" />
-                <div className="text-center">
-                  <p className="text-sm font-bold text-[#1C1C1E]">Clique para anexar ou arraste arquivos</p>
-                  <p className="text-[11px] text-[#8E8E93] mt-1">Imagens, PDF, Arte, Comprovantes</p>
-                </div>
-              </div>
-
-              {/* Mock attached files */}
-              <div className="space-y-2">
-                 <div className="flex items-center gap-3 p-3 rounded-xl border border-[#E5E5EA] hover:bg-[#F5F5F7] transition-colors group">
-                    <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-                      <FileIcon size={18} />
+                {/* COMPROVANTE PIX ROW */}
+                <div className="p-3 border border-slate-200/80 rounded-lg bg-slate-50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-500">
+                      <CreditCard size={16} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[#1C1C1E] truncate">Comprovante_PIX.pdf</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-[10px] font-medium text-[#8E8E93] uppercase tracking-wider">PDF</p>
-                        <span className="w-1 h-1 rounded-full bg-[#E5E5EA]" />
-                        <p className="text-[10px] font-medium text-[#8E8E93]">120 KB</p>
-                        <span className="w-1 h-1 rounded-full bg-[#E5E5EA]" />
-                        <p className="text-[10px] font-medium text-[#8E8E93]">Hoje, 14:30</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white rounded-lg transition-colors" title="Visualizar">
-                        <Eye size={16} />
-                      </button>
-                      <button className="p-2 text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white rounded-lg transition-colors" title="Baixar">
-                        <Download size={16} />
-                      </button>
-                      <button className="p-2 text-[#8E8E93] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Excluir">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                 </div>
-              </div>
-            </div>
-
-            {/* CARD 07 - HISTÓRICO */}
-            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center gap-2 text-[#1C1C1E] mb-6">
-                <div className="w-8 h-8 rounded-lg bg-[#F5F5F7] flex items-center justify-center">
-                  <Clock size={16} className="text-[#8E8E93]" />
-                </div>
-                <h3 className="font-bold tracking-tight">Histórico</h3>
-              </div>
-
-              <div className="relative pl-3 space-y-6 before:absolute before:inset-y-0 before:left-[15px] before:w-0.5 before:bg-[#F2F2F7]">
-                {historyEntries.map((entry, idx) => (
-                  <div key={idx} className="relative flex gap-4">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#1C1C1E] border-4 border-white shrink-0 mt-1.5 z-10 -ml-1.5" />
                     <div>
-                      <p className="text-sm font-semibold text-[#1C1C1E]">{entry.text}</p>
-                      <div className="flex items-center gap-2 mt-1 text-[11px] font-medium text-[#8E8E93]">
+                      <p className="font-bold text-slate-800">Comprovante de Pagamento</p>
+                      <p className="text-[10px] text-slate-400">Comprovante do PIX ou depósito</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-slate-400 italic">Pendente</span>
+                </div>
+
+                {/* IMAGENS DA PRODUÇÃO OR CUSTOM PHOTOS */}
+                <div className="p-3 border border-slate-200/80 rounded-lg bg-slate-50 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-500">
+                      <Paperclip size={16} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800">Fotos da Produção</p>
+                      <p className="text-[10px] text-slate-400">{(order.photos?.length || 0)} fotos anexadas</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-slate-400 italic">--</span>
+                </div>
+
+              </div>
+
+              {/* UPLOAD ZONE */}
+              <div className="border border-dashed border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100/50 transition-colors cursor-pointer">
+                <Upload size={18} className="text-slate-400" />
+                <p className="text-xs font-bold text-slate-700">Anexar Novo Arquivo</p>
+                <p className="text-[10px] text-slate-400">Arraste comprovantes, fotos ou PDFs para cá</p>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: HISTÓRICO */}
+          {activeTab === "historico" && (
+            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4 animate-in fade-in duration-150">
+              <div className="border-b border-slate-100 pb-2">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Histórico de Eventos e Auditoria</h3>
+              </div>
+
+              <div className="relative pl-3 space-y-4 before:absolute before:inset-y-0 before:left-[15px] before:w-0.5 before:bg-slate-100">
+                {historyEntries.map((entry, idx) => (
+                  <div key={idx} className="relative flex gap-3 text-xs">
+                    <div className="w-2 h-2 rounded-full bg-slate-800 border-2 border-white shrink-0 mt-1 z-10 -ml-1" />
+                    <div>
+                      <p className="font-semibold text-slate-800">{entry.text}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[10px] font-medium text-slate-400">
                         <span>{entry.date}</span>
-                        <span className="w-1 h-1 rounded-full bg-[#E5E5EA]" />
+                        <span className="w-1 h-1 rounded-full bg-slate-200" />
                         <span>{entry.time}</span>
-                        <span className="w-1 h-1 rounded-full bg-[#E5E5EA]" />
+                        <span className="w-1 h-1 rounded-full bg-slate-200" />
                         <span>{entry.user}</span>
                       </div>
                     </div>
@@ -591,48 +799,47 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 ))}
               </div>
             </div>
-
-          </div>
+          )}
 
         </div>
       </div>
 
-      {/* RODAPÉ FIXO */}
-      <div className="bg-white/80 backdrop-blur-xl border-t border-[#E5E5EA] p-4 flex items-center justify-end gap-3 shrink-0 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
+      {/* RODAPÉ OPERACIONAL FIXO */}
+      <div className="bg-white border-t border-slate-200 p-3 flex items-center justify-end gap-2 shrink-0 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
         <button 
           onClick={onBack}
-          className="px-6 py-3 bg-white border border-[#E5E5EA] text-[#1C1C1E] rounded-xl font-bold text-sm transition-all hover:bg-[#F5F5F7]"
+          className="px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg font-bold text-xs transition-all"
         >
-          Cancelar
+          Voltar
         </button>
         <button 
           onClick={handleSave}
           disabled={isSaving}
-          className="flex items-center gap-2 px-8 py-3 bg-[#1C1C1E] text-white rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50"
+          className="flex items-center gap-1.5 px-5 py-2 bg-slate-900 hover:bg-black text-white rounded-lg font-bold text-xs shadow-sm transition-all disabled:opacity-50"
         >
           {isSaving ? "Salvando..." : (
             <>
-              <Save size={16} /> Salvar
+              <Save size={14} /> Salvar Alterações
             </>
           )}
         </button>
       </div>
 
-      {/* MODAL DE PAGAMENTO */}
+      {/* MODAL DE REGISTRAR PAGAMENTO */}
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl animate-in zoom-in-95">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-[#1C1C1E] tracking-tight">Registrar Pagamento</h3>
-              <button onClick={() => setIsPaymentModalOpen(false)} className="text-[#8E8E93] hover:text-[#1C1C1E] transition-colors">
-                <X size={20} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-sm rounded-xl p-5 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+              <h3 className="text-sm font-bold text-slate-900 tracking-tight">Registrar Pagamento</h3>
+              <button onClick={() => setIsPaymentModalOpen(false)} className="text-slate-400 hover:text-slate-900 transition-colors">
+                <X size={18} />
               </button>
             </div>
 
-            <div className="space-y-5">
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-[#1C1C1E] block">Forma de pagamento</label>
-                <select className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:border-[#1C1C1E] transition-all text-[#1C1C1E]">
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 block">Forma de pagamento</label>
+                <select className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-slate-900 transition-all text-slate-800">
                   <option value="pix">PIX</option>
                   <option value="dinheiro">Dinheiro</option>
                   <option value="credito">Cartão de Crédito</option>
@@ -643,24 +850,24 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 </select>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-[#1C1C1E] block">Valor pago</label>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-500 block">Valor pago</label>
                 <input 
                   type="text" 
                   placeholder="R$ 0,00"
                   defaultValue={formatCurrency(remaining)}
-                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:border-[#1C1C1E] transition-all text-[#1C1C1E]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-slate-900 transition-all text-slate-800"
                 />
               </div>
 
               {order.paymentMode === 'planned' && order.remainingInstallments && (
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-[#1C1C1E] block">Parcelas</label>
-                  <div className="space-y-2">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 block">Parcelas</label>
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                     {Array.from({ length: order.remainingInstallments }).map((_, idx) => (
-                      <label key={idx} className="flex items-center gap-3 p-3 rounded-xl border border-[#E5E5EA] bg-[#F5F5F7] cursor-pointer hover:bg-white transition-colors">
-                        <input type="checkbox" className="w-4 h-4 rounded text-[#1C1C1E] border-[#E5E5EA] focus:ring-[#1C1C1E]" />
-                        <span className="text-sm font-medium text-[#1C1C1E]">Parcela {idx + 1} de {order.remainingInstallments} - {formatCurrency(order.remainingInstallmentValue || 0)}</span>
+                      <label key={idx} className="flex items-center gap-2 p-2 rounded bg-slate-50 border border-slate-200 cursor-pointer hover:bg-white transition-colors">
+                        <input type="checkbox" className="w-3.5 h-3.5 rounded text-slate-900 border-slate-300 focus:ring-slate-900" />
+                        <span className="text-[11px] font-medium text-slate-700">Parcela {idx + 1} de {order.remainingInstallments} - {formatCurrency(order.remainingInstallmentValue || 0)}</span>
                       </label>
                     ))}
                   </div>
@@ -668,8 +875,8 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
               )}
             </div>
 
-            <div className="mt-8 flex gap-3">
-               <button onClick={() => setIsPaymentModalOpen(false)} className="flex-1 py-3 bg-[#F5F5F7] text-[#1C1C1E] rounded-xl font-bold text-sm transition-all hover:bg-[#E5E5EA]">
+            <div className="mt-6 flex gap-2">
+               <button onClick={() => setIsPaymentModalOpen(false)} className="flex-1 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg font-bold text-xs transition-all">
                  Cancelar
                </button>
                <button 
@@ -678,18 +885,23 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                      onSave({
                        ...order,
                        paymentStatus: "paid",
-                       status: "paid"
+                       status: "fully_paid"
                      });
                    }
                    setIsPaymentModalOpen(false);
                  }}
-                 className="flex-1 py-3 bg-[#1C1C1E] text-white rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 transition-all"
+                 className="flex-1 py-2 bg-slate-900 hover:bg-black text-white rounded-lg font-bold text-xs shadow-sm transition-all"
                >
                  Confirmar Pagamento
                </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* MODAL DE ETIQUETA A6 */}
+      {isLabelModalOpen && (
+        <OrderPrintA6Modal order={order} onClose={() => setIsLabelModalOpen(false)} />
       )}
 
     </div>

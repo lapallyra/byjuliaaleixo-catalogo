@@ -56,100 +56,69 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Card 
-      className="group w-full max-w-[400px] p-3 flex flex-col gap-3 cursor-pointer hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+      className="group w-full max-w-[480px] flex flex-col cursor-pointer transition-all duration-500 hover:shadow-2xl hover:shadow-neutral-200/50 hover:-translate-y-1 border border-neutral-100 rounded-3xl overflow-hidden bg-white relative mx-auto"
       onClick={() => onClick?.(product)}
-      style={{ '--cor-detalhe': activeColor } as React.CSSProperties}
     >
-      <div className="flex gap-3">
-        {/* Product Image */}
-        <div className="relative w-[120px] h-[120px] rounded-xl overflow-hidden shrink-0 bg-gray-50">
+      <div className="flex flex-row h-[200px] sm:h-[220px]">
+        {/* LADO ESQUERDO: Foto */}
+        <div className="w-[50%] relative overflow-hidden bg-neutral-50 shrink-0 border-r border-neutral-100/50">
           <ImageWithFallback
             src={product.image || ''}
             alt={product.product_name}
-            className="w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
-          {product.image_hover && (
-            <ImageWithFallback
-              src={product.image_hover}
-              alt={product.product_name}
-              className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-            />
-          )}
-          
-          {/* Quick Actions overlay */}
-          <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            {onAddToFavorite && (
-              <button 
-                onClick={(e) => handleAction(e, () => onAddToFavorite(product), setAddedFavorite)}
-                className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-600 hover:text-rose-500 shadow-sm transition-colors"
-                aria-label="Adicionar aos favoritos"
-              >
-                {addedFavorite ? <Heart size={14} className="text-rose-500 fill-rose-500" /> : <Heart size={14} />}
-              </button>
-            )}
-            <button 
-              onClick={handleShare}
-              className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-600 hover:text-indigo-500 shadow-sm transition-colors"
-              aria-label="Compartilhar"
-            >
-              {copiedLink ? <Check size={14} className="text-emerald-500" /> : <Share2 size={14} />}
-            </button>
-          </div>
         </div>
                 
-        {/* Product Info */}
-        <div className="flex-1 flex flex-col gap-1 min-w-0">
-          {product.category && (
-            <Badge variant="brand" themeColor={activeColor} className="w-fit text-[9px] mb-1">
-              {product.category}
-            </Badge>
-          )}
-          <h3 className="text-sm font-semibold text-gray-900 leading-tight line-clamp-2">
-            {product.product_name}
-          </h3>
-          <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
-            {product.description}
-          </p>
-          
-          <div className="mt-auto pt-2 flex items-end justify-between gap-2">
-            <div className="flex flex-col">
-              {product.original_price > product.current_price && (
-                <span className="text-[10px] text-gray-400 line-through">
-                  {formatCurrency(product.original_price)}
-                </span>
-              )}
-              <span className="text-sm font-bold" style={{ color: activeColor }}>
-                {formatCurrency(product.current_price)}
+        {/* LADO DIREITO: Preço e Ações */}
+        <div className="flex-1 p-5 flex flex-col items-center justify-center gap-4">
+          <div className="flex flex-col items-center gap-0.5 text-center mb-1">
+            {product.original_price > product.current_price && (
+              <span className="text-[10px] text-neutral-400 line-through font-bold">
+                {formatCurrency(product.original_price)}
               </span>
-            </div>
-            
-            <div className="flex items-center gap-1.5">
-              {onAddToGiftList && (
-                <button
-                  onClick={(e) => handleAction(e, () => onAddToGiftList(product), setAddedGift)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                  aria-label="Adicionar à lista de presentes"
-                >
-                  {addedGift ? <Check size={14} className="text-emerald-500" /> : <Gift size={14} />}
-                </button>
-              )}
-              {onAddToCart && (
-                <button
-                  onClick={(e) => handleAction(e, () => onAddToCart(product, 1), setAddedCart)}
-                  className="h-8 px-3 rounded-full flex items-center gap-1.5 text-white transition-all hover:opacity-90 active:scale-95 text-xs font-medium shadow-sm"
-                  style={{ backgroundColor: activeColor }}
-                  aria-label="Adicionar ao carrinho"
-                >
-                  {addedCart ? (
-                    <><Check size={14} /> Adicionado</>
-                  ) : (
-                    <><ShoppingCart size={14} /> Add</>
-                  )}
-                </button>
-              )}
-            </div>
+            )}
+            <span className="text-2xl font-black text-[#D4AF37] tracking-tight drop-shadow-[0_1px_3px_rgba(212,175,55,0.3)]">
+              {formatCurrency(product.current_price)}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-center gap-2">
+            {onAddToCart && (
+              <button
+                onClick={(e) => handleAction(e, () => onAddToCart(product, 1), setAddedCart)}
+                className="p-2 text-[#3A312D]/60 hover:text-[#3A312D] transition-all active:scale-90"
+                title="Adicionar ao carrinho"
+              >
+                {addedCart ? <Check size={22} className="text-green-500" /> : <ShoppingCart size={22} strokeWidth={1.2} />}
+              </button>
+            )}
+            {onAddToGiftList && (
+              <button
+                onClick={(e) => handleAction(e, () => onAddToGiftList(product), setAddedGift)}
+                className="p-2 text-[#3A312D]/60 hover:text-[#3A312D] transition-all active:scale-90"
+                title="Adicionar à lista de presentes"
+              >
+                {addedGift ? <Check size={22} className="text-green-500" /> : <Gift size={22} strokeWidth={1.2} />}
+              </button>
+            )}
+            {onAddToFavorite && (
+              <button
+                onClick={(e) => handleAction(e, () => onAddToFavorite(product), setAddedFavorite)}
+                className="p-2 text-[#3A312D]/60 hover:text-rose-400 transition-all active:scale-90"
+                title="Favoritar"
+              >
+                {addedFavorite ? <Heart size={22} className="text-rose-400 fill-rose-400" /> : <Heart size={22} strokeWidth={1.2} />}
+              </button>
+            )}
           </div>
         </div>
+      </div>
+
+      {/* TAG INFERIOR (ABAIXO DO CONTEÚDO) */}
+      <div className="w-full py-3.5 px-4 bg-[#3A312D] border-t border-[#D4AF37]/20">
+        <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-[#D4AF37] truncate text-center drop-shadow-[0_0_2px_rgba(212,175,55,0.4)]">
+          {product.product_name}
+        </h3>
       </div>
     </Card>
   );

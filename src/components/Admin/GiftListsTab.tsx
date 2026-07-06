@@ -37,6 +37,8 @@ import { db } from "../../lib/firebase";
 import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { Product } from "../../types";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface GiftListsTabProps {
   companyId: string;
   products: Product[];
@@ -105,10 +107,11 @@ const PRESET_BANNERS = [
   }
 ];
 
-export const GiftListsTab: React.FC<GiftListsTabProps> = ({
+export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
   companyId,
   products = []
 }) => {
+  const orchestrator = useAdminOrchestrator();
   const [lists, setLists] = useState<GiftList[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -279,7 +282,15 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = ({
       await setDoc(docRef, updatedList);
     } catch (err) {
       console.error("Erro ao atualizar lista no Firestore:", err);
-      alert("Houve um problema ao salvar as alterações no banco de dados.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Houve um problema ao salvar as alterações no banco de dados.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
       handleFirestoreError(err, OperationType.WRITE, path);
     }
   };
@@ -316,14 +327,30 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = ({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.code || !formData.listName || !formData.hostName) {
-      alert("Por favor, preencha os campos obrigatórios: Código, Nome da Lista e Anfitrião.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Por favor, preencha os campos obrigatórios: Código, Nome da Lista e Anfitrião.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Aviso' }
+    });
       return;
     }
 
     const codeUpper = formData.code.trim().toUpperCase();
 
     if (!isEditMode && lists.some((l) => l.code === codeUpper)) {
-      alert(`O código "${codeUpper}" já está em uso por outra lista de presentes.`);
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: `O código "${codeUpper}" já está em uso por outra lista de presentes.`,
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
       return;
     }
 
@@ -358,7 +385,15 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = ({
       alert(isEditMode ? "Lista atualizada com sucesso!" : "Lista criada com sucesso!");
     } catch (err) {
       console.error("Erro ao salvar lista de presentes:", err);
-      alert("Erro ao salvar lista de presentes. Por favor, tente novamente.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar lista de presentes. Por favor, tente novamente.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
       handleFirestoreError(err, isEditMode ? OperationType.UPDATE : OperationType.CREATE, path);
     }
   };
@@ -390,7 +425,15 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = ({
       };
 
       await setDoc(docRef, payload);
-      alert(`Lista duplicada com sucesso! Novo Código: ${newCode}`);
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: `Lista duplicada com sucesso! Novo Código: ${newCode}`,
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
     } catch (err) {
       console.error("Erro ao duplicar lista:", err);
       handleFirestoreError(err, OperationType.WRITE, path);
@@ -412,7 +455,15 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = ({
         status: "archived",
         history: [newHistoryEntry, ...(list.history || [])]
       });
-      alert(`Lista ${list.code} arquivada com sucesso.`);
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: `Lista ${list.code} arquivada com sucesso.`,
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
     } catch (err) {
       console.error("Erro ao arquivar lista:", err);
       handleFirestoreError(err, OperationType.UPDATE, path);
@@ -434,7 +485,15 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = ({
         status: "ended",
         history: [newHistoryEntry, ...(list.history || [])]
       });
-      alert(`Lista ${list.code} encerrada com sucesso.`);
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: `Lista ${list.code} encerrada com sucesso.`,
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
     } catch (err) {
       console.error("Erro ao encerrar lista:", err);
       handleFirestoreError(err, OperationType.UPDATE, path);
@@ -446,7 +505,15 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = ({
       const path = `giftLists/${list.code}`;
       try {
         await deleteDoc(doc(db, "giftLists", list.code));
-        alert("Lista excluída com sucesso.");
+        orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Lista excluída com sucesso.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
         if (selectedList?.id === list.id) {
           setSelectedList(null);
         }
@@ -462,7 +529,15 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = ({
     if (!activeSelectedList) return;
 
     if (activeSelectedList.items.some((item) => item.id === product.id)) {
-      alert("Este produto já está incluído nesta lista.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Este produto já está incluído nesta lista.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
       return;
     }
 
@@ -2008,7 +2083,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = ({
 
     </div>
   );
-};
+});
 
 // Simple icon helpers representing Slider/Info icon without unnecessary external imports
 const SlidersIcon: React.FC<{ size: number }> = ({ size }) => (

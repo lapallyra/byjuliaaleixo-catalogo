@@ -5,6 +5,8 @@ import { safeFormat } from "../../lib/dateUtils";
 import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
 import { X, CheckCircle, Trash2 } from "lucide-react";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 export interface OrderFormModalProps {
   editingOrder: Partial<Order> | null;
   products: Product[];
@@ -20,6 +22,7 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const orchestrator = useAdminOrchestrator();
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<any[]>(editingOrder?.items || []);
   const [shipping, setShipping] = useState(editingOrder?.shippingCost || 0);
@@ -112,7 +115,15 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
               onClose();
             } catch (err) {
               console.error("Erro ao salvar pedido:", err);
-              alert("Erro ao salvar pedido.");
+              orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar pedido.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
             } finally {
               setLoading(false);
             }

@@ -9,15 +9,17 @@ import { exportOrderReceiptPDF } from "../../utils/pdfGenerator";
 interface OrderReceiptModalProps {
   order: Order;
   onClose: () => void;
+  autoPrint?: boolean;
 }
 
 export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
   order,
   onClose,
+  autoPrint = false,
 }) => {
   const [settings, setSettings] = useState<Partial<SiteSettings>>({});
   const [receiptType, setReceiptType] = useState<"receipt" | "coupon">(
-    "receipt",
+    "coupon", // Default to coupon for thermal printers
   );
 
   useEffect(() => {
@@ -32,6 +34,17 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
     };
     load();
   }, [order.companyId]);
+
+  useEffect(() => {
+    if (autoPrint) {
+      // Small timeout to ensure content is ready
+      setTimeout(() => {
+        window.print();
+        // Optional: close the modal after printing if that is the desired UX
+        // onClose();
+      }, 500);
+    }
+  }, [autoPrint]);
 
   const handlePrint = () => {
     exportOrderReceiptPDF(order, settings);

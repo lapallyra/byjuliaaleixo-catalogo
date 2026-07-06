@@ -3,7 +3,7 @@ import { Order, Product } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { safeFormatISO } from "../../lib/dateUtils";
 import { formatPhone } from "../../utils/masks";
-import { Box, MoreVertical, Printer, Copy, MessageSquare, Tag, Eye, RefreshCw, Calendar } from "lucide-react";
+import { Box, MoreVertical, Printer, Copy, MessageSquare, Tag, Eye, RefreshCw, Calendar, Trash2, CreditCard, Edit } from "lucide-react";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface OrderCardProps {
@@ -16,6 +16,8 @@ interface OrderCardProps {
   onDuplicate: (order: Order) => void;
   onPrint: (order: Order) => void;
   onGenerateLabel: (order: Order) => void;
+  isSelected: boolean;
+  onToggleSelect: () => void;
 }
 
 export const OrderCard: React.FC<OrderCardProps> = ({
@@ -27,7 +29,9 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   onUpdateStatus,
   onDuplicate,
   onPrint,
-  onGenerateLabel
+  onGenerateLabel,
+  isSelected,
+  onToggleSelect
 }) => {
   const orchestrator = useAdminOrchestrator();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -50,21 +54,34 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   };
 
   const menuItems = [
+    { label: "Abrir Resumo", icon: <Eye size={14} />, action: () => onViewDetails(order.id) },
+    { label: "Registrar Pagamento", icon: <CreditCard size={14} />, action: () => {/* Need to trigger payment modal, maybe pass handler down? */ console.log("Registrar Pagamento", order.id)} },
     { label: "Alterar Status", icon: <RefreshCw size={14} />, action: () => onChangeStatusRequest(order) },
-    { label: "Imprimir", icon: <Printer size={14} />, action: () => onPrint(order) },
-    { label: "Copiar Pedido", icon: <Copy size={14} />, action: () => onDuplicate(order) },
-    { label: "Enviar WhatsApp", icon: <MessageSquare size={14} />, action: handleWhatsApp },
-    { label: "Gerar Etiqueta", icon: <Tag size={14} />, action: () => onGenerateLabel(order) },
+    { label: "Imprimir Etiqueta", icon: <Tag size={14} />, action: () => onGenerateLabel(order) },
+    { label: "Imprimir Cupom", icon: <Printer size={14} />, action: () => onPrint(order) },
+    { label: "Duplicar Pedido", icon: <Copy size={14} />, action: () => onDuplicate(order) },
+    { label: "Editar", icon: <Edit size={14} />, action: () => onChangeStatusRequest(order) }, // Using edit modal
+    { label: "Excluir", icon: <Trash2 size={14} className="text-rose-600" />, action: () => {
+        if(window.confirm("Deseja realmente excluir este pedido?")) {
+           // Need to handle deletion properly
+           console.log("Excluir", order.id);
+        }
+    }},
   ];
 
   return (
     <div 
-      onClick={() => {
-        orchestrator.registerInteraction();
-        onViewDetails(order.id!);
+      onClick={(e) => {
+        // Stop click propagation if clicking on checkbox
+        if ((e.target as HTMLElement).tagName !== 'INPUT') {
+            orchestrator.registerInteraction();
+            onViewDetails(order.id!);
+        }
       }}
-      className={`clean-3d-card bg-white p-4 md:p-5 group flex flex-col md:flex-row items-start md:items-center justify-between relative pl-8 md:pl-10 ${isMenuOpen ? 'z-50' : 'z-10'} gap-4 md:gap-5 cursor-pointer hover:shadow-lg transition-all`}
+      className={`clean-3d-card bg-white p-4 md:p-5 group flex flex-col md:flex-row items-start md:items-center justify-between relative pl-12 md:pl-16 ${isMenuOpen ? 'z-50' : 'z-10'} gap-4 md:gap-5 cursor-pointer hover:shadow-lg transition-all ${isSelected ? 'ring-2 ring-indigo-500' : ''}`}
     >
+      <input type="checkbox" checked={isSelected} onChange={(e) => { e.stopPropagation(); onToggleSelect(); }} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded border-gray-300" />
+      
       {/* Faixa LED Lateral - Apenas a cor sólida e o brilho para fora */}
       <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-[28px] ${statusInfo.color} z-20`} style={{ boxShadow: '-6px 0 20px 2px ' + statusInfo.color.replace('bg-[', '').replace(']', '') + '80' }} />
       

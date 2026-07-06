@@ -79,6 +79,17 @@ export const AdminNotificationPortal: React.FC = () => {
         companyId: latest.companyId,
         time: 'Agora'
       };
+    } else if (latest.type === 'FEEDBACK') {
+      newNotif = {
+        id,
+        type: 'feedback',
+        title: latest.data?.title || 'Aviso',
+        message: latest.message,
+        icon: latest.data?.success ? CheckCircle2 : Info,
+        color: latest.data?.success ? '#10B981' : '#F59E0B',
+        companyId: latest.companyId,
+        time: 'Agora'
+      };
     }
 
     if (newNotif) {

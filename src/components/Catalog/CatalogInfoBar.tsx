@@ -1,49 +1,58 @@
-import React, { useState } from 'react';
-import { Truck, AlertCircle, CreditCard, ShieldCheck, Zap } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import React from 'react';
+import { TrendingUp, Filter, ChevronDown } from 'lucide-react';
 
-export const CatalogInfoBar: React.FC<{theme: any}> = ({ theme }) => {
-  const items = [
-    { icon: Truck, title: "Envio Nacional", text: "Envio pelos correios" },
-    { icon: AlertCircle, title: "Taxa Emergencial", text: "Será adicionado R$ 25,00 no valor final." },
-    { icon: CreditCard, title: "Parcelamento", text: "Taxa adicional da máquina de cartão" },
-    { icon: ShieldCheck, title: "Compra Segura", text: "Site seguro para compras" },
-    { icon: Zap, title: "Sob Encomenda", text: "Produtos feitos apenas sob encomenda 03-20 dias uteis." },
-  ];
+interface CatalogInfoBarProps {
+  selectedCategory: string | null;
+  sortBy: string;
+  onSortChange: (value: string) => void;
+  hasActiveFilters: boolean;
+  onClearFilters: () => void;
+}
 
-  const isPallyra = theme.primaryColor === '#F8F8F6';
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
+export const CatalogInfoBar: React.FC<CatalogInfoBarProps> = ({
+  selectedCategory,
+  sortBy,
+  onSortChange,
+  hasActiveFilters,
+  onClearFilters
+}) => {
   return (
-    <div className={`flex overflow-visible gap-10 py-10 px-4 scrollbar-hide items-center justify-center relative flex-wrap`}>
-      {items.map((item, i) => (
-        <div 
-          key={item.title} 
-          className={`relative flex-shrink-0 flex flex-col items-center gap-3 transition-opacity opacity-70 hover:opacity-100 cursor-help group z-10`}
-          onMouseEnter={() => setHoveredIndex(i)}
-          onMouseLeave={() => setHoveredIndex(null)}
-        >
-          <item.icon size={18} strokeWidth={1} className={theme.textPrimary} />
-          <div className="flex flex-col items-center">
-            <span className={`text-[8px] font-medium uppercase tracking-[0.3em] ${theme.textPrimary}`}>{item.title}</span>
+    <div className="catalog-info-bar mb-8 py-4 border-b border-[#e8dcc8]/20 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        <h2 className="text-2xl font-serif text-[#3A312D] italic tracking-tight">
+          {selectedCategory || 'Coleção Completa'}
+        </h2>
+        
+        <div className="flex items-center gap-2 px-4 py-2 bg-white/40 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm group hover:shadow-md transition-all">
+          <TrendingUp size={14} className="text-[#A68B80]" />
+          <div className="relative flex items-center">
+            <select 
+              value={sortBy}
+              onChange={(e) => onSortChange(e.target.value)}
+              className="appearance-none text-[10px] font-bold uppercase tracking-widest bg-transparent border-none focus:ring-0 cursor-pointer text-[#3A312D] pr-6"
+            >
+              <option value="latest">Mais Recentes</option>
+              <option value="bestselling">Mais Vendidos</option>
+              <option value="price_asc">Menor Preço</option>
+              <option value="price_desc">Maior Preço</option>
+              <option value="alphabetical">Ordem Alfabética</option>
+            </select>
+            <ChevronDown size={10} className="absolute right-0 text-[#A68B80] pointer-events-none" />
           </div>
-
-          <AnimatePresence>
-            {hoveredIndex === i && (
-              <motion.div
-                initial={{ opacity: 0, y: -5, scale: 0.95 }}
-                animate={{ opacity: 1, y: 5, scale: 1 }}
-                exit={{ opacity: 0, y: -5, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="absolute top-full mt-2 w-48 p-3 bg-black text-white text-[10px] leading-relaxed font-sans text-center rounded-xl shadow-2xl z-[100] pointer-events-none"
-              >
-                {item.text}
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-black"></div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
-      ))}
+      </div>
+
+      <div className="flex items-center gap-4">
+        {hasActiveFilters && (
+          <button 
+            onClick={onClearFilters}
+            className="flex items-center gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors bg-rose-50/50 rounded-lg"
+          >
+            <Filter size={12} />
+            Limpar Filtros
+          </button>
+        )}
+      </div>
     </div>
   );
 };

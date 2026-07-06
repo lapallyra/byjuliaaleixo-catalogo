@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Product, CompanyId, Order, Componente, Insumo, Customer, AuditLog } from "../types";
 import {
@@ -19,6 +19,7 @@ import {
   updateOrderStatus,
   updateOrder,
   saveSale,
+  getOrderByCode,
   subscribeToCheckoutEvents,
   subscribeToAuditLogs,
 } from "../services/firebaseService";
@@ -92,7 +93,9 @@ import { OperationalEfficiencyTab } from "./Admin/OperationalEfficiencyTab";
 import { OrderControlCenterTab } from "./Admin/OrderControlCenterTab";
 import { DeliveriesTab } from "./Admin/DeliveriesTab";
 
+import { GlobalSearch } from "./Admin/GlobalSearch";
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
+import { Sidebar } from "./Admin/Sidebar";
 import { useAdminOrchestrator } from "./AdminOrchestratorSystem";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
 import { safeFormatISO } from "../lib/dateUtils";
@@ -180,6 +183,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     return localStorage.getItem("admin_sidebar_expanded") || "Operação";
   });
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
+  const [autoPrint, setAutoPrint] = useState(false);
+  
+  // Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+      
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('trigger-global-search'));
+      } else if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('trigger-new-order'));
+      } else if (e.ctrlKey && e.key === 'p') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('trigger-print-coupon'));
+      } else if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('trigger-print-etiqueta'));
+      } else if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('trigger-focus-search'));
+      } else if (e.key === 'Escape') {
+        window.dispatchEvent(new CustomEvent('trigger-close-modals'));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Sync expanded group to local storage
   useEffect(() => {
@@ -208,8 +240,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       setSales(loaded as Order[]),
     );
     const unsubSettings = subscribeToAllSettings(setSettings);
-    const unsubInsumos = subscribeToInsumos((data) => setInsumos(data as any)); // Existing
-    const unsubComponentes = subscribeToInsumos((data) => setComponentes(data as Componente[]));
+    const unsubInsumos = subscribeToInsumos((data) => { setInsumos(data as any); setComponentes(data as Componente[]); });
     const unsubCustomers = subscribeToCustomers(setCustomers);
     const unsubSuggestions = subscribeToSuggestions(setSuggestions);
     const unsubFeedbacks = subscribeToFeedbacks(setFeedbacks);
@@ -310,6 +341,83 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     { id: "activity-logs", label: "Atividades", group: "Sistema", icon: Activity },
   ];
 
+  
+  const handleUpdateOrderStatus = useCallback(async (id: string, status: string) => {
+    if (status === 'production') {
+       const order = sales.find(o => o.id === id);
+       if (order && user) {
+           for (const item of order.items) {
+               const product = products.find(p => p.id === item.productId || p.id === item.id);
+               if (product) {
+                   await startProductProduction(id, product, user.uid);
+               }
+           }
+       }
+    }
+    await updateOrderStatus(id, status);
+    if (["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(status)) {
+      playSuccessSound();
+    }
+  }, [sales, products, user]);
+
+  const handleSaveOrder = useCallback(async (data: Partial<Order>) => {
+    if (data.id) {
+      await updateOrder(data.id, data);
+      if (data.status && ["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(data.status)) {
+        playSuccessSound();
+      }
+      return;
+    } else {
+      const orderCode = await saveSale(data);
+      playSuccessSound();
+      if (orderCode) {
+        const order = await getOrderByCode(orderCode);
+        if (order) {
+          setPrintingOrder(order);
+          setAutoPrint(true);
+        }
+      }
+    }
+  }, []);
+
+  const handleUpdateOrderData = useCallback(async (id: string, data: Partial<Order>) => {
+    await updateDoc(doc(db, "orders", id), data);
+  }, []);
+
+  const handleDeleteOrder = useCallback(async (id: string) => {
+    await deleteDoc(doc(db, "orders", id));
+  }, []);
+
+  const handlePrintOrder = useCallback((o: Order) => {
+    setPrintingOrder(o);
+    setAutoPrint(true);
+  }, []);
+
+  const handleViewCustomer = useCallback((customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setActiveTab("clients");
+  }, []);
+
+
+
+  const handleNewOrderForCustomer = useCallback((customerId: string) => {
+    setSelectedCustomerId(customerId);
+    setActiveTab("orders");
+  }, []);
+
+
+  const handleSaveComponente = useCallback(async (data: Partial<Componente>) => {
+    if (data.id) {
+      await updateInsumo(data.id, data as any);
+    } else {
+      await addInsumo(data as any);
+    }
+  }, []);
+
+  const handleDeleteComponente = useCallback(async (id: string) => {
+    await deleteInsumo(id);
+  }, []);
+
   const menuGroups = [
     "Dashboard",
     "Operação",
@@ -327,138 +435,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   }, {} as Record<string, typeof menuItems>);
 
   return (
-    <div className="h-screen bg-[#F5F5F7] text-[#1C1C1E] flex font-sans overflow-hidden relative selection:bg-[#E5E5EA] selection:text-[#1C1C1E] admin-wrapper">
+    <div className="h-screen bg-slate-50 text-slate-900 flex font-sans overflow-hidden relative selection:bg-slate-200 selection:text-slate-900 admin-wrapper">
       <AdminNotificationPortal />
 
-      {/* Sidebar navigation - Desktop */}
-      <aside
-        className={`bg-white/60 backdrop-blur-2xl border-r border-[#E5E5EA]/60 flex flex-col hidden lg:flex flex-shrink-0 relative z-[60] transition-all duration-300 ${isSidebarCollapsed ? "w-20 items-center" : "w-64"}`}
-      >
-        <button
-          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          className="absolute -right-3 top-10 bg-white border border-[#E5E5EA] w-6 h-6 flex items-center justify-center rounded-full z-50 text-[#8E8E93] hover:text-[#1C1C1E] shadow-3d-soft transition-all elevated-3d"
-        >
-          <ChevronRight
-            size={12}
-            className={`transition-transform duration-300 ${!isSidebarCollapsed ? "rotate-180" : ""}`}
-          />
-        </button>
-
-        <div className={`flex flex-col flex-1 overflow-hidden p-6 ${isSidebarCollapsed ? "px-4" : ""}`}>
-          <div className="flex-1 overflow-y-auto scrollbar-hide px-0 py-2">
-            <nav className="space-y-3 pb-10">
-              {menuGroups.map((groupName) => {
-                const items = groupedMenu[groupName] || [];
-                const isExpanded = expandedGroup === groupName || isSidebarCollapsed;
-                const isDashboard = groupName === "Dashboard";
-
-                if (isDashboard && items.length > 0) {
-                  const item = items[0];
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative group overflow-hidden mb-6 ${isActive ? "text-white bg-[#FF1493]" : "text-[#8E8E93] hover:text-[#FF1493] hover:bg-white/40"}`}
-                    >
-                      {isActive && (
-                        <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full" />
-                      )}
-                      <div className="relative z-10 flex items-center justify-center w-5 h-5">
-                         <item.icon
-                           size={18}
-                           strokeWidth={isActive ? 2.5 : 2}
-                           className={`${isActive ? "text-white" : "text-[#8E8E93] group-hover:text-[#FF1493]"} transition-colors duration-300`}
-                         />
-                      </div>
-                      {!isSidebarCollapsed && (
-                        <span className={`text-[11px] font-bold uppercase tracking-[0.15em] relative z-10 ${isActive ? "text-white" : "text-[#8E8E93]"}`}>
-                          {groupName}
-                        </span>
-                      )}
-                    </button>
-                  );
-                }
-
-                return (
-                  <div key={groupName} className="space-y-1.5">
-                    <button
-                      onClick={() => !isSidebarCollapsed && setExpandedGroup(expandedGroup === groupName ? null : groupName)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group ${expandedGroup === groupName ? "text-white bg-[#FF1493]" : "text-[#8E8E93] hover:text-[#FF1493] hover:bg-white/20"}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`flex items-center justify-center w-5 h-5 transition-colors duration-300 ${expandedGroup === groupName ? "text-white" : "text-[#8E8E93] group-hover:text-[#FF1493]"}`}>
-                          {groupName === "Operação" && <ShoppingBag size={16} />}
-                          {groupName === "Produção" && <Box size={16} />}
-                          {groupName === "Financeiro" && <DollarSign size={16} />}
-                          {groupName === "Marketing" && <Megaphone size={16} />}
-                          {groupName === "Sistema" && <Settings size={16} />}
-                        </div>
-                        {!isSidebarCollapsed && (
-                          <span className="text-[10px] font-black uppercase tracking-[0.18em]">{groupName}</span>
-                        )}
-                      </div>
-                      {!isSidebarCollapsed && (
-                        <ChevronDown 
-                          size={12} 
-                          className={`transition-transform duration-500 opacity-40 ${isExpanded ? "rotate-180" : ""}`} 
-                        />
-                      )}
-                    </button>
-
-                    <AnimatePresence initial={false}>
-                      {isExpanded && !isSidebarCollapsed && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-                          className="overflow-hidden"
-                        >
-                          <div className="pl-10 pr-2 space-y-1 py-1.5">
-                            {items.map((item) => {
-                              const isActive = activeTab === item.id;
-                              return (
-                                <button
-                                  key={item.id}
-                                  onClick={() => setActiveTab(item.id)}
-                                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative group ${isActive ? "text-[#FF1493] bg-[#FF1493]/10" : "text-[#8E8E93] hover:text-[#FF1493] hover:bg-[#F5F5F7]/40"}`}
-                                >
-                                  {isActive && (
-                                    <motion.div
-                                      layoutId="activeSubNavIndicator"
-                                      className="absolute left-1 w-1 h-1 bg-[#FF1493] rounded-full shadow-[0_0_8px_#FF1493]"
-                                    />
-                                  )}
-                                  <span className={`text-[11px] font-semibold tracking-wide transition-colors duration-300 ${isActive ? "text-[#FF1493]" : "text-[#8E8E93] group-hover:text-[#FF1493]"}`}>
-                                    {item.label}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </nav>
-          </div>
-
-          <div className="pt-6 space-y-3">
-          <button
-            onClick={() => {
-              logout();
-              window.location.href = "/";
-            }}
-            className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl text-[#8E8E93] hover:bg-white hover:text-[#1C1C1E] hover:shadow-[0_2px_10px_rgba(0,0,0,0.04)] transition-all text-xs font-medium"
-          >
-            <LogOut size={14} /> {!isSidebarCollapsed && "Encerrar Sessão"}
-          </button>
-        </div>
-      </div>
-    </aside>
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        activeTab={activeTab}
+        setActiveTab={(tab) => setActiveTab(tab as TabType)}
+        menuGroups={menuGroups}
+        groupedMenu={groupedMenu}
+        logout={() => {
+          logout();
+          window.location.href = "/";
+        }}
+      />
 
       <AnimatePresence>
         {isMobileMenuOpen && (
@@ -595,10 +586,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-white">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-slate-50">
         {/* Top Header Bar */}
         {activeTab === "dashboard" ? (
-          <header className="h-20 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 lg:px-10 flex items-center justify-between z-50 flex-shrink-0 mx-6 mt-6 rounded-3xl shadow-3d-soft border border-slate-100">
+          <header className="h-14 bg-white border-b border-slate-200/80 px-6 lg:px-10 flex items-center justify-between z-40 flex-shrink-0 shadow-sm">
             {/* Lado Esquerdo - Mobile Menu Toggle */}
             <div className="flex items-center gap-4 lg:hidden">
               <button
@@ -639,6 +630,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
 
             {/* Lado Direito - Notificações */}
             <div className="flex items-center gap-4">
+              <GlobalSearch 
+                orders={sales} 
+                products={products} 
+                customers={customers} 
+                insumos={insumos} 
+                componentes={componentes}
+                onResultClick={(type, id) => {
+                  if (type === 'Pedido') { setSelectedOrderId(id); setActiveTab('orders'); }
+                  else if (type === 'Cliente') { setSelectedCustomerId(id); setActiveTab('clients'); }
+                  else if (type === 'Produto') { setActiveTab('products'); }
+                  else if (type === 'Insumo') { setActiveTab('inventory'); }
+                  else if (type === 'Componente') { setActiveTab('componentes'); }
+                }}
+              />
               <div className="relative">
                 <button
                   onClick={() => setIsSuggestionsModalOpen(true)}
@@ -654,7 +659,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
           </header>
         ) : (
           /* Mobile-only tiny menu when header is hidden to prevent getting stuck */
-          <div className="lg:hidden h-12 px-4 flex items-center justify-between bg-white/30 backdrop-blur-md border-b border-white/20 z-50 flex-shrink-0">
+          <div className="lg:hidden h-12 px-4 flex items-center justify-between bg-white border-b border-slate-200 z-50 flex-shrink-0">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="p-2 text-[#8E8E93] hover:text-[#1C1C1E] transition-colors"
@@ -727,7 +732,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   {printingOrder && (
                     <OrderReceiptModal
                       order={printingOrder}
-                      onClose={() => setPrintingOrder(null)}
+                      autoPrint={autoPrint}
+                      onClose={() => {
+                        setPrintingOrder(null);
+                        setAutoPrint(false);
+                      }}
                     />
                   )}
                   {activeTab === "orders" && (
@@ -737,61 +746,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       insumos={insumos}
                       customers={customers}
                       companyId={selectedCompanyId}
-                      onUpdateStatus={async (id, status) => {
-                        if (status === 'production') {
-                           const order = sales.find(o => o.id === id);
-                           if (order && user) {
-                               for (const item of order.items) {
-                                   const product = products.find(p => p.id === item.productId || p.id === item.id);
-                                   if (product) {
-                                       await startProductProduction(id, product, user.uid);
-                                   }
-                               }
-                           }
-                        }
-                        await updateOrderStatus(id, status);
-                        if (["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(status)) {
-                          playSuccessSound();
-                        }
-                      }}
-                      onSaveOrder={async (data) => {
-                        if (data.id) {
-                          await updateOrder(data.id, data);
-                          if (data.status && ["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(data.status)) {
-                            playSuccessSound();
-                          }
-                        } else {
-                          await saveSale(data);
-                          playSuccessSound();
-                        }
-                      }}
-                      onDeleteOrder={async (id) => {
-                        await deleteDoc(doc(db, "orders", id));
-                      }}
+                      onUpdateStatus={handleUpdateOrderStatus}
+                      onSaveOrder={handleSaveOrder}
+                      onDeleteOrder={handleDeleteOrder}
                       initialOrderId={selectedOrderId}
                       initialCustomerId={selectedCustomerId}
                     />
                   )}
                   {activeTab === "componentes" && (
-                    <ComponentsTab
+                    <ComponentsTab products={products}
                       componentes={componentes}
-                      onSaveComponente={async (data) => {
-                        if (data.id) {
-                          await updateInsumo(data.id, data as any);
-                        } else {
-                          await addInsumo(data as any);
-                        }
-                      }}
-                      onDeleteComponente={async (id) => {
-                        await deleteInsumo(id);
-                      }}
+                      onSaveComponente={handleSaveComponente}
+                      onDeleteComponente={handleDeleteComponente}
                     />
                   )}
                   {activeTab === "purchases" && (
-                    <PurchasesTab companyId={selectedCompanyId} />
+                    <PurchasesTab companyId={selectedCompanyId} orders={sales} />
                   )}
                   {activeTab === "financeiro" && (
-                    <FinanceTab
+                    <FinanceTab auditLogs={auditLogs}
                       orders={sales}
                       products={products}
                       componentes={componentes}
@@ -828,21 +801,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       orders={sales}
                       auditLogs={auditLogs}
                       companyId={selectedCompanyId}
-                      onSaveProduct={async (p) => {
-                        if (p.id) {
-                          await updateProduct(p.id, p);
-                        } else {
-                          await addProduct(p as any);
-                        }
-                      }}
-                      onDeleteProduct={(id) => deleteProduct(id)}
+                      onSaveProduct={handleSaveProduct}
+                      onDeleteProduct={handleDeleteProduct}
                     />
                   )}
                   {activeTab === "collections" && (
-                    <CollectionsTab />
+                    <CollectionsTab products={products} />
                   )}
                   {activeTab === "campaigns" && (
-                    <CampaignsTab />
+                    <CampaignsTab products={products} />
                   )}
                   {activeTab === "coupons" && (
                     <CouponsTab
@@ -852,7 +819,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "media-center" && (
-                    <MediaCenterTab />
+                    <MediaCenterTab products={products} />
                   )}
                   {activeTab === "kits" && (
                     <KitsTab
@@ -862,13 +829,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "clients" && (
-                    <ClientsTab
+                    <ClientsTab orders={sales}
                       companyId={selectedCompanyId}
                       customers={customers}
-                      onNewOrder={(customerId) => {
-                        setSelectedCustomerId(customerId);
-                        setActiveTab("orders");
-                      }}
+                      onNewOrder={handleNewOrderForCustomer}
                     />
                   )}
                   {activeTab === "gift-lists" && (
@@ -922,7 +886,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <NotificationsTab />
                   )}
                   {activeTab === "activity-logs" && (
-                    <AuditTimelineTab />
+                    <AuditTimelineTab auditLogs={auditLogs} companyId={selectedCompanyId} />
                   )}
                 </ErrorBoundary>
               </React.Suspense>
@@ -946,9 +910,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 100 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="relative w-full max-w-md bg-[#F5F5F7] h-full sm:rounded-[2rem] border border-[#E5E5EA] shadow-2xl flex flex-col overflow-hidden"
+                className="relative w-full max-w-md bg-slate-50 h-full sm:rounded-l-3xl border-l border-slate-200/80 shadow-2xl flex flex-col overflow-hidden"
               >
-                <div className="p-6 border-b border-[#E5E5EA] bg-white/80 backdrop-blur-xl space-y-6">
+                <div className="p-6 border-b border-slate-200 bg-white space-y-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-2xl bg-white text-[#1C1C1E] flex items-center justify-center border border-[#E5E5EA] shadow-sm relative">

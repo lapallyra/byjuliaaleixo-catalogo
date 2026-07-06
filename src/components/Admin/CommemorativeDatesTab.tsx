@@ -93,7 +93,7 @@ export function CommemorativeDatesTab() {
 
   useEffect(() => {
     const unsub = commemorativeDateService.subscribe(setDates);
-    commemorativeDateService.seedInitialDates();
+  // No longer seeding initial dates to comply with SITE-005
     return unsub;
   }, []);
 

@@ -58,6 +58,8 @@ export const CustomerSocialProofToast: React.FC<
   useEffect(() => {
     if (!currentCompany) return;
 
+    // Disabled to comply with SITE-005 (Zero Mock Data Policy)
+    /*
     const triggerNotification = () => {
         const mockData = generateRandomNotification(currentCompany, products);
         if (!seenSaleIds.current.has(mockData.id)) {
@@ -82,6 +84,7 @@ export const CustomerSocialProofToast: React.FC<
       clearInterval(interval);
       Object.values(timerRefs.current).forEach(clearTimeout);
     };
+    */
   }, [currentCompany, products]);
 
   return (

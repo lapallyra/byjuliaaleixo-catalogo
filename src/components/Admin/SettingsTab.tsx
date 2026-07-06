@@ -28,6 +28,7 @@ import {
   Package,
   CheckCircle2,
   Settings,
+  Keyboard,
 } from "lucide-react";
 import { ClientSettings } from "./Settings/ClientSettings";
 import { ProductSettings } from "./Settings/ProductSettings";
@@ -35,6 +36,7 @@ import { PaymentSettings } from "./Settings/PaymentSettings";
 import { ApprovalSettings } from "./Settings/ApprovalSettings";
 import { NotificationSettings } from "./Settings/NotificationSettings";
 import { SystemSettings } from "./Settings/SystemSettings";
+import { ShortcutsView } from "./ShortcutsView";
 import { ImageUpload } from "./ImageUpload";
 import { DynamicPricingList } from "./DynamicPricingList";
 import { CompanyId, SiteSettings } from "../../types";
@@ -53,6 +55,8 @@ import { format } from "date-fns";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { resendTelegramNotification } from "../../services/telegramService";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface SettingsTabProps {
   companyId: CompanyId;
 }
@@ -64,7 +68,8 @@ interface BrandSettings {
   slogan: string;
 }
 
-export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
+export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }) => {
+  const orchestrator = useAdminOrchestrator();
   const [activeSubTab, setActiveSubTab] = useState<
     | "brand"
     | "about"
@@ -79,6 +84,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
     | "payments"
     | "approval"
     | "system"
+    | "shortcuts"
   >("brand");
   const [settings, setSettings] = useState<Partial<SiteSettings>>({});
   const [loading, setLoading] = useState(true);
@@ -112,12 +118,28 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
       await performSystemReset();
       setResetProgress("success");
       setConfirmInput("");
-      alert("O sistema foi redefinido aos padrões iniciais de uso com sucesso!");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "O sistema foi redefinido aos padrões iniciais de uso com sucesso!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
       setActiveSubTab("brand");
     } catch (e) {
       console.error(e);
       setResetProgress("error");
-      alert("Erro ao redefinir o sistema. Consulte os logs no console.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao redefinir o sistema. Consulte os logs no console.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setResetProgress("idle");
     }
@@ -233,10 +255,26 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           await saveAppConfig(configUpdate);
         }
       }
-      alert("Configurações salvas com sucesso!");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Configurações salvas com sucesso!",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: true, title: 'Sucesso' }
+    });
     } catch (err) {
       console.error(err);
-      alert("Erro ao salvar configurações.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar configurações.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setSaving(false);
     }
@@ -325,6 +363,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
           { id: "roulette", label: "Roleta de Brindes", icon: Gift },
           { id: "notifications", label: "Notificações", icon: Bell },
           { id: "system", label: "Sistema", icon: Settings },
+          { id: "shortcuts", label: "Atalhos", icon: Keyboard },
           { id: "reset", label: "Reset de Dados", icon: RotateCw },
         ].map((item) => (
           <button
@@ -352,6 +391,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
         {activeSubTab === "payments" && <PaymentSettings />}
         {activeSubTab === "approval" && <ApprovalSettings />}
         {activeSubTab === "system" && <SystemSettings />}
+        {activeSubTab === "shortcuts" && <ShortcutsView />}
         
         {activeSubTab === "brand" && (
           <div className="space-y-8">
@@ -1833,4 +1873,4 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ companyId }) => {
       </div>
     </div>
   );
-};
+});

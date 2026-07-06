@@ -7,9 +7,10 @@ import { ImageWithFallback } from './ImageWithFallback';
 
 interface KitConstructorProps {
   allProducts: Product[];
+  setCarts: any;
 }
 
-export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts }) => {
+export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, setCarts }) => {
   const [selectedProducts, setSelectedProducts] = useState<Record<string, { product: Product; quantity: number }>>({});
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts }) =
   const selectedNames = useMemo(() => {
     const items = Object.values(selectedProducts);
     if (items.length === 0) return 'Selecione os itens do seu presente';
-    return items.map(item => item.product.product_name.split(' ')[0]).join(', '); // Simplified names
+    return items.map(item => `${item.quantity}x ${item.product.product_name.split(' ')[0]}`).join(', '); // Simplified names with qty
   }, [selectedProducts]);
 
   const toggleCategory = (cat: string) => {
@@ -45,6 +46,37 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts }) =
       }
       return next;
     });
+  };
+
+  const handleFinish = () => {
+    if (total === 0) return;
+
+    const kitItems = Object.values(selectedProducts).map(item => ({
+      id: item.product.id,
+      product_name: item.product.product_name,
+      quantity: item.quantity,
+      price: item.product.retail_price
+    }));
+
+    const virtualKit: any = {
+      id: `custom-kit-${Date.now()}`,
+      product_name: "Kit Personalizado",
+      retail_price: total,
+      image: Object.values(selectedProducts)[0]?.product.image, // Use first item image as preview
+      description: `Composto por: ${kitItems.map(i => `${i.quantity}x ${i.product_name}`).join(', ')}`,
+      quantity: 1,
+      isKit: true,
+      kitType: 'monte_seu_kit',
+      kitItems: Object.values(selectedProducts).map(item => ({
+        type: 'product',
+        id: item.product.id,
+        quantity: item.quantity
+      }))
+    };
+
+    setCarts((prev: any[]) => [...prev, virtualKit]);
+    alert("Seu kit personalizado foi adicionado ao carrinho!");
+    navigate('/');
   };
 
   return (
@@ -178,9 +210,10 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts }) =
             </div>
             
             <button 
+              onClick={handleFinish}
               className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
                 total > 0 
-                  ? 'bg-[#6d5443] text-white hover:bg-[#5b4535] shadow-lg shadow-[#6d5443]/10' 
+                  ? 'bg-[#6d5443] text-white hover:bg-[#5b4535] shadow-lg shadow-[#6d5443]/10 active:scale-95' 
                   : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
               }`}
               disabled={total === 0}

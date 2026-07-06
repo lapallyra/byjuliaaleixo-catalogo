@@ -46,6 +46,8 @@ import { ProductCard } from './ui/ProductCard';
 
 
 import { CatalogHeader } from './Catalog/CatalogHeader';
+import { FloatingMenu } from './Catalog/FloatingMenu';
+import { CatalogInfoBar } from './Catalog/CatalogInfoBar';
 import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
@@ -73,6 +75,7 @@ interface CatalogViewProps {
   onUpdateQuantity: (id: string, delta: number) => void;
   onSetQuantity: (id: string, quantity: number) => void;
   onAddToGiftList: (product: Product) => void;
+  onAddToFavorite?: (product: Product) => void;
   onRemoveFromGiftList: (id: string) => void;
   onGoBack: () => void;
   onCheckoutComplete: () => void;
@@ -90,6 +93,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   onUpdateQuantity,
   onSetQuantity,
   onAddToGiftList,
+  onAddToFavorite,
   onRemoveFromGiftList,
   onGoBack,
   onCheckoutComplete,
@@ -103,6 +107,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [globalSettings, setGlobalSettings] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'latest' | 'price_asc' | 'price_desc' | 'alphabetical' | 'bestselling'>('latest');
   const [view, setView] = useState<'catalog' | 'collections'>('catalog');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltering, setIsFiltering] = useState(false);
@@ -627,21 +632,50 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   };
 
   const companyName = companyId === 'pallyra' ? config.company_1_name : companyId === 'guennita' ? config.company_2_name : companyId === 'mimada' ? config.company_3_name : config.company_4_name;
-  const defaultLogo = companyId === 'pallyra' ? config.company_1_logo : companyId === 'guennita' ? config.company_2_logo : companyId === 'mimada' ? config.company_3_logo : config.company_4_logo;
+  const isotipo = siteSettings?.store_isotipo;
   
   const categories = useMemo(() => {
     return Array.from(new Set(companyProducts.map(p => p.category))).sort();
   }, [companyProducts]);
 
   const filteredProducts = useMemo(() => {
-    return companyProducts.filter(p => {
+    let filtered = companyProducts.filter(p => {
       const matchesCategory = !selectedCategory || p.category === selectedCategory;
       const matchesSearch = !searchQuery || 
         p.product_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
         p.description.toLowerCase().includes(searchQuery.toLowerCase());
+      
       return matchesCategory && matchesSearch;
     });
-  }, [companyProducts, selectedCategory, searchQuery]);
+
+    // Sort logic
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'price_asc':
+          return (a.retail_price || 0) - (b.retail_price || 0);
+        case 'price_desc':
+          return (b.retail_price || 0) - (a.retail_price || 0);
+        case 'alphabetical':
+          return a.product_name.localeCompare(b.product_name);
+        case 'bestselling':
+          return (b.salesCount || 0) - (a.salesCount || 0);
+        case 'latest':
+        default:
+          const dateA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const dateB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return dateB - dateA;
+      }
+    });
+  }, [companyProducts, selectedCategory, searchQuery, sortBy]);
+
+  const clearFilters = () => {
+    setSelectedCategory(null);
+    setSearchQuery('');
+    setSortBy('latest');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = selectedCategory || searchQuery || sortBy !== 'latest';
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -679,7 +713,16 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         onViewCollections={() => setView('collections')}
         onViewNews={() => highlightsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })}
         onViewContact={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-        logoUrl={defaultLogo}
+        onProfileClick={() => {
+          // Rola para a seção de contato/rodapé como mock de perfil/suporte
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }}
+        onFilterClick={() => {
+          // Rola para a barra de filtros
+          const infoBar = document.querySelector('.catalog-info-bar');
+          if (infoBar) infoBar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }}
+        logoUrl={isotipo}
         companyId={companyId}
       />
       
@@ -726,11 +769,15 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               {/* Main Scroll Content */}
               <main className="p-2 md:p-4 relative">
 
-                <div className="max-w-[1400px] mx-auto h-full flex flex-col pt-4">
+                <div className="max-w-[1600px] mx-auto h-full flex flex-col pt-4">
                   
-                  <div className="mb-6 py-2 border-b border-[#e8dcc8]/15 select-none flex flex-col sm:flex-row items-center justify-between gap-4">
-
-                  </div>
+                  <CatalogInfoBar 
+                    selectedCategory={selectedCategory}
+                    sortBy={sortBy}
+                    onSortChange={(val) => setSortBy(val as any)}
+                    hasActiveFilters={!!hasActiveFilters}
+                    onClearFilters={clearFilters}
+                  />
 
               {/* Loading Overlay between Filters */}
               <AnimatePresence mode="wait">
@@ -754,25 +801,18 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     {/* Grid - Premium Vertical Cards Showcase */}
                     {filteredProducts.length > 0 ? (
                       <>
-                      <div id="catalog-grid" className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-6 pb-20 px-4 md:px-0">
-                        {paginatedProducts.map((product, idx) => {
-                          const today = new Date();
-                          const createdAtDate = product.createdAt?.toMillis ? new Date(product.createdAt.toMillis()) : product.createdAt instanceof Date ? product.createdAt : new Date();
-                          
-                          return (
+                      <div id="catalog-grid" className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 pb-20 px-4 md:px-0">
+                        {paginatedProducts.map((product, idx) => (
                             <ProductCard 
                               key={`prod-${product.id}-${idx}`}
                               product={product}
                               theme={theme}
-                              onAddToCart={(prod, qty) => {
-                                onAddToCart(prod, qty);
-                              }}
-                              onAddToGiftList={(prod) => {
-                                onAddToGiftList?.(prod);
-                              }}
+                              onAddToCart={(prod, qty) => onAddToCart(prod, qty)}
+                              onAddToGiftList={(prod) => onAddToGiftList?.(prod)}
+                              onAddToFavorite={(prod) => onAddToFavorite?.(prod)}
                               onClick={() => setSelectedProduct(product)}
                             />
-                          )})}
+                        ))}
                       </div>
                       
                       {/* Pagination Controls */}
@@ -805,10 +845,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       )}
                       </>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-32 text-neutral-400">
-                        <Package size={48} strokeWidth={1} className="mb-4 opacity-50" />
-                        <h3 className="text-base font-serif tracking-wide text-center text-neutral-900">Nenhum produto cadastrado</h3>
-                        <p className="text-xs text-center font-sans tracking-wide">Tente ajustar sua busca ou filtro de categoria.</p>
+                      <div className="flex flex-col items-center justify-center py-40 px-6 text-center">
+                        <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center mb-6 text-neutral-300">
+                          <Search size={32} strokeWidth={1.5} />
+                        </div>
+                        <h3 className="text-xl font-serif text-neutral-900 mb-2 italic">Nenhum tesouro encontrado</h3>
+                        <p className="text-sm text-neutral-500 font-sans tracking-wide max-w-xs mb-8">
+                          Não encontramos produtos para sua pesquisa com os filtros atuais.
+                        </p>
+                        <button 
+                          onClick={clearFilters}
+                          className="px-8 py-3 bg-neutral-900 text-white rounded-full text-xs font-sans font-bold uppercase tracking-widest hover:bg-neutral-800 transition-all shadow-lg"
+                        >
+                          Limpar todos os filtros
+                        </button>
                       </div>
                     )}
                   </motion.div>
@@ -942,58 +992,15 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         )}
       </AnimatePresence>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: (isCartOpen || isGiftListOpen || isSearchingList || selectedProduct || isSuggestionOpen) ? 0 : 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[1000] flex flex-row items-center gap-2"
-        >
-            <button 
-              onClick={() => setIsSuggestionOpen(true)}
-              className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm active:scale-95 transition-all border`}
-              style={{ borderColor: `${theme.accentColor}40` }}
-              title="Sugestões"
-            >
-              <MessageSquare size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
-            </button>
-
-            <button 
-              onClick={() => setIsGiftListOpen(true)}
-              className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm active:scale-95 transition-all border`}
-              style={{ borderColor: `${theme.accentColor}40` }}
-              title="Lista de Presentes"
-            >
-              <Gift size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
-              {giftList.length > 0 && (
-                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: theme.accentColor }} />
-              )}
-            </button>
-            
-            <button 
-              onClick={() => setIsCartOpen(true)}
-              className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm active:scale-95 transition-all border`}
-              style={{ borderColor: `${theme.accentColor}40` }}
-              title="Carrinho"
-            >
-              <ShoppingCart size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
-              {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 text-[7px] font-black flex items-center justify-center rounded-full text-white pointer-events-none shadow-sm" style={{ backgroundColor: theme.accentColor }}>
-                  {cart.reduce((a, b) => a + b.quantity, 0)}
-                </span>
-              )}
-            </button>
-
-            <a 
-              href={`https://wa.me/${(config.whatsapp_number || "").replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow-sm active:scale-95 transition-all border`}
-              style={{ borderColor: `${theme.accentColor}40` }}
-              title="Fale Comigo"
-            >
-              <MessageCircle size={14} strokeWidth={2} style={{ color: theme.accentColor }} />
-            </a>
-        </motion.div>
+        <FloatingMenu 
+          cartCount={cart.reduce((sum, i) => sum + i.quantity, 0)}
+          giftListCount={giftList.length}
+          onCartClick={() => setIsCartOpen(true)}
+          onGiftListClick={() => setIsGiftListOpen(true)}
+          onSuggestionClick={() => setIsSuggestionOpen(true)}
+          whatsappUrl={`https://wa.me/${(config.whatsapp_number || "").replace(/\D/g, '')}`}
+          theme={theme}
+        />
         
     </div>
   );

@@ -42,20 +42,23 @@ import {
   deleteCustomer,
   updateCustomer,
   addCustomer,
-  subscribeToSales,
+  
 } from "../../services/firebaseService";
 import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
 import { HorizontalScroll } from "../shared/HorizontalScroll";
 import { motion, AnimatePresence } from "motion/react";
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface ClientsTabProps {
+  orders?: Order[];
   companyId: CompanyId;
   customers: Customer[];
   onNewOrder?: (customerId: string) => void;
 }
 
-export const ClientsTab: React.FC<ClientsTabProps> = ({
+export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
+  orders: salesData = [],
   companyId,
   customers,
   onNewOrder,
@@ -73,6 +76,8 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const orchestrator = useAdminOrchestrator();
+  const activeCustomer = useMemo(() => customers.find(c => c.id === selectedCustomer?.id) || selectedCustomer, [customers, selectedCustomer]);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
@@ -91,10 +96,9 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
   const [savingNotes, setSavingNotes] = useState(false);
 
   // Local sales database subscription for detailed history
-  const [sales, setSales] = useState<Order[]>([]);
-  const [loadingSales, setLoadingSales] = useState(true);
-
-  // Form states
+  const sales = salesData;
+  const loadingSales = false;
+// Form states
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -112,22 +116,12 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
     notes: "",
   });
 
-  // Subscribe to sales for deep purchase integration
-  useEffect(() => {
-    setLoadingSales(true);
-    const unsubscribe = subscribeToSales((data) => {
-      setSales(data);
-      setLoadingSales(false);
-    }, companyId);
-    return () => unsubscribe();
-  }, [companyId]);
-
   // Sync internal notes text when selected customer changes
   useEffect(() => {
-    if (selectedCustomer) {
-      setNoteText(selectedCustomer.notes || "");
+    if (activeCustomer) {
+      setNoteText(activeCustomer.notes || "");
     }
-  }, [selectedCustomer]);
+  }, [activeCustomer]);
 
   // KPI Calculations
   const clientKPIs = useMemo(() => {
@@ -175,10 +169,26 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
       }
       setSelectedIds([]);
       setIsBulkDeleteModalOpen(false);
-      alert("Clientes excluídos com sucesso!");
+      orchestrator.dispatchEvent({
+        type: 'FEEDBACK',
+        message: 'Clientes excluídos com sucesso!',
+        priority: 'HIGH',
+        customerName: '',
+        productName: '',
+        companyId,
+        data: { success: true, title: 'Sucesso' }
+      });
     } catch (e) {
       console.error("Erro na exclusão em massa:", e);
-      alert("Houve um erro ao excluir um ou mais clientes.");
+      orchestrator.dispatchEvent({
+        type: 'FEEDBACK',
+        message: 'Houve um erro ao excluir um ou mais clientes.',
+        priority: 'HIGH',
+        customerName: '',
+        productName: '',
+        companyId,
+        data: { success: false, title: 'Erro' }
+      });
     } finally {
       setLoading(false);
     }
@@ -336,9 +346,9 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
 
   // Correlate sales to active selected customer for timeline, history, and aggregate products
   const customerOrders = useMemo(() => {
-    if (!selectedCustomer) return [];
-    const cleanPhone = selectedCustomer.contact.replace(/\D/g, "");
-    const cleanCpf = selectedCustomer.cpfCnpj?.replace(/\D/g, "");
+    if (!activeCustomer) return [];
+    const cleanPhone = activeCustomer.contact.replace(/\D/g, "");
+    const cleanCpf = activeCustomer.cpfCnpj?.replace(/\D/g, "");
 
     return sales.filter((o) => {
       const orderPhone = o.contact?.replace(/\D/g, "");
@@ -347,10 +357,10 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
       return (
         (cleanPhone && orderPhone === cleanPhone) ||
         (cleanCpf && orderCpf === cleanCpf) ||
-        (o.customerName && o.customerName.toLowerCase() === selectedCustomer.name.toLowerCase())
+        (o.customerName && o.customerName.toLowerCase() === activeCustomer.name.toLowerCase())
       );
     });
-  }, [sales, selectedCustomer]);
+  }, [sales, activeCustomer]);
 
   // Get most bought products for this client
   const customerProducts = useMemo(() => {
@@ -387,7 +397,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
 
   // Generate an elegant dynamic timeline
   const timelineEvents = useMemo(() => {
-    if (!selectedCustomer) return [];
+    if (!activeCustomer) return [];
     const events: {
       id: string;
       type: "creation" | "order" | "info" | "note";
@@ -400,9 +410,9 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
     }[] = [];
 
     // Registration event
-    const regDate = selectedCustomer.createdAt?.toDate
-      ? selectedCustomer.createdAt.toDate()
-      : new Date(selectedCustomer.createdAt || Date.now());
+    const regDate = activeCustomer.createdAt?.toDate
+      ? activeCustomer.createdAt.toDate()
+      : new Date(activeCustomer.createdAt || Date.now());
 
     events.push({
       id: "creation",
@@ -433,9 +443,9 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
     });
 
     // Birthday event
-    if (selectedCustomer.birthDate) {
+    if (activeCustomer.birthDate) {
       try {
-        const parts = selectedCustomer.birthDate.split("/");
+        const parts = activeCustomer.birthDate.split("/");
         if (parts.length >= 2) {
           const [d, m] = parts;
           const currentYear = new Date().getFullYear();
@@ -444,7 +454,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
             id: "birthday",
             type: "info",
             date: birthDate,
-            title: `Aniversário (${selectedCustomer.birthDate})`,
+            title: `Aniversário (${activeCustomer.birthDate})`,
             desc: "Data especial de nascimento registrada.",
             icon: Cake,
             statusColor: "purple",
@@ -454,25 +464,41 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
     }
 
     return events.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }, [selectedCustomer, customerOrders]);
+  }, [activeCustomer, customerOrders]);
 
   // CRM notes updates
   const handleSaveNotes = async () => {
-    if (!selectedCustomer) return;
+    if (!activeCustomer) return;
     setSavingNotes(true);
     try {
-      await updateCustomer(selectedCustomer.id, {
+      await updateCustomer(activeCustomer.id, {
         notes: noteText,
       });
       // Update local object representation in drawer
       setSelectedCustomer({
-        ...selectedCustomer,
+        ...activeCustomer,
         notes: noteText,
       });
-      alert("Notas e observações atualizadas com sucesso!");
+      orchestrator.dispatchEvent({
+        type: 'FEEDBACK',
+        message: 'Notas e observações atualizadas com sucesso!',
+        priority: 'HIGH',
+        customerName: '',
+        productName: '',
+        companyId,
+        data: { success: true, title: 'Sucesso' }
+      });
     } catch (err) {
       console.error(err);
-      alert("Erro ao salvar observações.");
+      orchestrator.dispatchEvent({
+        type: 'FEEDBACK',
+        message: 'Erro ao salvar observações.',
+        priority: 'HIGH',
+        customerName: '',
+        productName: '',
+        companyId,
+        data: { success: false, title: 'Erro' }
+      });
     } finally {
       setSavingNotes(false);
     }
@@ -483,12 +509,29 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
     const newStatus = (customer.status || "Ativo") === "Ativo" ? "Inativo" : "Ativo";
     try {
       await updateCustomer(customer.id, { status: newStatus });
-      if (selectedCustomer?.id === customer.id) {
-        setSelectedCustomer({ ...selectedCustomer, status: newStatus });
+      if (activeCustomer?.id === customer.id) {
+        setSelectedCustomer({ ...activeCustomer, status: newStatus });
       }
+      orchestrator.dispatchEvent({
+        type: 'FEEDBACK',
+        message: `Status alterado para ${newStatus}.`,
+        priority: 'HIGH',
+        customerName: '',
+        productName: '',
+        companyId,
+        data: { success: true, title: 'Sucesso' }
+      });
     } catch (err) {
       console.error(err);
-      alert("Erro ao alterar status do cliente.");
+      orchestrator.dispatchEvent({
+        type: 'FEEDBACK',
+        message: 'Erro ao alterar status do cliente.',
+        priority: 'HIGH',
+        customerName: '',
+        productName: '',
+        companyId,
+        data: { success: false, title: 'Erro' }
+      });
     }
   };
 
@@ -538,7 +581,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
       setLoading(true);
       try {
         await deleteCustomer(customerToDelete);
-        if (selectedCustomer?.id === customerToDelete) {
+        if (activeCustomer?.id === customerToDelete) {
           setIsDetailDrawerOpen(false);
           setSelectedCustomer(null);
         }
@@ -556,20 +599,28 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
     setLoading(true);
     try {
       let finalStatus = formData.status;
-      if (selectedCustomer && selectedCustomer.status === "Cadastro Incompleto") {
+      if (activeCustomer && activeCustomer.status === "Cadastro Incompleto") {
         const hasAllMandatory = formData.cpfCnpj && formData.email && formData.address && formData.city && formData.state && formData.zipCode;
         if (hasAllMandatory) {
           finalStatus = "Ativo";
         }
       }
 
-      if (selectedCustomer) {
-        await updateCustomer(selectedCustomer.id, {
+      if (activeCustomer) {
+        await updateCustomer(activeCustomer.id, {
           ...formData,
           status: finalStatus,
           companyId,
         });
-        alert("Cliente atualizado!");
+        orchestrator.dispatchEvent({
+          type: 'FEEDBACK',
+          message: 'Cliente atualizado!',
+          priority: 'HIGH',
+          customerName: '',
+          productName: '',
+          companyId,
+          data: { success: true, title: 'Sucesso' }
+        });
       } else {
         await addCustomer({
           ...formData,
@@ -577,14 +628,30 @@ export const ClientsTab: React.FC<ClientsTabProps> = ({
           totalSpent: 0,
           ordersCount: 0,
         });
-        alert("Cliente cadastrado com sucesso!");
+        orchestrator.dispatchEvent({
+          type: 'FEEDBACK',
+          message: 'Cliente cadastrado com sucesso!',
+          priority: 'HIGH',
+          customerName: '',
+          productName: '',
+          companyId,
+          data: { success: true, title: 'Sucesso' }
+        });
       }
 
       setIsModalOpen(false);
       setSelectedCustomer(null);
     } catch (error) {
       console.error("Erro ao salvar cliente:", error);
-      alert("Erro ao salvar cliente.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar cliente.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setLoading(false);
     }
@@ -1040,53 +1107,33 @@ Histórico de Compras:
 
       {/* PAGINATION */}
       {filteredCustomers.length > 0 && (
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 bg-white p-4 rounded-2xl border border-[#E5E5EA] shadow-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-wider">Itens por página:</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value) as any);
-                setCurrentPage(1);
-              }}
-              className="bg-[#F5F5F7] border border-[#E5E5EA] rounded-lg px-2 py-1 text-xs font-bold text-[#1C1C1E] outline-none cursor-pointer"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-          
-          <div className="flex items-center gap-4 text-xs font-bold text-[#1C1C1E] uppercase tracking-wider">
-            <span>
-              {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredCustomers.length)} de {filteredCustomers.length}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                className="p-1.5 rounded-lg border border-[#E5E5EA] text-[#1C1C1E] hover:bg-[#F5F5F7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-              </button>
-              <button
-                disabled={currentPage * itemsPerPage >= filteredCustomers.length}
-                onClick={() => setCurrentPage(p => p + 1)}
-                className="p-1.5 rounded-lg border border-[#E5E5EA] text-[#1C1C1E] hover:bg-[#F5F5F7] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-              </button>
+        <div className="flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-[#E5E5EA]">
+              <div className="text-xs text-[#8E8E93]">
+                Exibindo {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, filteredCustomers.length)} de {filteredCustomers.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value) as any);
+                    setCurrentPage(1);
+                  }}
+                  className="px-2 py-1 text-xs border rounded-lg"
+                >
+                  {[10, 20, 50, 100].map(v => <option key={v} value={v}>{v} por página</option>)}
+                </select>
+                <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="px-3 py-1 text-xs border rounded-lg disabled:opacity-50">Anterior</button>
+                <span className="text-xs font-bold">{currentPage} de {Math.max(1, Math.ceil(filteredCustomers.length / itemsPerPage))}</span>
+                <button disabled={currentPage >= Math.ceil(filteredCustomers.length / itemsPerPage)} onClick={() => setCurrentPage(p => p + 1)} className="px-3 py-1 text-xs border rounded-lg disabled:opacity-50">Próximo</button>
+              </div>
             </div>
-          </div>
-        </div>
       )}
       </>
       )}
 
       {/* DETAIL DRAWER / SLIDE OVER PANEL (CRM SIDEBAR) */}
       <AnimatePresence>
-        {isDetailDrawerOpen && selectedCustomer && (
+        {isDetailDrawerOpen && activeCustomer && (
           <div className="fixed inset-0 bg-black/45 backdrop-blur-xs z-[150] flex justify-end">
             <motion.div
               initial={{ x: "100%" }}
@@ -1098,22 +1145,22 @@ Histórico de Compras:
               {/* Drawer Header Area */}
               <div className="p-6 border-b border-[#E5E5EA] flex items-center justify-between shrink-0 bg-[#F5F5F7]">
                 <div className="flex items-center gap-4">
-                  {renderAvatar(selectedCustomer.name, selectedCustomer.avatarUrl, "md")}
+                  {renderAvatar(activeCustomer.name, activeCustomer.avatarUrl, "md")}
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="text-base font-extrabold text-[#1C1C1E] tracking-tight truncate max-w-[280px]">
-                        {selectedCustomer.name}
+                        {activeCustomer.name}
                       </h4>
                       <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest border ${
-                        (selectedCustomer.status || "Ativo") === "Ativo"
+                        (activeCustomer.status || "Ativo") === "Ativo"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : "bg-slate-50 text-slate-400 border-slate-200"
                       }`}>
-                        {selectedCustomer.status || "Ativo"}
+                        {activeCustomer.status || "Ativo"}
                       </span>
                     </div>
                     <p className="text-[10px] text-[#cca062] font-bold uppercase tracking-widest mt-1">
-                      Código do Cliente: #{selectedCustomer.code || "---"}
+                      Código do Cliente: #{activeCustomer.code || "---"}
                     </p>
                   </div>
                 </div>
@@ -1134,21 +1181,21 @@ Histórico de Compras:
                 <div className="p-4 border-r border-[#E5E5EA]">
                   <span className="text-[8px] font-bold text-[#8E8E93] uppercase tracking-wider block">Total Investido</span>
                   <span className="text-base font-extrabold text-emerald-600 mt-1 block">
-                    R$ {(selectedCustomer.totalSpent || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    R$ {(activeCustomer.totalSpent || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="p-4 border-r border-[#E5E5EA]">
                   <span className="text-[8px] font-bold text-[#8E8E93] uppercase tracking-wider block">Pedidos Realizados</span>
                   <span className="text-base font-extrabold text-[#1C1C1E] mt-1 block">
-                    {selectedCustomer.ordersCount || 0} un.
+                    {activeCustomer.ordersCount || 0} un.
                   </span>
                 </div>
                 <div className="p-4">
                   <span className="text-[8px] font-bold text-[#8E8E93] uppercase tracking-wider block">Ticket Médio</span>
                   <span className="text-base font-extrabold text-[#cca062] mt-1 block">
                     R$ {
-                      (selectedCustomer.ordersCount > 0
-                        ? selectedCustomer.totalSpent / selectedCustomer.ordersCount
+                      (activeCustomer.ordersCount > 0
+                        ? activeCustomer.totalSpent / activeCustomer.ordersCount
                         : 0
                       ).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                     }
@@ -1192,27 +1239,27 @@ Histórico de Compras:
                         <div className="space-y-1">
                           <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] block">CPF / CNPJ</span>
                           <span className="text-xs font-bold text-[#1C1C1E]">
-                            {selectedCustomer.cpfCnpj ? formatCPFOrCNPJ(selectedCustomer.cpfCnpj) : "Não Informado"}
+                            {activeCustomer.cpfCnpj ? formatCPFOrCNPJ(activeCustomer.cpfCnpj) : "Não Informado"}
                           </span>
                         </div>
                         <div className="space-y-1">
                           <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] block">Nascimento</span>
-                          <span className="text-xs font-bold text-[#1C1C1E]">{selectedCustomer.birthDate || "Não Informado"}</span>
+                          <span className="text-xs font-bold text-[#1C1C1E]">{activeCustomer.birthDate || "Não Informado"}</span>
                         </div>
                         <div className="space-y-1 col-span-2">
                           <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] block">E-mail</span>
-                          <span className="text-xs font-bold text-[#1C1C1E] break-all">{selectedCustomer.email || "Não Informado"}</span>
+                          <span className="text-xs font-bold text-[#1C1C1E] break-all">{activeCustomer.email || "Não Informado"}</span>
                         </div>
                         <div className="space-y-1">
                           <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] block">Telefone</span>
-                          <span className="text-xs font-bold text-[#1C1C1E]">{formatPhone(selectedCustomer.contact)}</span>
+                          <span className="text-xs font-bold text-[#1C1C1E]">{formatPhone(activeCustomer.contact)}</span>
                         </div>
                         <div className="space-y-1">
                           <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] block">Data de Cadastro</span>
                           <span className="text-xs font-bold text-[#1C1C1E]">
-                            {selectedCustomer.createdAt?.toDate
-                              ? selectedCustomer.createdAt.toDate().toLocaleDateString("pt-BR")
-                              : new Date(selectedCustomer.createdAt || Date.now()).toLocaleDateString("pt-BR")}
+                            {activeCustomer.createdAt?.toDate
+                              ? activeCustomer.createdAt.toDate().toLocaleDateString("pt-BR")
+                              : new Date(activeCustomer.createdAt || Date.now()).toLocaleDateString("pt-BR")}
                           </span>
                         </div>
                       </div>
@@ -1223,16 +1270,16 @@ Histórico de Compras:
                       <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-[#cca062] border-b border-[#F2F2F7] pb-2 flex items-center gap-1.5">
                         <MapPin size={12} /> Endereço de Entrega
                       </h5>
-                      {selectedCustomer.address ? (
+                      {activeCustomer.address ? (
                         <div className="space-y-2">
                           <p className="text-xs font-bold text-[#1C1C1E] uppercase">
-                            {selectedCustomer.address}, nº {selectedCustomer.number || "S/N"}
+                            {activeCustomer.address}, nº {activeCustomer.number || "S/N"}
                           </p>
                           <p className="text-xs font-semibold text-[#8E8E93] uppercase">
-                            Bairro: {selectedCustomer.neighborhood || "Não Informado"}
+                            Bairro: {activeCustomer.neighborhood || "Não Informado"}
                           </p>
                           <p className="text-xs font-bold text-[#cca062] uppercase">
-                            {selectedCustomer.city} - {selectedCustomer.state} {selectedCustomer.zipCode ? `| CEP: ${selectedCustomer.zipCode}` : ""}
+                            {activeCustomer.city} - {activeCustomer.state} {activeCustomer.zipCode ? `| CEP: ${activeCustomer.zipCode}` : ""}
                           </p>
                         </div>
                       ) : (
@@ -1452,7 +1499,7 @@ Histórico de Compras:
               {/* Drawer footer */}
               <div className="p-6 bg-[#F5F5F7] border-t border-[#E5E5EA] flex items-center justify-between shrink-0">
                 <button
-                  onClick={() => handleCopyCustomerSummary(selectedCustomer)}
+                  onClick={() => handleCopyCustomerSummary(activeCustomer)}
                   className="px-4 py-2.5 bg-white hover:bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl text-xs font-bold text-[#1C1C1E] flex items-center gap-1.5 transition-all shadow-xs"
                 >
                   <Copy size={13} /> Copiar Resumo
@@ -1462,7 +1509,7 @@ Histórico de Compras:
                   <button
                     onClick={() => {
                       setIsDetailDrawerOpen(false);
-                      handleOpenEdit(selectedCustomer);
+                      handleOpenEdit(activeCustomer);
                     }}
                     className="px-5 py-2.5 bg-white hover:bg-[#FAF9F6] border border-[#E5E5EA] text-[#1C1C1E] rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-xs"
                   >
@@ -1471,7 +1518,7 @@ Histórico de Compras:
                   <button
                     onClick={() => {
                       setIsDetailDrawerOpen(false);
-                      setCustomerToDelete(selectedCustomer.id);
+                      setCustomerToDelete(activeCustomer.id);
                     }}
                     className="px-5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
                   >
@@ -1501,7 +1548,7 @@ Histórico de Compras:
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-[#1C1C1E]">
-                      {selectedCustomer ? "Editar Cadastro do Cliente" : "Cadastrar Novo Cliente"}
+                      {activeCustomer ? "Editar Cadastro do Cliente" : "Cadastrar Novo Cliente"}
                     </h4>
                     <p className="text-[9px] text-[#8E8E93] font-bold uppercase tracking-wider mt-0.5">
                       Vitrine CRM Database
@@ -1724,7 +1771,7 @@ Histórico de Compras:
                     disabled={loading}
                     className="px-6 py-2.5 bg-[#1C1C1E] hover:bg-black text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-40 flex items-center gap-2 cursor-pointer border-b-[3px] border-b-black"
                   >
-                    {loading ? "Salvando..." : selectedCustomer ? "Atualizar Cliente" : "Cadastrar Cliente"}
+                    {loading ? "Salvando..." : activeCustomer ? "Atualizar Cliente" : "Cadastrar Cliente"}
                   </button>
                 </div>
               </form>
@@ -1827,4 +1874,4 @@ Histórico de Compras:
       )}
     </div>
   );
-};
+});

@@ -46,7 +46,8 @@ import {
   Customer, 
   CompanyId, 
   PurchaseOrder, 
-  Componente 
+  Componente,
+  Campaign 
 } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { 
@@ -100,16 +101,7 @@ interface EventItem {
   category: 'global' | 'nacional' | 'regional' | 'personalizado';
 }
 
-interface Campaign {
-  id: string;
-  name: string;
-  status: 'active' | 'scheduled' | 'ended';
-  startDate: string;
-  endDate: string;
-  type: string;
-}
-
-export const DashboardTab: React.FC<DashboardTabProps> = ({
+export const DashboardTab: React.FC<DashboardTabProps> = React.memo(({
   orders = [],
   products = [],
   customers = [],
@@ -538,11 +530,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             {campaigns.length > 0 ? campaigns.slice(0, 4).map(campaign => (
               <div key={campaign.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white transition-all">
                 <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mb-2 inline-block ${
-                  campaign.status === 'active' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                  campaign.active ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
                 }`}>
-                  {campaign.status === 'active' ? 'Ativa' : 'Programada'}
+                  {campaign.active ? 'Ativa' : 'Programada'}
                 </span>
-                <h4 className="text-xs font-black text-slate-900 mb-1">{campaign.name}</h4>
+                <h4 className="text-xs font-black text-slate-900 mb-1">{campaign.title}</h4>
                 <p className="text-[10px] text-slate-400">{campaign.type}</p>
               </div>
             )) : (
@@ -677,7 +669,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       </AnimatePresence>
     </div>
   );
-};
+});
 
 // COMPONENTES AUXILIARES
 

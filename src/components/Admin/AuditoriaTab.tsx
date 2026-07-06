@@ -32,6 +32,8 @@ import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, serverTi
 import { jsPDF } from 'jspdf';
 import { safeFormat } from '../../lib/dateUtils';
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface AuditoriaTabProps {
   companyId: CompanyId;
   orders: Order[];
@@ -54,6 +56,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
   products,
   insumos: rawInsumos
 }) => {
+  const orchestrator = useAdminOrchestrator();
   // Submenu states
   const [activeSubmenu, setActiveSubmenu] = useState<'dashboard' | 'materials' | 'suppliers' | 'formulas' | 'simulator' | 'viability' | 'reports'>('dashboard');
   
@@ -111,19 +114,10 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
       querySnapshot.forEach((doc) => {
         list.push({ id: doc.id, ...doc.data() } as Supplier);
       });
-      if (list.length === 0) {
-        // Bootstrap defaults
-        for (const s of defaultSuppliers) {
-          const { id: _, ...data } = s;
-          await addDoc(collection(db, 'suppliers'), data);
-        }
-        setSuppliers(defaultSuppliers);
-      } else {
-        setSuppliers(list);
-      }
+      setSuppliers(list);
     } catch (e) {
-      console.warn('Could not fetch suppliers from firestore, using static fallbacks:', e);
-      setSuppliers(defaultSuppliers);
+      console.error('Could not fetch suppliers from firestore:', e);
+      setSuppliers([]);
     } finally {
       setIsSuppliersLoading(false);
     }
@@ -557,7 +551,15 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
   const handleGeneratePDF = (productId: string) => {
     const prd = products.find(p => p.id === productId);
     if (!prd) {
-      alert("Selecione um produto válido para gerar o relatório.");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Selecione um produto válido para gerar o relatório.",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Aviso' }
+    });
       return;
     }
 

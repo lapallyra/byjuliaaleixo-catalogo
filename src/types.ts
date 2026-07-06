@@ -173,6 +173,7 @@ export interface Order {
   remainingInstallments?: number;
   remainingInstallmentValue?: number;
   remainingFee?: number;
+  remainingValue?: number;
   isWholesale: boolean;
   observations: string;
   photos?: string[];
@@ -621,6 +622,26 @@ export interface PurchaseOrder {
   deliveryDate?: any;
   createdAt: any;
   updatedAt: any;
+}
+
+export interface Campaign {
+  id: string;
+  title: string;
+  description?: string;
+  type: 'banner' | 'carousel' | 'product_highlight' | 'seasonal_campaign';
+  active: boolean;
+  startDate?: string;
+  endDate?: string;
+  priority: number;
+  companyId: CompanyId | 'all';
+  items: string[]; // array of productId or banner data (as JSON string or ID)
+  targetPages: ('home' | 'catalog' | 'product')[];
+  highlightProductId?: string;
+  imageUrl?: string;
+  mobileImageUrl?: string;
+  colorTheme?: string;
+  createdAt: any;
+  updatedAt?: any;
 }
 
 export type AuditModule = 

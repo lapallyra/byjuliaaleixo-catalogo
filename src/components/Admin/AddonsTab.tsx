@@ -21,11 +21,14 @@ import {
 import { ImageUpload } from "./ImageUpload";
 import { formatCurrency } from "../../lib/currencyUtils";
 
+import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+
 interface AddonsTabProps {
   companyId: CompanyId;
 }
 
-export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
+export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId }) => {
+  const orchestrator = useAdminOrchestrator();
   const [addons, setAddons] = useState<CheckoutAddon[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,7 +59,15 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
       setEditingAddon(null);
     } catch (err) {
       console.error(err);
-      alert("Erro ao salvar adicional");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao salvar adicional",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     } finally {
       setSaving(false);
     }
@@ -67,7 +78,15 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
     try {
       await deleteAddon(id);
     } catch (err) {
-      alert("Erro ao excluir");
+      orchestrator.dispatchEvent({
+      type: 'FEEDBACK',
+      message: "Erro ao excluir",
+      priority: 'HIGH',
+      customerName: '',
+      productName: '',
+      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      data: { success: false, title: 'Erro' }
+    });
     }
   };
 
@@ -337,4 +356,4 @@ export const AddonsTab: React.FC<AddonsTabProps> = ({ companyId }) => {
       </AnimatePresence>
     </div>
   );
-};
+});

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getGiftList, updateGiftListItemStatusByCode } from '../services/firebaseService';
-import { ChevronLeft, Gift, ShoppingBag, Loader2, CheckCircle, Lock, Calendar, Sparkles, X } from 'lucide-react';
+import { ChevronLeft, Gift, ShoppingBag, Loader2, CheckCircle, Lock, Calendar, Sparkles, X, ChevronRight, Plus, Clock } from 'lucide-react';
 import { Product, AppConfig, CartItem } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { useMemo } from 'react';
 import { ImageWithFallback } from './ImageWithFallback';
 
 interface GiftListViewProps {
@@ -26,6 +27,20 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
   const [isReserveModalOpen, setIsReserveModalOpen] = useState(false);
   const [reserveName, setReserveName] = useState('');
   const [isSubmittingReserve, setIsSubmittingReserve] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const handleCopyLink = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    });
+  };
+
+  const isListCompleted = useMemo(() => {
+    if (!giftList || !giftList.items) return false;
+    return giftList.items.length > 0 && giftList.items.every((item: any) => item.status === 'presenteado');
+  }, [giftList]);
 
   const fetchList = async () => {
     if (!code) return;
@@ -130,224 +145,308 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
   const listProgressPercent = totalItemsCount > 0 ? Math.round((giftedItemsCount / totalItemsCount) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-[#F8F6F2] flex flex-col items-center p-4 md:p-6 relative">
+    <div className="min-h-screen bg-[#FDFCFB] flex flex-col relative font-sans">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {copySuccess && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[3000] bg-neutral-900 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/10"
+          >
+            <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+              <CheckCircle size={14} />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-[0.2em]">Link copiado.</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <button 
-        onClick={() => navigate('/document')} 
-        className="fixed top-6 left-6 p-4 rounded-full bg-white hover:bg-gray-50 transition-all z-50 text-black border border-[#D4AF37]/20 shadow-sm"
+        onClick={() => navigate('/')} 
+        className="fixed top-8 left-8 p-3.5 rounded-full bg-white hover:bg-neutral-50 transition-all z-[200] text-neutral-900 border border-neutral-100 shadow-xl shadow-neutral-200/50 group"
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
       </button>
 
-      <div className="w-full max-w-3xl mt-16 z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="bg-white rounded-[2.5rem] p-6 md:p-12 shadow-xl border border-[#D4AF37]/10 mb-8">
-          
-          <div className="text-center mb-10">
-            <div className="w-20 h-20 bg-pink-50 text-[#D4AF37] rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-[#D4AF37]/20 relative overflow-hidden">
-               <Gift size={32} className="relative z-10" />
+      {/* HEADER SECTION */}
+      <header className="bg-white/80 backdrop-blur-md border-b border-neutral-100 sticky top-0 z-[100]">
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="w-14 h-14 bg-neutral-900 rounded-[1.25rem] flex items-center justify-center text-white shadow-xl shadow-neutral-200">
+               <Gift size={28} />
             </div>
-            <h1 className="text-4xl font-fancy text-[#D4AF37] drop-shadow-sm mb-4">
-              Lista de Presentes
-            </h1>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full border border-gray-100">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Código:</span>
-              <span className="text-xs font-bold text-gray-800 tracking-wider">{giftList.code}</span>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="bg-[#FAF9F6] border border-[#D4AF37]/20 p-5 md:p-6 rounded-2xl mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h3 className="text-xs font-black uppercase tracking-widest text-[#6d5443]">Progresso da Lista</h3>
-              <p className="text-[11px] text-gray-500 font-medium mt-1">Conclusão baseada nos itens comprados.</p>
-            </div>
-            <div className="flex-1 max-w-md w-full">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[11px] font-mono font-black text-[#D4AF37]">{listProgressPercent}% Concluída</span>
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{giftedItemsCount} de {totalItemsCount} presentes escolhidos</span>
-              </div>
-              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden relative border border-gray-200/50">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${listProgressPercent}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-[#D4AF37] to-[#C5A030] rounded-full"
-                />
+              <h1 className="text-xl font-serif italic text-neutral-900">{giftList.listName || "Lista de Presentes"}</h1>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{giftList.hostName}</span>
+                <span className="w-1 h-1 rounded-full bg-neutral-200" />
+                <span className="text-[10px] font-bold text-neutral-900 uppercase tracking-widest bg-neutral-50 px-2 py-0.5 rounded-md border border-neutral-100">#{giftList.code}</span>
               </div>
             </div>
           </div>
 
-          <div className="space-y-6">
-            {(giftList.items || []).map((item: any, idx: number) => {
-              const quantityRequested = item.quantity || 1;
-              const status = item.status || 'disponivel';
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={handleCopyLink}
+              className="px-6 py-3 bg-white border border-neutral-100 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-600 hover:text-neutral-900 hover:border-neutral-300 transition-all shadow-sm active:scale-95 flex items-center gap-2"
+            >
+              <Sparkles size={14} className="text-amber-500" />
+              Copiar Link
+            </button>
+          </div>
+        </div>
+      </header>
 
-              return (
-                <motion.div 
-                  key={`${item.id}-${idx}`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={`group flex flex-col md:flex-row gap-6 items-center p-6 bg-white border rounded-3xl transition-all relative overflow-hidden cursor-pointer ${
-                    status !== 'disponivel' 
-                      ? 'bg-neutral-50/50 border-gray-100 opacity-90' 
-                      : 'border-gray-100 hover:shadow-xl hover:border-[#D4AF37]/30'
-                  }`}
-                  onClick={() => {
-                      setSelectedItemForDetails(item);
-                      setIsDetailsModalOpen(true);
-                  }}
-                >
-                  <div className="w-32 h-32 rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0 relative">
-                    {item.image ? (
-                      <ImageWithFallback 
-                        src={item.image} 
-                        alt={item.product_name} 
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105" 
-                        referrerPolicy="no-referrer" 
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-200">
-                        <Gift size={32} />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 text-center md:text-left">
-                    <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2 justify-center md:justify-start">
-                      <h3 className="text-xl font-black text-black leading-tight group-hover:text-[#D4AF37] transition-colors">
-                        {item.product_name}
-                      </h3>
-                      
-                      {/* Item Type Badge */}
-                      <span className="inline-block px-2.5 py-1 rounded-full bg-gray-50 text-gray-500 text-[9px] font-black uppercase tracking-wider self-center border border-gray-100">
-                        {item.isKit 
-                          ? (item.kitType === 'kit_pronto' ? 'Kit Pronto' : 'Kit Personalizado') 
-                          : 'Produto'}
-                      </span>
-                      
-                      {/* Luxury Status Badges */}
-                      {status === 'disponivel' && (
-                        <span className="inline-block px-3 py-1 rounded-full bg-white text-emerald-900 text-[9px] font-bold uppercase tracking-widest self-center border border-emerald-100 shadow-sm">
-                          Disponível
-                        </span>
-                      )}
-                      {status === 'reservado' && (
-                        <span className="inline-block px-3 py-1 rounded-full bg-white text-amber-900 text-[9px] font-bold uppercase tracking-widest self-center border border-amber-100 shadow-sm flex items-center gap-1">
-                          <Lock size={10} /> Reservado
-                        </span>
-                      )}
-                      {status === 'presenteado' && (
-                        <span className="inline-block px-3 py-1 rounded-full bg-white text-neutral-900 text-[9px] font-black uppercase tracking-widest self-center border border-neutral-200 shadow-sm flex items-center gap-1">
-                          Presenteado
-                        </span>
-                      )}
-                    </div>
+      <main className="max-w-7xl mx-auto px-6 py-12 space-y-12 w-full">
+        {/* COMPLETED STATE HERO */}
+        {isListCompleted && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 rounded-[3rem] p-12 text-center shadow-sm relative overflow-hidden"
+          >
+            <div className="relative z-10">
+              <span className="text-5xl mb-6 block">🎉</span>
+              <h2 className="text-3xl font-serif italic text-amber-900 mb-4">Todos os presentes desta lista foram entregues.</h2>
+              <p className="text-neutral-600 font-medium max-w-lg mx-auto leading-relaxed">
+                Muito obrigado por fazer parte deste momento. Sua presença e carinho tornaram tudo mais especial.
+              </p>
+            </div>
+            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+              <Gift size={200} className="text-amber-900" />
+            </div>
+          </motion.div>
+        )}
 
-                    <p className="text-lg text-[#D4AF37] font-bold mb-4">R$ {item.retail_price.toFixed(2)}</p>
-                    
-                    <div className="inline-flex bg-gray-50 border border-gray-100 rounded-xl px-4 py-2">
-                       <span className="text-[10px] uppercase font-black tracking-widest text-gray-500">
-                         Quantidade desejada: <span className="text-black ml-1 scale-110 inline-block">{quantityRequested}</span>
-                       </span>
-                    </div>
+        {/* HOST MESSAGE CARD */}
+        {giftList.message && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white border border-neutral-100 rounded-[3rem] p-10 shadow-sm relative overflow-hidden group"
+          >
+            <div className="flex items-start gap-8">
+              <div className="w-16 h-16 rounded-full bg-neutral-50 flex items-center justify-center text-neutral-300 shrink-0 border border-neutral-100 group-hover:bg-neutral-900 group-hover:text-white transition-all duration-500">
+                <Sparkles size={24} />
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-neutral-400">Mensagem do Anfitrião</h3>
+                <p className="text-lg font-serif italic text-neutral-700 leading-relaxed">
+                  "{giftList.message}"
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
-                    {/* Meta Status Text */}
-                    {status === 'reservado' && (
-                      <p className="text-xs text-amber-500 font-bold mt-3 uppercase tracking-wider">
-                        Reservado por: <span className="text-gray-800 font-black">{item.reservedBy || "Convidado"}</span>
-                      </p>
-                    )}
-                    {status === 'presenteado' && (
-                      <p className="text-xs text-neutral-500 font-bold mt-3 uppercase tracking-wider">
-                        Comprado por: <span className="text-gray-800 font-black">{item.giftedBy || item.reservedBy || "Convidado"}</span>
-                      </p>
-                    )}
-                  </div>
-                  
-                  {/* Actions (Duplicate Protection Included) */}
-                  <div className="w-full md:w-auto mt-4 md:mt-0 flex flex-col sm:flex-row md:flex-col gap-2.5">
-                    {status === 'disponivel' ? (
-                      <>
-                        <button 
-                          onClick={() => handleOpenReserveModal(item)}
-                          className="w-full md:w-44 px-4 py-3 border border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 transition-colors"
-                        >
-                          <Gift size={13} />
-                          Quero Presentear
-                        </button>
-                        <button 
-                          onClick={() => handleBuyProduct(item, quantityRequested)}
-                          className="w-full md:w-44 px-4 py-3 bg-[#D4AF37] text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-lg hover:bg-[#C5A030] transition-colors"
-                        >
-                          <ShoppingBag size={13} />
-                          Comprar Presente
-                        </button>
-                      </>
-                    ) : (
-                      <div className="text-center py-2 px-4 bg-gray-50 border border-gray-100 rounded-xl text-neutral-400 text-[9px] font-black uppercase tracking-widest">
-                        Item indisponível
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
+        {/* LIST STATS & TITLE */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h2 className="text-4xl font-serif italic text-neutral-900 mb-2">Selecione um Presente</h2>
+            <p className="text-neutral-400 text-sm font-medium">Toque em um item para ver detalhes ou reservar.</p>
           </div>
           
-          {(!giftList.items || giftList.items.length === 0) && (
-            <div className="py-12 text-center text-gray-400">
-              <Gift size={40} className="mx-auto mb-4 opacity-50" />
-              <p className="text-xs font-black uppercase tracking-widest">A lista está vazia</p>
+          <div className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100 flex items-center gap-6">
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Total de Itens</span>
+              <span className="text-xl font-bold text-neutral-900">{totalItemsCount}</span>
             </div>
-          )}
-
+            <div className="w-px h-8 bg-neutral-200" />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Presenteados</span>
+              <span className="text-xl font-bold text-green-600">{giftedItemsCount}</span>
+            </div>
+            <div className="w-px h-8 bg-neutral-200" />
+            <div className="flex flex-col pr-4">
+              <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mb-1">Progresso</span>
+              <div className="flex items-center gap-3">
+                <span className="text-xl font-bold text-neutral-900">{listProgressPercent}%</span>
+                <div className="w-24 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${listProgressPercent}%` }}
+                    className="h-full bg-neutral-900"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="text-center mt-12 pb-12">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              Presentes Personalizados By Julia Aleixo
-            </p>
+        {/* PRODUCTS GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {(giftList.items || []).map((item: any, idx: number) => {
+            const isGifted = item.status === 'presenteado';
+            const isReserved = item.status === 'reservado';
+            const isAvailable = !isGifted && !isReserved;
+
+            return (
+              <motion.div 
+                key={item.id || idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                onClick={() => !isGifted && !isReserved && setSelectedItemForDetails(item)}
+                className={`group bg-white rounded-[2.5rem] overflow-hidden border border-neutral-100 transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-neutral-200/50 flex flex-col ${
+                  (isGifted || isReserved) ? 'grayscale-[0.8] opacity-80 cursor-default' : 'cursor-pointer hover:-translate-y-1'
+                }`}
+              >
+                <div className="aspect-square relative overflow-hidden bg-neutral-50">
+                  <ImageWithFallback 
+                    src={item.image} 
+                    alt={item.product_name} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                  />
+                  
+                  {/* BADGES PREMIUM */}
+                  <div className="absolute top-6 left-6 flex flex-col gap-2">
+                    {isGifted && (
+                      <span className="bg-white/90 backdrop-blur-md text-green-600 px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-widest border border-green-100 shadow-lg flex items-center gap-2">
+                        <CheckCircle size={12} />
+                        Presenteado
+                      </span>
+                    )}
+                    {isReserved && (
+                      <span className="bg-white/90 backdrop-blur-md text-amber-600 px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-widest border border-amber-100 shadow-lg flex items-center gap-2">
+                        <Clock size={12} />
+                        Reservado
+                      </span>
+                    )}
+                    {isAvailable && (
+                      <span className="bg-neutral-900 text-white px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-widest shadow-lg flex items-center gap-2">
+                        <Sparkles size={12} />
+                        Disponível
+                      </span>
+                    )}
+                  </div>
+
+                  {/* PRICE TAG OVERLAY */}
+                  <div className="absolute bottom-6 right-6">
+                    <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 shadow-xl">
+                      <span className="text-sm font-bold text-neutral-900">R$ {item.retail_price.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-8 flex flex-col flex-1">
+                  <div className="mb-4">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 mb-2 block">
+                      {item.isKit ? 'Kit' : 'Produto'}
+                    </span>
+                    <h3 className="text-xl font-serif italic text-neutral-900 line-clamp-1">{item.product_name}</h3>
+                  </div>
+
+                  {isGifted && (
+                    <div className="mt-auto pt-4 border-t border-neutral-50 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                        <Gift size={14} />
+                      </div>
+                      <p className="text-[10px] font-medium text-neutral-500">
+                        Comprado por: <span className="font-bold text-neutral-800">{item.giftedBy || "Convidado"}</span>
+                      </p>
+                    </div>
+                  )}
+
+                  {isReserved && (
+                    <div className="mt-auto pt-4 border-t border-neutral-50 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-600">
+                        <Clock size={14} />
+                      </div>
+                      <p className="text-[10px] font-medium text-neutral-500">
+                        Reservado por: <span className="font-bold text-neutral-800">{item.reservedBy || "Convidado"}</span>
+                      </p>
+                    </div>
+                  )}
+
+                  {isAvailable && (
+                    <div className="mt-auto pt-4 flex items-center justify-between">
+                      <button className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 group-hover:text-neutral-900 transition-colors flex items-center gap-2">
+                        Ver Detalhes <ChevronRight size={14} />
+                      </button>
+                      <div className="w-10 h-10 rounded-full bg-neutral-50 flex items-center justify-center text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white transition-all duration-300 shadow-sm">
+                        <Plus size={18} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
-      </div>
+
+        {(!giftList.items || giftList.items.length === 0) && (
+          <div className="text-center py-24 bg-white border border-dashed border-neutral-200 rounded-[3rem]">
+            <div className="w-20 h-20 bg-neutral-50 rounded-full flex items-center justify-center text-neutral-300 mx-auto mb-6">
+              <Gift size={40} />
+            </div>
+            <h3 className="text-xl font-serif italic text-neutral-900 mb-2">Nenhum item na lista ainda</h3>
+            <p className="text-neutral-400 text-sm font-medium">Esta lista está sendo preparada pelo anfitrião.</p>
+          </div>
+        )}
+      </main>
 
       {/* Details Modal */}
       <AnimatePresence>
         {isDetailsModalOpen && selectedItemForDetails && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-neutral-900/40 backdrop-blur-md z-[2000] flex items-center justify-center p-4">
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-[2rem] p-6 md:p-8 max-w-sm w-full shadow-2xl relative border border-[#D4AF37]/20"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-[3rem] p-8 md:p-10 max-w-sm w-full shadow-2xl relative border border-neutral-100"
             >
               <button 
                 onClick={() => setIsDetailsModalOpen(false)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/5 transition-all text-gray-400 hover:text-black z-20"
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-neutral-50 transition-all text-neutral-400 hover:text-neutral-900 z-20"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
               
-              <div className="aspect-square w-full rounded-2xl bg-gray-50 mb-6 overflow-hidden">
+              <div className="aspect-square w-full rounded-[2rem] bg-neutral-50 mb-8 overflow-hidden border border-neutral-100">
                 <ImageWithFallback src={selectedItemForDetails.image} alt={selectedItemForDetails.product_name} className="w-full h-full object-cover" />
               </div>
 
-              <h3 className="text-xl font-black text-black mb-2">{selectedItemForDetails.product_name}</h3>
-              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-4">
-                {selectedItemForDetails.isKit ? (selectedItemForDetails.kitType === 'kit_pronto' ? 'Kit Pronto' : 'Kit Personalizado') : 'Produto'}
+              <div className="space-y-2 mb-6">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400">
+                  {selectedItemForDetails.isKit ? 'Kit Especial' : 'Produto Premium'}
+                </span>
+                <h3 className="text-2xl font-serif italic text-neutral-900">{selectedItemForDetails.product_name}</h3>
+              </div>
+
+              <p className="text-sm text-neutral-500 mb-8 leading-relaxed italic">
+                "{selectedItemForDetails.description || "Um presente especial selecionado com carinho pelo anfitrião."}"
               </p>
-              <p className="text-sm text-gray-600 mb-6 leading-relaxed bg-gray-50 p-4 rounded-xl">{selectedItemForDetails.description}</p>
               
-              <div className="text-2xl font-black text-[#D4AF37] mb-6">R$ {selectedItemForDetails.retail_price.toFixed(2)}</div>
+              <div className="flex items-center justify-between mb-8 pb-8 border-b border-neutral-50">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Valor do Presente</span>
+                <span className="text-2xl font-bold text-neutral-900">R$ {selectedItemForDetails.retail_price.toFixed(2)}</span>
+              </div>
               
-              <button
-                onClick={() => {
-                  setIsDetailsModalOpen(false);
-                  handleOpenReserveModal(selectedItemForDetails);
-                }}
-                className="w-full py-4 bg-[#D4AF37] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#C5A030]"
-              >
-                Reservar
-              </button>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    setIsDetailsModalOpen(false);
+                    handleBuyProduct(selectedItemForDetails, selectedItemForDetails.quantity || 1);
+                  }}
+                  className="w-full py-5 bg-neutral-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-neutral-800 transition-all shadow-xl shadow-neutral-200 active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <ShoppingBag size={14} />
+                  Comprar Presente
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setIsDetailsModalOpen(false);
+                    handleOpenReserveModal(selectedItemForDetails);
+                  }}
+                  className="w-full py-5 bg-white border border-neutral-100 text-neutral-600 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-neutral-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Gift size={14} />
+                  Apenas Reservar
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
@@ -356,41 +455,41 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
       {/* Reservation Name Dialog Modal */}
       <AnimatePresence>
         {isReserveModalOpen && selectedItemForReserve && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-neutral-900/60 backdrop-blur-md z-[2000] flex items-center justify-center p-4">
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-[2rem] p-6 md:p-8 max-w-sm w-full shadow-2xl relative border border-[#D4AF37]/20"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-[3rem] p-8 md:p-10 max-w-sm w-full shadow-2xl relative border border-neutral-100"
             >
               <button 
                 onClick={() => setIsReserveModalOpen(false)}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/5 transition-all text-gray-400 hover:text-black"
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-neutral-50 transition-all text-neutral-400 hover:text-neutral-900 z-20"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
               
-              <div className="w-12 h-12 rounded-full bg-amber-50 text-[#D4AF37] flex items-center justify-center mb-4 border border-[#D4AF37]/10">
-                <Gift size={24} />
+              <div className="w-16 h-16 rounded-[1.25rem] bg-neutral-50 text-neutral-900 flex items-center justify-center mb-8 border border-neutral-100 shadow-sm">
+                <Gift size={28} />
               </div>
               
-              <h3 className="text-lg font-black uppercase tracking-wider text-gray-800 mb-2">
+              <h3 className="text-2xl font-serif italic text-neutral-900 mb-4">
                 Quero Presentear
               </h3>
-              <p className="text-xs text-gray-500 leading-relaxed mb-6 font-medium">
-                Insira seu nome abaixo para reservar <strong>{selectedItemForReserve.product_name}</strong>. Isso evita que outras pessoas deem o mesmo presente.
+              <p className="text-sm text-neutral-500 leading-relaxed mb-8">
+                Insira seu nome abaixo para reservar <strong className="text-neutral-900">{selectedItemForReserve.product_name}</strong>. Isso evita duplicidades e ajuda na organização.
               </p>
               
-              <form onSubmit={handleConfirmReserve} className="space-y-4">
-                <div>
-                  <label className="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5 pl-1">Seu Nome Completo</label>
+              <form onSubmit={handleConfirmReserve} className="space-y-8">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 pl-1">Seu Nome Completo</label>
                   <input 
                     type="text"
                     required
                     value={reserveName}
                     onChange={(e) => setReserveName(e.target.value)}
                     placeholder="Ex: Maria Souza"
-                    className="w-full bg-[#FAF9F6] border border-gray-200 focus:border-[#D4AF37] rounded-xl px-4 py-3.5 text-xs font-bold outline-none transition-all placeholder:text-gray-300"
+                    className="w-full bg-neutral-50 border border-neutral-100 focus:border-neutral-900 focus:bg-white rounded-2xl px-6 py-5 text-sm font-medium outline-none transition-all placeholder:text-neutral-300 shadow-inner"
                     autoFocus
                   />
                 </div>
@@ -398,17 +497,23 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
                 <button
                   type="submit"
                   disabled={isSubmittingReserve || !reserveName.trim()}
-                  className="w-full py-3.5 bg-[#D4AF37] text-white rounded-xl text-[10px] font-black uppercase tracking-[0.15em] hover:bg-[#C5A030] disabled:bg-gray-200 disabled:text-gray-400 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#D4AF37]/10"
+                  className="w-full py-5 bg-neutral-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-neutral-800 disabled:bg-neutral-100 disabled:text-neutral-300 transition-all flex items-center justify-center gap-3 shadow-xl shadow-neutral-200 active:scale-95"
                 >
                   {isSubmittingReserve ? (
-                    <Loader2 size={12} className="animate-spin" />
-                  ) : 'Confirmar Reserva'}
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle size={16} />
+                      Confirmar Reserva
+                    </>
+                  )}
                 </button>
               </form>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
     </div>
   );
 };

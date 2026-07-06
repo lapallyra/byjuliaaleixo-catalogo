@@ -10,8 +10,7 @@ service cloud.firestore {
     }
     
     function isAdmin() { 
-      return request.auth != null && 
-             request.auth.token.email_verified == true && (
+      return request.auth != null && (
                request.auth.token.email == 'juualleixo@gmail.com' ||
                request.auth.token.email == 'lapallyra@gmail.com'
              );
@@ -20,13 +19,6 @@ service cloud.firestore {
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
-
-    // ----------------------------------------------------
-    // DEFAULT DENY
-    // ----------------------------------------------------
-    match /{document=**} {
-      allow read, write: if false;
-    }
 
     // ----------------------------------------------------
     // SYSTEM NOTIFICATIONS
@@ -246,6 +238,13 @@ service cloud.firestore {
     }
 
     // ----------------------------------------------------
+    // CAMPAIGNS
+    // ----------------------------------------------------
+    match /campaigns/{document=**} {
+      allow read, write: if true;
+    }
+
+    // ----------------------------------------------------
     // MEDIA CENTER (FOLDERS & FILES)
     // ----------------------------------------------------
     match /media_folders/{folderId} {
@@ -305,6 +304,13 @@ service cloud.firestore {
 
     match /productionBatches/{batchId} {
       allow read, write: if isAdmin();
+    }
+
+    // ----------------------------------------------------
+    // DEFAULT DENY (LAST RESORT)
+    // ----------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
