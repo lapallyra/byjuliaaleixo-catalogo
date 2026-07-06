@@ -391,9 +391,20 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 <div className="relative flex-grow rounded-xl overflow-hidden bg-[#fcfaf7]">
                   {/* Brand Content */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none z-10 transition-transform duration-500 group-hover:scale-105">
-                    <span className="text-4xl mb-4 filter drop-shadow-md">
-                      {atelier.emoji}
-                    </span>
+                    {customSettings[atelier.id]?.store_isotipo ? (
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 mb-4 flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={customSettings[atelier.id]?.store_isotipo} 
+                          alt={atelier.name} 
+                          className="w-full h-full object-contain filter drop-shadow-sm"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-4xl mb-4 filter drop-shadow-md">
+                        {atelier.emoji}
+                      </span>
+                    )}
                     <h3 className="font-mea-culpa text-3xl text-[#3A312D] mb-1 font-normal leading-none">
                       {atelier.name}
                     </h3>

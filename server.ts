@@ -84,6 +84,23 @@ async function startServer() {
     });
     console.log("Vite dev server created.");
     app.use(vite.middlewares);
+
+    // Fallback for SPA routing in development
+    app.get("*", async (req, res, next) => {
+      // Don't intercept API calls or static assets/file requests with extensions
+      if (req.originalUrl.startsWith("/api") || req.originalUrl.includes(".")) {
+        return next();
+      }
+      try {
+        const fs = await import("node:fs");
+        let template = fs.readFileSync(path.join(process.cwd(), "index.html"), "utf-8");
+        // Apply Vite HTML transforms (e.g. injecting react-refresh, etc.)
+        template = await vite.transformIndexHtml(req.originalUrl, template);
+        res.status(200).set({ "Content-Type": "text/html" }).end(template);
+      } catch (e) {
+        next(e);
+      }
+    });
   } else {
     // Production static serving with robust path resolution
     let distPath = path.join(process.cwd(), 'dist');

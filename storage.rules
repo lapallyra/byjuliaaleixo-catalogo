@@ -2,32 +2,8 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    match /catalogos/{allPaths=**} {
-      allow read, write: if request.auth != null;
-    }
-    
-    match /produtos/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /addons/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /sobrenos/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    match /pix/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-
     match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if true;
     }
   }
 }

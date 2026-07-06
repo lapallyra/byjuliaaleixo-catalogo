@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Product, CompanyId, Order, Componente, Insumo, Customer, AuditLog } from "../types";
 import {
@@ -22,6 +22,7 @@ import {
   getOrderByCode,
   subscribeToCheckoutEvents,
   subscribeToAuditLogs,
+  preloadAdminData,
 } from "../services/firebaseService";
 import { startProductProduction } from "../services/productionService";
 import { db } from "../lib/firebase";
@@ -224,6 +225,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     if (!isAdmin || !user) return;
 
     console.log("Attaching admin listeners as:", user.email);
+    
+    // Preload administrative cache data silently without blocking UI
+    preloadAdminData();
 
     const handleEditOrder = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -240,7 +244,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       setSales(loaded as Order[]),
     );
     const unsubSettings = subscribeToAllSettings(setSettings);
-    const unsubInsumos = subscribeToInsumos((data) => { setInsumos(data as any); setComponentes(data as Componente[]); });
+    const unsubInsumos = subscribeToInsumos((data) => setInsumos(data as any)); // Existing
+    const unsubComponentes = subscribeToInsumos((data) => setComponentes(data as Componente[]));
     const unsubCustomers = subscribeToCustomers(setCustomers);
     const unsubSuggestions = subscribeToSuggestions(setSuggestions);
     const unsubFeedbacks = subscribeToFeedbacks(setFeedbacks);
@@ -340,83 +345,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     { id: "addons", label: "Adicionais", group: "Sistema", icon: Star },
     { id: "activity-logs", label: "Atividades", group: "Sistema", icon: Activity },
   ];
-
-  
-  const handleUpdateOrderStatus = useCallback(async (id: string, status: string) => {
-    if (status === 'production') {
-       const order = sales.find(o => o.id === id);
-       if (order && user) {
-           for (const item of order.items) {
-               const product = products.find(p => p.id === item.productId || p.id === item.id);
-               if (product) {
-                   await startProductProduction(id, product, user.uid);
-               }
-           }
-       }
-    }
-    await updateOrderStatus(id, status);
-    if (["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(status)) {
-      playSuccessSound();
-    }
-  }, [sales, products, user]);
-
-  const handleSaveOrder = useCallback(async (data: Partial<Order>) => {
-    if (data.id) {
-      await updateOrder(data.id, data);
-      if (data.status && ["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(data.status)) {
-        playSuccessSound();
-      }
-      return;
-    } else {
-      const orderCode = await saveSale(data);
-      playSuccessSound();
-      if (orderCode) {
-        const order = await getOrderByCode(orderCode);
-        if (order) {
-          setPrintingOrder(order);
-          setAutoPrint(true);
-        }
-      }
-    }
-  }, []);
-
-  const handleUpdateOrderData = useCallback(async (id: string, data: Partial<Order>) => {
-    await updateDoc(doc(db, "orders", id), data);
-  }, []);
-
-  const handleDeleteOrder = useCallback(async (id: string) => {
-    await deleteDoc(doc(db, "orders", id));
-  }, []);
-
-  const handlePrintOrder = useCallback((o: Order) => {
-    setPrintingOrder(o);
-    setAutoPrint(true);
-  }, []);
-
-  const handleViewCustomer = useCallback((customerId: string) => {
-    setSelectedCustomerId(customerId);
-    setActiveTab("clients");
-  }, []);
-
-
-
-  const handleNewOrderForCustomer = useCallback((customerId: string) => {
-    setSelectedCustomerId(customerId);
-    setActiveTab("orders");
-  }, []);
-
-
-  const handleSaveComponente = useCallback(async (data: Partial<Componente>) => {
-    if (data.id) {
-      await updateInsumo(data.id, data as any);
-    } else {
-      await addInsumo(data as any);
-    }
-  }, []);
-
-  const handleDeleteComponente = useCallback(async (id: string) => {
-    await deleteInsumo(id);
-  }, []);
 
   const menuGroups = [
     "Dashboard",
@@ -746,25 +674,70 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       insumos={insumos}
                       customers={customers}
                       companyId={selectedCompanyId}
-                      onUpdateStatus={handleUpdateOrderStatus}
-                      onSaveOrder={handleSaveOrder}
-                      onDeleteOrder={handleDeleteOrder}
+                      onUpdateStatus={async (id, status) => {
+                        if (status === 'production') {
+                           const order = sales.find(o => o.id === id);
+                           if (order && user) {
+                               for (const item of order.items) {
+                                   const product = products.find(p => p.id === item.productId || p.id === item.id);
+                                   if (product) {
+                                       await startProductProduction(id, product, user.uid);
+                                   }
+                               }
+                           }
+                        }
+                        await updateOrderStatus(id, status);
+                        if (["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(status)) {
+                          playSuccessSound();
+                        }
+                      }}
+                      onSaveOrder={async (data) => {
+                        if (data.id) {
+                          await updateOrder(data.id, data);
+                          if (data.status && ["fully_paid", "paid", "ready", "delivered", "planned_active"].includes(data.status)) {
+                            playSuccessSound();
+                          }
+                          return;
+                        } else {
+                          const orderCode = await saveSale(data);
+                          playSuccessSound();
+                          if (orderCode) {
+                            const order = await getOrderByCode(orderCode);
+                            if (order) {
+                              setAutoPrint(true);
+                              setPrintingOrder(order);
+                            }
+                          }
+                          return orderCode;
+                        }
+                      }}
+                      onDeleteOrder={async (id) => {
+                        await deleteDoc(doc(db, "orders", id));
+                      }}
                       initialOrderId={selectedOrderId}
                       initialCustomerId={selectedCustomerId}
                     />
                   )}
                   {activeTab === "componentes" && (
-                    <ComponentsTab products={products}
+                    <ComponentsTab
                       componentes={componentes}
-                      onSaveComponente={handleSaveComponente}
-                      onDeleteComponente={handleDeleteComponente}
+                      onSaveComponente={async (data) => {
+                        if (data.id) {
+                          await updateInsumo(data.id, data as any);
+                        } else {
+                          await addInsumo(data as any);
+                        }
+                      }}
+                      onDeleteComponente={async (id) => {
+                        await deleteInsumo(id);
+                      }}
                     />
                   )}
                   {activeTab === "purchases" && (
-                    <PurchasesTab companyId={selectedCompanyId} orders={sales} />
+                    <PurchasesTab companyId={selectedCompanyId} />
                   )}
                   {activeTab === "financeiro" && (
-                    <FinanceTab auditLogs={auditLogs}
+                    <FinanceTab
                       orders={sales}
                       products={products}
                       componentes={componentes}
@@ -801,15 +774,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       orders={sales}
                       auditLogs={auditLogs}
                       companyId={selectedCompanyId}
-                      onSaveProduct={handleSaveProduct}
-                      onDeleteProduct={handleDeleteProduct}
+                      onSaveProduct={async (p) => {
+                        if (p.id) {
+                          await updateProduct(p.id, p);
+                        } else {
+                          await addProduct(p as any);
+                        }
+                      }}
+                      onDeleteProduct={(id) => deleteProduct(id)}
                     />
                   )}
                   {activeTab === "collections" && (
-                    <CollectionsTab products={products} />
+                    <CollectionsTab />
                   )}
                   {activeTab === "campaigns" && (
-                    <CampaignsTab products={products} />
+                    <CampaignsTab />
                   )}
                   {activeTab === "coupons" && (
                     <CouponsTab
@@ -819,7 +798,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "media-center" && (
-                    <MediaCenterTab products={products} />
+                    <MediaCenterTab />
                   )}
                   {activeTab === "kits" && (
                     <KitsTab
@@ -829,10 +808,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "clients" && (
-                    <ClientsTab orders={sales}
+                    <ClientsTab
                       companyId={selectedCompanyId}
                       customers={customers}
-                      onNewOrder={handleNewOrderForCustomer}
+                      onNewOrder={(customerId) => {
+                        setSelectedCustomerId(customerId);
+                        setActiveTab("orders");
+                      }}
                     />
                   )}
                   {activeTab === "gift-lists" && (
@@ -886,7 +868,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <NotificationsTab />
                   )}
                   {activeTab === "activity-logs" && (
-                    <AuditTimelineTab auditLogs={auditLogs} companyId={selectedCompanyId} />
+                    <AuditTimelineTab />
                   )}
                 </ErrorBoundary>
               </React.Suspense>

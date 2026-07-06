@@ -19,6 +19,229 @@ import { db, auth } from '../lib/firebase';
 import { sendTelegramNotification } from './telegramService';
 import { createAuditLog } from './auditService';
 import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig, Coupon, ProductionBatch, AuditActionType, AuditLog, Campaign } from '../types';
+import { eventBus } from './eventBus';
+
+// --- Smart Cache & Subscription Multiplexing Layer ---
+class FirestoreMultiplexer<T> {
+  private collectionName: string;
+  private queryFn: () => any;
+  private fallbackQueryFn?: () => any;
+  private cache: T[] | null = null;
+  private subscribers: Set<(data: T[]) => void> = new Set();
+  private unsubscribeFromFirestore: (() => void) | null = null;
+  private isPreloading: boolean = false;
+
+  constructor(collectionName: string, queryFn: () => any, fallbackQueryFn?: () => any) {
+    this.collectionName = collectionName;
+    this.queryFn = queryFn;
+    this.fallbackQueryFn = fallbackQueryFn;
+  }
+
+  hasCache(): boolean {
+    return this.cache !== null;
+  }
+
+  getCache(): T[] {
+    return this.cache || [];
+  }
+
+  subscribe(callback: (data: T[]) => void, companyIdFilter?: string, companyIdField: string = 'companyId'): () => void {
+    const filteredCallback = (data: T[]) => {
+      if (companyIdFilter) {
+        callback(data.filter((item: any) => {
+          const val = (item as any)[companyIdField];
+          const secondaryVal = (item as any).company;
+          return val === companyIdFilter || secondaryVal === companyIdFilter;
+        }));
+      } else {
+        callback(data);
+      }
+    };
+
+    this.subscribers.add(filteredCallback);
+
+    // If cache already exists, return it IMMEDIATELY synchronously (zero frame layout delay)
+    if (this.cache !== null) {
+      filteredCallback(this.cache);
+    }
+
+    if (!this.unsubscribeFromFirestore) {
+      this.startFirestoreListener();
+    }
+
+    return () => {
+      this.subscribers.delete(filteredCallback);
+    };
+  }
+
+  preload() {
+    if (this.cache === null && !this.isPreloading && !this.unsubscribeFromFirestore) {
+      this.isPreloading = true;
+      this.startFirestoreListener();
+    }
+  }
+
+  private notifyAll() {
+    if (this.cache) {
+      this.subscribers.forEach(cb => {
+        try {
+          cb(this.cache!);
+        } catch (e) {
+          console.error(`[Cache] Error notifying subscriber for ${this.collectionName}:`, e);
+        }
+      });
+    }
+  }
+
+  private detectAndTriggerEvents(oldCache: T[], newCache: T[]) {
+    try {
+      if (this.collectionName === 'orders') {
+        const oldMap = new Map(oldCache.map((x: any) => [x.id, x]));
+        newCache.forEach((newItem: any) => {
+          const oldItem = oldMap.get(newItem.id);
+          if (!oldItem) {
+            eventBus.emit('ORDER_CREATED', { order: newItem });
+          } else {
+            const statusChanged = oldItem.status !== newItem.status;
+            const oldPaid = oldItem.status === 'paid' || oldItem.status === 'fully_paid' || oldItem.paymentStatus === 'paid';
+            const newPaid = newItem.status === 'paid' || newItem.status === 'fully_paid' || newItem.paymentStatus === 'paid';
+            
+            if (newPaid && !oldPaid) {
+              eventBus.emit('ORDER_PAID', { order: newItem });
+            } else if (newItem.status === 'cancelled' && oldItem.status !== 'cancelled') {
+              eventBus.emit('ORDER_CANCELLED', { order: newItem });
+            } else if (statusChanged) {
+              eventBus.emit('ORDER_UPDATED', { order: newItem, changes: ['status'] });
+            }
+          }
+        });
+      } else if (this.collectionName === 'products') {
+        const oldMap = new Map(oldCache.map((x: any) => [x.id, x]));
+        newCache.forEach((newItem: any) => {
+          const oldItem = oldMap.get(newItem.id);
+          if (!oldItem) {
+            eventBus.emit('PRODUCT_CREATED', { product: newItem });
+          } else {
+            const oldStock = oldItem.stock ?? 0;
+            const newStock = newItem.stock ?? 0;
+            if (newStock !== oldStock) {
+              eventBus.emit('STOCK_UPDATED', { product: newItem, oldStock, newStock });
+              if (newStock <= 5 && oldStock > 5) {
+                eventBus.emit('STOCK_LOW', { product: newItem, currentStock: newStock });
+              }
+            }
+          }
+        });
+      } else if (this.collectionName === 'customers') {
+        const oldMap = new Map(oldCache.map((x: any) => [x.id, x]));
+        newCache.forEach((newItem: any) => {
+          const oldItem = oldMap.get(newItem.id);
+          if (!oldItem) {
+            eventBus.emit('CLIENT_CREATED', { customer: newItem });
+          }
+        });
+      }
+    } catch (e) {
+      console.error(`[Cache] Error detecting events for ${this.collectionName}:`, e);
+    }
+  }
+
+  private startFirestoreListener() {
+    console.log(`[Cache] Init multiplexed real-time listener: ${this.collectionName}`);
+    let q;
+    try {
+      q = this.queryFn();
+    } catch (e) {
+      console.warn(`[Cache] Query builder failed for ${this.collectionName}, using fallback`, e);
+      q = this.fallbackQueryFn ? this.fallbackQueryFn() : collection(db, this.collectionName);
+    }
+
+    this.unsubscribeFromFirestore = onSnapshot(q, (snapshot) => {
+      this.isPreloading = false;
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      
+      if (this.collectionName === 'orders') {
+        data.sort((a: any, b: any) => {
+          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+          return timeB - timeA;
+        });
+      }
+      
+      const oldCache = this.cache;
+      this.cache = data;
+      this.notifyAll();
+
+      if (oldCache !== null) {
+        this.detectAndTriggerEvents(oldCache, data);
+      }
+    }, (error) => {
+      console.warn(`[Cache] Listener failed on ${this.collectionName}`, error);
+      if (this.fallbackQueryFn && this.unsubscribeFromFirestore) {
+        if (typeof this.unsubscribeFromFirestore === 'function') {
+          this.unsubscribeFromFirestore();
+        }
+        
+        try {
+          const fallbackQ = this.fallbackQueryFn();
+          this.unsubscribeFromFirestore = onSnapshot(fallbackQ, (fallbackSnap) => {
+            this.isPreloading = false;
+            const data = fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+            
+            if (this.collectionName === 'orders') {
+              data.sort((a: any, b: any) => {
+                const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+                const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+                return timeB - timeA;
+              });
+            }
+            
+            const oldCache = this.cache;
+            this.cache = data;
+            this.notifyAll();
+
+            if (oldCache !== null) {
+              this.detectAndTriggerEvents(oldCache, data);
+            }
+          }, (fallbackError) => {
+            this.isPreloading = false;
+            handleFirestoreError(fallbackError, OperationType.LIST, this.collectionName, false);
+          });
+        } catch (fbErr) {
+          this.isPreloading = false;
+          handleFirestoreError(fbErr, OperationType.LIST, this.collectionName, false);
+        }
+      } else {
+        this.isPreloading = false;
+        handleFirestoreError(error, OperationType.LIST, this.collectionName, false);
+      }
+    });
+  }
+}
+
+export const productsMultiplexer = new FirestoreMultiplexer<Product>(
+  'products',
+  () => collection(db, 'products')
+);
+
+export const salesMultiplexer = new FirestoreMultiplexer<Order>(
+  'orders',
+  () => query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(500)),
+  () => collection(db, 'orders')
+);
+
+export const customersMultiplexer = new FirestoreMultiplexer<Customer>(
+  'customers',
+  () => collection(db, 'customers')
+);
+
+export const preloadAdminData = () => {
+  console.log('[Cache] Preloading administrative cache data...');
+  productsMultiplexer.preload();
+  salesMultiplexer.preload();
+  customersMultiplexer.preload();
+};
+// ---------------------------------------------------
 
 export enum OperationType {
   CREATE = 'create',
@@ -135,6 +358,13 @@ function sanitize(data: any): any {
 }
 
 export const getProducts = async (companyId?: CompanyId): Promise<Product[]> => {
+  if (productsMultiplexer.hasCache()) {
+    const cached = productsMultiplexer.getCache();
+    if (companyId) {
+      return cached.filter(p => p.company === companyId);
+    }
+    return cached;
+  }
   const path = 'products';
   try {
     const q = companyId 
@@ -770,13 +1000,7 @@ export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdA
 };
 
 export const subscribeToCustomers = (callback: (customers: Customer[]) => void, companyId?: CompanyId) => {
-  const q = companyId 
-    ? query(collection(db, 'customers'), where('companyId', '==', companyId))
-    : collection(db, 'customers');
-    
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Customer)));
-  }, (error) => handleFirestoreError(error, OperationType.LIST, 'customers', false));
+  return customersMultiplexer.subscribe(callback, companyId, 'companyId');
 };
 
 export const updateCustomer = async (id: string, data: Partial<Customer>) => {
@@ -1107,6 +1331,11 @@ export const getGiftList = async (code: string) => {
 };
 
 export const getCustomerByCpf = async (cpf: string, companyId: string): Promise<Customer | null> => {
+  if (customersMultiplexer.hasCache()) {
+    const cached = customersMultiplexer.getCache();
+    const found = cached.find(c => c.cpfCnpj === cpf && c.companyId === companyId);
+    if (found) return found;
+  }
   try {
     const q = query(
       collection(db, 'customers'),
@@ -1177,39 +1406,11 @@ export const subscribeToGiftLists = (callback: (lists: any[]) => void, companyId
 };
 
 export const subscribeToSales = (callback: (sales: any[]) => void, companyId?: CompanyId) => {
-  const path = 'orders';
-  let q;
-  if (companyId) {
-    q = query(collection(db, path), where('companyId', '==', companyId), orderBy('createdAt', 'desc'), limit(300));
-  } else {
-    q = query(collection(db, path), orderBy('createdAt', 'desc'), limit(300));
-  }
-
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-  }, (error) => {
-    // Fallback to unstructured query if index is missing
-    console.warn("Index missing, falling back to unstructured sales query", error);
-    const fallbackQ = companyId ? query(collection(db, path), where('companyId', '==', companyId)) : collection(db, path);
-    onSnapshot(fallbackQ, (fallbackSnap) => {
-      callback(fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (fallbackError) => {
-      handleFirestoreError(fallbackError, OperationType.LIST, path, false);
-    });
-  });
+  return salesMultiplexer.subscribe(callback, companyId, 'companyId');
 };
 
 export const subscribeToProducts = (callback: (products: Product[]) => void, companyId?: CompanyId) => {
-  const path = 'products';
-  const q = companyId 
-    ? query(collection(db, path), where('company', '==', companyId))
-    : collection(db, path);
-
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-  }, (error) => {
-    handleFirestoreError(error, OperationType.GET, path, false);
-  });
+  return productsMultiplexer.subscribe(callback, companyId, 'company');
 };
 
 export const addSuggestion = async (companyId: CompanyId, message: string) => {

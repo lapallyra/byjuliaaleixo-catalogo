@@ -101,7 +101,7 @@ export const AteliersPresentationView: React.FC = () => {
         <div className="space-y-12">
           {ateliers.map((atelier, index) => {
             const logo = getAtelierLogo(atelier.id);
-            const isImageLogo = logo.startsWith('http') || logo.startsWith('data:') || logo.includes('/');
+            const isImageLogo = logo && (logo.startsWith('http') || logo.startsWith('data:') || logo.includes('/'));
 
             return (
               <AtelierCard

@@ -77,6 +77,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { HorizontalScroll } from "../shared/HorizontalScroll";
 import { commemorativeDateService } from "../../services/commemorativeDateService";
 import { subscribeToCampaigns } from "../../services/firebaseService";
+import { eventBus } from "../../services/eventBus";
 
 interface DashboardTabProps {
   orders: Order[];
@@ -101,7 +102,7 @@ interface EventItem {
   category: 'global' | 'nacional' | 'regional' | 'personalizado';
 }
 
-export const DashboardTab: React.FC<DashboardTabProps> = React.memo(({
+export const DashboardTab: React.FC<DashboardTabProps> = ({
   orders = [],
   products = [],
   customers = [],
@@ -116,6 +117,99 @@ export const DashboardTab: React.FC<DashboardTabProps> = React.memo(({
   const [user, setUser] = useState(auth.currentUser);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: '', date: '', category: 'personalizado' as 'global' | 'nacional' | 'regional' | 'personalizado' });
+  const [liveEvents, setLiveEvents] = useState<any[]>([]);
+
+  // Pre-populate with recent orders when orders load
+  useEffect(() => {
+    if (orders.length > 0 && liveEvents.length === 0) {
+      const initial = orders.slice(0, 10).map(order => ({
+        id: `initial-ev-${order.id}`,
+        type: order.status === 'paid' || order.status === 'fully_paid' ? 'ORDER_PAID' : 'ORDER_CREATED',
+        message: order.status === 'paid' || order.status === 'fully_paid' 
+          ? `Pedido #${order.code || ''} de ${order.customerName} confirmado como PAGO!`
+          : `Pedido #${order.code || ''} criado por ${order.customerName} - ${formatCurrency(order.total)}`,
+        color: order.status === 'paid' || order.status === 'fully_paid' ? '#10B981' : '#3B82F6',
+        badge: order.status === 'paid' || order.status === 'fully_paid' ? 'PAGO' : 'NOVO PEDIDO',
+        timestamp: order.createdAt?.toDate ? order.createdAt.toDate() : (order.createdAt?.seconds ? new Date(order.createdAt.seconds * 1000) : new Date()),
+        rawData: order
+      }));
+      setLiveEvents(initial);
+    }
+  }, [orders]);
+
+  // Subscribe to real-time eventBus events
+  useEffect(() => {
+    const addLiveEvent = (type: string, message: string, color: string, badge: string, rawData: any) => {
+      const newEv = {
+        id: `live-ev-${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        message,
+        color,
+        badge,
+        timestamp: new Date(),
+        rawData
+      };
+      setLiveEvents(prev => [newEv, ...prev].slice(0, 20));
+    };
+
+    const unsubCreated = eventBus.on('ORDER_CREATED', ({ order }) => {
+      addLiveEvent(
+        'ORDER_CREATED',
+        `Pedido #${order.code || ''} criado por ${order.customerName} - ${formatCurrency(order.total)}`,
+        '#10B981',
+        'NOVO PEDIDO',
+        order
+      );
+    });
+
+    const unsubPaid = eventBus.on('ORDER_PAID', ({ order }) => {
+      addLiveEvent(
+        'ORDER_PAID',
+        `Pedido #${order.code || ''} de ${order.customerName} confirmado como PAGO!`,
+        '#10B981',
+        'PAGO',
+        order
+      );
+    });
+
+    const unsubUpdated = eventBus.on('ORDER_UPDATED', ({ order }) => {
+      addLiveEvent(
+        'ORDER_UPDATED',
+        `Status do pedido #${order.code || ''} alterado para "${order.status}"`,
+        '#3B82F6',
+        'ATUALIZADO',
+        order
+      );
+    });
+
+    const unsubStock = eventBus.on('STOCK_LOW', ({ product, currentStock }) => {
+      addLiveEvent(
+        'STOCK_LOW',
+        `Estoque de "${product.product_name}" caiu para ${currentStock} (crítico!)`,
+        '#F59E0B',
+        'ESTOQUE CRÍTICO',
+        product
+      );
+    });
+
+    const unsubClient = eventBus.on('CLIENT_CREATED', ({ customer }) => {
+      addLiveEvent(
+        'CLIENT_CREATED',
+        `Novo cliente "${customer.name}" registrado no sistema`,
+        '#8B5CF6',
+        'NOVO CLIENTE',
+        customer
+      );
+    });
+
+    return () => {
+      unsubCreated();
+      unsubPaid();
+      unsubUpdated();
+      unsubStock();
+      unsubClient();
+    };
+  }, []);
 
   // Fetch Checklist
   useEffect(() => {
@@ -358,6 +452,85 @@ export const DashboardTab: React.FC<DashboardTabProps> = React.memo(({
                 />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BLOCO LIVE OPERATIONS: EVENT FEED */}
+      <section>
+        <div className="clean-3d-card p-8 border border-slate-100 relative overflow-hidden bg-slate-900 text-white shadow-[0_12px_40px_rgba(31,38,135,0.15)]">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+                <Activity size={20} className="animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white">Live Operations Feed</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Atividade em tempo real do sistema</p>
+              </div>
+            </div>
+            
+            {/* Realtime Status Indicator */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700/50 shadow-inner w-fit">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[9px] font-black tracking-widest text-emerald-400 uppercase">REAL-TIME ATIVO</span>
+            </div>
+          </div>
+
+          <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 scrollbar-hide relative z-10">
+            <AnimatePresence mode="popLayout">
+              {liveEvents.length > 0 ? (
+                liveEvents.map((ev) => (
+                  <motion.div
+                    layout
+                    key={ev.id}
+                    initial={{ opacity: 0, y: -15, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                    className="flex items-center justify-between p-4 rounded-xl bg-slate-800/40 border border-slate-700/20 hover:bg-slate-850 transition-all group"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      {/* Left accent block based on event color */}
+                      <div className="w-1.5 h-8 rounded-full shrink-0" style={{ backgroundColor: ev.color }} />
+                      
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span 
+                            className="text-[8px] font-black uppercase tracking-[0.15em] px-2 py-0.5 rounded-md"
+                            style={{ backgroundColor: `${ev.color}15`, color: ev.color }}
+                          >
+                            {ev.badge}
+                          </span>
+                          <span className="text-[9px] font-semibold text-slate-500">
+                            {format(ev.timestamp, "HH:mm:ss")}
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-slate-100 line-clamp-1">
+                          {ev.message}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Tiny visual dynamic accent */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 pl-4">
+                      <ChevronRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="h-40 flex flex-col items-center justify-center text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+                  <Activity size={32} className="stroke-[1.5] mb-2 opacity-50 animate-pulse" />
+                  <p className="text-[10px] font-black uppercase tracking-widest">Aguardando novos eventos do ERP...</p>
+                </div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </section>
@@ -669,7 +842,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = React.memo(({
       </AnimatePresence>
     </div>
   );
-});
+};
 
 // COMPONENTES AUXILIARES
 
