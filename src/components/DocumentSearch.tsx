@@ -6,7 +6,7 @@ import { OrderReceiptModal } from './Admin/OrderReceiptModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { themes } from '../lib/theme';
 import { ImageWithFallback } from './ImageWithFallback';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 interface DocumentSearchProps {
   onGoBack: () => void;
@@ -14,6 +14,7 @@ interface DocumentSearchProps {
 
 export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -31,7 +32,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
     const fetchedOrder = await getOrderByCode(searchVal);
     if (fetchedOrder) {
       setLoading(false);
-      window.location.href = `/rastreamento?code=${fetchedOrder.code}`;
+      navigate(`/rastreamento?code=${fetchedOrder.code}`);
       return;
     }
 
@@ -39,7 +40,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
     const { data: fetchedList, status } = await getGiftListWithStatus(searchVal);
     if (status === 'found' && fetchedList) {
       setLoading(false);
-      window.location.href = `/listadepresentes/${fetchedList.code}`;
+      navigate(`/listadepresentes/${fetchedList.code}`);
       return;
     } else if (status === 'expired') {
       setError('Esta lista de presentes expirou (mais de 60 dias).');

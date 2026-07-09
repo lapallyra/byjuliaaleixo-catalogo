@@ -13,7 +13,8 @@ import {
   updateDoc,
   deleteDoc,
   orderBy,
-  limit
+  limit,
+  runTransaction
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { sendTelegramNotification } from './telegramService';
@@ -158,7 +159,13 @@ class FirestoreMultiplexer<T> {
 
     this.unsubscribeFromFirestore = onSnapshot(q, (snapshot) => {
       this.isPreloading = false;
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      const data = snapshot.docs.map(doc => {
+        const docData = doc.data() as any;
+        if (this.collectionName === 'orders' && docData.status) {
+          docData.status = normalizeStatus(docData.status);
+        }
+        return { id: doc.id, ...docData } as any;
+      });
       
       if (this.collectionName === 'orders') {
         data.sort((a: any, b: any) => {
@@ -186,7 +193,13 @@ class FirestoreMultiplexer<T> {
           const fallbackQ = this.fallbackQueryFn();
           this.unsubscribeFromFirestore = onSnapshot(fallbackQ, (fallbackSnap) => {
             this.isPreloading = false;
-            const data = fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+            const data = fallbackSnap.docs.map(doc => {
+              const docData = doc.data() as any;
+              if (this.collectionName === 'orders' && docData.status) {
+                docData.status = normalizeStatus(docData.status);
+              }
+              return { id: doc.id, ...docData } as any;
+            });
             
             if (this.collectionName === 'orders') {
               data.sort((a: any, b: any) => {
@@ -528,68 +541,750 @@ export const subscribeToInsumos = (callback: (insumos: Insumo[]) => void) => {
   });
 };
 
+export const normalizeStatus = (status: any): any => {
+  if (!status) return 'novo pedido';
+  if (typeof status !== 'string') return 'novo pedido';
+  
+  const s = status.trim().toLowerCase();
+  
+  switch (s) {
+    // 1. Novo Pedido
+    case 'novo':
+    case 'novo_pedido':
+    case 'novo-pedido':
+    case 'novo pedido':
+      return 'novo pedido';
+
+    // 2. Orçamento
+    case 'quote':
+    case 'orcamento':
+    case 'orçamento':
+    case 'draft':
+      return 'quote';
+
+    // 3. Aguardando Pagamento / Pending
+    case 'pending':
+    case 'waiting_payment':
+    case 'aguardando_pagamento':
+    case 'aguardando pagamento':
+      return 'waiting_payment';
+
+    // 4. Aprovação Arte / Approved
+    case 'approval':
+    case 'aprovacao':
+    case 'aprovação':
+    case 'aprovacao_arte':
+    case 'aprovacao de arte':
+    case 'aprovado':
+    case 'approved':
+      return 'approval';
+
+    // 5. Aguardando Sinal
+    case 'waiting_deposit':
+    case 'sinal_pendente':
+    case 'aguardando_sinal':
+    case 'aguardando sinal':
+      return 'waiting_deposit';
+
+    // 6. Aguardando Produção
+    case 'waiting_production':
+    case 'aguardando_producao':
+    case 'aguardando produção':
+    case 'aguardando producao':
+      return 'waiting_production';
+
+    // 7. Em Produção
+    case 'production':
+    case 'em_producao':
+    case 'em produção':
+    case 'producao':
+    case 'produção':
+    case 'in_production':
+      return 'production';
+
+    // 8. Montagem
+    case 'assembly':
+    case 'montagem':
+    case 'em_montagem':
+    case 'em montagem':
+      return 'assembly';
+
+    // 9. Conferência
+    case 'conferencing':
+    case 'conferencia':
+    case 'conferência':
+      return 'conferencing';
+
+    // 10. Pronto para entrega
+    case 'ready':
+    case 'pronto':
+    case 'pronto_entrega':
+    case 'pronto para entrega':
+    case 'pronto para retirada':
+    case 'pronto_retirada':
+      return 'ready';
+
+    // 11. Embalagem
+    case 'packaging':
+    case 'embalagem':
+    case 'em_embalagem':
+    case 'em embalagem':
+      return 'packaging';
+
+    // 12. Em Entrega / Enviado
+    case 'delivery':
+    case 'enviado':
+    case 'em entrega':
+    case 'em_entrega':
+    case 'shipped':
+      return 'delivery';
+
+    // 13. Entregue
+    case 'delivered':
+    case 'entregue':
+      return 'delivered';
+
+    // 14. Concluído / Finalizado
+    case 'finalized':
+    case 'finalizado':
+      return 'finalized';
+
+    // 15. Totalmente Pago / Pago
+    case 'fully_paid':
+    case 'concluido':
+    case 'concluído':
+    case 'paid':
+      return 'fully_paid';
+
+    // 16. Cancelado
+    case 'cancelled':
+    case 'cancelado':
+      return 'cancelled';
+
+    default:
+      return status;
+  }
+};
+
+export const DEDUCT_STATUSES = [
+  'novo pedido', 'approval', 'production', 'conferencing', 'assembly', 
+  'ready', 'packaging', 'delivered', 'delivery', 'paid', 'fully_paid', 
+  'finalized', 'waiting_production'
+];
+
+const orderStockMutexes = new Map<string, Promise<any>>();
+
+const runWithMutex = async (orderId: string, fn: () => Promise<any>) => {
+  while (orderStockMutexes.has(orderId)) {
+    try {
+      await orderStockMutexes.get(orderId);
+    } catch (e) {}
+  }
+  const promise = fn();
+  orderStockMutexes.set(orderId, promise);
+  try {
+    return await promise;
+  } finally {
+    orderStockMutexes.delete(orderId);
+  }
+};
+
+interface StockRequirement {
+  products: { [productId: string]: number };
+  insumos: { [insumoId: string]: number };
+  addons: { [addonId: string]: number };
+}
+
+function getStockRequirements(items: CartItem[]): StockRequirement {
+  const reqs: StockRequirement = { products: {}, insumos: {}, addons: {} };
+  for (const item of items) {
+    const qty = item.quantity || 1;
+    if (item.productId && !item.isKit) {
+      reqs.products[item.productId] = (reqs.products[item.productId] || 0) + qty;
+      
+      if (item.insumos && item.insumos.length > 0) {
+        for (const req of item.insumos) {
+          reqs.insumos[req.insumoId] = (reqs.insumos[req.insumoId] || 0) + (req.quantity * qty);
+        }
+      }
+    }
+    if (item.isKit && item.kitItems && item.kitItems.length > 0) {
+      for (const ki of item.kitItems) {
+        const itemQty = ki.quantity * qty;
+        if (ki.type === 'product') {
+          reqs.products[ki.id] = (reqs.products[ki.id] || 0) + itemQty;
+        } else if (ki.type === 'insumo') {
+          reqs.insumos[ki.id] = (reqs.insumos[ki.id] || 0) + itemQty;
+        } else if (ki.type === 'addon') {
+          reqs.addons[ki.id] = (reqs.addons[ki.id] || 0) + itemQty;
+        }
+      }
+    }
+  }
+  return reqs;
+}
+
+export const adjustStockForOrderItems = async (orderId: string, orderCode: string, oldItems: CartItem[], newItems: CartItem[]) => {
+  const oldReqs = getStockRequirements(oldItems);
+  const newReqs = getStockRequirements(newItems);
+
+  // 1. Adjust Products Stock
+  const allProductIds = new Set([...Object.keys(oldReqs.products), ...Object.keys(newReqs.products)]);
+  for (const prodId of allProductIds) {
+    const oldQty = oldReqs.products[prodId] || 0;
+    const newQty = newReqs.products[prodId] || 0;
+    const delta = newQty - oldQty;
+    if (delta !== 0) {
+      try {
+        const prodRef = doc(db, 'products', prodId);
+        const prodSnap = await getDoc(prodRef);
+        if (prodSnap.exists()) {
+          const pData = prodSnap.data();
+          if (typeof pData.stock === 'number') {
+            const newStock = Math.max(0, pData.stock - delta);
+            await updateDoc(prodRef, { stock: newStock });
+          }
+        }
+      } catch (err) {
+        console.warn(`Could not adjust stock for product ${prodId}:`, err);
+      }
+    }
+  }
+
+  // 2. Adjust Insumos Stock & Log movements
+  const allInsumoIds = new Set([...Object.keys(oldReqs.insumos), ...Object.keys(newReqs.insumos)]);
+  for (const insumoId of allInsumoIds) {
+    const oldQty = oldReqs.insumos[insumoId] || 0;
+    const newQty = newReqs.insumos[insumoId] || 0;
+    const delta = newQty - oldQty;
+    if (delta !== 0) {
+      try {
+        const insumoRef = doc(db, 'insumos', insumoId);
+        const insumoSnap = await getDoc(insumoRef);
+        if (insumoSnap.exists()) {
+          const currentQty = insumoSnap.data().quantity || 0;
+          const newQuantity = Math.max(0, currentQty - delta);
+          await updateDoc(insumoRef, { quantity: newQuantity });
+
+          try {
+            await addDoc(collection(db, 'insumo_movements'), sanitize({
+              insumoId: insumoId,
+              insumoName: insumoSnap.data()?.name || 'Material',
+              orderId: orderId,
+              orderCode: orderCode || orderId,
+              productName: 'Ajuste de Pedido',
+              quantityDeducted: Math.abs(delta),
+              timestamp: new Date().toISOString(),
+              type: delta > 0 ? 'out' : 'in'
+            }));
+          } catch (logErr) {}
+
+          if (newQuantity <= 10 && delta > 0) {
+            try {
+              sendTelegramNotification('low_stock', `⚠️ ESTOQUE BAIXO\n\nInsumo (Ajuste):\n${insumoSnap.data().name || 'Material'}\n\nQuantidade Atual:\n${newQuantity}`);
+            } catch (e) {}
+          }
+        }
+      } catch (err) {
+        console.warn(`Could not adjust stock for insumo ${insumoId}:`, err);
+      }
+    }
+  }
+
+  // 3. Adjust Addons Stock
+  const allAddonIds = new Set([...Object.keys(oldReqs.addons), ...Object.keys(newReqs.addons)]);
+  for (const addonId of allAddonIds) {
+    const oldQty = oldReqs.addons[addonId] || 0;
+    const newQty = newReqs.addons[addonId] || 0;
+    const delta = newQty - oldQty;
+    if (delta !== 0) {
+      try {
+        const addonRef = doc(db, 'addons', addonId);
+        const addonSnap = await getDoc(addonRef);
+        if (addonSnap.exists()) {
+          const aData = addonSnap.data();
+          if (typeof aData.stock === 'number') {
+            const newStock = Math.max(0, aData.stock - delta);
+            await updateDoc(addonRef, { stock: newStock });
+          }
+        }
+      } catch (err) {
+        console.warn(`Could not adjust stock for addon ${addonId}:`, err);
+      }
+    }
+  }
+};
+
+export const deductStockForOrder = async (orderId: string, orderData: Order) => {
+  return runWithMutex(orderId, async () => {
+    let alreadyDeducted = false;
+    try {
+      await runTransaction(db, async (transaction) => {
+        const orderRef = doc(db, 'orders', orderId);
+        const orderSnap = await transaction.get(orderRef);
+        if (orderSnap.exists() && orderSnap.data().insumosDeducted === true) {
+          alreadyDeducted = true;
+          return;
+        }
+        transaction.update(orderRef, { insumosDeducted: true });
+      });
+    } catch (txErr) {
+      console.warn("Transaction failed in deductStockForOrder, assuming lock/concurrency conflict:", txErr);
+      alreadyDeducted = true;
+    }
+
+    if (alreadyDeducted) {
+      console.log(`[deductStockForOrder] Stock already deducted for order ${orderId}. Skipping.`);
+      return;
+    }
+
+    const items = orderData.items || [];
+    for (const item of items) {
+      if (item.productId && !item.isKit) {
+        try {
+          const prodRef = doc(db, 'products', item.productId);
+          const prodSnap = await getDoc(prodRef);
+          if (prodSnap.exists()) {
+            const pData = prodSnap.data();
+            if (typeof pData.stock === 'number') {
+              const newStock = Math.max(0, pData.stock - (item.quantity || 1));
+              await updateDoc(prodRef, { stock: newStock });
+            }
+          }
+        } catch (err) {
+          console.warn('Could not deduct stock for product', item.productId, err);
+        }
+      }
+
+      if (item.insumos && item.insumos.length > 0) {
+        for (const requiredInsumo of item.insumos) {
+          try {
+            const insumoRef = doc(db, 'insumos', requiredInsumo.insumoId);
+            const insumoSnap = await getDoc(insumoRef);
+            if (insumoSnap.exists()) {
+              const currentQty = insumoSnap.data().quantity || 0;
+              const reduction = requiredInsumo.quantity * item.quantity;
+              const newQty = Math.max(0, currentQty - reduction);
+              await updateDoc(insumoRef, { quantity: newQty });
+
+              try {
+                await addDoc(collection(db, 'insumo_movements'), sanitize({
+                  insumoId: requiredInsumo.insumoId,
+                  insumoName: insumoSnap.data()?.name || 'Material',
+                  orderId: orderId,
+                  orderCode: orderData.code || orderId,
+                  productName: item.product_name || 'Produto',
+                  quantityDeducted: reduction,
+                  timestamp: new Date().toISOString(),
+                  type: 'out'
+                }));
+              } catch (logErr) {
+                console.warn('Logging movement error:', logErr);
+              }
+
+              if (newQty <= 10) {
+                try {
+                  sendTelegramNotification('low_stock', `⚠️ ESTOQUE BAIXO\n\nProduto:\n${insumoSnap.data().name || 'Material'}\n\nQuantidade Atual:\n${newQty}`);
+                } catch (e) {}
+              }
+            }
+          } catch (err) {
+            console.warn(`Could not deduct stock for insumo ${requiredInsumo.insumoId}:`, err);
+          }
+        }
+      }
+
+      if (item.isKit && item.kitItems && item.kitItems.length > 0) {
+        for (const ki of item.kitItems) {
+          const qtyToDeduct = ki.quantity * item.quantity;
+          try {
+            if (ki.type === 'product') {
+              const prodRef = doc(db, 'products', ki.id);
+              const prodSnap = await getDoc(prodRef);
+              if (prodSnap.exists()) {
+                const pData = prodSnap.data();
+                if (typeof pData.stock === 'number') {
+                  const newStock = Math.max(0, pData.stock - qtyToDeduct);
+                  await updateDoc(prodRef, { stock: newStock });
+                }
+              }
+            } else if (ki.type === 'insumo') {
+              const insumoRef = doc(db, 'insumos', ki.id);
+              const insumoSnap = await getDoc(insumoRef);
+              if (insumoSnap.exists()) {
+                const currentQty = insumoSnap.data().quantity || 0;
+                const newQty = Math.max(0, currentQty - qtyToDeduct);
+                await updateDoc(insumoRef, { quantity: newQty });
+
+                try {
+                  await addDoc(collection(db, 'insumo_movements'), sanitize({
+                    insumoId: ki.id,
+                    insumoName: insumoSnap.data()?.name || 'Material Kit',
+                    orderId: orderId,
+                    orderCode: orderData.code || orderId,
+                    productName: `[Kit] ${item.product_name}`,
+                    quantityDeducted: qtyToDeduct,
+                    timestamp: new Date().toISOString(),
+                    type: 'out'
+                  }));
+                } catch (logErr) {}
+
+                if (newQty <= 10) {
+                  try {
+                    sendTelegramNotification('low_stock', `⚠️ ESTOQUE BAIXO\n\nInsumo do Kit:\n${insumoSnap.data().name || 'Material'}\n\nQuantidade Atual:\n${newQty}`);
+                  } catch (e) {}
+                }
+              }
+            } else if (ki.type === 'addon') {
+              const addonRef = doc(db, 'addons', ki.id);
+              const addonSnap = await getDoc(addonRef);
+              if (addonSnap.exists()) {
+                const aData = addonSnap.data();
+                if (typeof aData.stock === 'number') {
+                  const newStock = Math.max(0, aData.stock - qtyToDeduct);
+                  await updateDoc(addonRef, { stock: newStock });
+                }
+              }
+            }
+          } catch (err) {
+            console.warn(`Could not deduct stock for kit item ${ki.id}:`, err);
+          }
+        }
+      }
+    }
+  });
+};
+
+export const restoreStockForOrder = async (orderId: string, orderData: Order) => {
+  return runWithMutex(orderId, async () => {
+    let alreadyRestored = false;
+    try {
+      await runTransaction(db, async (transaction) => {
+        const orderRef = doc(db, 'orders', orderId);
+        const orderSnap = await transaction.get(orderRef);
+        if (!orderSnap.exists() || orderSnap.data().insumosDeducted !== true) {
+          alreadyRestored = true;
+          return;
+        }
+        transaction.update(orderRef, { insumosDeducted: false });
+      });
+    } catch (txErr) {
+      console.warn("Transaction failed in restoreStockForOrder, assuming lock/concurrency conflict:", txErr);
+      alreadyRestored = true;
+    }
+
+    if (alreadyRestored) {
+      console.log(`[restoreStockForOrder] Stock already restored/not deducted for order ${orderId}. Skipping.`);
+      return;
+    }
+
+    const items = orderData.items || [];
+    for (const item of items) {
+      if (item.productId && !item.isKit) {
+        try {
+          const prodRef = doc(db, 'products', item.productId);
+          const prodSnap = await getDoc(prodRef);
+          if (prodSnap.exists()) {
+            const pData = prodSnap.data();
+            if (typeof pData.stock === 'number') {
+              const newStock = pData.stock + (item.quantity || 1);
+              await updateDoc(prodRef, { stock: newStock });
+            }
+          }
+        } catch (err) {
+          console.warn('Could not restore stock for product', item.productId, err);
+        }
+      }
+
+      if (item.insumos && item.insumos.length > 0) {
+        for (const requiredInsumo of item.insumos) {
+          try {
+            const insumoRef = doc(db, 'insumos', requiredInsumo.insumoId);
+            const insumoSnap = await getDoc(insumoRef);
+            if (insumoSnap.exists()) {
+              const currentQty = insumoSnap.data().quantity || 0;
+              const addition = requiredInsumo.quantity * item.quantity;
+              const newQty = currentQty + addition;
+              await updateDoc(insumoRef, { quantity: newQty });
+
+              try {
+                await addDoc(collection(db, 'insumo_movements'), sanitize({
+                  insumoId: requiredInsumo.insumoId,
+                  insumoName: insumoSnap.data()?.name || 'Material',
+                  orderId: orderId,
+                  orderCode: orderData.code || orderId,
+                  productName: item.product_name || 'Produto',
+                  quantityDeducted: addition,
+                  timestamp: new Date().toISOString(),
+                  type: 'in'
+                }));
+              } catch (logErr) {
+                console.warn('Logging movement error:', logErr);
+              }
+            }
+          } catch (err) {
+            console.warn(`Could not restore stock for insumo ${requiredInsumo.insumoId}:`, err);
+          }
+        }
+      }
+
+      if (item.isKit && item.kitItems && item.kitItems.length > 0) {
+        for (const ki of item.kitItems) {
+          const qtyToRestore = ki.quantity * item.quantity;
+          try {
+            if (ki.type === 'product') {
+              const prodRef = doc(db, 'products', ki.id);
+              const prodSnap = await getDoc(prodRef);
+              if (prodSnap.exists()) {
+                const pData = prodSnap.data();
+                if (typeof pData.stock === 'number') {
+                  const newStock = pData.stock + qtyToRestore;
+                  await updateDoc(prodRef, { stock: newStock });
+                }
+              }
+            } else if (ki.type === 'insumo') {
+              const insumoRef = doc(db, 'insumos', ki.id);
+              const insumoSnap = await getDoc(insumoRef);
+              if (insumoSnap.exists()) {
+                const currentQty = insumoSnap.data().quantity || 0;
+                const newQty = currentQty + qtyToRestore;
+                await updateDoc(insumoRef, { quantity: newQty });
+
+                try {
+                  await addDoc(collection(db, 'insumo_movements'), sanitize({
+                    insumoId: ki.id,
+                    insumoName: insumoSnap.data()?.name || 'Material Kit',
+                    orderId: orderId,
+                    orderCode: orderData.code || orderId,
+                    productName: `[Kit] ${item.product_name}`,
+                    quantityDeducted: qtyToRestore,
+                    timestamp: new Date().toISOString(),
+                    type: 'in'
+                  }));
+                } catch (logErr) {}
+              }
+            } else if (ki.type === 'addon') {
+              const addonRef = doc(db, 'addons', ki.id);
+              const addonSnap = await getDoc(addonRef);
+              if (addonSnap.exists()) {
+                const aData = addonSnap.data();
+                if (typeof aData.stock === 'number') {
+                  const newStock = aData.stock + qtyToRestore;
+                  await updateDoc(addonRef, { stock: newStock });
+                }
+              }
+            }
+          } catch (err) {
+            console.warn(`Could not restore stock for kit item ${ki.id}:`, err);
+          }
+        }
+      }
+    }
+  });
+};
+
 export const updateOrder = async (orderId: string, data: Partial<Order>) => {
   const path = `sales/${orderId}`;
   const { id: _, ...dataWithoutId } = data as any;
   try {
     let finalData = { ...dataWithoutId };
     
-    const orderRef = doc(db, 'orders', orderId);
-    let orderData = (data as Order); // Fallback
-    const orderSnap = await getDoc(orderRef);
-    if (orderSnap.exists()) {
-      orderData = { ...orderSnap.data(), ...data } as Order; // Merged
+    if (finalData.status) {
+      finalData.status = normalizeStatus(finalData.status);
+      if (finalData.status === 'fully_paid') {
+        finalData.paymentStatus = 'paid';
+      }
     }
 
-    // Automatic stock deduction when entering produced/completed statuses
-    if (['ready', 'delivered', 'fully_paid', 'production'].includes(data.status || '')) {
+    const orderRef = doc(db, 'orders', orderId);
+    let orderData = (data as Order); // Fallback
+    let orderSnap: any = null;
+    
+    try {
+      orderSnap = await getDoc(orderRef);
       if (orderSnap.exists()) {
-        const dbOrderData = orderSnap.data() as Order;
-        if (!dbOrderData.insumosDeducted) {
-          const items = data.items || dbOrderData.items || [];
-          for (const item of items) {
-            if (item.insumos && item.insumos.length > 0) {
-              for (const req of item.insumos) {
-                try {
-                  const insumoRef = doc(db, 'insumos', req.insumoId);
-                  const insumoSnap = await getDoc(insumoRef);
-                  if (insumoSnap.exists()) {
-                    const currentQty = insumoSnap.data().quantity || 0;
-                    const reduction = req.quantity * item.quantity;
-                    const newQty = Math.max(0, currentQty - reduction);
-                    await updateDoc(insumoRef, { quantity: newQty });
-                    
-                    // Log movement
-                    await addDoc(collection(db, 'insumo_movements'), sanitize({
-                      insumoId: req.insumoId,
-                      insumoName: insumoSnap.data().name || 'Material',
-                      orderId: orderId,
-                      orderCode: dbOrderData.code || orderId,
-                      productName: item.product_name || 'Produto',
-                      quantityDeducted: reduction,
-                      timestamp: new Date().toISOString(),
-                      type: 'out'
-                    }));
-
-                    // Low Stock Check
-                    if (newQty <= 10) { // Default low stock threshold, can make dynamic if needed
-                       try {
-                         sendTelegramNotification('low_stock', `⚠️ ESTOQUE BAIXO\n\nProduto:\n${insumoSnap.data().name || 'Material'}\n\nQuantidade Atual:\n${newQty}`);
-                       } catch(e){}
-                    }
-                  }
-                } catch (err) {
-                  console.warn(`Could not update stock for insumo ${req.insumoId}:`, err);
-                }
-              }
-            }
-          }
-          finalData.insumosDeducted = true;
+        const dbData = orderSnap.data() as any;
+        if (dbData.status) {
+          dbData.status = normalizeStatus(dbData.status);
         }
+        orderData = { ...dbData, ...data } as Order; // Merged
+        if (orderData.status) {
+          orderData.status = normalizeStatus(orderData.status);
+        }
+        if (orderData.status === 'fully_paid') {
+          orderData.paymentStatus = 'paid';
+        }
+      }
+    } catch (err) {
+      console.warn("Could not read order data for merging (expected if public user):", err);
+    }
+
+    // Real-time payment processing (ERP-101)
+    if (typeof finalData.payAmount === 'number' && finalData.payAmount > 0) {
+      const payAmount = finalData.payAmount;
+      const paymentMethod = finalData.paymentMethod || 'Não informado';
+      
+      const items = orderData.items || [];
+      const subtotal = items.reduce((sum: number, item: any) => sum + ((item.retail_price || item.current_price || 0) * (item.quantity || 1)), 0);
+      const discount = orderData.discount || 0;
+      const shipping = orderData.shippingCost || 0;
+      const total = orderData.total || (subtotal + shipping - discount);
+      
+      const dbOrderData = orderSnap?.exists() ? (orderSnap.data() as Order) : null;
+      let currentPaid = 0;
+      if (dbOrderData) {
+        if (typeof dbOrderData.signalValue === 'number') {
+          currentPaid = dbOrderData.signalValue;
+        } else if (dbOrderData.hasSignal) {
+          // Histórico migrado: hasSignal é verdadeiro, mas signalValue não existe
+          currentPaid = subtotal * 0.5;
+        } else if (dbOrderData.paymentStatus === 'paid' || dbOrderData.status === 'fully_paid') {
+          currentPaid = total;
+        }
+      }
+      
+      const newPaidTotal = currentPaid + payAmount;
+      const fullyCleared = newPaidTotal >= total;
+      
+      finalData.hasSignal = true;
+      finalData.signalValue = newPaidTotal;
+      finalData.paymentStatus = fullyCleared ? "paid" : "partial";
+      finalData.paymentMethod = paymentMethod;
+      
+      const oldStatus = dbOrderData ? normalizeStatus(dbOrderData.status) : 'novo pedido';
+      if (fullyCleared) {
+        finalData.status = 'fully_paid';
+      } else {
+        finalData.status = (oldStatus === 'waiting_payment') ? 'waiting_production' : (dbOrderData?.status || 'novo pedido');
+      }
+      
+      try {
+        await addDoc(collection(db, 'finance'), sanitize({
+          type: 'revenue',
+          category: 'Quitação de Parcela',
+          description: `Quitação ${fullyCleared ? "Integral" : "Parcial"} Pedido ${orderData.code || orderId} - ${orderData.customerName || 'Cliente'}`,
+          value: payAmount,
+          date: new Date().toISOString().split('T')[0],
+          status: 'paid',
+          paymentMethod: paymentMethod,
+          companyId: orderData.companyId || '',
+          orderId: orderId,
+          createdAt: serverTimestamp()
+        }));
+        console.log(`✅ Lançamento financeiro registrado automaticamente para o pedido ${orderId}`);
+      } catch (e) {
+        console.warn('Non-blocking finance registration error in updateOrder:', e);
+      }
+      
+      delete finalData.payAmount;
+      
+      // Update orderData as well so subsequent stock/status checks use the updated status/paymentStatus
+      orderData.hasSignal = true;
+      orderData.signalValue = newPaidTotal;
+      orderData.paymentStatus = finalData.paymentStatus;
+      orderData.status = finalData.status;
+    }
+
+    // Centralized stock deduction or restore based on status transition (ERP-098)
+    if (orderSnap?.exists?.()) {
+      const dbOrderData = orderSnap.data() as Order;
+      const oldStatus = normalizeStatus(dbOrderData.status);
+      const newStatus = finalData.status || oldStatus;
+      const wasDeducted = dbOrderData.insumosDeducted === true;
+      const shouldBeDeducted = DEDUCT_STATUSES.includes(newStatus);
+
+      if (shouldBeDeducted && !wasDeducted) {
+        await deductStockForOrder(orderId, orderData);
+        finalData.insumosDeducted = true;
+      } else if (!shouldBeDeducted && wasDeducted) {
+        await restoreStockForOrder(orderId, orderData);
+        finalData.insumosDeducted = false;
+      } else if (shouldBeDeducted && wasDeducted && (finalData.items || data.items)) {
+        const oldItems = dbOrderData.items || [];
+        const newItems = finalData.items || data.items || [];
+        await adjustStockForOrderItems(orderId, dbOrderData.code || orderId, oldItems, newItems);
       }
     }
 
     await updateDoc(doc(db, 'orders', orderId), sanitize(finalData));
+
+    // Finance status synchronization, restoration and shielding (ERP-087, ERP-088, ERP-103)
+    try {
+      const dbOrderData = orderSnap?.exists() ? (orderSnap.data() as Order) : null;
+      const oldStatus = dbOrderData ? normalizeStatus(dbOrderData.status) : 'novo pedido';
+      const newStatus = finalData.status || oldStatus;
+      
+      const isReopened = (oldStatus === 'cancelled' && newStatus !== 'cancelled');
+      const isCanceledNow = (newStatus === 'cancelled');
+      
+      const isPaidNow = (data.paymentStatus === 'paid' || finalData.paymentStatus === 'paid' || ['paid', 'fully_paid'].includes(newStatus));
+      
+      const orderCode = dbOrderData ? dbOrderData.code : null;
+      
+      // Find all finance entries matching orderId or orderCode
+      const financeQuery1 = query(collection(db, 'finance'), where('orderId', '==', orderId));
+      const financeSnap1 = await getDocs(financeQuery1);
+      const docsToUpdate = new Map();
+      for (const fDoc of financeSnap1.docs) {
+        docsToUpdate.set(fDoc.id, fDoc);
+      }
+      if (orderCode && orderCode !== orderId) {
+        const financeQuery2 = query(collection(db, 'finance'), where('orderId', '==', orderCode));
+        const financeSnap2 = await getDocs(financeQuery2);
+        for (const fDoc of financeSnap2.docs) {
+          docsToUpdate.set(fDoc.id, fDoc);
+        }
+      }
+      
+      for (const [fDocId, fDoc] of docsToUpdate.entries()) {
+        const fData = fDoc.data();
+        
+        if (isCanceledNow) {
+          // If canceled, all docs go to cancelled status
+          if (fData.status !== 'cancelled') {
+            await updateDoc(doc(db, 'finance', fDocId), { status: 'cancelled' });
+            console.log(`✅ Sincronização Financeira: Registro ${fDocId} atualizado para status "cancelled" para o pedido ${orderId}`);
+          }
+        } else if (isReopened) {
+          // If reopened from cancelled, restore status
+          let restoredStatus: 'paid' | 'pending' = 'pending';
+          if (fData.category === 'Quitação de Parcela') {
+            restoredStatus = 'paid';
+          } else if (fData.category === 'Venda de Produto') {
+            restoredStatus = isPaidNow ? 'paid' : 'pending';
+          } else {
+            restoredStatus = 'paid';
+          }
+          await updateDoc(doc(db, 'finance', fDocId), { status: restoredStatus });
+          console.log(`✅ Sincronização Financeira: Registro ${fDocId} restaurado para status "${restoredStatus}" ao reabrir o pedido ${orderId}`);
+        } else {
+          // Regular status/payment changes (shielding against manual inconsistencies)
+          if (isPaidNow) {
+            // Update everything to paid
+            if (fData.status !== 'paid') {
+              await updateDoc(doc(db, 'finance', fDocId), { status: 'paid' });
+              console.log(`✅ Sincronização Financeira: Registro ${fDocId} atualizado para status "paid" para o pedido ${orderId}`);
+            }
+          } else {
+            // If the order is unpaid/partially paid, "Venda de Produto" should be pending,
+            // but "Quitação de Parcela" should remain 'paid'.
+            if (fData.category === 'Venda de Produto') {
+              if (fData.status !== 'pending') {
+                await updateDoc(doc(db, 'finance', fDocId), { status: 'pending' });
+                console.log(`✅ Sincronização Financeira: Venda de Produto ${fDocId} atualizada para "pending" (pedido não integralmente pago)`);
+              }
+            } else if (fData.category === 'Quitação de Parcela') {
+              if (fData.status !== 'paid') {
+                await updateDoc(doc(db, 'finance', fDocId), { status: 'paid' });
+                console.log(`✅ Sincronização Financeira: Quitação de Parcela ${fDocId} mantida/atualizada como "paid"`);
+              }
+            }
+          }
+        }
+      }
+    } catch (syncErr) {
+      console.warn("Error during finance status sync/restoration:", syncErr);
+    }
 
     // Audit Log for status change
     if (data.status && orderSnap.exists() && orderSnap.data().status !== data.status) {
@@ -612,7 +1307,7 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
         orderId, 
         (orderData.code || orderId), 
         { 
-          oldData: orderSnap.exists() ? orderSnap.data() : {}, 
+          oldData: orderSnap?.exists?.() ? orderSnap.data() : {}, 
           newData: finalData 
         }, 
         orderData.companyId
@@ -653,16 +1348,18 @@ export const saveSale = async (data: any) => {
     const isKitOrder = data.items && data.items.some((item: any) => item.isKit);
     const code = data.code || (isKitOrder ? await generateUniqueKitCode() : generateOrderCode(data.companyId));
     
+    const normalizedStatus = normalizeStatus(data.status || 'novo pedido');
+
     const saleData = sanitize({
       ...data,
       createdAt: serverTimestamp(),
       dateFormatted: formatDate(today),
       code: code,
-      status: 'novo pedido',
+      status: normalizedStatus,
       source: 'catalogo',
       deliveryDate: deliveryDate,
       estimatedDelivery: deliveryDate,
-      insumosDeducted: true // Already deducted on catalog purchase below
+      insumosDeducted: false
     });
     
     let docRef = doc(db, 'orders', saleData.code);
@@ -698,13 +1395,14 @@ export const saveSale = async (data: any) => {
 
     // Auto-register finance entry (Revenue)
     try {
+      const isPaid = data.paymentStatus === 'paid' || data.status === 'paid' || data.status === 'fully_paid';
       await addDoc(collection(db, 'finance'), sanitize({
         type: 'revenue',
         category: 'Venda de Produto',
         description: `Pedido ${saleData.code} - ${saleData.customerName}`,
         value: saleData.total,
         date: new Date().toISOString().split('T')[0],
-        status: 'paid',
+        status: isPaid ? 'paid' : 'pending',
         companyId: saleData.companyId,
         orderId: docRef.id,
         marketplace: saleData.marketplace || '',
@@ -715,104 +1413,10 @@ export const saveSale = async (data: any) => {
       console.warn('Non-blocking finance registration error:', e);
     }
 
-    // Automatic stock deduction for products, insumos, and kits
-    if (saleData.items) {
-      for (const item of saleData.items) {
-        
-        // 1. If it's a normal product (has productId), deduct its own stock if applicable
-        if (item.productId && !item.isKit) {
-           try {
-             const prodRef = doc(db, 'products', item.productId);
-             const prodSnap = await getDoc(prodRef);
-             if (prodSnap.exists()) {
-                const pData = prodSnap.data();
-                if (typeof pData.stock === 'number') {
-                   const newStock = Math.max(0, pData.stock - (item.quantity || 1));
-                   await updateDoc(prodRef, { stock: newStock });
-                }
-             }
-           } catch(err) {
-             console.warn('Could not update stock for product', item.productId, err);
-           }
-        }
-
-        // 2. Normal Product Insumos
-        if (item.insumos && item.insumos.length > 0) {
-          for (const requiredInsumo of item.insumos) {
-            try {
-              const insumoRef = doc(db, 'insumos', requiredInsumo.insumoId);
-              const insumoSnap = await getDoc(insumoRef);
-              if (insumoSnap.exists()) {
-                const currentQty = insumoSnap.data().quantity || 0;
-                const reduction = requiredInsumo.quantity * item.quantity;
-                await updateDoc(insumoRef, { 
-                    quantity: Math.max(0, currentQty - reduction) 
-                });
-                try {
-                  await addDoc(collection(db, 'insumo_movements'), sanitize({
-                    insumoId: requiredInsumo.insumoId,
-                    insumoName: insumoSnap.data()?.name || 'Material',
-                    orderId: docRef.id,
-                    orderCode: saleData.code || docRef.id,
-                    productName: item.product_name || 'Produto',
-                    quantityDeducted: reduction,
-                    timestamp: new Date().toISOString(),
-                    type: 'out'
-                  }));
-                } catch (logErr) {
-                  console.warn('Logging movement error:', logErr);
-                }
-              }
-            } catch (err) {
-              console.warn(`Could not update stock for insumo ${requiredInsumo.insumoId}:`, err);
-            }
-          }
-        }
-
-        // 3. Kit Items Deduction
-        if (item.isKit && item.kitItems && item.kitItems.length > 0) {
-           for (const ki of item.kitItems) {
-              const qtyToDeduct = ki.quantity * item.quantity;
-              try {
-                if (ki.type === 'product') {
-                   const prodRef = doc(db, 'products', ki.id);
-                   const prodSnap = await getDoc(prodRef);
-                   if (prodSnap.exists()) {
-                      const pData = prodSnap.data();
-                      if (typeof pData.stock === 'number') {
-                         const newStock = Math.max(0, pData.stock - qtyToDeduct);
-                         await updateDoc(prodRef, { stock: newStock });
-                      }
-                   }
-                } else if (ki.type === 'insumo') {
-                   const insumoRef = doc(db, 'insumos', ki.id);
-                   const insumoSnap = await getDoc(insumoRef);
-                   if (insumoSnap.exists()) {
-                      const currentQty = insumoSnap.data().quantity || 0;
-                      await updateDoc(insumoRef, { 
-                          quantity: Math.max(0, currentQty - qtyToDeduct) 
-                      });
-                      try {
-                        await addDoc(collection(db, 'insumo_movements'), sanitize({
-                          insumoId: ki.id,
-                          insumoName: insumoSnap.data()?.name || 'Material Kit',
-                          orderId: docRef.id,
-                          orderCode: saleData.code || docRef.id,
-                          productName: `[Kit] ${item.product_name}`,
-                          quantityDeducted: qtyToDeduct,
-                          timestamp: new Date().toISOString(),
-                          type: 'out'
-                        }));
-                      } catch (logErr) {}
-                   }
-                }
-              } catch(err) {
-                 console.warn(`Could not update stock for kit item ${ki.id}:`, err);
-              }
-           }
-        }
-
-      }
+    // Automatic stock deduction for products, insumos, and kits (ERP-098)
+    const orderDataForDeduction = { ...saleData, id: docRef.id } as Order;
+    if (DEDUCT_STATUSES.includes(normalizedStatus)) {
+      await deductStockForOrder(docRef.id, orderDataForDeduction);
     }
     
     // Telegram Notification
@@ -1101,7 +1705,11 @@ export const getOrderByCode = async (code: string): Promise<Order | null> => {
     try {
       const docSnap = await getDoc(doc(db, 'orders', uppercaseCode));
       if (docSnap.exists()) {
-        return { id: docSnap.id, ...docSnap.data() } as Order;
+        const orderData = docSnap.data() as any;
+        if (orderData.status) {
+          orderData.status = normalizeStatus(orderData.status);
+        }
+        return { id: docSnap.id, ...orderData } as Order;
       }
       return null;
     } catch (e) {

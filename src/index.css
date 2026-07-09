@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Mea+Culpa&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Pinyon+Script&family=Rouge+Script&family=Monsieur+La+Doulaise&family=Bowlby+One+SC&family=Playfair+Display:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mea+Culpa&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Pinyon+Script&family=Monsieur+La+Doulaise&family=Bowlby+One+SC&family=Playfair+Display:wght@700;900&display=swap');
 @import "tailwindcss";
 
 html {
@@ -10,15 +10,14 @@ html {
   --font-poppins: "DM Sans", sans-serif;
   --font-serif: "Playfair Display", serif;
   --font-playfair: "Playfair Display", serif;
-  --font-hello-olivia: "Rouge Script", cursive;
-  --font-cursive: "Rouge Script", cursive;
-  --font-hand: "Rouge Script", cursive;
+  --font-hello-olivia: "Mea Culpa", cursive;
+  --font-cursive: "Mea Culpa", cursive;
+  --font-hand: "Mea Culpa", cursive;
   --font-atelier: "Mea Culpa", cursive;
-  --font-elegant: "Rouge Script", cursive;
-  --font-sofia: "Rouge Script", cursive;
-  --font-imperial: "Rouge Script", cursive;
-  --font-parisienne: "Rouge Script", cursive;
-  --font-allura: "Rouge Script", cursive;
+  --font-elegant: "Mea Culpa", cursive;
+  --font-sofia: "Mea Culpa", cursive;
+  --font-imperial: "Mea Culpa", cursive;
+  --font-allura: "Mea Culpa", cursive;
   --font-mea-culpa: "Mea Culpa", cursive;
   --font-number: "DM Sans", sans-serif;
   --font-tahoma: "DM Sans", sans-serif;
@@ -33,7 +32,7 @@ html {
   --font-gloock: "Gloock", serif;
   --font-monsieur: "Monsieur La Doulaise", cursive;
   --font-bowlby: "Bowlby One SC", sans-serif;
-  --font-rouge: "Rouge Script", cursive;
+  --font-rouge: "Mea Culpa", cursive;
 }
 
 @layer utilities {
@@ -54,7 +53,7 @@ html {
     font-style: normal;
   }
   .rouge-script-regular {
-    font-family: "Rouge Script", cursive;
+    font-family: "Mea Culpa", cursive;
     font-weight: 400;
     font-style: normal;
   }
@@ -85,9 +84,6 @@ html {
     font-family: var(--font-rouge);
   }
   .font-signature {
-    font-family: var(--font-rouge);
-  }
-  .font-parisienne {
     font-family: var(--font-rouge);
   }
   .font-rouge-script {
@@ -863,3 +859,354 @@ html {
 .new-atelier-card:hover .new-isotipo-container {
   @apply blur-[2px] opacity-80;
 }
+
+/* ==========================================================================
+   ERP-114 — Quiet Luxury Light Admin Overrides
+   ========================================================================== */
+
+/* Scoped variables for admin */
+:root:has(.admin-wrapper) {
+  --admin-bg-primary: #FFFFFF;
+  --admin-bg-secondary: #FCFAF7;
+  --admin-sidebar-bg: #FAF8F5;
+  --admin-border: #EAE4DC;
+  --admin-text-primary: #1F1F1F;
+  --admin-text-secondary: #666666;
+  --admin-text-auxiliary: #8A8A8A;
+  --admin-hover-neutral: #F4EFE8;
+}
+
+/* Let's target the admin wrapper and all its contents */
+.admin-wrapper {
+  background-color: #FFFFFF !important;
+  color: #1F1F1F !important;
+}
+
+/* Main background area */
+.admin-wrapper main,
+.admin-wrapper .bg-slate-50,
+.admin-wrapper .bg-gray-50,
+.admin-wrapper .bg-[#F5F5F7],
+.admin-wrapper .bg-[#F9F9F9] {
+  background-color: #FFFFFF !important;
+}
+
+/* Secondary backgrounds */
+.admin-wrapper .bg-slate-100,
+.admin-wrapper .bg-gray-100,
+.admin-wrapper .bg-slate-50\/80,
+.admin-wrapper .bg-slate-50\/40,
+.admin-wrapper .bg-gray-50\/80,
+.admin-wrapper .bg-[#FCFAF7] {
+  background-color: #FCFAF7 !important;
+}
+
+/* Cards & containers with clean breathing room */
+.admin-wrapper .bg-white,
+.admin-wrapper [class*="bg-white"],
+.admin-wrapper .clean-3d-card,
+.admin-wrapper .glass-premium,
+.admin-wrapper .glass-card {
+  background-color: #FFFFFF !important;
+  border-color: #EAE4DC !important;
+  box-shadow: 0 4px 12px 0 rgba(142, 142, 147, 0.03), 0 1px 2px 0 rgba(142, 142, 147, 0.02) !important;
+}
+
+/* Force extremely soft shadows */
+.admin-wrapper [class*="shadow-"] {
+  box-shadow: 0 4px 12px 0 rgba(142, 142, 147, 0.03), 0 1px 2px 0 rgba(142, 142, 147, 0.02) !important;
+}
+
+/* Borders */
+.admin-wrapper *,
+.admin-wrapper [class*="border-"] {
+  border-color: #EAE4DC !important;
+}
+
+/* Primary text */
+.admin-wrapper h1,
+.admin-wrapper h2,
+.admin-wrapper h3,
+.admin-wrapper h4,
+.admin-wrapper h5,
+.admin-wrapper h6,
+.admin-wrapper .text-slate-900,
+.admin-wrapper .text-gray-900,
+.admin-wrapper .text-slate-850,
+.admin-wrapper .text-slate-800,
+.admin-wrapper .text-gray-800,
+.admin-wrapper .text-[#1C1C1E],
+.admin-wrapper .text-[#1F1F1F] {
+  color: #1F1F1F !important;
+}
+
+/* Secondary text */
+.admin-wrapper .text-slate-700,
+.admin-wrapper .text-slate-600,
+.admin-wrapper .text-gray-700,
+.admin-wrapper .text-gray-600 {
+  color: #666666 !important;
+}
+
+/* Auxiliary text */
+.admin-wrapper .text-slate-500,
+.admin-wrapper .text-slate-400,
+.admin-wrapper .text-gray-500,
+.admin-wrapper .text-gray-400,
+.admin-wrapper .text-[#8E8E93],
+.admin-wrapper .text-[#A09898],
+.admin-wrapper .text-[#D1CACA] {
+  color: #8A8A8A !important;
+}
+
+/* Hovers */
+.admin-wrapper .hover\:bg-slate-100:hover,
+.admin-wrapper .hover\:bg-gray-100:hover,
+.admin-wrapper .hover\:bg-[#F0F0F0]:hover,
+.admin-wrapper .hover\:bg-slate-50:hover,
+.admin-wrapper .hover\:bg-gray-50:hover,
+.admin-wrapper .hover\:bg-[#F4EFE8]:hover {
+  background-color: #F4EFE8 !important;
+}
+
+/* Inputs, Selects and Textareas */
+.admin-wrapper input,
+.admin-wrapper textarea,
+.admin-wrapper select,
+[role="dialog"] input,
+[role="dialog"] textarea,
+[role="dialog"] select {
+  background-color: #FFFFFF !important;
+  border: 1px solid #EAE4DC !important;
+  color: #1F1F1F !important;
+  outline: none !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.admin-wrapper input:focus,
+.admin-wrapper textarea:focus,
+.admin-wrapper select:focus,
+[role="dialog"] input:focus,
+[role="dialog"] textarea:focus,
+[role="dialog"] select:focus {
+  border-color: #f97316 !important; /* Laranja de foco padronizado */
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12) !important;
+}
+
+.admin-wrapper input::placeholder,
+.admin-wrapper textarea::placeholder,
+[role="dialog"] input::placeholder,
+[role="dialog"] textarea::placeholder {
+  color: #8A8A8A !important;
+  opacity: 1 !important;
+}
+
+/* Tables design with clean header & spaced rows */
+.admin-wrapper table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.admin-wrapper table thead tr th {
+  background-color: #FCFAF7 !important;
+  color: #666666 !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid #EAE4DC !important;
+  text-transform: uppercase !important;
+  font-size: 10px !important;
+  letter-spacing: 0.05em !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.admin-wrapper table tbody tr td {
+  background-color: #FFFFFF !important;
+  color: #1F1F1F !important;
+  border-bottom: 1px solid #EAE4DC !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.admin-wrapper table tbody tr:hover td {
+  background-color: #FCFAF7 !important;
+}
+
+/* Dialogs/Modals Styling */
+[role="dialog"],
+.modal-content,
+.bg-white:has(h2),
+.bg-white:has(h3) {
+  background-color: #FFFFFF !important;
+  border-color: #EAE4DC !important;
+  box-shadow: 0 10px 40px -10px rgba(142, 142, 147, 0.1) !important;
+}
+
+/* Secondary Buttons - Neutros */
+.admin-wrapper button.bg-slate-100,
+.admin-wrapper button.bg-gray-100,
+.admin-wrapper button.bg-slate-50,
+.admin-wrapper button.bg-gray-50,
+.admin-wrapper button.border-slate-200 {
+  background-color: #FFFFFF !important;
+  border: 1px solid #EAE4DC !important;
+  color: #666666 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.admin-wrapper button.bg-slate-100:hover,
+.admin-wrapper button.bg-gray-100:hover,
+.admin-wrapper button.bg-slate-50:hover,
+.admin-wrapper button.bg-gray-50:hover,
+.admin-wrapper button.border-slate-200:hover {
+  background-color: #F4EFE8 !important;
+  color: #1F1F1F !important;
+  border-color: #D3C9BE !important;
+}
+
+/* ==========================================================================
+   ERP-115 — Microinterações, Transições e Animações Globais
+   ========================================================================== */
+
+/* Buttons Smooth Interactions */
+.admin-wrapper button,
+.admin-wrapper a[role="button"] {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.admin-wrapper button:hover:not(:disabled),
+.admin-wrapper a[role="button"]:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px 0 rgba(142, 142, 147, 0.12) !important;
+}
+
+.admin-wrapper button:active:not(:disabled),
+.admin-wrapper a[role="button"]:active {
+  transform: translateY(0px) scale(0.97) !important;
+}
+
+.admin-wrapper button:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Cards Hover Elevating Visuals */
+.admin-wrapper div[class*="rounded-"].bg-white,
+.admin-wrapper div[class*="rounded-"][class*="bg-white"],
+.admin-wrapper .clean-3d-card,
+.admin-wrapper .glass-premium,
+.admin-wrapper .glass-card {
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.admin-wrapper div[class*="rounded-"].bg-white:hover,
+.admin-wrapper div[class*="rounded-"][class*="bg-white"]:hover,
+.admin-wrapper .clean-3d-card:hover,
+.admin-wrapper .glass-premium:hover,
+.admin-wrapper .glass-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 24px 0 rgba(142, 142, 147, 0.08), 0 2px 6px 0 rgba(142, 142, 147, 0.03) !important;
+  border-color: #D3C9BE !important;
+}
+
+/* Modal Animations: Smooth Fade In & Slide Up */
+@keyframes admin-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes admin-backdrop-in {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+.admin-wrapper [role="dialog"],
+.admin-wrapper .modal-content,
+[role="dialog"] .modal-content {
+  animation: admin-modal-in 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+.admin-wrapper .fixed.inset-0:not(.z-40) {
+  animation: admin-backdrop-in 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+/* Sidebar Menu smooth items & gradual color changes */
+.admin-wrapper aside button {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.admin-wrapper aside button.bg-orange-500 {
+  background-color: #f97316 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px 0 rgba(249, 115, 22, 0.15) !important;
+}
+
+.admin-wrapper aside button.bg-orange-500:hover {
+  background-color: #ea580c !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Standardized, Elegant Spinners and Loaders */
+@keyframes spin-premium {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.admin-wrapper .animate-spin {
+  animation: spin-premium 0.75s linear infinite !important;
+  border-top-color: #f97316 !important;
+}
+
+/* Acessibilidade: Prefers Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .admin-wrapper *,
+  .admin-wrapper button,
+  .admin-wrapper div,
+  .admin-wrapper [role="dialog"],
+  .admin-wrapper .modal-content,
+  .admin-wrapper .fixed.inset-0,
+  .perspective-1000,
+  .preserve-3d,
+  .backface-hidden {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* 3D Card Flip Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+

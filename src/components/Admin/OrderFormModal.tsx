@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Order, Product, CompanyId } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { safeFormat } from "../../lib/dateUtils";
@@ -24,6 +24,7 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
 }) => {
   const orchestrator = useAdminOrchestrator();
   const [loading, setLoading] = useState(false);
+  const isSavingRef = useRef(false);
   const [items, setItems] = useState<any[]>(editingOrder?.items || []);
   const [shipping, setShipping] = useState(editingOrder?.shippingCost || 0);
   const [isDepositPaid, setIsDepositPaid] = useState(
@@ -89,6 +90,8 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
         <form
           onSubmit={async (e) => {
             e.preventDefault();
+            if (loading || isSavingRef.current) return;
+            isSavingRef.current = true;
             setLoading(true);
             try {
               const formData = new FormData(e.currentTarget);
@@ -116,15 +119,16 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
             } catch (err) {
               console.error("Erro ao salvar pedido:", err);
               orchestrator.dispatchEvent({
-      type: 'FEEDBACK',
-      message: "Erro ao salvar pedido.",
-      priority: 'HIGH',
-      customerName: '',
-      productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
-      data: { success: false, title: 'Erro' }
-    });
+                type: 'FEEDBACK',
+                message: "Erro ao salvar pedido.",
+                priority: 'HIGH',
+                customerName: '',
+                productName: '',
+                companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+                data: { success: false, title: 'Erro' }
+              });
             } finally {
+              isSavingRef.current = false;
               setLoading(false);
             }
           }}

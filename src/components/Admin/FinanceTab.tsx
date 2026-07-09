@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   DollarSign,
   TrendingUp,
@@ -65,6 +65,7 @@ interface FinanceTabProps {
 }
 
 export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
+  auditLogs: initialAuditLogs,
   orders,
   products,
   componentes,
@@ -72,6 +73,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
 }) => {
   // Database subscriptions state
   const [financeEntries, setFinanceEntries] = useState<FinanceEntry[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(initialAuditLogs);
   const [loadingEntries, setLoadingEntries] = useState(true);
 
   // Filter States
@@ -112,6 +114,12 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
   const [paymentIsPartial, setPaymentIsPartial] = useState(false);
   const [selectedInstallments, setSelectedInstallments] = useState<number[]>([]);
 
+  useEffect(() => {
+    if (isPaymentModalOpen) {
+      setSelectedInstallments([]);
+    }
+  }, [isPaymentModalOpen]);
+
   // Subscriptions
   useEffect(() => {
     setLoadingEntries(true);
@@ -147,6 +155,25 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     // Sort chronologically desc
     return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [financeEntries, orders]);
+
+  // Local helper function to deduplicate revenues between "Venda de Produto" and "Quitação de Parcela" for the same order (ERP-093)
+  const deduplicateRevenues = useCallback(<T extends { orderId?: string; category?: string }>(transactions: T[]): T[] => {
+    const orderIdsWithInstallments = new Set<string>();
+    transactions.forEach((t) => {
+      if (t.orderId && t.category === "Quitação de Parcela") {
+        orderIdsWithInstallments.add(t.orderId);
+      }
+    });
+
+    return transactions.filter((t) => {
+      if (t.orderId && orderIdsWithInstallments.has(t.orderId)) {
+        if (t.category === "Venda de Produto") {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, []);
 
   // Helper: check if a date is within selected filter range
   const isDateInFilter = (dateStr: string, filterType: string, customStart?: string, customEnd?: string) => {
@@ -221,13 +248,14 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
   // Consolidated Financial Calculations
   const calculations = useMemo(() => {
     // 1. Gross Revenue (Filtered period)
-    const totalGrossRevenue = unifiedTransactions
-      .filter((t) => {
-        if (t.type !== "revenue" || t.status !== "paid") return false;
-        if (dateFilter !== "all" && !isDateInFilter(t.date, dateFilter, customStartDate, customEndDate)) return false;
-        return true;
-      })
-      .reduce((sum, t) => sum + t.value, 0);
+    const activeRevenues = unifiedTransactions.filter((t) => {
+      if (t.type !== "revenue" || t.status !== "paid") return false;
+      if (dateFilter !== "all" && !isDateInFilter(t.date, dateFilter, customStartDate, customEndDate)) return false;
+      return true;
+    });
+
+    const filteredRevenues = deduplicateRevenues(activeRevenues);
+    const totalGrossRevenue = filteredRevenues.reduce((sum, t) => sum + t.value, 0);
 
     // 2. Production Costs from Orders + Manual Expenses
     const totalProductionCosts = filteredOrders.reduce((sum, order) => {
@@ -272,16 +300,18 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     const pendingOrdersAmount = filteredOrders.reduce((sum, order) => {
       const sub = order.items?.reduce((s, i) => s + ((i.retail_price || i.current_price || 0) * (i.quantity || 1)), 0) || 0;
       const tot = order.total || sub;
-      const paid = order.hasSignal ? (order.signalValue || (sub * 0.5)) : (order.paymentStatus === "paid" || order.status === "fully_paid" ? tot : 0);
+      const paid = order.hasSignal 
+        ? (typeof order.signalValue === 'number' ? order.signalValue : (sub * 0.5)) 
+        : (order.paymentStatus === "paid" || order.status === "fully_paid" ? tot : 0);
       return sum + Math.max(0, tot - paid);
     }, 0);
 
     const totalPendingReceipts = pendingManualRevenues + pendingOrdersAmount;
 
     // Accumulated over all history for indicators
-    const historyRevenue = unifiedTransactions
-      .filter((t) => t.type === "revenue" && t.status === "paid")
-      .reduce((sum, t) => sum + t.value, 0);
+    const allPaidRevenues = unifiedTransactions.filter((t) => t.type === "revenue" && t.status === "paid");
+    const deduplicatedHistoryRevenue = deduplicateRevenues(allPaidRevenues);
+    const historyRevenue = deduplicatedHistoryRevenue.reduce((sum, t) => sum + t.value, 0);
 
     const historyExpenses = unifiedTransactions
       .filter((t) => t.type === "expense" && t.status === "paid")
@@ -299,7 +329,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       accumulatedRevenue: historyRevenue,
       accumulatedProfit: historyProfit,
     };
-  }, [unifiedTransactions, filteredOrders, products, componentes, dateFilter, customStartDate, customEndDate]);
+  }, [unifiedTransactions, filteredOrders, products, componentes, dateFilter, customStartDate, customEndDate, deduplicateRevenues]);
 
   // Executive Metrics (Ticket, lucrativos etc.)
   const executiveMetrics = useMemo(() => {
@@ -361,10 +391,10 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
   const monthlyRevenueReached = useMemo(() => {
     const now = new Date();
     const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    return unifiedTransactions
-      .filter((t) => t.type === "revenue" && t.status === "paid" && t.date.startsWith(prefix))
-      .reduce((sum, t) => sum + t.value, 0);
-  }, [unifiedTransactions]);
+    const monthlyRevenues = unifiedTransactions.filter((t) => t.type === "revenue" && t.status === "paid" && t.date.startsWith(prefix));
+    const deduplicatedMonthly = deduplicateRevenues(monthlyRevenues);
+    return deduplicatedMonthly.reduce((sum, t) => sum + t.value, 0);
+  }, [unifiedTransactions, deduplicateRevenues]);
 
   // Save customized monthly goal
   const handleSaveGoal = () => {
@@ -381,9 +411,9 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     const todayStr = new Date().toISOString().split("T")[0];
     const entriesToday = unifiedTransactions.filter((t) => t.date === todayStr && t.status === "paid");
 
-    const totalEntradas = entriesToday
-      .filter((t) => t.type === "revenue")
-      .reduce((sum, t) => sum + t.value, 0);
+    const revenuesToday = entriesToday.filter((t) => t.type === "revenue");
+    const deduplicatedToday = deduplicateRevenues(revenuesToday);
+    const totalEntradas = deduplicatedToday.reduce((sum, t) => sum + t.value, 0);
 
     const totalSaidas = entriesToday
       .filter((t) => t.type === "expense")
@@ -395,7 +425,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       lucro: totalEntradas - totalSaidas,
       saldo: calculations.accumulatedProfit,
     };
-  }, [unifiedTransactions, calculations.accumulatedProfit]);
+  }, [unifiedTransactions, calculations.accumulatedProfit, deduplicateRevenues]);
 
   // Executive Charts Data (Real historical progression)
   const chartData = useMemo(() => {
@@ -410,17 +440,33 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       monthlyMap[label] = { month: label, Receita: 0, Custos: 0, Lucro: 0, Pedidos: 0 };
     }
 
+    // Deduplicate all paid revenues before charting
+    const allPaidRevenues = unifiedTransactions.filter((t) => t.type === "revenue" && t.status === "paid");
+    const deduplicatedRevenues = deduplicateRevenues(allPaidRevenues);
+
+    // Process deduplicated revenues
+    deduplicatedRevenues.forEach((t) => {
+      const d = new Date(t.date + "T12:00:00");
+      const label = `${monthLabels[d.getMonth()]} ${d.getFullYear().toString().substring(2)}`;
+      
+      if (monthlyMap[label]) {
+        monthlyMap[label].Receita += t.value;
+        if (t.orderId) {
+          monthlyMap[label].Pedidos += 1;
+        }
+      }
+    });
+
+    // Process expenses and other (non-revenue) transactions that have orderId
     unifiedTransactions.forEach((t) => {
       const d = new Date(t.date + "T12:00:00");
       const label = `${monthLabels[d.getMonth()]} ${d.getFullYear().toString().substring(2)}`;
       
       if (monthlyMap[label]) {
-        if (t.type === "revenue" && t.status === "paid") {
-          monthlyMap[label].Receita += t.value;
-        } else if (t.type === "expense" && t.status === "paid") {
+        if (t.type === "expense" && t.status === "paid") {
           monthlyMap[label].Custos += t.value;
         }
-        if (t.orderId) {
+        if (t.type !== "revenue" && t.orderId) {
           monthlyMap[label].Pedidos += 1;
         }
       }
@@ -447,7 +493,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       ...m,
       Lucro: m.Receita - m.Custos,
     }));
-  }, [unifiedTransactions, orders, products, componentes]);
+  }, [unifiedTransactions, orders, products, componentes, deduplicateRevenues]);
 
   // Alerts Generator
   const alerts = useMemo(() => {
@@ -537,23 +583,39 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     const totalToPay = parseFloat(paymentValue.replace(",", "."));
     if (isNaN(totalToPay)) return;
 
+    if (paymentTargetOrder.paymentMode === "planned" && paymentTargetOrder.remainingInstallments) {
+      const instVal = paymentTargetOrder.remainingInstallmentValue || 0;
+      if (selectedInstallments.length === 0) return;
+      if (totalToPay < (selectedInstallments.length * instVal)) return;
+    }
+
     const sub = paymentTargetOrder.items?.reduce((s, i) => s + ((i.retail_price || i.current_price || 0) * (i.quantity || 1)), 0) || 0;
     const orderTotal = paymentTargetOrder.total || sub;
 
     // Calculate updated amounts
     const currentPaid = paymentTargetOrder.hasSignal 
-      ? (paymentTargetOrder.signalValue || (orderTotal * 0.5)) 
+      ? (typeof paymentTargetOrder.signalValue === 'number' ? paymentTargetOrder.signalValue : (orderTotal * 0.5)) 
       : (paymentTargetOrder.paymentStatus === "paid" || paymentTargetOrder.status === "fully_paid" ? orderTotal : 0);
     
     const newPaidTotal = currentPaid + totalToPay;
     const fullyCleared = newPaidTotal >= orderTotal;
 
-    await updateOrder(paymentTargetOrder.id, {
+    const isInstallmentPayment = paymentTargetOrder.paymentMode === "planned" && paymentTargetOrder.remainingInstallments;
+    const newRemainingInstallments = isInstallmentPayment
+      ? Math.max(0, paymentTargetOrder.remainingInstallments - selectedInstallments.length)
+      : undefined;
+
+    const updateData: any = {
       paymentStatus: fullyCleared ? "paid" : "partial",
       status: fullyCleared ? "fully_paid" : paymentTargetOrder.status,
       hasSignal: true,
       signalValue: newPaidTotal,
-    });
+    };
+    if (newRemainingInstallments !== undefined) {
+      updateData.remainingInstallments = newRemainingInstallments;
+    }
+
+    await updateOrder(paymentTargetOrder.id, updateData);
 
     // Automatically log revenue entry
     await createFinanceEntry({
@@ -569,6 +631,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     });
 
     setIsPaymentModalOpen(false);
+    setSelectedInstallments([]);
     setSelectedItem(null);
   };
 
@@ -1433,7 +1496,12 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                               <button
                                 onClick={() => {
                                   setPaymentTargetOrder(order);
-                                  setPaymentValue(formatCurrency(order.total - (order.signalValue || 0)).replace("R$", "").trim());
+                                  const sub = order.items?.reduce((s, i) => s + ((i.retail_price || i.current_price || 0) * (i.quantity || 1)), 0) || 0;
+                                  const orderTotal = order.total || sub;
+                                  const currentPaid = order.hasSignal 
+                                    ? (typeof order.signalValue === 'number' ? order.signalValue : (orderTotal * 0.5)) 
+                                    : (order.paymentStatus === "paid" || order.status === "fully_paid" ? orderTotal : 0);
+                                  setPaymentValue(formatCurrency(orderTotal - currentPaid).replace("R$", "").trim());
                                   setIsPaymentModalOpen(true);
                                 }}
                                 className="w-full mt-2 py-2 bg-slate-900 text-white font-extrabold rounded-xl text-[10px] hover:bg-black uppercase tracking-wider cursor-pointer border-b-2 border-slate-950 shadow-md"
@@ -1788,7 +1856,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                         const sub = paymentTargetOrder.items?.reduce((s, i) => s + ((i.retail_price || i.current_price || 0) * (i.quantity || 1)), 0) || 0;
                         const orderTotal = paymentTargetOrder.total || sub;
                         const currentPaid = paymentTargetOrder.hasSignal 
-                          ? (paymentTargetOrder.signalValue || (orderTotal * 0.5)) 
+                          ? (typeof paymentTargetOrder.signalValue === 'number' ? paymentTargetOrder.signalValue : (orderTotal * 0.5)) 
                           : (paymentTargetOrder.paymentStatus === "paid" || paymentTargetOrder.status === "fully_paid" ? orderTotal : 0);
                         const rem = Math.max(0, orderTotal - currentPaid);
                         setPaymentValue(rem.toString());
@@ -1867,7 +1935,19 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
               </button>
               <button
                 onClick={handleClearInstallments}
-                className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold text-xs shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer border-b-[2px] border-b-slate-955"
+                disabled={
+                  (() => {
+                    const valNum = parseFloat(paymentValue.replace(",", "."));
+                    if (isNaN(valNum) || valNum <= 0) return true;
+                    if (paymentTargetOrder.paymentMode === "planned" && paymentTargetOrder.remainingInstallments) {
+                      const instVal = paymentTargetOrder.remainingInstallmentValue || 0;
+                      if (selectedInstallments.length === 0) return true;
+                      if (valNum < (selectedInstallments.length * instVal)) return true;
+                    }
+                    return false;
+                  })()
+                }
+                className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold text-xs shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer border-b-[2px] border-b-slate-955 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Confirmar Liquidação
               </button>

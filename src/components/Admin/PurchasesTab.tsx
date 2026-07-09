@@ -27,6 +27,7 @@ import {
   Componente, 
   PurchaseOrder, 
   Supplier, 
+  Product, 
   Order,
   ComponenteMovement
 } from "../../types";
@@ -61,6 +62,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
   const orchestrator = useAdminOrchestrator();
   const [activeTab, setActiveTab] = useState<'items' | 'suggestions' | 'manual' | 'history' | 'suppliers'>('items');
   const [insumos, setInsumos] = useState<Componente[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,6 +82,11 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
       setInsumos(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Componente)));
     });
 
+    const qProducts = query(collection(db, "products"), where("company", "==", companyId));
+    const unsubProducts = onSnapshot(qProducts, (snap) => {
+      setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+    });
+
     const qPurchases = query(collection(db, "purchase_orders"), where("companyId", "==", companyId));
     const unsubPurchases = onSnapshot(qPurchases, (snap) => {
       setPurchaseOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PurchaseOrder)));
@@ -93,6 +100,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
     setLoading(false);
     return () => {
       unsubInsumos();
+      unsubProducts();
       unsubPurchases();
       unsubSuppliers();
     };
@@ -259,6 +267,8 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
       <div className="space-y-4">
         {activeTab === 'items' && (
           <ComponentsTab
+            companyId={companyId}
+            products={products}
             componentes={insumos}
             onSaveComponente={async (data) => {
               try {
@@ -582,6 +592,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
 
       {isInsumoModalOpen && (
         <InsumoFormModal
+          companyId={companyId}
           editing={null}
           onClose={() => setIsInsumoModalOpen(false)}
           onSave={async (data) => {
@@ -610,7 +621,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId: companyId,
       data: { success: false, title: 'Erro' }
     });
             }

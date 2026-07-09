@@ -133,7 +133,7 @@ export function VitrinePage() {
                   className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center group cursor-pointer hover:shadow-md transition-all"
                 >
                   <div className="aspect-square rounded-xl overflow-hidden mb-3 bg-gray-50">
-                    <img src={p.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    <img src={p.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform" referrerPolicy="no-referrer" />
                   </div>
                   <div className="text-[11px] font-bold uppercase tracking-wider text-gray-900 truncate px-1">{p.product_name}</div>
                 </div>

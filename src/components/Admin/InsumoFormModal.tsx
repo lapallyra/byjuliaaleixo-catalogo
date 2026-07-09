@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, DollarSign, Package, Percent, ChevronRight, ChevronLeft, MapPin, Tag, Box, Info } from "lucide-react";
-import { Componente } from "../../types";
+import { Componente, CompanyId } from "../../types";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface InsumoFormModalProps {
+  companyId: CompanyId;
   editing: Partial<Componente> | null;
   onClose: () => void;
   onSave: (data: Partial<Componente>) => Promise<void>;
 }
 
 export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
+  companyId,
   editing,
   onClose,
   onSave,
@@ -71,8 +73,8 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
-      data: { success: true, title: 'Sucesso' }
+      companyId: companyId,
+      data: { success: false, title: 'Erro' }
     });
         return;
       }
@@ -97,8 +99,8 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
-      data: { success: true, title: 'Sucesso' }
+      companyId: companyId,
+      data: { success: false, title: 'Erro' }
     });
       return;
     }

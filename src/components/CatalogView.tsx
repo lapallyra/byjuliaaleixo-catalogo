@@ -31,9 +31,11 @@ import {
   MessageSquare,
   Wand2,
   Loader2,
-  Check
+  Check,
+  Megaphone,
+  Clock
 } from 'lucide-react';
-import { CompanyId, AppConfig, Product, CartItem, SiteSettings } from '../types';
+import { CompanyId, AppConfig, Product, CartItem, SiteSettings, Campaign } from '../types';
 import { CartSidebar } from './CartSidebar';
 import { CheckoutModal } from './CheckoutModal';
 import { GiftListSidebar } from './GiftListSidebar';
@@ -41,7 +43,8 @@ import { SuggestionBox } from './SuggestionBox';
 import { ProductDetailPage } from './ProductDetailPage';
 import { ColecoesView } from './ColecoesView';
 import { CategoryPillMenu } from './Catalog/CategoryPillMenu';
-import { FestiveBanner } from './Catalog/FestiveBanner';
+import { FestiveBanner, BubbleHearts } from './Catalog/FestiveBanner';
+import { SeasonalBanner } from './Catalog/SeasonalBanner';
 import { ProductCard } from './ui/ProductCard';
 
 
@@ -51,7 +54,7 @@ import { CatalogInfoBar } from './Catalog/CatalogInfoBar';
 import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
 import { PriceDisplay } from './ui/PriceDisplay';
-import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGlobalSettings, getGiftList, updateOrderStatus } from '../services/firebaseService';
+import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGlobalSettings, getGiftList, updateOrderStatus, subscribeToCampaigns } from '../services/firebaseService';
 import { validateProductStock } from '../utils/stockValidation';
 import { playSuccessSound } from '../utils/audio';
 import { functions } from '../lib/firebase';
@@ -104,12 +107,46 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const location = useLocation();
   const theme = useMemo(() => getTheme(companyId), [companyId]);
 
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+
+  useEffect(() => {
+    const unsubCampaigns = subscribeToCampaigns((data) => {
+      setCampaigns(data);
+    }, companyId);
+    return () => unsubCampaigns();
+  }, [companyId]);
+
+  const activeCampaigns = useMemo(() => {
+    const now = new Date();
+    return campaigns.filter(c => {
+      if (!c.active) return false;
+      
+      // Check target pages
+      if (c.targetPages && !c.targetPages.includes('catalog')) return false;
+
+      // Check dates
+      if (c.startDate) {
+        const start = new Date(c.startDate);
+        if (start > now) return false;
+      }
+      if (c.endDate) {
+        const end = new Date(c.endDate);
+        end.setHours(23, 59, 59, 999);
+        if (end < now) return false;
+      }
+
+      return true;
+    });
+  }, [campaigns]);
+
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [globalSettings, setGlobalSettings] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'latest' | 'price_asc' | 'price_desc' | 'alphabetical' | 'bestselling'>('latest');
   const [view, setView] = useState<'catalog' | 'collections'>('catalog');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<{ label: string, type: 'product' | 'category' }[]>([]);
   const [isFiltering, setIsFiltering] = useState(false);
 
   const companyProducts = useMemo(() => {
@@ -123,6 +160,25 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       setSearchQuery(searchParam);
     }
   }, [location.search]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const query = searchQuery.toLowerCase();
+    const productMatches = companyProducts
+      .filter(p => p.product_name.toLowerCase().includes(query))
+      .slice(0, 3)
+      .map(p => ({ label: p.product_name, type: 'product' as const }));
+
+    const categoryMatches = Array.from(new Set(companyProducts.map(p => p.category)))
+      .filter(cat => cat.toLowerCase().includes(query))
+      .slice(0, 3)
+      .map(cat => ({ label: cat, type: 'category' as const }));
+
+    setSuggestions([...productMatches, ...categoryMatches]);
+  }, [searchQuery, companyProducts]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
@@ -134,20 +190,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const newProducts = companyProducts.filter(p => {
-      const createdAtDate = p.createdAt?.toMillis 
-        ? new Date(p.createdAt.toMillis()) 
-        : p.createdAt instanceof Date 
-          ? p.createdAt 
-          : new Date();
+      if (!p.createdAt) return false;
+      let createdAtDate: Date;
+      if (typeof (p.createdAt as any)?.toMillis === 'function') {
+        createdAtDate = new Date((p.createdAt as any).toMillis());
+      } else if (p.createdAt instanceof Date) {
+        createdAtDate = p.createdAt;
+      } else {
+        const parsed = new Date(p.createdAt as any);
+        createdAtDate = isNaN(parsed.getTime()) ? new Date(0) : parsed;
+      }
       return createdAtDate >= sevenDaysAgo;
     });
 
-    // If no recent items, show some random ones as fallback but labeled as catalog
-    if (newProducts.length === 0) {
-      return companyProducts.slice(0, 5);
-    }
-    
-    return newProducts.slice(0, 6);
+    return newProducts.slice(0, 10);
   }, [companyProducts]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -203,7 +259,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
          const p = companyProducts.find(cp => cp.id === item.id) || item;
          const validation = await validateProductStock(p, item.quantity);
          if (!validation.valid) {
-            alert(`Item indisponível: ${validation.reason}`);
+            setToast({ message: `Item indisponível: ${validation.reason}`, type: 'success' });
             setIsDirectCheckoutLoading(false);
             return;
          }
@@ -313,7 +369,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         }));
 
         window.dispatchEvent(new CustomEvent('clear-cart'));
-        window.location.href = `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`;
+        navigate(`${location.pathname}?payment_status=approved&order_id=${savedOrderCode}`);
         return;
       }
       
@@ -405,7 +461,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       }
     } catch (e: any) {
       console.error("Checkout Error:", e);
-      alert(`Falha ao ir para o pagamento: ${e.message || "Erro desconhecido"}`);
+      setToast({ message: `Falha ao ir para o pagamento: ${e.message || "Erro desconhecido"}`, type: 'success' });
       setIsDirectCheckoutLoading(false);
     }
   };
@@ -414,6 +470,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [adminClickCount, setAdminClickCount] = useState(0);
   const [isAdminLoggingIn, setIsAdminLoggingIn] = useState(false);
   const highlightsScrollRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const startScrolling = (direction: 'left' | 'right') => {
@@ -457,9 +514,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       if (list) {
         setIsSearchingList(false);
         setListSearchCode('');
-        window.location.href = `/listadepresentes/${list.code}`;
+        navigate(`/listadepresentes/${list.code}`);
       } else {
-        alert("Lista não encontrada. Verifique o código.");
+        setToast({ message: "Lista não encontrada. Verifique o código.", type: 'success' });
       }
     } catch (err) {
       console.error(err);
@@ -523,7 +580,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       }
     } else {
       navigator.clipboard.writeText(url);
-      alert('Link copiado para a área de transferência!');
+      setToast({ message: 'Link copiado para a área de transferência!', type: 'success' });
     }
   };
 
@@ -596,11 +653,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       for (const p of productsToSeed) {
         await addProduct(p);
       }
-      alert('Produtos sincronizados com sucesso!');
+      setToast({ message: 'Produtos sincronizados com sucesso!', type: 'success' });
     } catch (e: any) {
       if (e?.name === 'AbortError') return;
       console.error(e);
-      alert('Erro ao sincronizar produtos.');
+      setToast({ message: 'Erro ao sincronizar produtos.', type: 'success' });
     } finally {
       setIsSeeding(false);
     }
@@ -643,7 +700,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       const matchesCategory = !selectedCategory || p.category === selectedCategory;
       const matchesSearch = !searchQuery || 
         p.product_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        p.description.toLowerCase().includes(searchQuery.toLowerCase());
+        p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.subcategory.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.tags && p.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())));
       
       return matchesCategory && matchesSearch;
     });
@@ -718,12 +778,18 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }}
         onFilterClick={() => {
-          // Rola para a barra de filtros
-          const infoBar = document.querySelector('.catalog-info-bar');
-          if (infoBar) infoBar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Rola para a barra de filtros ou foca a busca
+          if (searchInputRef.current) {
+            searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => searchInputRef.current?.focus(), 500);
+          } else {
+            const infoBar = document.querySelector('.catalog-info-bar');
+            if (infoBar) infoBar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
         }}
         logoUrl={isotipo}
         companyId={companyId}
+        searchQuery={searchQuery}
       />
       
       <div className="flex-1 flex overflow-hidden">
@@ -758,13 +824,174 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             {/* Content Area */}
             <div className="flex-1 flex flex-col min-h-0 bg-[#FAF9F6] overflow-y-auto scrollbar-none">
               
-              <FestiveBanner companyId={companyId} />
+
+
+              {/* Active Campaigns Banner Section */}
+
+              {/* Active Campaigns Banner Section - Moved to Home */}
               
+              {/* Elegant Persistent Search Bar Container */}
+              <div className="max-w-xl mx-auto w-full px-4 mt-6 mb-6">
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-[#cca062] transition-colors">
+                    <Search size={18} className="transition-transform duration-300 group-focus-within:scale-110" />
+                  </div>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="O que você deseja buscar no ateliê?"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      handleSearch(e.target.value);
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    className="w-full pl-12 pr-12 py-3.5 bg-white/70 backdrop-blur-sm border border-[#e8dcc8]/40 hover:border-[#e8dcc8]/80 focus:border-[#cca062] rounded-full text-sm font-sans placeholder-neutral-400 text-[#3A312D] outline-none transition-all shadow-sm focus:shadow-md focus:bg-white"
+                  />
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#e8dcc8]/40 rounded-2xl shadow-lg z-50 overflow-hidden">
+                      {suggestions.map((s, idx) => (
+                        <button
+                          key={idx}
+                          className="w-full text-left px-6 py-3 text-sm hover:bg-[#F5F5F7] transition-colors flex items-center gap-2"
+                          onClick={() => {
+                            handleSearch(s.label);
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          <span className="text-[#8E8E93] text-xs uppercase tracking-wider">{s.type === 'category' ? 'Categoria' : 'Produto'}</span>
+                          <span className="font-medium text-[#1C1C1E]">{s.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {searchQuery && (
+                    <button
+                      onClick={() => handleSearch('')}
+                      className="absolute inset-y-0 right-4 flex items-center p-1 hover:bg-neutral-100 rounded-full text-neutral-400 hover:text-neutral-600 transition-colors cursor-pointer"
+                      title="Limpar busca"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <CategoryPillMenu 
                 categories={categories}
                 selectedCategory={selectedCategory}
                 onSelectCategory={handleCategoryClick}
               />
+
+              {!selectedCategory && !searchQuery && highlights.length > 0 && (
+                <div ref={highlightsScrollRef} className="border-b border-[#e8dcc8]/10 pb-4">
+                  <div className="max-w-[1600px] mx-auto px-4 pt-6 pb-2 text-left">
+                    <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
+                      Lançamentos
+                    </span>
+                    <h2 className="text-xl md:text-2xl font-serif text-[#3A312D] tracking-tight leading-tight mt-1">
+                      Novidades
+                    </h2>
+                  </div>
+                  <FeaturedProductsCarousel 
+                    products={highlights}
+                    theme={theme}
+                    companyId={companyId}
+                    onSelectProduct={(product) => setSelectedProduct(product)}
+                    onAddToCart={(prod, qty) => onAddToCart(prod, qty)}
+                    onAddToGiftList={(prod) => onAddToGiftList?.(prod)}
+                    onAddToFavorite={(prod) => onAddToFavorite?.(prod)}
+                  />
+                </div>
+              )}
+
+              {/* Campaign Carousels & Product Highlights */}
+              {!selectedCategory && !searchQuery && activeCampaigns.map((camp) => {
+                if (camp.type === 'carousel') {
+                  const campaignProducts = companyProducts.filter(p => camp.items?.includes(p.id));
+                  if (campaignProducts.length === 0) return null;
+                  return (
+                    <div key={camp.id} className="border-b border-[#e8dcc8]/10 pb-4 mt-4">
+                      <div className="max-w-[1600px] mx-auto px-4 pt-6 pb-2 text-left">
+                        <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
+                          {camp.subtitle || "Seleção Exclusiva"}
+                        </span>
+                        <h2 className="text-xl md:text-2xl font-serif text-[#3A312D] tracking-tight leading-tight mt-1">
+                          {camp.title}
+                        </h2>
+                        {camp.description && (
+                          <p className="text-xs text-neutral-500 font-sans tracking-wide max-w-lg mt-1">
+                            {camp.description}
+                          </p>
+                        )}
+                      </div>
+                      <FeaturedProductsCarousel 
+                        products={campaignProducts}
+                        theme={theme}
+                        companyId={companyId}
+                        onSelectProduct={(product) => setSelectedProduct(product)}
+                        onAddToCart={(prod, qty) => onAddToCart(prod, qty)}
+                        onAddToGiftList={(prod) => onAddToGiftList?.(prod)}
+                        onAddToFavorite={(prod) => onAddToFavorite?.(prod)}
+                      />
+                    </div>
+                  );
+                }
+
+                if (camp.type === 'product_highlight' && camp.highlightProductId) {
+                  const highlightProd = companyProducts.find(p => p.id === camp.highlightProductId);
+                  if (!highlightProd) return null;
+                  return (
+                    <div key={camp.id} className="max-w-[1600px] mx-auto px-4 py-8 border-b border-[#e8dcc8]/10">
+                      <div className="bg-white rounded-3xl p-6 md:p-12 border border-[#e8dcc8]/35 shadow-xs flex flex-col md:flex-row items-center gap-8 md:gap-16">
+                        <div className="w-full md:w-1/2 aspect-square rounded-2xl overflow-hidden bg-neutral-50 border border-neutral-100">
+                          <img src={highlightProd.image} className="w-full h-full object-cover hover:scale-103 transition-transform duration-500" referrerPolicy="no-referrer" />
+                        </div>
+                        <div className="w-full md:w-1/2 text-left space-y-4 md:space-y-6">
+                          <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
+                            {camp.subtitle || "Destaque do Ateliê"}
+                          </span>
+                          <h2 className="text-2xl md:text-3xl font-serif text-[#3A312D] tracking-tight leading-tight">
+                            {highlightProd.product_name}
+                          </h2>
+                          {highlightProd.description && (
+                            <p className="text-xs md:text-sm text-neutral-500 font-sans tracking-wide leading-relaxed max-w-md">
+                              {highlightProd.description}
+                            </p>
+                          )}
+                          <div className="space-y-1">
+                            {highlightProd.original_price && highlightProd.original_price > highlightProd.current_price && (
+                              <span className="text-[10px] font-sans font-black tracking-[0.1em] uppercase text-[#8E8E93] line-through">
+                                R$ {highlightProd.original_price.toFixed(2)}
+                              </span>
+                            )}
+                            <div className="text-2xl font-light text-[#3A312D]">
+                              R$ {highlightProd.current_price.toFixed(2)}
+                            </div>
+                          </div>
+                          <div className="flex gap-4 pt-2">
+                            <button 
+                              onClick={() => setSelectedProduct(highlightProd)}
+                              className="px-6 py-3 bg-[#3A312D] text-white rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-[#52443e] transition-all shadow-sm cursor-pointer"
+                            >
+                              Ver Detalhes
+                            </button>
+                            <button 
+                              onClick={() => onAddToCart(highlightProd, 1)}
+                              className="px-6 py-3 bg-white border border-[#e8dcc8]/60 text-neutral-700 rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-neutral-50 transition-all shadow-sm cursor-pointer"
+                            >
+                              Adicionar à Sacola
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return null;
+              })}
               
               {/* Main Scroll Content */}
               <main className="p-2 md:p-4 relative">
@@ -777,6 +1004,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     onSortChange={(val) => setSortBy(val as any)}
                     hasActiveFilters={!!hasActiveFilters}
                     onClearFilters={clearFilters}
+                    searchQuery={searchQuery}
+                    totalResults={filteredProducts.length}
+                    onClearSearch={() => handleSearch('')}
                   />
 
               {/* Loading Overlay between Filters */}
@@ -845,20 +1075,55 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       )}
                       </>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-40 px-6 text-center">
-                        <div className="w-20 h-20 bg-neutral-100 rounded-full flex items-center justify-center mb-6 text-neutral-300">
-                          <Search size={32} strokeWidth={1.5} />
+                      <div className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-3xl mx-auto">
+                        <div className="w-16 h-16 bg-[#FDFCF0] border border-[#e8dcc8]/40 rounded-full flex items-center justify-center mb-6 text-[#cca062] shadow-sm animate-pulse">
+                          <Search size={28} strokeWidth={1.5} />
                         </div>
-                        <h3 className="text-xl font-serif text-neutral-900 mb-2 italic">Nenhum tesouro encontrado</h3>
-                        <p className="text-sm text-neutral-500 font-sans tracking-wide max-w-xs mb-8">
-                          Não encontramos produtos para sua pesquisa com os filtros atuais.
+                        <h3 className="text-2xl font-serif text-[#3A312D] mb-2 italic">Nenhum tesouro encontrado</h3>
+                        <p className="text-xs text-neutral-500 font-sans tracking-wide max-w-md mb-8 leading-relaxed">
+                          Não encontramos produtos para "<span className="font-semibold text-neutral-800">{searchQuery}</span>" {selectedCategory ? `na categoria ${selectedCategory}` : ''}. Que tal ajustar sua busca ou explorar as coleções do nosso ateliê?
                         </p>
-                        <button 
-                          onClick={clearFilters}
-                          className="px-8 py-3 bg-neutral-900 text-white rounded-full text-xs font-sans font-bold uppercase tracking-widest hover:bg-neutral-800 transition-all shadow-lg"
-                        >
-                          Limpar todos os filtros
-                        </button>
+
+                        <div className="flex flex-wrap justify-center gap-3 mb-10">
+                          <button 
+                            onClick={() => handleSearch('')}
+                            className="px-5 py-2.5 bg-[#3A312D] text-white rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-[#52443e] transition-all shadow-sm cursor-pointer"
+                          >
+                            Limpar Busca
+                          </button>
+                          <button 
+                            onClick={clearFilters}
+                            className="px-5 py-2.5 bg-white border border-[#e8dcc8]/60 text-neutral-700 rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-neutral-50 transition-all shadow-sm cursor-pointer"
+                          >
+                            Ver Todo o Catálogo
+                          </button>
+                        </div>
+
+                        {/* Smart Category Discovery */}
+                        <div className="w-full bg-[#FDFCF0]/40 backdrop-blur-sm border border-[#e8dcc8]/20 rounded-2xl p-6 text-left">
+                          <h4 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#cca062] mb-4 font-poppins text-center">Explorar Outras Coleções</h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {categories.map((cat) => {
+                              return (
+                                <button
+                                  key={cat}
+                                  onClick={() => {
+                                    handleCategoryClick(cat);
+                                    handleSearch('');
+                                  }}
+                                  className="flex items-center gap-3 p-3 bg-white hover:bg-white/95 border border-neutral-100 hover:border-[#cca062]/40 rounded-xl transition-all shadow-sm hover:shadow-md text-left group cursor-pointer"
+                                >
+                                  <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[#3A312D]/5 group-hover:bg-[#3A312D] text-[#3A312D] group-hover:text-[#cca062] transition-all shrink-0">
+                                    {getCategoryIcon(cat)}
+                                  </div>
+                                  <span className="text-[11px] font-bold text-neutral-700 group-hover:text-neutral-900 transition-colors uppercase tracking-wider truncate">
+                                    {cat}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </motion.div>
@@ -934,7 +1199,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             />
             {/* Modal Body */}
             <div className="bg-white rounded-[24px] w-full max-w-sm border border-[#e8dcc8]/50 p-6 shadow-xl relative z-10 animate-fade-in text-center font-sans">
-              <h3 className="text-xl font-parisienne text-[#3A312D] mb-1 font-normal">Buscar Lista</h3>
+              <h3 className="text-xl font-mea-culpa text-[#3A312D] mb-1 font-normal">Buscar Lista</h3>
               <p className="text-[10.5px] text-[#6d5443]/70 font-light mb-4">Insira o código de 5 dígitos para encontrar a lista de presentes</p>
               
               <input 

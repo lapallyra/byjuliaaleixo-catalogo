@@ -4,9 +4,10 @@ import { Check } from 'lucide-react';
 
 interface SuccessOverlayProps {
   onContinue: () => void;
+  orderCode?: string;
 }
 
-export const SuccessOverlay: React.FC<SuccessOverlayProps> = ({ onContinue }) => {
+export const SuccessOverlay: React.FC<SuccessOverlayProps> = ({ onContinue, orderCode }) => {
   return (
     <div className="fixed inset-0 bg-[#FAF9F6]/95 backdrop-blur-sm flex items-center justify-center z-[9999] overflow-hidden">
       <div className="relative flex flex-col items-center justify-center text-center px-6 max-w-md w-full">
@@ -28,7 +29,13 @@ export const SuccessOverlay: React.FC<SuccessOverlayProps> = ({ onContinue }) =>
         >
           <div className="space-y-2">
             <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Pedido recebido com sucesso</h2>
-            <p className="text-sm text-neutral-600 leading-relaxed max-w-[340px] mx-auto">
+            {orderCode && (
+              <div className="mt-2 inline-block px-4 py-1.5 bg-neutral-100 rounded-full">
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500 mr-2">Código:</span>
+                <span className="text-xs font-bold text-neutral-900 font-mono tracking-wider">{orderCode}</span>
+              </div>
+            )}
+            <p className="text-sm text-neutral-600 leading-relaxed max-w-[340px] mx-auto pt-2">
               Recebemos seu pedido e ele já está em nosso sistema. Nossa equipe realizará a conferência das informações enviadas e entrará em contato pelo canal informado para seguir com os próximos passos.
             </p>
           </div>

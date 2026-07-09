@@ -7,7 +7,7 @@ import { startOfDay } from 'date-fns';
 
 import { themes, getTheme } from '../../lib/theme';
 
-const BubbleHearts = () => {
+export const BubbleHearts = () => {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-30">
       {[...Array(15)].map((_, i) => (

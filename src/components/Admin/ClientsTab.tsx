@@ -48,6 +48,33 @@ import { exportGenericReportPDF } from "../../utils/pdfGenerator";
 import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
 import { HorizontalScroll } from "../shared/HorizontalScroll";
 import { motion, AnimatePresence } from "motion/react";
+
+const translateStatus = (status: string): string => {
+  const s = (status || "").toLowerCase();
+  const map: Record<string, string> = {
+    "novo pedido": "Novo Pedido",
+    "quote": "Orçamento",
+    "orçamento": "Orçamento",
+    "waiting_payment": "Aguardando Pagamento",
+    "waiting_deposit": "Aguardando Sinal",
+    "aguardando sinal": "Aguardando Sinal",
+    "approval": "Aprovação de Arte",
+    "aguardando aprovação cliente": "Aprovação de Arte",
+    "production": "Em Produção",
+    "em produção": "Em Produção",
+    "assembly": "Montagem",
+    "montagem": "Montagem",
+    "ready": "Pronto para Retirada",
+    "pronto para entregar": "Pronto para Retirada",
+    "delivery": "Enviado",
+    "enviado": "Enviado",
+    "delivered": "Entregue",
+    "fully_paid": "Pago",
+    "concluído (pagamento completo)": "Pago",
+    "cancelled": "Cancelado"
+  };
+  return map[s] || status;
+};
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface ClientsTabProps {
@@ -435,7 +462,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
         type: "order",
         date: orderDate,
         title: `Compra #${o.code || "Realizada"}`,
-        desc: `Status: ${o.status.toUpperCase()}`,
+        desc: `Status: ${translateStatus(o.status).toUpperCase()}`,
         valueLabel: `R$ ${(o.total || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`,
         icon: ShoppingBag,
         statusColor: o.status === "paid" || o.status === "fully_paid" || o.status === "delivered" ? "emerald" : "amber",
@@ -1363,7 +1390,7 @@ Histórico de Compras:
                                   ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                   : "bg-amber-50 text-amber-700 border-amber-200"
                               }`}>
-                                {order.status}
+                                {translateStatus(order.status)}
                               </span>
                             </div>
 

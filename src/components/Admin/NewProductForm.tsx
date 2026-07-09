@@ -16,7 +16,8 @@ import {
   ChevronRight,
   TrendingUp,
   AlertTriangle,
-  Zap
+  Zap,
+  Image as ImageIcon
 } from "lucide-react";
 import { Product, Componente, CompanyId, Insumo } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
@@ -24,6 +25,7 @@ import { calculateProductCost } from "../../lib/finance";
 import { motion, AnimatePresence } from "motion/react";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+import { ImageUpload } from "./ImageUpload";
 
 interface NewProductFormProps {
   companyId: CompanyId;
@@ -52,6 +54,7 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
     price: editingProduct?.retail_price || 0,
     original_price: editingProduct?.original_price || 0,
     isVisible: editingProduct?.isVisible ?? true,
+    image: editingProduct?.image || "",
     description: editingProduct?.description || "",
     productionTime: editingProduct?.productionTime || 5,
     weight: editingProduct?.weight || 0,
@@ -108,6 +111,7 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
         retail_price: formData.price,
         original_price: formData.original_price,
         isVisible: formData.isVisible,
+        image: formData.image,
         description: formData.description,
         productionTime: formData.productionTime,
         weight: formData.weight,
@@ -241,6 +245,16 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
                 >
                   <h3 className="text-xs font-black text-[#1C1C1E] uppercase tracking-[0.3em] border-b border-[#E5E5EA] pb-3">Identificação do Produto</h3>
                   <div className="grid grid-cols-2 gap-6">
+                    <div className="col-span-2 space-y-2">
+                      <label className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest ml-1">Imagem do Produto</label>
+                      <ImageUpload 
+                        label="Upload de Imagem"
+                        path={`products/${companyId}`}
+                        currentUrl={formData.image}
+                        onUploadComplete={(url) => setFormData({...formData, image: url})}
+                        onRemove={() => setFormData({...formData, image: ""})}
+                      />
+                    </div>
                     <div className="col-span-2 space-y-2">
                       <label className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest ml-1">Nome do Produto *</label>
                       <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ex: Planner Anual 2024" className="w-full bg-white border border-[#E5E5EA] rounded-2xl p-4 text-xs font-bold text-[#1C1C1E] outline-none focus:border-[#1C1C1E]/20 shadow-inner transition-all"/>

@@ -32,6 +32,7 @@ export function CompanyCatalogWrapper({
   const [showSuccess, setShowSuccess] = useState(false);
   const [showMPRoulette, setShowMPRoulette] = useState(false);
   const [mpPendingOrderData, setMpPendingOrderData] = useState<any>(null);
+  const [orderCode, setOrderCode] = useState<string | undefined>(undefined);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -42,21 +43,31 @@ export function CompanyCatalogWrapper({
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const paymentStatus = params.get('collection_status') || params.get('payment_status') || params.get('status');
+    const urlOrderId = params.get('order_id');
     const pendingOrderStr = localStorage.getItem('mp_pending_order');
     
-    if (paymentStatus === 'approved' && pendingOrderStr) {
-      try {
-        const pendingOrder = JSON.parse(pendingOrderStr);
-        if (pendingOrder && pendingOrder.companyName) {
-          handleClearCart();
-          setMpPendingOrderData(pendingOrder);
-          setShowMPRoulette(true);
-          playSuccessSound();
-          localStorage.removeItem('mp_pending_order');
-          navigate(location.pathname, { replace: true });
+    if (paymentStatus === 'approved') {
+      if (urlOrderId) setOrderCode(urlOrderId);
+      
+      if (pendingOrderStr) {
+        try {
+          const pendingOrder = JSON.parse(pendingOrderStr);
+          if (pendingOrder && pendingOrder.companyName) {
+            handleClearCart();
+            setMpPendingOrderData(pendingOrder);
+            if (pendingOrder.orderId) setOrderCode(pendingOrder.orderId);
+            setShowMPRoulette(true);
+            playSuccessSound();
+            localStorage.removeItem('mp_pending_order');
+            navigate(location.pathname, { replace: true });
+          }
+        } catch(e) {
+          console.error("Error parsing mp_pending_order", e);
         }
-      } catch(e) {
-        console.error("Error parsing mp_pending_order", e);
+      } else {
+        // Just show success if no pending order but approved in URL
+        setShowSuccess(true);
+        navigate(location.pathname, { replace: true });
       }
     }
   }, [location.search, config, navigate, location.pathname, handleClearCart]);
@@ -139,8 +150,10 @@ export function CompanyCatalogWrapper({
       />
       {showSuccess && (
         <SuccessOverlay 
+          orderCode={orderCode}
           onContinue={() => {
             setShowSuccess(false);
+            setOrderCode(undefined);
             handleClearCart();
           }} 
         />

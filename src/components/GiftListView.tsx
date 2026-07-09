@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getGiftList, updateGiftListItemStatusByCode } from '../services/firebaseService';
-import { ChevronLeft, Gift, ShoppingBag, Loader2, CheckCircle, Lock, Calendar, Sparkles, X, ChevronRight, Plus, Clock } from 'lucide-react';
+import { ChevronLeft, Gift, ShoppingBag, Loader2, CheckCircle, Lock, Calendar, Sparkles, X, ChevronRight, Plus, Clock, ShoppingCart } from 'lucide-react';
 import { Product, AppConfig, CartItem } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { useMemo } from 'react';
@@ -37,6 +37,15 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
     });
   };
 
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   const isListCompleted = useMemo(() => {
     if (!giftList || !giftList.items) return false;
     return giftList.items.length > 0 && giftList.items.every((item: any) => item.status === 'presenteado');
@@ -61,7 +70,7 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
     
     // Protection against duplicate purchasing
     if ((product as any).status && (product as any).status !== 'disponivel') {
-      alert("Este item já foi reservado ou presenteado.");
+      setToast("Este item já foi reservado ou presenteado.");
       return;
     }
 
@@ -79,8 +88,10 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
     });
 
     // Notify user with a nice prompt first
-    alert(`${product.product_name} foi adicionado à sua sacola como presente! Conclua a compra no checkout para oficializar.`);
-    navigate('/');
+    setToast(`${product.product_name} foi adicionado à sua sacola como presente! Conclua a compra no checkout para oficializar.`);
+    setTimeout(() => {
+      navigate('/');
+    }, 2500);
   };
 
   const handleOpenReserveModal = (item: any) => {
@@ -105,10 +116,10 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
     setIsReserveModalOpen(false);
 
     if (success) {
-      alert(`O item "${selectedItemForReserve.product_name}" foi reservado com sucesso por ${reserveName.trim()}!`);
+      setToast(`O item "${selectedItemForReserve.product_name}" foi reservado com sucesso por ${reserveName.trim()}!`);
       fetchList(); // reload values
     } else {
-      alert("Houve um problema ao reservar o item. Por favor, tente novamente.");
+      setToast("Houve um problema ao reservar o item. Por favor, tente novamente.");
     }
   };
 
@@ -514,6 +525,20 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 50, x: '-50%' }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[5000] px-6 py-4 bg-[#3A312D] text-white text-xs font-medium uppercase tracking-widest rounded-full shadow-[0_12px_30px_rgba(0,0,0,0.15)] border border-white/10 flex items-center gap-3 min-w-[280px] justify-center text-center font-poppins"
+          >
+            <ShoppingCart size={14} className="text-[#cca062]" />
+            <span>{toast}</span>
+            <Sparkles size={12} className="text-[#cca062] animate-pulse" />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

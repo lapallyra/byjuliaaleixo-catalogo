@@ -207,7 +207,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
                 {order.hasSignal && (
                   <div className="flex justify-between font-bold">
                     <span>Sinal Pago:</span>
-                    <span>-{formatCurrency(order.signalValue || (order.total * 0.5))}</span>
+                    <span>-{formatCurrency(typeof order.signalValue === 'number' ? order.signalValue : (order.total * 0.5))}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-black text-xs border-t border-dotted border-black pt-1 mt-1">

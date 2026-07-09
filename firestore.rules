@@ -24,8 +24,7 @@ service cloud.firestore {
     // SYSTEM NOTIFICATIONS
     // ----------------------------------------------------
     match /system_notifications/{configId} {
-      allow get, list: if true;
-      allow write: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     match /telegram_logs/{logId} {
@@ -54,26 +53,35 @@ service cloud.firestore {
     // ORDERS
     // ----------------------------------------------------
     match /orders/{orderId} {
-      // criar pedido público
+      // Criar pedido público (checkout)
       allow create: if true;
-      allow get: if true; // allow fetching specific order by ID (code)
+      
+      // Detalhes individuais: apenas admin (Proteção LGPD)
+      allow get: if isAdmin();
 
-      // permitir atualização APENAS de campos específicos do pós-venda
+      // Consulta de rastreio: permitida apenas se filtrar por código
+      // Isso impede listagem total por usuários públicos
+      allow list: if isAdmin() || (
+        request.query.filters != null &&
+        "code" in request.query.filters
+      );
+
+      // Atualização pós-venda: apenas campos não sensíveis
+      // Removemos 'status' e 'batchId' da permissão pública
       allow update: if isAdmin() || 
         incoming().diff(existing()).affectedKeys().hasOnly([
           "roulettePrize",
           "roulettePlayed",
+          "giftInfo",
           "whatsappSent",
           "thankYouShown",
-          "updatedAt",
-          "status",
-          "batchId"
+          "updatedAt"
         ]);
 
-      // somente admin pode listar/deletar
-      allow list, delete: if isAdmin();
+      // Somente admin pode deletar
+      allow delete: if isAdmin();
 
-      // Historico de Versoes do Pedido
+      // Histórico de Versões do Pedido
       match /versions/{versionId} {
         allow read, write: if isAdmin();
       }
@@ -84,7 +92,13 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /customers/{customerId} {
       allow get, list: if isAdmin();
-      allow create, update: if true; 
+      allow create: if true; 
+      allow update: if isAdmin() || (
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'totalSpent', 'ordersCount', 'name', 'cpfCnpj', 'email', 
+          'address', 'city', 'state', 'zipCode', 'number', 'neighborhood'
+        ])
+      );
       allow delete: if isAdmin();
     }
 
@@ -134,7 +148,10 @@ service cloud.firestore {
     match /insumos/{insumoId} {
       allow get: if true; // Needed to check stock before taking
       allow list: if isAdmin();
-      allow update: if true; // Allow stock deduction
+      allow update: if isAdmin() || (
+        incoming().diff(existing()).affectedKeys().hasOnly(['totalQuantity']) &&
+        incoming().totalQuantity < existing().totalQuantity
+      );
       allow create, delete: if isAdmin();
     }
 
@@ -162,7 +179,9 @@ service cloud.firestore {
     // GIFT LISTS 
     // ----------------------------------------------------
     match /giftLists/{listId} {
-      allow get, list, create, update, delete: if true;
+      allow get, list, create: if true;
+      allow update: if true; // Needed for item status updates by customers
+      allow delete: if isAdmin();
     }
 
     // ----------------------------------------------------
@@ -241,7 +260,8 @@ service cloud.firestore {
     // CAMPAIGNS
     // ----------------------------------------------------
     match /campaigns/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // ----------------------------------------------------

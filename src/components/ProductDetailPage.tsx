@@ -139,6 +139,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   src={images[imageIndex]} 
                   alt={product.product_name}
                   className="w-full h-full object-cover"
+                  isCritical={true}
+                  fetchPriority="high"
                 />
               </motion.div>
             </AnimatePresence>

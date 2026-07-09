@@ -2,8 +2,22 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+    
+    // Helper to verify if the user is an authorized admin
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email_verified == true && (
+               request.auth.token.email == 'juualleixo@gmail.com' ||
+               request.auth.token.email == 'lapallyra@gmail.com'
+             );
+    }
+
     match /{allPaths=**} {
-      allow read, write: if true;
+      // Allow public read for storefront images and brand assets
+      allow read: if true;
+      
+      // Restrict all write operations (create, update, delete) to authenticated admins
+      allow write: if isAdmin();
     }
   }
 }

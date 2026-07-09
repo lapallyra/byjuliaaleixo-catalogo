@@ -91,7 +91,7 @@ export const OrderPrintA6Modal: React.FC<OrderPrintA6ModalProps> = ({ order, onC
              </div>
              <div className="flex justify-between">
                <span>Valor Pago:</span>
-               <span>{formatCurrency(order.signalValue || 0)}</span>
+               <span>{formatCurrency(typeof order.signalValue === 'number' ? order.signalValue : (order.hasSignal ? (Number(order.total) * 0.5) : 0))}</span>
              </div>
              {order.remainingValue && order.remainingValue > 0 && (
                 <div className="flex justify-between font-bold text-red-600">

@@ -1,6 +1,10 @@
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { automationEngine } from './services/automationEngine';
+
+// Initialize the Smart Automation Engine
+automationEngine.init();
 
 window.addEventListener('unhandledrejection', event => {
   if (event.reason && typeof event.reason.message === 'string') {

@@ -5,6 +5,8 @@ export interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImag
   fallbackSrc?: string;
   containerClassName?: string;
   isThumbnail?: boolean;
+  isCritical?: boolean;
+  fetchPriority?: 'high' | 'low' | 'auto';
 }
 
 export const getOptimizedWebpUrl = (srcStr: string | undefined | null, isThumbnail?: boolean, className: string = ""): string => {
@@ -65,6 +67,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   fallbackSrc = '/logo_placeholder.png',
   containerClassName = "",
   isThumbnail = false,
+  isCritical = false,
+  fetchPriority,
   ...props
 }) => {
   return (
@@ -75,6 +79,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       containerClassName={containerClassName}
       fallbackSrc={fallbackSrc}
       isThumbnail={isThumbnail}
+      isCritical={isCritical}
+      fetchPriority={fetchPriority}
       // Deduce aspect ratio if class names contain custom layout dimensions or aspect tags
       aspectRatio={className.includes('aspect-') ? undefined : "aspect-none"}
       {...props}

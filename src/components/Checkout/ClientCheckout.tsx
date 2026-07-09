@@ -78,11 +78,11 @@ export const ClientCheckout: React.FC = () => {
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
             <h2 className="text-xl font-bold mb-6">Dados de Entrega</h2>
             <div className="grid grid-cols-2 gap-4">
-                <input placeholder="Nome" className="p-3 border rounded-xl" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} />
-                <input placeholder="E-mail" className="p-3 border rounded-xl" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-                <input placeholder="CPF/CNPJ" className="p-3 border rounded-xl col-span-2" value={formData.cpfCnpj} onChange={e => setFormData({...formData, cpfCnpj: e.target.value})} />
-                <input placeholder="CEP" className="p-3 border rounded-xl" value={formData.cep} onChange={e => setFormData({...formData, cep: e.target.value})} />
-                <input placeholder="Endereço" className="p-3 border rounded-xl" value={formData.endereco} onChange={e => setFormData({...formData, endereco: e.target.value})} />
+                <input aria-label="Nome completo" placeholder="Nome" className="p-3 border rounded-xl" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} />
+                <input aria-label="E-mail" placeholder="E-mail" className="p-3 border rounded-xl" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                <input aria-label="CPF ou CNPJ" placeholder="CPF/CNPJ" className="p-3 border rounded-xl col-span-2" value={formData.cpfCnpj} onChange={e => setFormData({...formData, cpfCnpj: e.target.value})} />
+                <input aria-label="CEP" placeholder="CEP" className="p-3 border rounded-xl" value={formData.cep} onChange={e => setFormData({...formData, cep: e.target.value})} />
+                <input aria-label="Endereço" placeholder="Endereço" className="p-3 border rounded-xl" value={formData.endereco} onChange={e => setFormData({...formData, endereco: e.target.value})} />
             </div>
             <button onClick={handleNext} className="mt-8 w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-800">Continuar para Pagamento</button>
           </div>

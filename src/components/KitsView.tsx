@@ -3,9 +3,10 @@ import { Product, CartItem } from '../types';
 import { ProductCard } from './ui/ProductCard';
 import { themes } from '../lib/theme';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ShoppingBag, ChevronLeft, Gift, X, Sparkles, CheckCircle } from 'lucide-react';
+import { ShoppingBag, ChevronLeft, Gift, X, Sparkles, CheckCircle, ShoppingCart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ImageWithFallback } from './ImageWithFallback';
+import { ProductDetailModal } from './ProductDetailModal';
 
 interface KitsViewProps {
   allProducts: Product[];
@@ -18,6 +19,14 @@ export const KitsView: React.FC<KitsViewProps> = ({ allProducts, setCarts }) => 
   const productId = searchParams.get('product');
   
   const [selectedKit, setSelectedKit] = useState<Product | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const kits = useMemo(() => allProducts.filter(p => p.isKit && p.kitType === 'kit_pronto'), [allProducts]);
 
@@ -30,16 +39,16 @@ export const KitsView: React.FC<KitsViewProps> = ({ allProducts, setCarts }) => 
     }
   }, [productId, kits]);
 
-  const handleAddToCart = (product: Product) => {
-    const itemToAdd: CartItem = { ...product, quantity: 1 };
+  const handleAddToCart = (product: Product, quantity: number = 1) => {
+    const itemToAdd: CartItem = { ...product, quantity: quantity };
     setCarts((prev: CartItem[]) => {
       const exists = prev.find(item => item.id === product.id);
       if (exists) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
       }
       return [...prev, itemToAdd];
     });
-    alert(`${product.product_name} adicionado ao seu carrinho!`);
+    setToast(`${product.product_name} adicionado ao seu carrinho!`);
     setSearchParams({});
   };
 
@@ -107,74 +116,33 @@ export const KitsView: React.FC<KitsViewProps> = ({ allProducts, setCarts }) => 
         )}
       </main>
 
-      {/* Details Modal */}
+      {/* Details Modal (Unified Drawer Pattern) */}
       <AnimatePresence>
         {selectedKit && (
-          <div className="fixed inset-0 bg-neutral-900/40 backdrop-blur-md z-[1000] flex items-center justify-center p-4 overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[3rem] w-full max-w-4xl shadow-2xl overflow-hidden relative"
-            >
-              <button 
-                onClick={() => setSearchParams({})}
-                className="absolute top-8 right-8 p-3 rounded-full bg-white/80 backdrop-blur-md text-neutral-400 hover:text-neutral-900 z-50 shadow-sm transition-all"
-              >
-                <X size={20} />
-              </button>
+          <ProductDetailModal
+            product={selectedKit}
+            onClose={() => setSearchParams({})}
+            onAddToCart={(prod, qty) => {
+              handleAddToCart(prod, qty);
+            }}
+            allProducts={allProducts}
+            companyId={selectedKit.company || 'mimada'}
+          />
+        )}
+      </AnimatePresence>
 
-              <div className="flex flex-col md:flex-row">
-                <div className="md:w-1/2 aspect-square md:aspect-auto">
-                  <ImageWithFallback src={selectedKit.image} alt={selectedKit.product_name} className="w-full h-full object-cover" />
-                </div>
-                
-                <div className="md:w-1/2 p-10 md:p-14 flex flex-col">
-                  <div className="mb-10">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Sparkles size={16} className="text-amber-500" />
-                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400">Kit Especial</span>
-                    </div>
-                    <h2 className="text-4xl font-serif italic text-neutral-900 mb-6">{selectedKit.product_name}</h2>
-                    <p className="text-neutral-500 leading-relaxed italic">
-                      "{selectedKit.description || "Uma seleção exclusiva de produtos que se complementam perfeitamente para criar um momento especial."}"
-                    </p>
-                  </div>
-
-                  {selectedKit.kitItems && selectedKit.kitItems.length > 0 && (
-                    <div className="mb-10">
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-4 border-b border-neutral-50 pb-2">Itens Inclusos</h4>
-                      <ul className="space-y-3">
-                        {selectedKit.kitItems.map((item, i) => (
-                          <li key={i} className="flex items-center gap-3 text-sm text-neutral-600">
-                            <CheckCircle size={14} className="text-green-500" />
-                            <span>{item.quantity}x {allProducts.find(p => p.id === item.id)?.product_name || "Item do Kit"}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  <div className="mt-auto">
-                    <div className="flex items-end justify-between mb-8">
-                      <div>
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Valor Total</p>
-                        <p className="text-3xl font-bold text-neutral-900">R$ {selectedKit.retail_price.toFixed(2)}</p>
-                      </div>
-                    </div>
-                    
-                    <button
-                      onClick={() => handleAddToCart(selectedKit)}
-                      className="w-full py-5 bg-neutral-900 text-white rounded-2xl font-bold uppercase tracking-[0.2em] text-[10px] hover:bg-neutral-800 transition-all flex items-center justify-center gap-3 shadow-xl shadow-neutral-200 active:scale-95"
-                    >
-                      <ShoppingBag size={18} />
-                      Adicionar à Sacola
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 50, x: '-50%' }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[5000] px-6 py-4 bg-[#3A312D] text-white text-xs font-medium uppercase tracking-widest rounded-full shadow-[0_12px_30px_rgba(0,0,0,0.15)] border border-white/10 flex items-center gap-3 min-w-[280px] justify-center text-center font-poppins"
+          >
+            <ShoppingCart size={14} className="text-[#cca062]" />
+            <span>{toast}</span>
+            <Sparkles size={12} className="text-[#cca062] animate-pulse" />
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

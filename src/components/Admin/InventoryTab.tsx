@@ -35,7 +35,7 @@ import {
   TrendingUp,
   RotateCcw
 } from "lucide-react";
-import { Order, Product, Insumo, ProductionBatch, Componente } from "../../types";
+import { Order, Product, Insumo, ProductionBatch, Componente, CompanyId } from "../../types";
 import { calculateOrderPriority, getPriorityStyles, PriorityResult } from "../../utils/priorityUtils";
 import { createProductionBatch, updateProductionBatch, subscribeToProductionBatches } from "../../services/firebaseService";
 import { suggestBatches, consolidateBatchInsumos } from "../../utils/batchUtils";
@@ -46,6 +46,7 @@ import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface InventoryTabProps {
+  companyId: CompanyId;
   orders: Order[];
   products: Product[];
   insumos: Insumo[];
@@ -94,6 +95,7 @@ const STAGES: { id: KanbanStage; label: string; color: string; border: string; b
 ];
 
 export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
+  companyId,
   orders,
   products,
   insumos,
@@ -123,10 +125,10 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
 
   // Subscribe to production batches
   useEffect(() => {
-    return subscribeToProductionBatches('all' as any, (data) => {
+    return subscribeToProductionBatches(companyId, (data) => {
       setBatches(data);
     });
-  }, []);
+  }, [companyId]);
 
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const tomorrowStr = useMemo(() => {
@@ -408,7 +410,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId: companyId,
       data: { success: true, title: 'Sucesso' }
     });
     } catch (err) {
@@ -419,7 +421,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId: companyId,
       data: { success: false, title: 'Erro' }
     });
     } finally {

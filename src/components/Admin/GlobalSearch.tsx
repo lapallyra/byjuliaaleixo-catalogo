@@ -7,12 +7,11 @@ interface GlobalSearchProps {
   products: Product[];
   customers: Customer[];
   insumos: Insumo[];
-  componentes: Componente[];
   onResultClick: (type: string, id: string) => void;
 }
 
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({ 
-  orders, products, customers, insumos, componentes, onResultClick 
+  orders, products, customers, insumos, onResultClick 
 }) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -42,11 +41,10 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
     const orderResults = orders.filter(o => o.code?.toLowerCase().includes(q) || o.customerName?.toLowerCase().includes(q)).map(o => ({ type: 'Pedido', id: o.id!, title: `Pedido ${o.code}`, info: o.customerName || 'Sem cliente', icon: ShoppingBag }));
     const customerResults = customers.filter(c => c.name?.toLowerCase().includes(q) || c.contact?.toLowerCase().includes(q)).map(c => ({ type: 'Cliente', id: c.id!, title: c.name || 'Sem nome', info: c.contact || 'Sem telefone', icon: User }));
     const productResults = products.filter(p => p.product_name?.toLowerCase().includes(q) || p.code?.toLowerCase().includes(q)).map(p => ({ type: 'Produto', id: p.id!, title: p.product_name || 'Sem nome', info: p.code || 'Sem código', icon: Box }));
-    const insumoResults = insumos.filter(i => i.name?.toLowerCase().includes(q)).map(i => ({ type: 'Insumo', id: i.id!, title: i.name || 'Sem nome', info: 'Insumo', icon: Package }));
-    const compResults = componentes.filter(c => c.name?.toLowerCase().includes(q)).map(c => ({ type: 'Componente', id: c.id!, title: c.name || 'Sem nome', info: 'Componente', icon: Package }));
+    const insumoResults = insumos.filter(i => i.name?.toLowerCase().includes(q)).map(i => ({ type: 'Componente', id: i.id!, title: i.name || 'Sem nome', info: 'Componente', icon: Package }));
 
-    return [...orderResults, ...customerResults, ...productResults, ...insumoResults, ...compResults].slice(0, 5);
-  }, [query, orders, customers, products, insumos, componentes]);
+    return [...orderResults, ...customerResults, ...productResults, ...insumoResults].slice(0, 5);
+  }, [query, orders, customers, products, insumos]);
 
   return (
     <div className="relative">

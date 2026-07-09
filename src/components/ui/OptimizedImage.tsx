@@ -9,6 +9,7 @@ export interface OptimizedImageProps extends Omit<React.ImgHTMLAttributes<HTMLIm
   isThumbnail?: boolean;
   isCritical?: boolean; // When true, bypasses lazy loading and preloads immediately (e.g. above-the-fold, logos, avatars)
   aspectRatio?: string; // e.g. "aspect-square", "aspect-video", "aspect-[4/3]"
+  fetchPriority?: 'high' | 'low' | 'auto';
 }
 
 // Global in-memory cache of fully fetched/loaded image URLs to prevent rendering flashes or duplicate network downloads
@@ -92,6 +93,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   isThumbnail = false,
   isCritical = false,
   aspectRatio = "aspect-square",
+  fetchPriority,
   ...props
 }) => {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
@@ -183,10 +185,18 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   const isObjectFitProvided = className.includes('object-');
 
+  // Extract all rounded- classes (e.g., rounded-full, rounded-2xl, etc.) from props to ensure perfect masking/clipping on all states
+  const combinedClasses = `${className} ${containerClassName}`;
+  const roundedClasses = combinedClasses
+    .split(/\s+/)
+    .filter(c => c.startsWith('rounded-') || c === 'rounded')
+    .filter((v, i, a) => a.indexOf(v) === i) // Unique values
+    .join(' ');
+
   return (
     <div 
       ref={containerRef}
-      className={`relative overflow-hidden w-full h-full bg-stone-50 select-none ${aspectRatio} ${containerClassName}`}
+      className={`relative overflow-hidden w-full h-full bg-stone-50 select-none ${aspectRatio} ${containerClassName} ${roundedClasses}`}
       style={props.style}
     >
       <AnimatePresence mode="popLayout">
@@ -197,10 +207,10 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-10 flex items-center justify-center bg-gradient-to-br from-[#faf9f6] via-[#faf6ef] to-[#f4ebe0]/50"
+            className={`absolute inset-0 z-10 flex items-center justify-center bg-gradient-to-br from-[#faf9f6] via-[#faf6ef] to-[#f4ebe0]/50 ${roundedClasses}`}
           >
             {/* Seamless metallic sliding shine animation */}
-            <div className="absolute inset-0 bg-[linear-gradient(110deg,#ece5d8,30%,#faf9f6,45%,#ece5d8,60%)] bg-[length:200%_100%] animate-shimmer" 
+            <div className={`absolute inset-0 bg-[linear-gradient(110deg,#ece5d8,30%,#faf9f6,45%,#ece5d8,60%)] bg-[length:200%_100%] animate-shimmer ${roundedClasses}`} 
               style={{
                 animation: 'shimmer 1.6s infinite linear'
               }}
@@ -218,7 +228,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#FAF9F6] to-[#E8DCC8]/20 border border-[#e8dcc8]/20 p-4"
+            className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#FAF9F6] to-[#E8DCC8]/20 border border-[#e8dcc8]/20 p-4 ${roundedClasses}`}
           >
             <div className="flex flex-col items-center text-center max-w-[85%] select-none pointer-events-none">
               <Heart className="w-4 h-4 mb-1 text-[#cca062]/50 animate-pulse" strokeWidth={1.5} />
@@ -237,11 +247,12 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
           onLoad={handleLoad}
           onError={handleError}
           referrerPolicy="no-referrer"
+          fetchPriority={fetchPriority as any}
           className={`w-full h-full transition-all duration-500 ease-out ${
             status === 'loaded' 
               ? 'opacity-100 scale-100 blur-0' 
               : 'opacity-0 scale-98 blur-xs'
-          } ${isObjectFitProvided ? '' : 'object-cover'} ${className}`}
+          } ${isObjectFitProvided ? '' : 'object-cover'} ${className} ${roundedClasses}`}
           style={{
             ...props.style,
             visibility: status === 'error' ? 'hidden' : 'visible'

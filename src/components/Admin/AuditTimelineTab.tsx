@@ -32,9 +32,9 @@ import { safeFormat } from '../../lib/dateUtils';
 import { formatCurrency } from '../../lib/currencyUtils';
 
 export const AuditTimelineTab: React.FC<{ companyId: CompanyId, auditLogs: AuditLog[] }> = React.memo(({ companyId, auditLogs }) => {
-  const logs = auditLogs;
-  const loading = false;
-const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [logs, setLogs] = useState<AuditLog[]>(auditLogs);
+  const [loading, setLoading] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');

@@ -36,7 +36,7 @@ export const SidebarCliente: React.FC<{ isOpen: boolean; onClose: () => void }> 
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="p-6 flex items-center justify-between lg:justify-start">
-            <span className="font-parisienne text-2xl text-[#3A312D]">Ateliê</span>
+            <span className="font-mea-culpa text-2xl text-[#3A312D]">Ateliê</span>
             <button className="lg:hidden" onClick={onClose}><X size={20}/></button>
         </div>
         

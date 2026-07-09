@@ -71,8 +71,37 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
   const discount = order.discount || 0;
   const shipping = order.shippingCost || 0;
   const total = order.total || (subtotal + shipping - discount);
-  const paid = order.hasSignal ? (order.signalValue || (subtotal * 0.5)) : (order.paymentStatus === "paid" || order.status === "fully_paid" ? total : 0);
+  const paid = order.hasSignal 
+    ? (typeof order.signalValue === 'number' ? order.signalValue : (subtotal * 0.5)) 
+    : (order.paymentStatus === "paid" || order.status === "fully_paid" ? total : 0);
   const remaining = Math.max(0, total - paid);
+
+  const [paymentMethod, setPaymentMethod] = useState("pix");
+  const [paymentValue, setPaymentValue] = useState("");
+  const [selectedInstallments, setSelectedInstallments] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (isPaymentModalOpen) {
+      setPaymentMethod("pix");
+      setPaymentValue(remaining.toFixed(2).replace(".", ","));
+      setSelectedInstallments([]);
+    }
+  }, [isPaymentModalOpen, remaining]);
+
+  const handleToggleInstallment = (index: number) => {
+    const isSelected = selectedInstallments.includes(index);
+    let newSelected: number[];
+    if (isSelected) {
+      newSelected = selectedInstallments.filter(i => i !== index);
+    } else {
+      newSelected = [...selectedInstallments, index];
+    }
+    setSelectedInstallments(newSelected);
+    
+    const installmentValue = order.remainingInstallmentValue || 0;
+    const totalSelectedValue = newSelected.length * installmentValue;
+    setPaymentValue(totalSelectedValue.toFixed(2).replace(".", ","));
+  };
 
   const costTotal = useMemo(() => {
     return items.reduce((sum, item) => {
@@ -113,7 +142,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
       "ready": { label: "Pronto para Retirada", color: "bg-purple-100 text-purple-700", border: "border-purple-200" },
       "delivery": { label: "Enviado", color: "bg-emerald-100 text-emerald-700", border: "border-emerald-200" },
       "delivered": { label: "Entregue", color: "bg-emerald-100 text-emerald-700", border: "border-emerald-200" },
-      "fully_paid": { label: "Concluído", color: "bg-emerald-100 text-emerald-700", border: "border-emerald-200" },
+      "fully_paid": { label: "Pago", color: "bg-emerald-100 text-emerald-700", border: "border-emerald-200" },
       "cancelled": { label: "Cancelado", color: "bg-rose-100 text-rose-700", border: "border-rose-200" }
     };
     return map[s] || { label: status, color: "bg-slate-100 text-slate-700", border: "border-slate-200" };
@@ -839,7 +868,11 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 block">Forma de pagamento</label>
-                <select className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-slate-900 transition-all text-slate-800">
+                <select 
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-slate-900 transition-all text-slate-800"
+                >
                   <option value="pix">PIX</option>
                   <option value="dinheiro">Dinheiro</option>
                   <option value="credito">Cartão de Crédito</option>
@@ -855,7 +888,8 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 <input 
                   type="text" 
                   placeholder="R$ 0,00"
-                  defaultValue={formatCurrency(remaining)}
+                  value={paymentValue}
+                  onChange={(e) => setPaymentValue(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:bg-white focus:border-slate-900 transition-all text-slate-800"
                 />
               </div>
@@ -864,12 +898,20 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500 block">Parcelas</label>
                   <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                    {Array.from({ length: order.remainingInstallments }).map((_, idx) => (
-                      <label key={idx} className="flex items-center gap-2 p-2 rounded bg-slate-50 border border-slate-200 cursor-pointer hover:bg-white transition-colors">
-                        <input type="checkbox" className="w-3.5 h-3.5 rounded text-slate-900 border-slate-300 focus:ring-slate-900" />
-                        <span className="text-[11px] font-medium text-slate-700">Parcela {idx + 1} de {order.remainingInstallments} - {formatCurrency(order.remainingInstallmentValue || 0)}</span>
-                      </label>
-                    ))}
+                    {Array.from({ length: order.remainingInstallments }).map((_, idx) => {
+                      const isChecked = selectedInstallments.includes(idx);
+                      return (
+                        <label key={idx} className="flex items-center gap-2 p-2 rounded bg-slate-50 border border-slate-200 cursor-pointer hover:bg-white transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={isChecked}
+                            onChange={() => handleToggleInstallment(idx)}
+                            className="w-3.5 h-3.5 rounded text-slate-900 border-slate-300 focus:ring-slate-900" 
+                          />
+                          <span className="text-[11px] font-medium text-slate-700">Parcela {idx + 1} de {order.remainingInstallments} - {formatCurrency(order.remainingInstallmentValue || 0)}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -881,16 +923,41 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                </button>
                <button 
                  onClick={() => {
+                   const parsedValue = parseFloat(paymentValue.replace(",", "."));
+                   if (isNaN(parsedValue) || parsedValue <= 0) return;
+                   if (order.paymentMode === 'planned' && order.remainingInstallments) {
+                     const instVal = order.remainingInstallmentValue || 0;
+                     if (selectedInstallments.length === 0) return;
+                     if (parsedValue < (selectedInstallments.length * instVal)) return;
+                   }
                    if (onSave) {
+                     const isInstallmentPayment = order.paymentMode === 'planned' && order.remainingInstallments;
+                     const newRemainingInstallments = isInstallmentPayment
+                       ? Math.max(0, order.remainingInstallments - selectedInstallments.length)
+                       : undefined;
+                     
                      onSave({
-                       ...order,
-                       paymentStatus: "paid",
-                       status: "fully_paid"
+                       id: order.id,
+                       payAmount: parsedValue,
+                       paymentMethod: paymentMethod,
+                       remainingInstallments: newRemainingInstallments
                      });
                    }
                    setIsPaymentModalOpen(false);
                  }}
-                 className="flex-1 py-2 bg-slate-900 hover:bg-black text-white rounded-lg font-bold text-xs shadow-sm transition-all"
+                 disabled={
+                   (() => {
+                     const valNum = parseFloat(paymentValue.replace(",", "."));
+                     if (isNaN(valNum) || valNum <= 0) return true;
+                     if (order.paymentMode === 'planned' && order.remainingInstallments) {
+                       const instVal = order.remainingInstallmentValue || 0;
+                       if (selectedInstallments.length === 0) return true;
+                       if (valNum < (selectedInstallments.length * instVal)) return true;
+                     }
+                     return false;
+                   })()
+                 }
+                 className="flex-1 py-2 bg-slate-900 hover:bg-black text-white rounded-lg font-bold text-xs shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                >
                  Confirmar Pagamento
                </button>

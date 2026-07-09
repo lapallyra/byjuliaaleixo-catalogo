@@ -439,21 +439,6 @@ export function CheckoutModal({
 
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
-    if (cart.length === 0) {
-      newErrors.cart = 'Você precisa ter pelo menos 1 produto selecionado para iniciar a personalização.';
-    }
-    if (!persName.trim()) {
-      newErrors.persName = 'Por favor, informe o nome para a personalização.';
-    }
-    if (!persTheme) {
-      newErrors.persTheme = 'Por favor, selecione um tema ou estilo.';
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateStep2 = () => {
-    const newErrors: Record<string, string> = {};
     if (!clientName) newErrors.clientName = 'Nome é obrigatório.';
     if (!clientContact) newErrors.clientContact = 'Contato é obrigatório.';
     if (!clientCpf) newErrors.clientCpf = 'CPF é obrigatório.';
@@ -476,17 +461,14 @@ export function CheckoutModal({
   const handleNext = () => {
     if (step === 1) {
       if (!validateStep1()) return;
-      logCheckoutEvent('Seleção de Personalização', {
+      logCheckoutEvent('Dados e Entrega', {
         companyId,
         clientName: clientName || undefined,
         total,
         itemsCount: cart.reduce((sum, item) => sum + (item.quantity || 1), 0),
-        description: `Tema: ${persTheme || 'Sem tema'}, Cores: ${persColors || 'Sem cor'}, Nome: ${persName || 'Sem nome'}`
       });
-    } else if (step === 2) {
-      if (!validateStep2()) return;
     }
-    setStep(s => Math.min(3, s + 1));
+    setStep(s => Math.min(2, s + 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
@@ -675,9 +657,8 @@ export function CheckoutModal({
 
       <div className="flex items-center gap-4 mt-6 md:mt-0 overflow-x-auto w-full md:w-1/2 justify-center hide-scrollbar">
          {[
-           { id: 1, label: 'Personalização' },
-           { id: 2, label: 'Entrega' },
-           { id: 3, label: 'Pagamento' }
+           { id: 1, label: 'Entrega' },
+           { id: 2, label: 'Pagamento' }
          ].map(s => (
            <React.Fragment key={s.id}>
              <div className="flex flex-col md:flex-row items-center gap-2">
@@ -879,184 +860,6 @@ export function CheckoutModal({
              <div className="w-full">
                
                {step === 1 && (
-                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-8">
-                   <div>
-                     <h2 className="text-3xl font-bold text-gray-900 mb-2">Personalização</h2>
-                     <p className="text-sm text-gray-500">Preencha com atenção para criarmos algo único para você.</p>
-                    {errors.cart && (
-                      <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-800 text-xs font-semibold shadow-sm mt-4">
-                        ⚠️ {errors.cart}
-                      </div>
-                    )}
-                   </div>
-                   
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border border-gray-100 p-6 md:p-8 rounded-3xl bg-white shadow-[0_4px_24px_-10px_rgba(0,0,0,0.03)]">
-                     <div className="space-y-2">
-                       <label className="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1">Nome da Criança / Pessoa <span className="text-rose-400 font-bold">*</span></label>
-                       <input value={persName} onChange={e => { setPersName(e.target.value); setErrors(p => ({...p, persName: ''})) }} className={`w-full p-4 bg-[#F8F5F2] border ${errors.persName ? 'border-rose-300 focus:ring-rose-100' : 'border-transparent'} rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium text-gray-800`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Ex: Maria Alice" />
-                       {errors.persName && <p className="text-rose-500 text-xs font-semibold mt-1.5 flex items-center gap-1">✨ {errors.persName}</p>}
-                     </div>
-                     <div className="space-y-2">
-                       <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Idade / Frase</label>
-                       <input value={persAge} onChange={e => setPersAge(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium text-gray-800" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Ex: 1 aninho" />
-                     </div>
-                   </div>
-
-                   <div className="space-y-2">
-                     <label className="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1">Tema / Estilo <span className="text-rose-400 font-bold">*</span></label>
-                     <select value={persTheme} onChange={e => { setPersTheme(e.target.value); setErrors(p => ({...p, persTheme: ''})) }} className={`w-full p-4 bg-white border ${errors.persTheme ? 'border-rose-300 focus:ring-rose-100' : 'border-gray-200'} rounded-2xl focus:ring-2 focus:border-transparent outline-none transition-all text-sm font-medium cursor-pointer`} style={{ '--tw-ring-color': theme.accentColor + '50' } as any}>
-                       <option value="">Selecione o tema desejado</option>
-                       <option value="Sereia">A Pequena Sereia</option>
-                       <option value="Safari">Safari Baby</option>
-                       <option value="Circo">Circo Rosa</option>
-                       <option value="Jardim">Jardim Encantado</option>
-                       <option value="Outro">Outro (Especifique abaixo)</option>
-                     </select>
-                     {errors.persTheme && <p className="text-rose-500 text-xs font-semibold mt-1.5 flex items-center gap-1">✨ {errors.persTheme}</p>}
-                   </div>
-
-                   <div className="space-y-2">
-                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cores Predominantes</label>
-                     <input value={persColors} onChange={e => setPersColors(e.target.value)} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium text-gray-800" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Ex: Rosa Bebê, Branco e Dourado" />
-                   </div>
-
-                   <div className="space-y-2">
-                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Envie inspirações (Opcional - Máx 2)</label>
-                     <div className="w-full flex-col border-2 border-dashed border-gray-200 rounded-3xl p-8 flex items-center justify-center bg-[#F8F5F2] hover:bg-gray-50 transition-colors cursor-pointer group">
-                       <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3 bg-white shadow-sm text-gray-400 group-hover:text-gray-600 transition-colors">
-                         <UploadCloud size={24} />
-                       </div>
-                       <span className="text-sm font-semibold text-gray-700">Adicionar Imagens</span>
-                       <span className="text-xs text-gray-400 mt-1">Solte aqui ou clique (JPG, PNG)</span>
-                     </div>
-                   </div>
-
-                   <div className="space-y-2">
-                    {/* Categoria Serviços Adicionais */}
-                    <div className="space-y-4 border border-gray-100 p-6 md:p-8 rounded-3xl bg-white shadow-[0_4px_24px_-10px_rgba(0,0,0,0.03)] mb-6">
-                      <div className="flex justify-between items-center border-b border-gray-50 pb-3">
-                        <div>
-                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                            <span>✨</span> Serviços Adicionais
-                          </h3>
-                          <p className="text-[11px] text-gray-400 mt-0.5">Selecione os serviços extras que deseja para o seu pedido.</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setIsCreatingService(!isCreatingService)}
-                          className="text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-all flex items-center gap-1 border border-dashed border-gray-200"
-                          style={{ color: theme.accentColor }}
-                        >
-                          {isCreatingService ? 'Cancelar' : '+ Criar'}
-                        </button>
-                      </div>
-
-                      {isCreatingService && (
-                        <div className="p-4 bg-gray-50/50 border border-gray-200 rounded-2xl space-y-4 animate-fade-in">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">Novo Serviço Adicional</span>
-                          
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                              <div className="space-y-1 md:col-span-2">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nome do Serviço</label>
-                                <input
-                                  type="text"
-                                  placeholder="Ex: Embalagem para Presente"
-                                  value={newServiceName}
-                                  onChange={e => setNewServiceName(e.target.value)}
-                                  className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:ring-1"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Valor (R$)</label>
-                                <input
-                                  type="number"
-                                  placeholder="15"
-                                  value={newServicePrice}
-                                  onChange={e => setNewServicePrice(e.target.value)}
-                                  className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:ring-1"
-                                />
-                              </div>
-                            </div>
-                            
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Descrição do Serviço</label>
-                              <textarea
-                                placeholder="Descrição detalhada sobre este serviço adicional..."
-                                value={newServiceDescription}
-                                onChange={e => setNewServiceDescription(e.target.value)}
-                                rows={2}
-                                className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:ring-1 resize-none"
-                              />
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={handleCreateService}
-                              className="w-full py-3 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.01] active:scale-[0.98] transition-all shadow-md"
-                              style={{ backgroundColor: theme.accentColor }}
-                            >
-                              Adicionar Serviço
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="space-y-3">
-                        {additionalServices.map((service) => {
-                          const isSelected = selectedServices.includes(service.id);
-                          return (
-                            <div
-                              key={service.id}
-                              onClick={() => toggleService(service.id)}
-                              className={`p-4 bg-white border rounded-2xl cursor-pointer transition-all flex items-start gap-4 hover:border-gray-200 ${
-                                isSelected ? 'ring-2' : 'border-gray-100'
-                              }`}
-                              style={isSelected ? { borderColor: theme.accentColor, '--tw-ring-color': theme.accentColor + '20' } as any : {}}
-                            >
-                              <div
-                                className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all ${
-                                  isSelected ? 'text-white' : 'border-gray-300 bg-white'
-                                }`}
-                                style={{
-                                  backgroundColor: isSelected ? theme.accentColor : undefined,
-                                  borderColor: isSelected ? theme.accentColor : undefined
-                                }}
-                              >
-                                {isSelected && <Check size={12} strokeWidth={3} />}
-                              </div>
-                              <div className="flex-grow text-left min-w-0">
-                                <div className="flex justify-between items-start gap-2">
-                                  <h4 className="text-xs font-bold text-gray-800 truncate">
-                                    {service.name}
-                                  </h4>
-                                  <span className="text-xs font-extrabold text-gray-900 shrink-0 font-mono">
-                                    R$ {service.price.toFixed(2).replace('.', ',')}
-                                  </span>
-                                </div>
-                                <p className="text-[10px] text-gray-400 mt-1 leading-normal font-medium">
-                                  {service.description}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Observações adicionais</label>
-                     <textarea value={persObs} onChange={e => setPersObs(e.target.value)} rows={3} className="w-full p-4 bg-[#F8F5F2] border-0 rounded-2xl focus:ring-2 outline-none transition-all text-sm font-medium text-gray-800 resize-none" style={{ '--tw-ring-color': theme.accentColor + '50' } as any} placeholder="Algum detalhe especial ou nome adicional?" />
-                   </div>
-
-                   <div className="pt-6 pb-20 lg:pb-0">
-                     <button onClick={handleNext} className="w-full py-5 text-white rounded-2xl font-bold uppercase tracking-widest flex items-center justify-center gap-3 transition-transform hover:scale-[1.01] active:scale-[0.98] shadow-lg hover:shadow-xl" style={{ backgroundColor: theme.accentColor, boxShadow: `0 10px 25px -5px ${theme.accentColor}50` }}>
-                       Continuar <ChevronRight size={18} />
-                     </button>
-                   </div>
-                 </motion.div>
-               )}
-
-               {step === 2 && (
                  <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }} className="space-y-10 pb-20 lg:pb-0">
                    <div>
                      <h2 className="text-3xl font-bold text-[#4E3F30] mb-2">Forma de Entrega</h2>
@@ -1254,7 +1057,7 @@ export function CheckoutModal({
       )}
 
       {/* Centered Layout for Step 3 */}
-      {step === 3 && (
+      {step === 2 && (
         <div className="flex-1 overflow-y-auto w-full relative p-6 md:p-12 pb-24">
            <div className="max-w-4xl mx-auto w-full">
              

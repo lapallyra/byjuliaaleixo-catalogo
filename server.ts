@@ -1,6 +1,16 @@
 import express from "express";
 import path from "node:path";
 import { MercadoPagoConfig, Preference } from "mercadopago";
+import { initializeApp, getApps } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+
+// Initialize Firebase Admin
+if (getApps().length === 0) {
+  initializeApp({
+    projectId: "gen-lang-client-0841512066",
+  });
+}
+const dbAdmin = getFirestore("ai-studio-c4cc2b71-da7b-4f2b-a88e-7badffe10d83");
 
 async function startServer() {
   const app = express();
@@ -75,6 +85,63 @@ async function startServer() {
     }
   });
 
+  app.post("/api/telegram/send", async (req, res) => {
+    try {
+      const { type, message } = req.body;
+      const token = process.env.TELEGRAM_BOT_TOKEN;
+      const chatId = process.env.TELEGRAM_CHAT_ID;
+
+      if (!token || !chatId) {
+        return res.status(500).json({ error: "Telegram credentials not configured on server" });
+      }
+
+      // Read config from Firestore using Admin SDK (bypassing security rules)
+      const configDoc = await dbAdmin.collection('system_notifications').doc('settings').get();
+      const tgConfig = configDoc.exists ? configDoc.data() : null;
+
+      if (tgConfig) {
+        if (!tgConfig.telegram_enabled) {
+          return res.json({ success: true, status: 'disabled_by_config' });
+        }
+        
+        // Check specific preferences
+        const preferences: Record<string, string> = {
+          'new_order': 'notify_new_order',
+          'payment_confirmed': 'notify_payment_confirmed',
+          'order_canceled': 'notify_order_canceled',
+          'order_completed': 'notify_order_completed',
+          'low_stock': 'notify_low_stock',
+          'new_client': 'notify_new_client'
+        };
+
+        const prefKey = preferences[type];
+        if (prefKey && tgConfig[prefKey] === false) {
+          return res.json({ success: true, status: 'muted_by_preference' });
+        }
+      }
+
+      const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: "HTML"
+        }),
+      });
+
+      if (response.ok) {
+        res.json({ success: true });
+      } else {
+        const err = await response.text();
+        res.status(response.status).json({ error: err });
+      }
+    } catch (error: any) {
+      console.error("Error sending Telegram message:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const { createServer } = await import("vite");
@@ -86,7 +153,7 @@ async function startServer() {
     app.use(vite.middlewares);
 
     // Fallback for SPA routing in development
-    app.get("*", async (req, res, next) => {
+    app.get("*all", async (req, res, next) => {
       // Don't intercept API calls or static assets/file requests with extensions
       if (req.originalUrl.startsWith("/api") || req.originalUrl.includes(".")) {
         return next();

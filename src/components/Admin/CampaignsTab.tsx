@@ -67,7 +67,9 @@ export const CampaignsTab: React.FC<CampaignsTabProps> = React.memo(({ products 
 
   const handleOpenNewForm = () => {
     setEditingCampaign({
+      internalName: "",
       title: "",
+      subtitle: "",
       description: "",
       type: "seasonal_campaign",
       active: true,
@@ -81,6 +83,7 @@ export const CampaignsTab: React.FC<CampaignsTabProps> = React.memo(({ products 
       imageUrl: "",
       mobileImageUrl: "",
       colorTheme: "",
+      linkUrl: "",
     });
     setProdSearchQuery("");
     setIsFormOpen(true);
@@ -132,6 +135,39 @@ export const CampaignsTab: React.FC<CampaignsTabProps> = React.memo(({ products 
       companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
       data: { success: false, title: 'Erro' }
     });
+    }
+  };
+
+  const handleReorderCampaign = async (index: number, direction: 'up' | 'down') => {
+    const list = [...filteredCampaigns];
+    if (direction === 'up' && index > 0) {
+      const current = list[index];
+      const previous = list[index - 1];
+      const currentPrio = current.priority ?? 0;
+      const prevPrio = previous.priority ?? 0;
+
+      if (currentPrio === prevPrio) {
+        current.priority = prevPrio + 1;
+      } else {
+        current.priority = prevPrio;
+        previous.priority = currentPrio;
+      }
+      await saveCampaign(current);
+      await saveCampaign(previous);
+    } else if (direction === 'down' && index < list.length - 1) {
+      const current = list[index];
+      const next = list[index + 1];
+      const currentPrio = current.priority ?? 0;
+      const nextPrio = next.priority ?? 0;
+
+      if (currentPrio === nextPrio) {
+        current.priority = Math.max(0, nextPrio - 1);
+      } else {
+        current.priority = nextPrio;
+        next.priority = currentPrio;
+      }
+      await saveCampaign(current);
+      await saveCampaign(next);
     }
   };
 
@@ -296,7 +332,7 @@ export const CampaignsTab: React.FC<CampaignsTabProps> = React.memo(({ products 
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCampaigns.map((camp) => (
+          {filteredCampaigns.map((camp, idx) => (
             <div key={camp.id} className="group bg-white border border-[#E5E5EA] hover:border-[#1C1C1E] rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-xs hover:shadow-md hover:-translate-y-0.5">
               <div className="relative aspect-[21/9] bg-[#F5F5F7] border-b border-[#E5E5EA] overflow-hidden">
                 {camp.imageUrl ? (
@@ -324,6 +360,12 @@ export const CampaignsTab: React.FC<CampaignsTabProps> = React.memo(({ products 
                     <span className="text-[10px] font-bold text-[#8E8E93]">Prio: {camp.priority}</span>
                   </div>
                   <h4 className="text-base font-bold text-[#1C1C1E] mt-2 truncate">{camp.title}</h4>
+                  {camp.internalName && (
+                    <span className="text-[10px] text-[#cca062] font-mono font-semibold block mt-0.5">Ref: {camp.internalName}</span>
+                  )}
+                  {camp.subtitle && (
+                    <p className="text-xs text-neutral-500 font-medium line-clamp-1 mt-1">{camp.subtitle}</p>
+                  )}
                   {camp.description && <p className="text-xs text-[#8E8E93] line-clamp-1 mt-1">{camp.description}</p>}
                 </div>
 
@@ -349,11 +391,15 @@ export const CampaignsTab: React.FC<CampaignsTabProps> = React.memo(({ products 
 
               <div className="px-5 py-4 bg-[#F5F5F7] border-t border-[#E5E5EA] flex items-center justify-between gap-1.5">
                 <div className="flex items-center gap-1.5">
-                  <button onClick={() => { setViewingCampaign(camp); setIsPreviewOpen(true); }} className="p-2 bg-white border border-[#E5E5EA] rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] transition-all"><Eye size={14} /></button>
-                  <button onClick={() => handleOpenEditForm(camp)} className="p-2 bg-white border border-[#E5E5EA] rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] transition-all"><Edit2 size={14} /></button>
-                  <button onClick={() => handleDuplicate(camp)} className="p-2 bg-white border border-[#E5E5EA] rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] transition-all"><Copy size={14} /></button>
+                  <button type="button" onClick={() => { setViewingCampaign(camp); setIsPreviewOpen(true); }} className="p-2 bg-white border border-[#E5E5EA] rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] transition-all" title="Visualizar"><Eye size={14} /></button>
+                  <button type="button" onClick={() => handleOpenEditForm(camp)} className="p-2 bg-white border border-[#E5E5EA] rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] transition-all" title="Editar"><Edit2 size={14} /></button>
+                  <button type="button" onClick={() => handleDuplicate(camp)} className="p-2 bg-white border border-[#E5E5EA] rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] transition-all" title="Duplicar"><Copy size={14} /></button>
+                  <div className="flex items-center gap-1 border-l border-neutral-200 pl-1.5 ml-0.5">
+                    <button type="button" onClick={() => handleReorderCampaign(idx, 'up')} disabled={idx === 0} className="p-1.5 bg-white border border-[#E5E5EA] rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] disabled:opacity-30 transition-all" title="Mover para cima"><ChevronUp size={14} /></button>
+                    <button type="button" onClick={() => handleReorderCampaign(idx, 'down')} disabled={idx === filteredCampaigns.length - 1} className="p-1.5 bg-white border border-[#E5E5EA] rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] disabled:opacity-30 transition-all" title="Mover para baixo"><ChevronDown size={14} /></button>
+                  </div>
                 </div>
-                <button onClick={() => handleDelete(camp.id)} className="p-2 bg-white border border-[#E5E5EA] rounded-xl text-rose-500 hover:bg-rose-50 transition-all"><Trash2 size={14} /></button>
+                <button type="button" onClick={() => handleDelete(camp.id)} className="p-2 bg-white border border-[#E5E5EA] rounded-xl text-rose-500 hover:bg-rose-50 transition-all" title="Excluir"><Trash2 size={14} /></button>
               </div>
             </div>
           ))}
@@ -378,9 +424,26 @@ export const CampaignsTab: React.FC<CampaignsTabProps> = React.memo(({ products 
               <form onSubmit={handleSave} className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                 <div className="flex-1 p-6 space-y-6 overflow-y-auto border-r border-[#E5E5EA]">
                   <div className="space-y-4">
-                    <div className="space-y-1">
-                      <label className="text-[9px] uppercase font-bold text-[#8E8E93]">Título da Campanha *</label>
-                      <input type="text" required className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:border-[#1C1C1E]" value={editingCampaign.title} onChange={e => setEditingCampaign({...editingCampaign, title: e.target.value})} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-[#8E8E93]">Nome Interno (Administrativo) *</label>
+                        <input type="text" required className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:border-[#1C1C1E]" value={editingCampaign.internalName || ""} onChange={e => setEditingCampaign({...editingCampaign, internalName: e.target.value})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-[#8E8E93]">Título da Campanha (Público) *</label>
+                        <input type="text" required className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:border-[#1C1C1E]" value={editingCampaign.title} onChange={e => setEditingCampaign({...editingCampaign, title: e.target.value})} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-[#8E8E93]">Subtítulo</label>
+                        <input type="text" className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:border-[#1C1C1E]" value={editingCampaign.subtitle || ""} onChange={e => setEditingCampaign({...editingCampaign, subtitle: e.target.value})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] uppercase font-bold text-[#8E8E93]">Link de Destino</label>
+                        <input type="text" placeholder="Ex: /lapallyra?category=Maternidade" className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:border-[#1C1C1E]" value={editingCampaign.linkUrl || ""} onChange={e => setEditingCampaign({...editingCampaign, linkUrl: e.target.value})} />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

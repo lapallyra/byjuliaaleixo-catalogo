@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, Search, Filter, SortDesc, Calendar, Box, Package, FileText, CheckCircle2, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, SortDesc, Calendar, Box, Package, FileText, CheckCircle2, Trash2, Printer } from "lucide-react";
 import { Order, CompanyId, Product, Insumo, SiteSettings, Customer } from "../../types";
 import { getSiteSettings } from "../../services/firebaseService";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
@@ -9,6 +9,7 @@ import { OrderFormModal } from "./OrderFormModal";
 import { OrderWizardModal } from "./OrderWizardModal";
 import { OrderReceiptModal } from "./OrderReceiptModal";
 import { HorizontalScroll } from "../shared/HorizontalScroll";
+import { exportActiveOrdersVerificationPDF } from "../../utils/pdfGenerator";
 
 interface OrdersTabProps {
   orders: Order[];
@@ -207,14 +208,14 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
       "orçamento": { label: "Orçamento", color: "bg-[#7FFF00]", shadow: "shadow-[2px_0_20px_rgba(127,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "novo pedido": { label: "Novo Pedido", color: "bg-[#37FD12]", shadow: "shadow-[2px_0_20px_rgba(55,253,18,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "aguardando sinal": { label: "Aguardando Sinal", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "aguardando aprovação cliente": { label: "Aprovação Cliente", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "aguardando aprovação cliente": { label: "Aprovação de Arte", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "em produção": { label: "Em Produção", color: "bg-[#FFD100]", shadow: "shadow-[2px_0_20px_rgba(255,209,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "montagem": { label: "Montagem", color: "bg-[#BD02FC]", shadow: "shadow-[2px_0_20px_rgba(189,2,252,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "pronto para entregar": { label: "Pronto p/ Entregar", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "enviado": { label: "Enviado", color: "bg-[#FFFFFF]", shadow: "shadow-[2px_0_20px_rgba(255,255,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "recebido": { label: "Recebido", color: "bg-[#3FFF00]", shadow: "shadow-[2px_0_20px_rgba(63,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "aguardando o pagamento restante": { label: "Aguardando Pagto", color: "bg-[#FFFF66]", shadow: "shadow-[2px_0_20px_rgba(255,255,102,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "concluído (pagamento completo)": { label: "Concluído", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "concluído (pagamento completo)": { label: "Pago", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" },
       "cancelled": { label: "Cancelado", color: "bg-[#EC7216]", shadow: "shadow-[2px_0_20px_rgba(236,114,22,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       
       "pending": { label: "Pendente", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
@@ -222,15 +223,15 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
       
       // Fallbacks para compatibilidade
       "quote": { label: "Orçamento", color: "bg-[#7FFF00]", shadow: "shadow-[2px_0_20px_rgba(127,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "waiting_payment": { label: "Pagamento Pendente", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "waiting_payment": { label: "Aguardando Pagamento", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "waiting_deposit": { label: "Aguardando Sinal", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "approval": { label: "Arte / Aprovação", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "approval": { label: "Aprovação de Arte", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "production": { label: "Em Produção", color: "bg-[#FFD100]", shadow: "shadow-[2px_0_20px_rgba(255,209,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "assembly": { label: "Montagem", color: "bg-[#BD02FC]", shadow: "shadow-[2px_0_20px_rgba(189,2,252,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "ready": { label: "Pronto", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "delivery": { label: "Enviado", color: "bg-[#FFFFFF]", shadow: "shadow-[2px_0_20px_rgba(255,255,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       "delivered": { label: "Concluído", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "fully_paid": { label: "Concluído", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" }
+      "fully_paid": { label: "Pago", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" }
     };
     return map[s] || { label: status, color: "bg-gray-500", shadow: "shadow-[2px_0_20px_rgba(107,114,128,0.7)]", text: "text-gray-700", bgLight: "bg-gray-100" };
   };
@@ -347,6 +348,18 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
                 />
               )}
             </div>
+            <button
+              onClick={() => {
+                const active = orders.filter(o => 
+                  !["delivered", "cancelled", "fully_paid", "finalized", "concluído (pagamento completo)"].includes((o.status || "").toLowerCase())
+                );
+                exportActiveOrdersVerificationPDF(active, companyId);
+              }}
+              className="clean-3d-button w-full md:w-auto bg-[#cca062] hover:bg-[#b28950] text-white flex items-center justify-center gap-2"
+              title="Gerar PDF de Conferência de Pedidos Ativos"
+            >
+              <Printer size={18} /> Conferência de Ativos
+            </button>
             <button
               onClick={() => setIsWizardOpen(true)}
               className="clean-3d-button w-full md:w-auto"
@@ -506,6 +519,16 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
       {selectedOrderIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-3d-soft animate-in slide-in-from-bottom-4">
           <span className="text-xs font-bold mr-2">{selectedOrderIds.length} selecionados</span>
+          <button
+            onClick={() => {
+              const selectedOrders = orders.filter(o => selectedOrderIds.includes(o.id!));
+              exportActiveOrdersVerificationPDF(selectedOrders, companyId);
+            }}
+            className="p-2 hover:bg-white/10 rounded-lg flex items-center gap-1.5 text-xs text-amber-300 font-bold cursor-pointer"
+            title="Gerar PDF de Conferência para os selecionados"
+          >
+            <Printer size={16} /> Conferência
+          </button>
           <button onClick={handleBatchDelete} className="p-2 hover:bg-white/10 rounded-lg"><Trash2 size={16} className="text-rose-400"/></button>
           <button onClick={clearSelection} className="p-2 hover:bg-white/10 rounded-lg">Cancelar</button>
         </div>

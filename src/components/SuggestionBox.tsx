@@ -22,12 +22,14 @@ export const SuggestionBox: React.FC<SuggestionBoxProps> = ({ companyId, hideTri
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || !subject.trim() || loading) return;
 
     setLoading(true);
+    setError('');
     try {
       await addSuggestion(companyId, `ASSUNTO: ${subject}\n\nSUGESTÃO: ${message}`);
       setSent(true);
@@ -39,7 +41,7 @@ export const SuggestionBox: React.FC<SuggestionBoxProps> = ({ companyId, hideTri
       }, 3000);
     } catch (e) {
       console.error(e);
-      alert('Erro ao enviar sugestão.');
+      setError('Erro ao enviar sugestão.');
     } finally {
       setLoading(false);
     }
@@ -99,6 +101,11 @@ export const SuggestionBox: React.FC<SuggestionBoxProps> = ({ companyId, hideTri
                     className={`w-full ${theme.cardBg} border ${theme.borderLine} text-inherit rounded-2xl px-4 py-3 text-[10px] font-bold outline-none h-24 resize-none focus:ring-1 ring-current transition-all placeholder:opacity-30`}
                     required
                   />
+                  {error && (
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-red-500 text-center animate-pulse">
+                      {error}
+                    </p>
+                  )}
                   <button
                     disabled={loading}
                     type="submit"

@@ -179,6 +179,7 @@ export interface Order {
   photos?: string[];
   hasSignal?: boolean;
   signalValue?: number;
+  payAmount?: number;
   source?: 'catalog' | 'admin';
   giftInfo?: string;
   giftName?: string;
@@ -626,7 +627,9 @@ export interface PurchaseOrder {
 
 export interface Campaign {
   id: string;
+  internalName?: string;
   title: string;
+  subtitle?: string;
   description?: string;
   type: 'banner' | 'carousel' | 'product_highlight' | 'seasonal_campaign';
   active: boolean;
@@ -640,6 +643,7 @@ export interface Campaign {
   imageUrl?: string;
   mobileImageUrl?: string;
   colorTheme?: string;
+  linkUrl?: string;
   createdAt: any;
   updatedAt?: any;
 }
@@ -648,6 +652,7 @@ export type AuditModule =
   | 'Clientes' 
   | 'Produtos' 
   | 'Pedidos' 
+  | 'Vendas'
   | 'Produção' 
   | 'Estoque' 
   | 'Compras' 
@@ -659,6 +664,7 @@ export type AuditModule =
 export type AuditActionType = 
   | 'Criação' 
   | 'Alteração' 
+  | 'Atualização'
   | 'Exclusão Lógica' 
   | 'Mudança de Status' 
   | 'Registro de Pagamento' 
@@ -666,6 +672,7 @@ export type AuditActionType =
   | 'Saída de Estoque'
   | 'Cancelamento' 
   | 'Aprovação' 
+  | 'Alerta'
   | 'Alteração de Preço' 
   | 'Alteração de Ficha Técnica' 
   | 'Alteração de Prazo';

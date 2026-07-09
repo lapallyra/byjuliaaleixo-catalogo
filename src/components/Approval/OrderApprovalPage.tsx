@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, query, where, getDocs, updateDoc, addDoc, serverTimestamp, orderBy, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, doc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Order, OrderVersion, OrderApprovalStatus } from '../../types';
 import { Loader2 } from 'lucide-react';
-import { handleFirestoreError, OperationType } from '../../services/firebaseService';
+import { handleFirestoreError, OperationType, updateOrder } from '../../services/firebaseService';
 
 export const OrderApprovalPage: React.FC = () => {
   const { code } = useParams<{ code: string }>();
@@ -47,7 +47,7 @@ export const OrderApprovalPage: React.FC = () => {
   const handleApprove = async () => {
     if (!order) return;
     try {
-      await updateDoc(doc(db, 'orders', order.id), { approvalStatus: 'approved', status: 'waiting_payment' });
+      await updateOrder(order.id, { approvalStatus: 'approved', status: 'waiting_payment' });
       setOrder({ ...order, approvalStatus: 'approved', status: 'waiting_payment' });
     } catch (e) {
       handleFirestoreError(e, OperationType.UPDATE, `orders/${order.id}`);
@@ -66,7 +66,7 @@ export const OrderApprovalPage: React.FC = () => {
         author: 'customer',
         createdAt: serverTimestamp()
       });
-      await updateDoc(doc(db, 'orders', order.id), { 
+      await updateOrder(order.id, { 
         approvalStatus: 'adjustments_requested',
         currentVersion: nextVersion 
       });

@@ -13,7 +13,7 @@ export const DashboardCliente: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-parisienne text-4xl text-[#3A312D]">Olá, Julia 🌸</h1>
+        <h1 className="font-mea-culpa text-4xl text-[#3A312D]">Olá, Julia 🌸</h1>
         <p className="text-gray-500 mt-2">Seus momentos especiais estão guardados aqui com carinho.</p>
       </div>
 

@@ -67,6 +67,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null);
   const [couponsList, setCouponsList] = useState<any[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadCoupons = async () => {
@@ -100,6 +101,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   const needsDeposit = total >= 100;
 
   const applyCoupon = () => {
+    setCouponError(null);
     const code = coupon.trim().toUpperCase();
     if (!code) {
       setAppliedCoupon(null);
@@ -110,14 +112,14 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
     const realCoupon = couponsList.find(c => c.code?.toUpperCase() === code);
     if (!realCoupon) {
       setAppliedCoupon(null);
-      alert('Cupom inválido');
+      setCouponError('Cupom inválido');
       return;
     }
 
     // Validate status
     if (realCoupon.status !== "active") {
       setAppliedCoupon(null);
-      alert('Este cupom não está ativo.');
+      setCouponError('Este cupom não está ativo.');
       return;
     }
 
@@ -125,26 +127,26 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
     const today = new Date().toISOString().split('T')[0];
     if (realCoupon.startDate && realCoupon.startDate > today) {
       setAppliedCoupon(null);
-      alert('Este cupom ainda não é válido.');
+      setCouponError('Este cupom ainda não é válido.');
       return;
     }
     if (realCoupon.endDate && realCoupon.endDate < today) {
       setAppliedCoupon(null);
-      alert('Este cupom já expirou.');
+      setCouponError('Este cupom já expirou.');
       return;
     }
 
     // Validate uses count
     if (realCoupon.maxUses && realCoupon.usesCount >= realCoupon.maxUses) {
       setAppliedCoupon(null);
-      alert('Este cupom já atingiu o limite de usos.');
+      setCouponError('Este cupom já atingiu o limite de usos.');
       return;
     }
 
     // Validate minOrderValue
     if (realCoupon.minOrderValue && subtotal < realCoupon.minOrderValue) {
       setAppliedCoupon(null);
-      alert(`Valor mínimo de compra para este cupom é R$ ${realCoupon.minOrderValue.toFixed(2)}.`);
+      setCouponError(`Valor mínimo de compra para este cupom é R$ ${realCoupon.minOrderValue.toFixed(2)}.`);
       return;
     }
 
@@ -153,7 +155,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
       const hasMatchingProduct = cart.some(item => realCoupon.appliedProducts.includes(item.id));
       if (!hasMatchingProduct) {
         setAppliedCoupon(null);
-        alert('Este cupom não se aplica aos itens selecionados.');
+        setCouponError('Este cupom não se aplica aos itens selecionados.');
         return;
       }
     }
@@ -163,7 +165,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
       const hasMatchingCategory = cart.some(item => realCoupon.appliedCategories?.includes(item.category || ""));
       if (!hasMatchingCategory) {
         setAppliedCoupon(null);
-        alert('Este cupom não se aplica a nenhum item desta categoria.');
+        setCouponError('Este cupom não se aplica a nenhum item desta categoria.');
         return;
       }
     }
@@ -189,7 +191,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
         }}
         exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className={`fixed right-0 top-0 h-full ${theme.bg} ${theme.textPrimary} backdrop-blur-2xl border-l ${theme.borderLine} z-[2000] shadow-[0_0_80px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden`}
+        className={`fixed right-0 top-0 h-[100dvh] ${theme.bg} ${theme.textPrimary} backdrop-blur-2xl border-l ${theme.borderLine} z-[2000] shadow-[0_0_80px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden`}
       >
         <div className={`p-6 border-b ${theme.borderLine} flex items-center ${theme.cardBg} ${isCollapsed ? 'flex-col justify-center gap-6 px-2' : 'justify-between'}`}>
           {!isCollapsed ? (
@@ -315,6 +317,12 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                     Aplicar
                   </button>
                 </div>
+
+                {couponError && (
+                  <div className="w-full text-center py-2 px-3 text-[10px] uppercase tracking-wider font-bold text-red-500 animate-pulse">
+                    {couponError}
+                  </div>
+                )}
 
                 {appliedCoupon && (
                   <div className={`w-full ${theme.specialBg} ${theme.specialBorder} ${theme.specialText} border text-[9px] font-black py-3 rounded-xl text-center uppercase tracking-widest flex items-center justify-center gap-2`}>

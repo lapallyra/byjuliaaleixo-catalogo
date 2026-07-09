@@ -25,8 +25,6 @@ import {
   preloadAdminData,
 } from "../services/firebaseService";
 import { startProductProduction } from "../services/productionService";
-import { db } from "../lib/firebase";
-import { doc, deleteDoc, updateDoc } from "firebase/firestore";
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -85,7 +83,6 @@ import { CollectionsTab } from "./Admin/CollectionsTab";
 import { MediaCenterTab } from "./Admin/MediaCenterTab";
 import { CampaignsTab } from "./Admin/CampaignsTab";
 import { CouponsTab } from "./Admin/CouponsTab";
-import { ExpeditionTab } from "./Admin/ExpeditionTab";
 import { IntegrationsTab } from "./Admin/IntegrationsTab";
 import { NotificationsTab } from "./Admin/NotificationsTab";
 import { ComponentsTab } from "./Admin/ComponentsTab";
@@ -169,7 +166,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   const [sales, setSales] = useState<Order[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [insumos, setInsumos] = useState<Insumo[]>([]);
-  const [componentes, setComponentes] = useState<Componente[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
@@ -244,8 +240,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       setSales(loaded as Order[]),
     );
     const unsubSettings = subscribeToAllSettings(setSettings);
-    const unsubInsumos = subscribeToInsumos((data) => setInsumos(data as any)); // Existing
-    const unsubComponentes = subscribeToInsumos((data) => setComponentes(data as Componente[]));
+    const unsubInsumos = subscribeToInsumos((data) => setInsumos(data as any)); 
     const unsubCustomers = subscribeToCustomers(setCustomers);
     const unsubSuggestions = subscribeToSuggestions(setSuggestions);
     const unsubFeedbacks = subscribeToFeedbacks(setFeedbacks);
@@ -563,7 +558,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                 products={products} 
                 customers={customers} 
                 insumos={insumos} 
-                componentes={componentes}
                 onResultClick={(type, id) => {
                   if (type === 'Pedido') { setSelectedOrderId(id); setActiveTab('orders'); }
                   else if (type === 'Cliente') { setSelectedCustomerId(id); setActiveTab('clients'); }
@@ -641,9 +635,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       customers={customers}
                       companyId={selectedCompanyId}
                       onAction={(action: any) => {
-                        if (action === "view_agenda") {
-                          // Agenda tab is removed. Do nothing.
-                        } else if (action === "new_order" || action === "orders") setActiveTab("orders");
+                        if (action === "new_order" || action === "orders") setActiveTab("orders");
                         else if (action === "new_client" || action === "clients") setActiveTab("clients");
                         else if (action === "new_insumo" || action === "inventory") setActiveTab("inventory");
                         else if (action === "products") setActiveTab("products");
@@ -712,7 +704,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                         }
                       }}
                       onDeleteOrder={async (id) => {
-                        await deleteDoc(doc(db, "orders", id));
+                        await updateOrder(id, { status: "cancelled" });
                       }}
                       initialOrderId={selectedOrderId}
                       initialCustomerId={selectedCustomerId}
@@ -720,7 +712,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   )}
                   {activeTab === "componentes" && (
                     <ComponentsTab
-                      componentes={componentes}
+                      companyId={selectedCompanyId}
+                      products={products}
+                      componentes={insumos}
                       onSaveComponente={async (data) => {
                         if (data.id) {
                           await updateInsumo(data.id, data as any);
@@ -734,23 +728,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "purchases" && (
-                    <PurchasesTab companyId={selectedCompanyId} />
+                    <PurchasesTab companyId={selectedCompanyId} orders={sales} />
                   )}
                   {activeTab === "financeiro" && (
                     <FinanceTab
+                      auditLogs={auditLogs}
                       orders={sales}
                       products={products}
-                      componentes={componentes}
+                      componentes={insumos}
                       companyId={selectedCompanyId}
                     />
                   )}
                   {activeTab === "inventory" && (
                     <InventoryTab
+                      companyId={selectedCompanyId}
                       orders={sales}
                       products={products}
                       insumos={insumos}
                       onUpdateOrder={async (id, data) => {
-                        await updateDoc(doc(db, "orders", id), data);
+                        await updateOrder(id, data);
                       }}
                     />
                   )}
@@ -785,10 +781,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "collections" && (
-                    <CollectionsTab />
+                    <CollectionsTab products={products} />
                   )}
                   {activeTab === "campaigns" && (
-                    <CampaignsTab />
+                    <CampaignsTab products={products} />
                   )}
                   {activeTab === "coupons" && (
                     <CouponsTab
@@ -798,7 +794,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "media-center" && (
-                    <MediaCenterTab />
+                    <MediaCenterTab products={products} />
                   )}
                   {activeTab === "kits" && (
                     <KitsTab
@@ -868,7 +864,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <NotificationsTab />
                   )}
                   {activeTab === "activity-logs" && (
-                    <AuditTimelineTab />
+                    <AuditTimelineTab companyId={selectedCompanyId} auditLogs={auditLogs} />
                   )}
                 </ErrorBoundary>
               </React.Suspense>

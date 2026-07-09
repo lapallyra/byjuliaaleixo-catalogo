@@ -13,9 +13,9 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
   const navigate = useNavigate();
 
   return (
-    <footer className="bg-white border-t border-[#e8dcc8]/25 pt-16 pb-10 px-6 sm:px-12 font-sans overflow-hidden mt-auto">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12 mb-10">
-        <div className="md:w-1/3 flex flex-col items-center md:items-start text-center md:text-left">
+    <footer className="bg-white border-t border-[#e8dcc8]/25 pt-16 pb-10 px-4 md:px-8 font-sans overflow-hidden mt-auto">
+      <div className="max-w-[1700px] mx-auto flex flex-col md:flex-row justify-between gap-8 mb-10">
+        <div className="md:w-[20%] flex flex-col items-center md:items-start text-center md:text-left">
           <div className="mb-4 flex flex-col items-center md:items-start cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <LogoAndSignature small={true} />
           </div>
@@ -30,7 +30,7 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
           </div>
         </div>
         
-        <div className="md:w-1/4">
+        <div className="md:w-[15%]">
            <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">Ateliês</h4>
            <ul className="space-y-3 text-[11px] font-light text-[#6d5443]/80 font-tahoma">
              {ATELIERS.map((a) => (
@@ -39,17 +39,31 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
            </ul>
         </div>
 
-        <div className="md:w-1/4">
+        <div className="md:w-[15%]">
            <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">Navegação</h4>
            <ul className="space-y-3 text-[11px] font-light text-[#6d5443]/80 font-tahoma">
              <li><a href="/#kits" className="hover:text-[#cca062] transition-colors">Kits Prontos</a></li>
              <li><button onClick={() => navigate('/kit-meukit')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Monte seu Kit</button></li>
-             <li><a href="/#produtos" className="hover:text-[#cca062] transition-colors">Produtos</a></li>
+             <li><button onClick={() => navigate('/colecoes')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Coleções</button></li>
              <li><button onClick={() => navigate('/listadepresentes-info')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Lista de Presentes</button></li>
            </ul>
         </div>
         
-        <div className="md:w-1/4">
+        <div className="md:w-[20%]">
+           <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">Contato</h4>
+           <ul className="space-y-3 text-[11px] font-light text-[#6d5443]/80 font-tahoma mb-6">
+               <li>E-mail: lapallyra@gmail.com</li>
+               <li>Contato: 44 9 7400 2857</li>
+               <li className="pt-2">
+                   <span className="font-bold block mb-1">Horário de atendimento</span>
+                   <span className="bg-[#e8dcc8]/40 px-2 py-0.5 rounded font-bold text-[#3A312D]">14:00 às 20:00</span>
+                   <p className="mt-1">Segunda | Terça | Quinta</p>
+                   <p>Sexta e Domingo</p>
+               </li>
+           </ul>
+        </div>
+
+        <div className="md:w-[15%]">
            <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">Suporte</h4>
            <ul className="space-y-3 text-[11px] font-light text-[#6d5443]/80 font-tahoma">
               <li><button onClick={() => navigate('/rastreamento')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer">Rastreamento de Pedido</button></li>
@@ -58,7 +72,7 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
            </ul>
         </div>
 
-        <div className="md:w-1/4 flex flex-col items-center md:items-start">
+        <div className="md:w-[15%] flex flex-col items-center md:items-start">
            <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-4.5 font-poppins">Pagamento</h4>
            <div className="flex flex-col gap-4 items-center md:items-start">
               {/* Mercado Pago Badge */}
@@ -92,7 +106,7 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
       </div>
 
       {/* FINAL LEGAL FOOTER */}
-      <div className="max-w-7xl mx-auto border-t border-[#e8dcc8]/20 pt-6 mt-6 text-center select-none">
+      <div className="max-w-[1600px] mx-auto border-t border-[#e8dcc8]/20 pt-6 mt-6 text-center select-none">
         <p className="font-sans text-[11px] sm:text-[12px] text-[#6d5443]/75 tracking-normal font-normal leading-relaxed">
           © 2025 Presentes Personalizados by Julia Aleixo. Todos os direitos reservados. CNPJ 63.348.579/0001-06
         </p>

@@ -1,24 +1,6 @@
 import { db } from '../lib/firebase';
 import { addDoc, collection, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 
-const getSystemNotificationsConfig = async (): Promise<any> => {
-  try {
-    const docSnap = await getDoc(doc(db, 'system_notifications', 'settings'));
-    if (docSnap.exists()) {
-      return docSnap.data();
-    }
-  } catch (e) {
-    console.error('Error fetching system notifications config in telegramService:', e);
-  }
-  return null;
-};
-
-const decryptHex = (str: string) => {
-  try {
-     return atob(str.split('').reverse().join(''));
-  } catch(e) { return "" }
-};
-
 export const resendTelegramNotification = async (logId: string, logData: any) => {
    // Re-send it
    await sendTelegramNotification(logData.type, logData.message);
@@ -26,36 +8,20 @@ export const resendTelegramNotification = async (logId: string, logData: any) =>
 
 export const sendTelegramNotification = async (type: string, message: string) => {
   try {
-    const tgConfig = await getSystemNotificationsConfig();
-    
-    if (!tgConfig || !tgConfig.telegram_enabled || !tgConfig.telegram_bot_token || !tgConfig.telegram_chat_id) {
-      return; 
-    }
-
-    // Check specific preferences
-    if (type === 'new_order' && !tgConfig.notify_new_order) return;
-    if (type === 'payment_confirmed' && !tgConfig.notify_payment_confirmed) return;
-    if (type === 'order_canceled' && !tgConfig.notify_order_canceled) return;
-    if (type === 'order_completed' && !tgConfig.notify_order_completed) return;
-    if (type === 'low_stock' && !tgConfig.notify_low_stock) return;
-    if (type === 'new_client' && !tgConfig.notify_new_client) return;
-
-    const token = decryptHex(tgConfig.telegram_bot_token);
-    if (!token) return;
-
-    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    const res = await fetch('/api/telegram/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        chat_id: tgConfig.telegram_chat_id,
-        text: message
+        type: type,
+        message: message
       })
     });
 
     if (res.ok) {
        await logTelegramEvent(type, message, 'success');
     } else {
-       await logTelegramEvent(type, message, 'error', await res.text());
+       const errorText = await res.text();
+       await logTelegramEvent(type, message, 'error', errorText);
     }
 
   } catch (error: any) {

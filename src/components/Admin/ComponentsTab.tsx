@@ -32,7 +32,7 @@ import {
   Power,
   RotateCcw
 } from "lucide-react";
-import { Componente, Product, ComponenteMovement } from "../../types";
+import { Componente, Product, ComponenteMovement, CompanyId } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { InsumoFormModal } from "./InsumoFormModal";
 import { db } from "../../lib/firebase";
@@ -51,6 +51,7 @@ import {
 } from "firebase/firestore";
 
 interface ComponentsTabProps {
+  companyId: CompanyId;
   products: Product[];
   componentes: Componente[];
   onSaveComponente: (componente: Partial<Componente>) => Promise<void>;
@@ -58,6 +59,7 @@ interface ComponentsTabProps {
 }
 
 export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
+  companyId,
   products,
   componentes,
   onSaveComponente,
@@ -966,6 +968,7 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
       <AnimatePresence>
         {isModalOpen && editingComponente && (
           <InsumoFormModal
+            companyId={companyId}
             editing={editingComponente}
             onClose={() => { setIsModalOpen(false); setEditingComponente(null); }}
             onSave={async (data) => {

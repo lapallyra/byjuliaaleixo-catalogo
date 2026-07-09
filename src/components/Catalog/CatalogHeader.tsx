@@ -18,6 +18,7 @@ export const CatalogHeader: React.FC<{
   onFilterClick: () => void;
   logoUrl?: string;
   companyId?: string;
+  searchQuery?: string;
 }> = ({ 
   companyName, 
   theme, 
@@ -34,11 +35,16 @@ export const CatalogHeader: React.FC<{
   onProfileClick,
   onFilterClick,
   logoUrl,
-  companyId
+  companyId,
+  searchQuery = ""
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState(searchQuery);
+
+  React.useEffect(() => {
+    setSearchValue(searchQuery);
+  }, [searchQuery]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,25 +52,46 @@ export const CatalogHeader: React.FC<{
     setIsSearchVisible(false);
   };
 
+  const handleSearchChange = (val: string) => {
+    setSearchValue(val);
+    onSearch(val);
+  };
+
+  const handleClearSearch = () => {
+    setSearchValue("");
+    onSearch("");
+  };
+
   return (
     <header className="relative bg-white z-50">
       {/* Search Overlay */}
       {isSearchVisible && (
-        <div className="absolute inset-0 bg-white z-[60] flex items-center px-4">
+        <div className="absolute inset-0 bg-white z-[60] flex items-center px-4 shadow-md border-b border-neutral-100">
           <form onSubmit={handleSearchSubmit} className="flex-1 max-w-4xl mx-auto flex items-center gap-4">
-            <Search size={20} className="text-[#3A312D]/40" />
+            <Search size={20} className="text-[#3A312D]/40 shrink-0" />
             <input 
               autoFocus
               type="text" 
               placeholder="O que você está procurando?" 
-              className="flex-1 bg-transparent border-none outline-none text-lg font-serif italic text-[#3A312D]"
+              className="flex-1 bg-transparent border-none outline-none text-lg font-serif italic text-[#3A312D] placeholder-neutral-300"
               value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
+            {searchValue && (
+              <button 
+                type="button"
+                onClick={handleClearSearch}
+                className="p-1.5 hover:bg-neutral-100 rounded-full text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
+                title="Limpar busca"
+              >
+                <X size={16} />
+              </button>
+            )}
             <button 
               type="button" 
               onClick={() => setIsSearchVisible(false)}
-              className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
+              className="p-2 hover:bg-neutral-100 rounded-full transition-colors shrink-0"
+              title="Fechar"
             >
               <X size={20} className="text-[#3A312D]/60" />
             </button>
@@ -149,6 +176,9 @@ export const CatalogHeader: React.FC<{
         <div className="max-w-[1600px] mx-auto px-4 h-12 flex items-center justify-center gap-6 sm:gap-12">
           <button onClick={onViewAll} className="text-[11px] sm:text-[13px] font-bold text-[#3A312D] hover:text-[#D4AF37] uppercase tracking-widest transition-colors cursor-pointer">
             Atelie
+          </button>
+          <button onClick={onViewNews} className="text-[11px] sm:text-[13px] font-bold text-[#3A312D] hover:text-[#D4AF37] uppercase tracking-widest transition-colors cursor-pointer">
+            Novidades
           </button>
           <button onClick={onViewCollections} className="text-[11px] sm:text-[13px] font-bold text-[#3A312D] hover:text-[#D4AF37] uppercase tracking-widest transition-colors cursor-pointer">
             Personalize

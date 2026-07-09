@@ -11,6 +11,7 @@ import { FeaturedProductCard } from './Catalog/FeaturedProductCard';
 import { LogoAndSignature } from './ui/LogoAndSignature';
 import { themes, getTheme } from '../lib/theme';
 import { motion, AnimatePresence } from 'motion/react';
+import { SeasonalBanner } from './Catalog/SeasonalBanner';
 
 interface EntryViewProps {
   config: AppConfig;
@@ -212,113 +213,59 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
   ];
 
   return (
-    <div className="home-root bg-[#fffdfa] min-h-[100dvh] w-full relative font-tahoma text-[#6d5443] selection:bg-[#e8dcc8] selection:text-[#3A312D] overflow-x-hidden antialiased">
+    <div className="home-root bg-white min-h-[100dvh] w-full relative font-tahoma text-[#1F1F1F] selection:bg-[#EAE4DC] selection:text-[#1F1F1F] overflow-x-hidden antialiased">
       
       {/* HUGE CENTERED LOGO */}
-      <div className="w-full bg-white py-5 flex justify-center items-center border-b border-[#e8dcc8]/10">
-        <div onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="cursor-pointer hover:opacity-90 transition-all duration-300">
+      <div className="w-full bg-white py-6 flex justify-center items-center border-b border-[#EAE4DC]/50">
+        <div onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="cursor-pointer hover:opacity-90 transition-all duration-150">
           <LogoAndSignature small={false} />
         </div>
       </div>
 
-      {/* DYNAMIC CAMPAIGN BANNER */}
+      {/* DYNAMIC CAMPAIGN BANNER (SEASONAL) */}
       {mainBannerCampaign && (
-        <div 
-          className="w-full relative aspect-[21/9] md:aspect-[3/1] lg:aspect-[4/1] overflow-hidden group cursor-pointer"
-          onClick={() => {
-            if (mainBannerCampaign.highlightProductId) {
-              const p = allProducts.find(prod => prod.id === mainBannerCampaign.highlightProductId);
-              if (p) {
-                const route = p.company === 'pallyra' ? '/lapallyra' : p.company === 'guennita' ? '/comamorguennita' : p.company === 'mimada' ? '/mimadasim' : '/tuttymimo';
-                navigate(`${route}?product=${p.id}`);
-              }
-            }
-          }}
-        >
-          <img 
-            src={window.innerWidth < 768 && mainBannerCampaign.mobileImageUrl ? mainBannerCampaign.mobileImageUrl : (mainBannerCampaign.imageUrl || "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?q=80&w=2070&auto=format&fit=crop")} 
-            alt={mainBannerCampaign.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-center p-6 text-white backdrop-blur-[1px]">
-            <motion.span 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-[10px] md:text-xs font-bold tracking-[0.4em] uppercase mb-2 text-[#cca062]"
-            >
-              Exclusividade Ateliê
-            </motion.span>
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="font-parisienne text-3xl md:text-5xl lg:text-7xl mb-4"
-              style={{ color: mainBannerCampaign.colorTheme || 'inherit' }}
-            >
-              {mainBannerCampaign.title}
-            </motion.h1>
-            {mainBannerCampaign.description && (
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-xs md:text-base font-light max-w-2xl opacity-90 font-sans tracking-wide"
-              >
-                {mainBannerCampaign.description}
-              </motion.p>
-            )}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
-              className="mt-8"
-            >
-              <button className="px-8 py-3 bg-white text-[#3A312D] text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-[#3A312D] hover:text-[#cca062] transition-all shadow-lg">
-                Explorar Coleção
-              </button>
-            </motion.div>
-          </div>
+        <div className="max-w-[1600px] mx-auto px-4 md:px-6 my-6 animate-in fade-in duration-150">
+          <SeasonalBanner campaign={mainBannerCampaign} />
         </div>
       )}
 
       {/* LUXURY ACTIVE NAVIGATION BAR */}
-      <div className="w-full border-b border-[#e8dcc8]/25 bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-3xs">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="w-full border-b border-[#EAE4DC]/50 bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
+        <div className="max-w-[1600px] mx-auto px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
           
           {/* Centered navigation links */}
-          <nav className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 gap-y-2 text-[#3A312D] tracking-[0.1em] font-semibold text-[11px] sm:text-[12px] uppercase select-none font-poppins">
+          <nav className="flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-4 gap-y-2 text-[#1F1F1F] tracking-[0.1em] font-medium text-[11px] sm:text-[12px] uppercase select-none font-poppins">
             <a 
               href="#ateliers" 
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[#3A312D] hover:bg-[#3A312D] hover:text-[#cca062] transition-all duration-300 ease-in-out font-medium tracking-[0.1em] font-poppins"
+              className="px-3 py-1.5 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out font-medium tracking-[0.12em]"
             >
               ateliês
             </a>
             
             <button 
               onClick={() => navigate('/kit-meukit')} 
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[#3A312D] hover:bg-[#3A312D] hover:text-[#cca062] transition-all duration-300 ease-in-out cursor-pointer outline-none uppercase font-semibold tracking-[0.12em] text-[11px] sm:text-[12px] font-poppins"
+              className="px-3 py-1.5 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out cursor-pointer outline-none uppercase font-semibold tracking-[0.12em] text-[11px] sm:text-[12px]"
             >
               monte seu kit
             </button>
             
             <a 
               href="#sobre-julia" 
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[#3A312D] hover:bg-[#3A312D] hover:text-[#cca062] transition-all duration-300 ease-in-out font-medium tracking-[0.1em] font-poppins"
+              className="px-3 py-1.5 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out font-medium tracking-[0.12em]"
             >
               sobre nós
             </a>
             
             <a 
               href="#feedbacks" 
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[#3A312D] hover:bg-[#3A312D] hover:text-[#cca062] transition-all duration-300 ease-in-out font-medium tracking-[0.1em] font-poppins"
+              className="px-3 py-1.5 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out font-medium tracking-[0.12em]"
             >
               feedback
             </a>
             
             <button 
               onClick={() => navigate('/listadepresentes-info')} 
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[#3A312D] hover:bg-[#3A312D] hover:text-[#cca062] transition-all duration-300 ease-in-out cursor-pointer outline-none uppercase font-semibold tracking-[0.12em] text-[11px] sm:text-[12px] font-poppins"
+              className="px-3 py-1.5 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out cursor-pointer outline-none uppercase font-semibold tracking-[0.12em] text-[11px] sm:text-[12px]"
             >
               lista de presentes
             </button>
@@ -334,107 +281,174 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 navigate('/document');
               }
             }}
-            className="flex items-center gap-2 bg-[#ffffff] border border-[#e8dcc8]/70 rounded-full px-4 py-2 text-[11px] font-sans text-[#6d5443] shadow-3xs hover:border-[#cca062]/50 transition-all w-full sm:w-auto md:max-w-[240px]"
+            className="flex items-center gap-2 bg-[#FCFAF7] border border-[#EAE4DC] rounded-full px-4 py-1.5 text-[11px] text-[#666666] shadow-[0_1px_2px_0_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all w-full sm:w-auto md:max-w-[240px]"
           >
-            <Search size={12} strokeWidth={2.5} className="text-[#cca062]" />
+            <Search size={11} strokeWidth={2.5} className="text-[#8A8A8A]" />
             <input 
               type="text" 
               value={searchCode}
               onChange={(e) => setSearchCode(e.target.value)}
               placeholder="encontre seu pedido aqui" 
-              className="bg-transparent focus:outline-none w-full text-[#6d5443] placeholder-[#6d5443]/40 font-medium text-[11px] select-text border-none p-0" 
+              className="bg-transparent focus:outline-none w-full text-[#1F1F1F] placeholder-[#8A8A8A] font-medium text-[11px] border-none p-0" 
             />
           </form>
         </div>
       </div>
 
       {/* BEAUTIFUL ROMANTIC CENTRAL TITLE */}
-      <div className="text-center py-10 md:py-12 px-2 animate-fade-in bg-gradient-to-b from-[#fffdfa] to-white select-none overflow-x-hidden">
-        <h2 className="font-parisienne text-[3.9vw] sm:text-2xl md:text-3.5xl lg:text-[45px] text-[#3A312D] font-normal leading-tight tracking-normal max-w-none mx-auto px-1 whitespace-nowrap">
-          Encontre o presente perfeito para deixar o seu momento inesquecivel.
+      <div className="text-center py-12 md:py-16 px-4 animate-fade-in bg-white select-none overflow-x-hidden">
+        <h2 className="font-mea-culpa text-2xl sm:text-3xl md:text-4xl lg:text-[42px] text-[#1F1F1F] font-normal leading-tight tracking-normal max-w-4xl mx-auto px-1">
+          Encontre o presente perfeito para deixar o seu momento inesquecível.
         </h2>
       </div>
 
-      {/* BOUTIQUE ATELIERS VERTICAL CAPSULE CARDS */}
-      <section id="ateliers" className="scroll-mt-24 pb-16 px-4 sm:px-6 max-w-6xl mx-auto w-full">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-5xl mx-auto font-poppins transition-transform duration-500">
-          {ateliers.map((atelier) => (
-            <div 
-              key={atelier.id}
-              onClick={() => navigate(atelier.route)}
-              onMouseEnter={() => {
-                orchestrator.setHoverActive(true);
-                orchestrator.registerInteraction();
-              }}
-              onMouseLeave={() => {
-                orchestrator.setHoverActive(false);
-              }}
-              onFocus={() => {
-                orchestrator.setHoverActive(true);
-                orchestrator.registerInteraction();
-              }}
-              onBlur={() => {
-                orchestrator.setHoverActive(false);
-              }}
-              tabIndex={0}
-              className="flex flex-col items-center group cursor-pointer relative outline-none focus:outline-none"
-            >
-              <div 
-                className="relative w-full aspect-square rounded-2xl bg-white p-1 transition-all duration-500 overflow-hidden shadow-sm flex flex-col z-10 
-                           group-hover:shadow-[0_0_20px_-5px_var(--glow-color)] group-focus:shadow-[0_0_20px_-5px_var(--glow-color)] group-hover:border-[var(--glow-color)] group-focus:border-[var(--glow-color)]"
-                style={{ 
-                  border: `2px solid transparent`,
-                  '--glow-color': atelier.accentColor
-                } as any}
-              >
-                {/* Image/Content Container */}
-                <div className="relative flex-grow rounded-xl overflow-hidden bg-[#fcfaf7]">
-                  {/* Brand Content */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none z-10 transition-transform duration-500 group-hover:scale-105">
-                    {customSettings[atelier.id]?.store_isotipo ? (
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 mb-4 flex items-center justify-center overflow-hidden">
-                        <img 
-                          src={customSettings[atelier.id]?.store_isotipo} 
-                          alt={atelier.name} 
-                          className="w-full h-full object-contain filter drop-shadow-sm"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-4xl mb-4 filter drop-shadow-md">
-                        {atelier.emoji}
-                      </span>
-                    )}
-                    <h3 className="font-mea-culpa text-3xl text-[#3A312D] mb-1 font-normal leading-none">
-                      {atelier.name}
-                    </h3>
-                    <div className="h-[1px] w-10 bg-[#cca062]/30 my-2" />
-                    <p className="font-parisienne text-[10px] text-[#cca062] tracking-[0.2em] uppercase font-normal">
-                      {atelier.subtitle}
-                    </p>
-                  </div>
+      {/* BOUTIQUE ATELIERS VERTICAL CAPSULE CARDS (WITH 3D CARD FLIP) */}
+      <section id="ateliers" className="scroll-mt-24 pb-16 px-4 sm:px-6 max-w-[1600px] mx-auto w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+          {ateliers.map((atelier) => {
+            const getAtelierCardTheme = (id: string) => {
+              switch (id) {
+                case 'pallyra':
+                  return {
+                    frontBg: 'bg-white',
+                    frontBorder: 'border-neutral-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.02)]',
+                    frontIsotipoBg: 'bg-[#fafafa] border-neutral-100',
+                    frontLogoFilter: '',
+                    backBg: 'bg-[#121212]',
+                    backBorder: 'border-[#cca062]/40 shadow-[0_8px_24px_rgba(204,160,98,0.15)]',
+                    backDescText: 'text-neutral-300',
+                    backTitleText: 'text-[#cca062]',
+                    backButtonClass: 'bg-[#cca062] hover:bg-white text-neutral-950 hover:text-black border border-transparent',
+                    nameHoverText: 'group-hover:text-[#cca062]',
+                  };
+                case 'guennita':
+                  return {
+                    frontBg: 'bg-white',
+                    frontBorder: 'border-neutral-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.02)]',
+                    frontIsotipoBg: 'bg-[#fafafa] border-neutral-100',
+                    frontLogoFilter: '',
+                    backBg: 'bg-[#4a1213]',
+                    backBorder: 'border-[#cca062]/40 shadow-[0_8px_24px_rgba(204,160,98,0.15)]',
+                    backDescText: 'text-neutral-200',
+                    backTitleText: 'text-[#cca062]',
+                    backButtonClass: 'bg-[#cca062] hover:bg-white text-neutral-950 hover:text-[#4a1213] border border-transparent',
+                    nameHoverText: 'group-hover:text-[#cca062]',
+                  };
+                case 'mimada':
+                  return {
+                    frontBg: 'bg-white',
+                    frontBorder: 'border-neutral-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.02)]',
+                    frontIsotipoBg: 'bg-[#fafafa] border-neutral-100',
+                    frontLogoFilter: '',
+                    backBg: 'bg-[#c96b71]',
+                    backBorder: 'border-[#c96b71]/20 shadow-[0_8px_24px_rgba(201,107,113,0.15)]',
+                    backDescText: 'text-white/95',
+                    backTitleText: 'text-white',
+                    backButtonClass: 'bg-white text-[#c96b71] hover:bg-[#fdf4f5] border border-transparent',
+                    nameHoverText: 'group-hover:text-[#c96b71]',
+                  };
+                case 'tuttymimo':
+                default:
+                  return {
+                    frontBg: 'bg-white',
+                    frontBorder: 'border-neutral-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.02)]',
+                    frontIsotipoBg: 'bg-[#fafafa] border-neutral-100',
+                    frontLogoFilter: '',
+                    backBg: 'bg-gradient-to-b from-[#FAF9F6] to-[#FFF0F2]',
+                    backBorder: 'border-[#ebd9cb] shadow-[0_8px_24px_rgba(235,217,203,0.3)]',
+                    backDescText: 'text-[#6d5443]/80',
+                    backTitleText: 'text-[#cca062]',
+                    backButtonClass: 'bg-[#6d5443] hover:bg-[#cca062] hover:text-white text-white border border-transparent',
+                    nameHoverText: 'group-hover:text-[#cca062]',
+                  };
+              }
+            };
 
-                  {/* Active Hover Cover */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 z-20 flex flex-col justify-center items-center p-5 text-center text-white bg-black/85 select-none">
-                    <p className="font-parisienne text-base text-[#e8dcc8] mb-2 font-normal">{atelier.details}</p>
-                    <p className="text-[10px] tracking-wide leading-relaxed font-light mb-6 max-w-[150px] opacity-90 font-sans">
-                      {atelier.description}
-                    </p>
-                    <div className="absolute bottom-6 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                      <span className="font-poppins font-bold text-[8px] uppercase tracking-[0.25em] border border-white/30 px-5 py-2 rounded-full hover:bg-white hover:text-black transition-all">
-                        ver vitrine
-                      </span>
+            const cardTheme = getAtelierCardTheme(atelier.id);
+
+            return (
+              <div 
+                key={atelier.id}
+                onClick={() => navigate(atelier.route)}
+                onMouseEnter={() => {
+                  orchestrator.setHoverActive(true);
+                  orchestrator.registerInteraction();
+                }}
+                onMouseLeave={() => {
+                  orchestrator.setHoverActive(false);
+                }}
+                onFocus={() => {
+                  orchestrator.setHoverActive(true);
+                  orchestrator.registerInteraction();
+                }}
+                onBlur={() => {
+                  orchestrator.setHoverActive(false);
+                }}
+                className="flex flex-col items-center gap-4 group cursor-pointer outline-none"
+              >
+                {/* 3D Polaroid Flipping Card Wrapper */}
+                <div 
+                  tabIndex={0}
+                  className="relative w-full aspect-[4/5] perspective-1000 rounded-2xl focus:ring-2 focus:ring-[#cca062]"
+                >
+                  <div className="relative w-full h-full transition-transform duration-500 preserve-3d group-hover:rotate-y-180 group-focus:rotate-y-180 shadow-md rounded-2xl">
+                    
+                    {/* FRONT FACE: Polaroid Image Area (Neutral Base State) */}
+                    <div className={`absolute inset-0 w-full h-full backface-hidden rounded-2xl border p-4 pb-12 flex flex-col items-center justify-start shadow-[0_4px_12px_rgba(0,0,0,0.02)] transition-all duration-300 ${cardTheme.frontBg} ${cardTheme.frontBorder}`}>
+                      {/* Photo Area (Mask) - Single visual frame */}
+                      <div className="w-full aspect-square rounded-xl bg-[#fafafa] border border-neutral-100 overflow-hidden relative flex items-center justify-center p-0 shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)]">
+                        {customSettings[atelier.id]?.store_isotipo ? (
+                          <ImageWithFallback 
+                            src={customSettings[atelier.id]?.store_isotipo} 
+                            alt={atelier.name} 
+                            className="w-full h-full object-cover transition-transform duration-[350ms] group-hover:scale-105"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <span className="text-6xl filter drop-shadow-sm select-none transition-transform duration-[350ms] group-hover:scale-110">
+                            {atelier.emoji}
+                          </span>
+                        )}
+                      </div>
                     </div>
+
+                    {/* BACK FACE (FLIPPED): Brand Identity state shown on hover/interaction only */}
+                    <div className={`absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-2xl border p-6 flex flex-col items-center justify-between shadow-[0_8px_20px_rgba(0,0,0,0.04)] transition-all duration-300 ${cardTheme.backBg} ${cardTheme.backBorder}`}>
+                      <div className="flex-grow flex flex-col items-center justify-center text-center">
+                        <span className={`font-mea-culpa text-2xl font-bold mb-4 ${cardTheme.backTitleText}`}>
+                          {customSettings[atelier.id]?.store_name || atelier.name}
+                        </span>
+                        <p className={`text-[11px] sm:text-xs leading-relaxed font-light line-clamp-4 px-1 ${cardTheme.backDescText}`}>
+                          {atelier.description}
+                        </p>
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(atelier.route);
+                        }}
+                        className={`w-full text-[9px] font-bold uppercase tracking-[0.25em] py-2.5 px-4 rounded-xl transition-all duration-200 shadow-sm ${cardTheme.backButtonClass}`}
+                      >
+                        Vitrine
+                      </button>
+                    </div>
+
                   </div>
                 </div>
-              </div>
 
-              {/* Title below card */}
-              <h3 className="font-mea-culpa text-3xl font-normal text-[#3A312D] text-center mt-5 block group-hover:text-[#3A312D] transition-all duration-300 group-hover:translate-y-1">
-                {atelier.name}
-              </h3>
-            </div>
-          ))}
+                {/* NAME OF THE ATELIER: Below the card (below the moldura) */}
+                <div className="text-center mt-1 select-none pointer-events-none">
+                  <h3 className={`font-mea-culpa text-3xl text-neutral-800 tracking-wide transition-colors duration-300 ${cardTheme.nameHoverText}`}>
+                    {customSettings[atelier.id]?.store_name || atelier.name}
+                  </h3>
+                  <span className="text-[9.5px] font-semibold tracking-[0.2em] text-[#cca062] uppercase block mt-1">
+                    {atelier.subtitle}
+                  </span>
+                </div>
+
+              </div>
+            );
+          })}
         </div>
 
         <div className="mt-14 text-center">
@@ -442,29 +456,106 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             onClick={() => navigate('/atelies')}
             className="group inline-flex flex-col items-center gap-2 cursor-pointer outline-none"
           >
-            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#cca062] group-hover:text-[#3A312D] transition-colors">conheça a história dos nossos ateliês</span>
-            <div className="h-[1px] w-12 bg-[#cca062]/40 group-hover:w-24 group-hover:bg-[#3A312D] transition-all duration-500" />
+            <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-[#cca062] group-hover:text-[#1F1F1F] transition-colors">conheça a história dos nossos ateliês</span>
+            <div className="h-[1px] w-12 bg-[#cca062]/40 group-hover:w-24 group-hover:bg-[#1F1F1F] transition-all duration-150" />
           </button>
         </div>
       </section>
 
-      <DelicateFlourish />
-          {/* KITS SELECIONADOS */}
-      <section id="kits" className="scroll-mt-24 py-12 bg-[#faf8f5]/80 border-y border-[#e8dcc8]/15 px-4 sm:px-5">
+      {/* COMO FUNCIONA SESSÃO (Step 3) */}
+      <section id="como-funciona" className="scroll-mt-24 py-20 bg-white border-t border-[#EAE4DC] px-4 sm:px-6 w-full">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl sm:text-[42px] font-parisienne font-normal text-[#3A312D] tracking-normal mt-1 mb-2">Kits Selecionados</h2>
-            <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
-            <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
-              Combinações escolhidas a dedo de produtos prontos para encantar e tornar o seu momento em data histórica.
+          <div className="text-center mb-14">
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#cca062] block mb-2 font-poppins">Processo de Criação</span>
+            <h2 className="font-mea-culpa text-[#1F1F1F] text-3xl sm:text-4xl leading-tight font-normal tracking-normal">
+              Como funciona
+            </h2>
+            <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3"></div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            
+            {/* STEP 1 */}
+            <div className="text-center group p-6 bg-[#FCFAF7] border border-[#EAE4DC] rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
+              <span className="font-poppins text-3xl font-light text-[#cca062] mb-1">
+                01
+              </span>
+              <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#EAE4DC] pb-1 w-8">Passo</span>
+              <h4 className="font-poppins font-medium text-xs uppercase tracking-wider text-[#1F1F1F] mb-2">
+                Escolha um Ateliê
+              </h4>
+              <p className="text-[11px] text-[#666666] font-light leading-relaxed max-w-[200px]">
+                Navegue pelas identidades únicas de cada um dos nossos ateliês e encontre a estética ideal.
+              </p>
+            </div>
+
+            {/* STEP 2 */}
+            <div className="text-center group p-6 bg-[#FCFAF7] border border-[#EAE4DC] rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
+              <span className="font-poppins text-3xl font-light text-[#cca062] mb-1">
+                02
+              </span>
+              <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#EAE4DC] pb-1 w-8">Passo</span>
+              <h4 className="font-poppins font-medium text-xs uppercase tracking-wider text-[#1F1F1F] mb-2">
+                Escolha um Kit ou Monte o Seu
+              </h4>
+              <p className="text-[11px] text-[#666666] font-light leading-relaxed max-w-[200px]">
+                Selecione um de nossos kits prontos ou crie uma composição inteiramente personalizada do seu jeito.
+              </p>
+            </div>
+
+            {/* STEP 3 */}
+            <div className="text-center group p-6 bg-[#FCFAF7] border border-[#EAE4DC] rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
+              <span className="font-poppins text-3xl font-light text-[#cca062] mb-1">
+                03
+              </span>
+              <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#EAE4DC] pb-1 w-8">Passo</span>
+              <h4 className="font-poppins font-medium text-xs uppercase tracking-wider text-[#1F1F1F] mb-2">
+                Produção Artesanal
+              </h4>
+              <p className="text-[11px] text-[#666666] font-light leading-relaxed max-w-[200px]">
+                Produzimos cada detalhe com cuidado especial, à mão, unindo afeto, fragrância e dedicação exclusiva.
+              </p>
+            </div>
+
+            {/* STEP 4 */}
+            <div className="text-center group p-6 bg-[#FCFAF7] border border-[#EAE4DC] rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
+              <span className="font-poppins text-3xl font-light text-[#cca062] mb-1">
+                04
+              </span>
+              <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-3 border-b border-[#EAE4DC] pb-1 w-8">Passo</span>
+              <h4 className="font-poppins font-medium text-xs uppercase tracking-wider text-[#1F1F1F] mb-2">
+                Receba e Encante
+              </h4>
+              <p className="text-[11px] text-[#666666] font-light leading-relaxed max-w-[200px]">
+                Receba a embalagem finalizada com carinho ou envie diretamente para presentear quem você ama.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* KITS SELECIONADOS (Step 4) */}
+      <section id="kits" className="scroll-mt-24 py-16 bg-[#FCFAF7] border-y border-[#EAE4DC] px-4 sm:px-6">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="text-center mb-10">
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#cca062] block mb-2 font-poppins">Combinações Perfeitas</span>
+            <h2 className="text-3xl sm:text-4xl font-mea-culpa font-normal text-[#1F1F1F] tracking-normal mb-3">Kits Prontos</h2>
+            <div className="h-[1px] w-12 bg-[#cca062] mx-auto mb-4"></div>
+            <p className="text-xs text-[#666666] font-light max-w-md mx-auto leading-relaxed">
+              Combinações escolhidas a dedo de produtos prontos para encantar e tornar o seu momento inesquecível.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-7xl mx-auto px-2">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-[1600px] mx-auto">
             {kits.length === 0 ? (
-              <p className="col-span-full text-center text-xs uppercase font-bold tracking-widest text-[#cca062]/60 py-12">
-                Nenhum kit disponível no momento.
-              </p>
+              Array.from({ length: 4 }).map((_, i) => (
+                <ProductCard
+                  key={`skeleton-${i}`}
+                  isLoading={true}
+                  product={{} as any}
+                />
+              ))
             ) : (
               kits.map((kit) => (
                 <ProductCard
@@ -480,20 +571,20 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         </div>
       </section>
       
-      {/* MONTE SEU KIT EXPLAINER (OBJECTIVE COMMERCIAL BANNER) */}
-      <section className="my-12 max-w-6xl mx-auto px-4 sm:px-5">
-        <div className="bg-[#fffdfa] border-2 border-[#cca062]/25 rounded-[32px] p-6 sm:p-10 shadow-[0_12px_40px_rgba(204,160,98,0.06)] flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-[#cca062]/3 rounded-br-full blur-md pointer-events-none" />
+      {/* MONTE SEU KIT EXPLAINER (Step 5) */}
+      <section className="my-16 max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="bg-white border border-[#EAE4DC] rounded-[32px] p-8 sm:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.015)] flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-[#FCFAF7] rounded-br-full pointer-events-none" />
           
           <div className="max-w-xl text-center lg:text-left relative z-10">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#cca062]/15 mb-3.5 border border-[#cca062]/10">
-              <Sparkles size={10} className="text-[#cca062]" />
-              <span className="text-[8px] font-bold uppercase tracking-widest text-[#cca062] font-poppins">Amor Personalizado</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FCFAF7] mb-4 border border-[#EAE4DC]">
+              <Sparkles size={11} className="text-[#cca062]" />
+              <span className="text-[9px] font-bold uppercase tracking-widest text-[#cca062] font-poppins">Amor Personalizado</span>
             </div>
-            <h3 className="text-2xl sm:text-[32px] font-parisienne font-normal text-[#3A312D] tracking-normal mb-2 leading-tight">
+            <h3 className="text-2xl sm:text-3xl font-mea-culpa font-normal text-[#1F1F1F] tracking-normal mb-3 leading-tight">
               Monte o Seu Próprio Kit
             </h3>
-            <p className="text-[11.5px] sm:text-xs text-[#6d5443]/85 leading-relaxed font-light">
+            <p className="text-xs text-[#666666] leading-relaxed font-light">
               Crie uma combinação personalizada, adicionando os mimos artesanais preferidos e inserindo um cartão com mensagem gravada. Rápido, objetivo e acolhedor!
             </p>
           </div>
@@ -501,7 +592,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           <div className="shrink-0 relative z-10">
             <button
                onClick={() => navigate('/kit-meukit')}
-               className="h-[46px] px-8 rounded-full bg-[#3A312D] hover:bg-[#cca062] text-[#fffdfa] hover:text-[#3A312D] border border-transparent hover:border-[#cca062]/20 text-[11px] font-semibold uppercase tracking-[0.14em] shadow-3xs hover:shadow-xs transition-all duration-300 cursor-pointer inline-flex items-center gap-2 font-poppins"
+               className="h-[46px] px-8 rounded-full bg-[#1F1F1F] hover:bg-[#cca062] text-white hover:text-[#1F1F1F] text-[11px] font-semibold uppercase tracking-[0.14em] shadow-sm transition-all duration-150 cursor-pointer inline-flex items-center gap-2 font-poppins"
             >
               CRIAR MEU KIT <ArrowRight size={12} strokeWidth={2.5} />
             </button>
@@ -509,74 +600,44 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         </div>
       </section>
 
-      {/* PRODUTOS (VITRINE DIRETA DE PRODUTOS PREMIUM COM MAPEAMENTO DE ATELIÊS) */}
-      <section id="produtos" className="scroll-mt-24 py-12 px-4 sm:px-5 max-w-[1440px] mx-auto">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-[42px] font-parisienne font-normal text-[#3A312D] tracking-normal mt-1 mb-2">
-            {campaignFeaturedProducts ? "Destaques da Campanha" : "Vitrine de Destaques"}
-          </h2>
-          <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
-          <p className="text-xs text-[#6d5443]/70 font-light max-w-md mx-auto leading-relaxed">
-            {campaignFeaturedProducts ? "Produtos selecionados especialmente para você" : "Produtos mais queridos"}
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 max-w-7xl mx-auto px-2">
-          {(campaignFeaturedProducts || featuredProducts).map((prod) => {
-            const targetRoute = prod.company === 'pallyra' ? '/lapallyra' 
-                              : prod.company === 'guennita' ? '/comamorguennita' 
-                              : prod.company === 'mimada' ? '/mimadasim' 
-                              : '/tuttymimo';
-            return (
-              <FeaturedProductCard
-                key={prod.id}
-                product={prod}
-                theme={getTheme(prod.company)}
-                onAddToCart={() => navigate(`${targetRoute}?product=${prod.id}`)}
-                onClick={() => navigate(`${targetRoute}?product=${prod.id}`)}
-              />
-            );
-          })}
-        </div>
-      </section>
-
-      {/* FEEDBACK QUE AMAMOS (EDITORIAL SOCIAL PROOF WITH HANDWRITTEN ACCENTS) */}
-      <section id="feedbacks" className="scroll-mt-24 py-12 bg-white border-t border-[#e8dcc8]/20 px-4 sm:px-5">
+      {/* FEEDBACK QUE AMAMOS - AVALIAÇÕES (Step 6) */}
+      <section id="feedbacks" className="scroll-mt-24 py-16 bg-[#FCFAF7] border-t border-[#EAE4DC] px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl sm:text-[42px] font-parisienne font-normal text-[#3A312D] tracking-normal mt-1 mb-2">Feedback que Amamos</h2>
-            <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-3 mb-2"></div>
-            <p className="text-xs text-[#6d5443]/70 font-light max-w-sm mx-auto leading-relaxed mb-6">
-             Clientes que escolheram presentear com o coração.
+          <div className="text-center mb-10">
+            <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#cca062] block mb-2 font-poppins">Nossos Clientes</span>
+            <h2 className="text-3xl sm:text-4xl font-mea-culpa font-normal text-[#1F1F1F] tracking-normal mb-3">Feedback que Amamos</h2>
+            <div className="h-[1px] w-12 bg-[#cca062] mx-auto mb-4"></div>
+            <p className="text-xs text-[#666666] font-light max-w-sm mx-auto leading-relaxed">
+              Clientes que escolheram presentear com o coração.
             </p>
           </div>
 
           {/* AUTOMATED CAROUSEL DEPOIMENTOS */}
           <div className="max-w-2xl mx-auto relative px-4 text-center select-none min-h-[200px] flex flex-col justify-between">
-            <div className="bg-[#faf8f5]/60 border border-[#e8dcc8]/30 rounded-[22px] p-6.2 sm:p-8 hover:shadow-[0_8px_20px_rgba(109,84,67,0.03)] hover:border-[#cca062]/30 transition-all duration-500">
-              <div className="flex items-center justify-center gap-1 text-[#cca062] mb-3.5">
+            <div className="bg-white border border-[#EAE4DC] rounded-[24px] p-6 sm:p-8 shadow-xs">
+              <div className="flex items-center justify-center gap-1 text-[#cca062] mb-4">
                 <span className="text-[11px] font-bold mr-1 text-[#cca062]/80 font-poppins">5.0</span>
                 <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
               </div>
-              <p className="text-[13px] sm:text-[14.5px] font-tahoma font-light text-[#6d5443] leading-relaxed italic mb-5">
+              <p className="text-xs sm:text-sm font-light text-[#1F1F1F] leading-relaxed italic mb-6">
                 {feedbacksDynamic[activeFeedbackIndex]?.text || ""}
               </p>
-              <div className="flex items-center justify-between pt-4 border-t border-[#e8dcc8]/20">
-                <span className="font-poppins font-semibold text-xs sm:text-sm text-[#3A312D]">{feedbacksDynamic[activeFeedbackIndex]?.author || ""}</span>
-                <span className={`text-[8px] sm:text-[9px] uppercase tracking-widest font-bold ${feedbacksDynamic[activeFeedbackIndex]?.colorTagBg || ""} ${feedbacksDynamic[activeFeedbackIndex]?.colorTagText || ""} px-2.5 py-0.5 rounded-full font-poppins`}>
-                  {feedbacksDynamic[activeFeedbackIndex]?.atelier || ""}
+              <div className="flex items-center justify-between pt-4 border-t border-[#EAE4DC]">
+                <span className="font-poppins font-semibold text-xs text-[#1F1F1F]">{feedbacksDynamic[activeFeedbackIndex]?.author || "Cliente"}</span>
+                <span className={`text-[8px] sm:text-[9px] uppercase tracking-widest font-bold ${feedbacksDynamic[activeFeedbackIndex]?.colorTagBg || "bg-[#FCFAF7]"} ${feedbacksDynamic[activeFeedbackIndex]?.colorTagText || "text-[#cca062]"} px-3 py-1 rounded-full border border-[#EAE4DC] font-poppins`}>
+                  {feedbacksDynamic[activeFeedbackIndex]?.atelier || "Depoimento"}
                 </span>
               </div>
             </div>
 
             {/* CAROUSEL BUTTON DOTS */}
-            <div className="flex justify-center items-center gap-2 mt-5">
+            <div className="flex justify-center items-center gap-2 mt-6">
               {feedbacksDynamic.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveFeedbackIndex(idx)}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 outline-none cursor-pointer ${
-                    idx === activeFeedbackIndex ? "bg-[#cca062] w-5" : "bg-[#cca062]/20 hover:bg-[#cca062]/45"
+                  className={`w-2 h-2 rounded-full transition-all duration-150 outline-none cursor-pointer ${
+                    idx === activeFeedbackIndex ? "bg-[#cca062] w-5" : "bg-[#cca062]/20 hover:bg-[#cca062]/40"
                   }`}
                   aria-label={`Visualizar depoimento ${idx + 1}`}
                 />
@@ -588,17 +649,16 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
       <DelicateFlourish />
 
-      {/* SEÇÃO EDITORIAL: CONEXÃO COM A MARCA / POR TRÁS DE CADA DETALHE (POSICIONADO COMO ANTEPENÚLTIMO BLOCO DA HOME) */}
-      <section id="sobre-julia" className="scroll-mt-24 py-16 lg:py-20 bg-gradient-to-b from-[#fffdfa] to-[#faf8f5] px-4 sm:px-5 relative overflow-hidden border-t sm:border-b border-[#e8dcc8]/20">
-        {/* Soft elegant background decorations */}
-        <div className="absolute -bottom-10 left-1/3 w-72 h-72 rounded-full bg-[#cca062]/3 blur-[120px] pointer-events-none" />
+      {/* SEÇÃO EDITORIAL: CONEXÃO COM A MARCA - MINHA HISTÓRIA (Step 7) */}
+      <section id="sobre-julia" className="scroll-mt-24 py-20 bg-white px-4 sm:px-6 relative overflow-hidden border-t border-b border-[#EAE4DC]">
+        <div className="absolute -bottom-10 left-1/3 w-72 h-72 rounded-full bg-[#FCFAF7]/50 blur-[120px] pointer-events-none" />
         
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[1400px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
             
             {/* LADO ESQUERDO: Portrait Editorial Photograph */}
             <div className="lg:col-span-5 flex justify-center w-full">
-              <div className="relative w-full max-w-[380px] rounded-[32px] overflow-hidden shadow-[0_16px_40px_rgba(109,84,67,0.06)] border border-[#e8dcc8]/45 bg-[#faf8f5] p-2.5 transition-transform duration-700 hover:scale-[1.01]">
+              <div className="relative w-full max-w-[380px] rounded-[32px] overflow-hidden shadow-xs border border-[#EAE4DC] bg-[#FCFAF7] p-2.5 transition-transform duration-150 hover:scale-[1.01]">
                 <div className="w-full h-full rounded-[24px] overflow-hidden aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5]">
                   <ImageWithFallback
                     src="https://i.imgur.com/KRLgtno.jpg"
@@ -607,44 +667,38 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                     isThumbnail={false}
                   />
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#3A312D]/12 to-transparent pointer-events-none rounded-[32px]" />
               </div>
             </div>
 
             {/* LADO DIREITO: Emotional Narrative */}
             <div className="lg:col-span-7 flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
-              {/* Title */}
-              <h2 className="text-3.5xl sm:text-4.5xl lg:text-[46px] font-parisienne font-normal text-[#3A312D] tracking-normal leading-[1.15] mb-6">
+              <h2 className="text-3xl sm:text-4xl lg:text-[46px] font-mea-culpa font-normal text-[#1F1F1F] tracking-normal leading-[1.15] mb-6">
                 Por trás de cada detalhe
               </h2>
               
-              {/* Decorative separator */}
               <div className="h-[1px] w-12 bg-[#cca062]/40 mb-6 block lg:hidden"></div>
 
-              {/* Text content in Tahoma */}
               <div className="space-y-4 max-w-xl">
-                <p className="font-sans text-[15.5px] sm:text-[17.5px] text-[#2c2420] font-normal leading-[1.75]">
+                <p className="font-sans text-[15px] sm:text-[16px] text-[#666666] font-light leading-[1.8]">
                   Acredito que os momentos mais valiosos da vida não são medidos pelo tempo, mas pelo afeto que neles depositamos. No ateliê, cada detalhe é desenhado para ser uma extensão desse sentimento: desde a curadoria sensível das matérias-primas até o toque feito inteiramente à mão.
                 </p>
-                <p className="font-sans text-[15.5px] sm:text-[17.5px] text-[#2c2420] font-normal leading-[1.75]">
+                <p className="font-sans text-[15px] sm:text-[16px] text-[#666666] font-light leading-[1.8]">
                   Cada presente aberto é o começo de uma nova história, e cada embalagem concluída carrega o peso de palavras que merecem durar. Criar com intenção é o meu propósito, unindo a sutileza das pequenas coisas à eternidade daquilo que permanece no coração.
                 </p>
               </div>
 
-              {/* Signature block */}
               <div className="mt-8 mb-8 flex flex-col items-center lg:items-start gap-1 select-none">
-                <span className="font-parisienne text-[#cca062] text-[28px] lg:text-[34px] leading-tight font-normal">
+                <span className="font-mea-culpa text-[#cca062] text-[28px] lg:text-[34px] leading-tight font-normal">
                   Com carinho,
                 </span>
-                <span className="font-parisienne text-[#3A312D] text-[34px] lg:text-[40px] leading-none font-normal -mt-1 lg:pl-4">
+                <span className="font-mea-culpa text-[#1F1F1F] text-[34px] lg:text-[40px] leading-none font-normal -mt-1 lg:pl-4">
                   Júlia Aleixo
                 </span>
               </div>
 
-              {/* Premium Button Re-branding */}
               <button
                 onClick={() => setIsStoryOpen(true)}
-                className="h-[46px] px-8 rounded-full border border-[#cca062]/40 bg-transparent text-[#3A312D] font-poppins font-semibold text-[11.5px] uppercase tracking-[0.14em] transition-all duration-300 hover:bg-[#3A312D] hover:text-[#cca062] hover:border-[#3A312D] hover:shadow-xs cursor-pointer flex items-center justify-center whitespace-nowrap"
+                className="h-[46px] px-8 rounded-full border border-[#EAE4DC] bg-transparent text-[#1F1F1F] font-poppins font-semibold text-[11px] uppercase tracking-[0.14em] transition-all duration-150 hover:bg-[#1F1F1F] hover:text-white hover:border-[#1F1F1F] shadow-sm cursor-pointer flex items-center justify-center whitespace-nowrap"
               >
                 Conheça minha história
               </button>
@@ -658,32 +712,28 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       {/* STORY MODAL DIALOG - EXCLUSIVELY STYLED */}
       {isStoryOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Overlay fade background */}
           <div 
             onClick={() => setIsStoryOpen(false)}
-            className="absolute inset-0 bg-[#3A312D]/40 backdrop-blur-sm transition-opacity duration-500 ease-out" 
+            className="absolute inset-0 bg-black/10 backdrop-blur-sm transition-opacity duration-200 ease-out animate-fade-in duration-200" 
           />
           
-          {/* Modal container with subtle upscale reveal animation */}
-          <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 border border-[#e8dcc8]/50 p-6 sm:p-10 shadow-xl scrollbar-thin animate-fade-in">
-            {/* Close button */}
+          <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 border border-[#EAE4DC] p-6 sm:p-10 shadow-lg scrollbar-thin animate-fade-in">
             <button 
               onClick={() => setIsStoryOpen(false)}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full border border-[#e8dcc8]/60 bg-white flex items-center justify-center text-[#cca062] hover:bg-[#3A312D] hover:text-[#cca062] hover:border-[#3A312D] transition-colors cursor-pointer"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full border border-[#EAE4DC] bg-white flex items-center justify-center text-[#cca062] hover:bg-[#1F1F1F] hover:text-white hover:border-[#1F1F1F] transition-colors cursor-pointer"
             >
-              <X size={15} />
+              <X size={14} />
             </button>
 
-            {/* Scrollable Story story content */}
             <div className="flex flex-col items-center text-center mt-4">
-              <span className="font-parisienne text-[#cca062] text-[38px] leading-none select-none mb-1">
+              <span className="font-mea-culpa text-[#cca062] text-[38px] leading-none select-none mb-1">
                 Julia Aleixo
               </span>
               <span className="text-[9px] uppercase font-bold tracking-[0.25em] text-[#cca062] font-poppins block mb-6">
                 Amor em detalhes à mão
               </span>
 
-              <div className="space-y-5 font-tahoma text-sm text-[#6d5443]/85 font-light leading-relaxed max-w-xl text-justify px-2">
+              <div className="space-y-5 font-sans text-sm text-[#666666] font-light leading-relaxed max-w-xl text-justify px-2">
                 <p>
                   Os Presentes Personalizados nasceram do desejo profundo de resgatar o valor do tempo e do afeto no ato de presentear. Em um mundo onde tudo caminha de forma apressada, escolhi ir na direção oposta: a do fazer manual, do respiro cuidadoso e da presença em cada laço de fita.
                 </p>
@@ -691,15 +741,14 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                   Formada com a paixão pela estética clássica e pela sofisticação dos papéis e fragrâncias, reuni sob estes quatros ateliês que dão vida às minhas maiores aspirações de criação.
                 </p>
                 <p>
-                  Em <strong>La Pallyra</strong>, a importancia de dar valor ao dia a dia, de lembrar que podemos sim ter um momento nosso ao olhar para agenda com o seu nome, calendário do seu jeitinho. Em <strong>com amor,Guennita</strong>, celebramos a delicada sofisticação de presentar com o extraordinário, para guardar no coração etermnamente. Em <strong>Mimada Sim</strong>, são feitos mimos atenciosos para o seu evento, seja ele, aniversário, comercial, chá de bebê, chá revelação, casamento, qualquer evento estaremos prontos para fazer o seu mimo a sua escolha. Em <strong>Tutty Mimo</strong>, é o afeto de forma pura, desde quando aparece os dois tracinhos até a primeira infância do seu amor.
+                  Em <strong>La Pallyra</strong>, a importância de dar valor ao dia a dia, de lembrar que podemos sim ter um momento nosso ao olhar para agenda com o seu nome, calendário do seu jeitinho. Em <strong>com amor, Guennita</strong>, celebramos a delicada sofisticação de presentear com o extraordinário, para guardar no coração eternamente. Em <strong>Mimada Sim</strong>, são feitos mimos atenciosos para o seu evento, seja ele aniversário, comercial, chá de bebê, chá revelação, casamento, qualquer evento estaremos prontos para fazer o seu mimo a sua escolha. Em <strong>Tutty Mimo</strong>, é o afeto de forma pura, desde quando aparece os dois tracinhos até a primeira infância do seu amor.
                 </p>
                 <p>
                   Minha maior recompensa é saber que cada peça que sai torna-se parte de um momento inesquecível na vida de alguém. Estar aqui é um convite para desacelerar, respirar e presentear quem você ama com a mais sincera e bela das intenções.
                 </p>
               </div>
 
-              {/* Floral tiny emblem/signature representation */}
-              <div className="mt-10 mb-2 font-parisienne text-[#cca062] text-[32px] leading-none select-none">
+              <div className="mt-10 mb-2 font-mea-culpa text-[#cca062] text-[32px] leading-none select-none">
                 Júlia Aleixo
               </div>
               <span className="text-[10px] tracking-widest text-[#cca062]/50 font-poppins uppercase">
@@ -709,86 +758,23 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           </div>
         </div>
       )}
-     
-            {/* COMO FUNCIONA SESSÃO */}
-      <section className="scroll-mt-24 py-4 px-4 sm:px-5 max-w-7xl mx-auto w-full">
-        <div className="text-center mb-6">
-          <h2 className="font-parisienne text-[#3A312D] text-3xl sm:text-[42px] leading-tight font-normal tracking-normal">
-            Como funciona
-          </h2>
-        </div>
 
-        {/* 4 HORIZONTAL LOGICAL STEP CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-2">
-          
-          {/* STEP 1 */}
-          <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-poppins text-3xl font-medium text-[#cca062] mb-1">
-              01
-            </span>
-            <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
-            <h4 className="font-poppins font-semibold text-[11px] uppercase tracking-wider text-[#3A312D] mb-1.5">
-              Escolha seu presente
-            </h4>
-            <p className="text-[10.5px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
-              Navegue pelas vitrines dos ateliês e selecione o personalizado que falará com o coração.
-            </p>
-          </div>
+      {/* FRASE INSTITUCIONAL (Step 8) */}
+      <section id="institucional-frase-final" className="py-4 md:py-6 bg-white flex flex-col items-center justify-center px-6">
+        <div className="max-w-[1400px] mx-auto text-center select-none">
+          <p className="font-mea-culpa text-2xl sm:text-3xl md:text-4xl text-[#1F1F1F] leading-relaxed md:leading-[1.8] font-normal tracking-wide text-center ">
+            {`Quatro ateliês.
 
-          {/* STEP 2 */}
-          <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-poppins text-3xl font-medium text-[#cca062] mb-1">
-              02
-            </span>
-            <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
-            <h4 className="font-poppins font-semibold text-[11px] uppercase tracking-wider text-[#3A312D] mb-1.5">
-              Deixe único
-            </h4>
-            <p className="text-[10.5px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
-              Adicione mimos complementare em nossos ateliês, elegendo o presente personalizado ideal.
-            </p>
-          </div>
+Cada detalhe feito à mão
+com um só propósito:
 
-          {/* STEP 3 */}
-          <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-poppins text-3xl font-medium text-[#cca062] mb-1">
-              03
-            </span>
-            <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
-            <h4 className="font-poppins font-semibold text-[11px] uppercase tracking-wider text-[#3A312D] mb-1.5">
-              Personalize
-            </h4>
-            <p className="text-[10.5px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
-              Escolha como será o seu presente. Nome, cor, afins...
-            </p>
-          </div>
-
-          {/* STEP 4 */}
-          <div className="text-center group p-4 bg-white border border-[#e8dcc8]/30 rounded-[24px] shadow-3xs hover:border-[#cca062]/40 hover:shadow-xs transition-all duration-500 flex flex-col items-center select-none">
-            <span className="font-poppins text-3xl font-medium text-[#cca062] mb-1">
-              04
-            </span>
-            <span className="text-[8px] font-bold tracking-[0.2em] text-[#cca062]/70 uppercase font-poppins block mb-2 border-b border-[#cca062]/20 pb-1 w-8">Passo</span>
-            <h4 className="font-poppins font-semibold text-[11px] uppercase tracking-wider text-[#3A312D] mb-1.5">
-              Envio 
-            </h4>
-            <p className="text-[10.5px] text-[#6d5443]/75 font-light leading-relaxed max-w-[200px]">
-              Finalizamos a montagem à mão com as mais belas essências e entregamos aonde você quiser com carinho.
-            </p>
-          </div>
-
-        </div>
-      </section>
-
-          {/* FINAL EMOTIONAL TRUST BANNER */}
-      <section className="bg-[#faf8f5] border-y border-[#e8dcc8]/40 py-12 px-6">
-        <div className="max-w-3xl mx-auto text-center select-none">
-          <Heart size={20} className="text-[#c96b71] mx-auto mb-4 animate-pulse" />
-          <p className="font-parisienne text-2.5xl sm:text-3.5xl text-[#3A312D] leading-snug mb-3 max-w-xl mx-auto font-normal">
-            "Quatro ateliês, feito cada detalhe à mãos com um só propósito: transformar o momento em único, feliz e eterno."
+transformar cada momento
+em algo inesquecível,
+feliz e eterno.`}
           </p>
-          </div>
+        </div>
       </section>
     </div>
   );
 };
+

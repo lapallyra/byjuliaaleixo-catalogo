@@ -53,6 +53,17 @@ export const validateProductStock = async (product: Product, requestedQuantity: 
          } else {
             return { valid: false, reason: `Insumo de kit não encontrado.` };
          }
+      } else if (ki.type === 'addon') {
+         const addonRef = doc(db, 'addons', ki.id);
+         const addonSnap = await getDoc(addonRef);
+         if (addonSnap.exists()) {
+            const aData = addonSnap.data();
+            if (typeof aData.stock === 'number' && aData.stock < requiredQty) {
+               return { valid: false, reason: `Estoque insuficiente no item adicional do kit: ${aData.name}` };
+            }
+         } else {
+            return { valid: false, reason: `Item adicional do kit não encontrado.` };
+         }
       }
     }
   }
