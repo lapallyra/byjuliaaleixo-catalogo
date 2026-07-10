@@ -11,7 +11,7 @@ import { FeaturedProductCard } from './Catalog/FeaturedProductCard';
 import { LogoAndSignature } from './ui/LogoAndSignature';
 import { themes, getTheme } from '../lib/theme';
 import { motion, AnimatePresence } from 'motion/react';
-import { SeasonalBanner } from './Catalog/SeasonalBanner';
+import { CommemorativeBanner } from './Catalog/CommemorativeBanner';
 
 interface EntryViewProps {
   config: AppConfig;
@@ -222,12 +222,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         </div>
       </div>
 
-      {/* DYNAMIC CAMPAIGN BANNER (SEASONAL) */}
-      {mainBannerCampaign && (
-        <div className="max-w-[1600px] mx-auto px-4 md:px-6 my-6 animate-in fade-in duration-150">
-          <SeasonalBanner campaign={mainBannerCampaign} />
-        </div>
-      )}
+      {/* DYNAMIC COMMEMORATIVE BANNER */}
+      <div className="max-w-[1600px] mx-auto px-4 md:px-6 my-6 animate-in fade-in duration-150">
+        <CommemorativeBanner allProducts={allProducts} />
+      </div>
 
       {/* LUXURY ACTIVE NAVIGATION BAR */}
       <div className="w-full border-b border-[#EAE4DC]/50 bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">

@@ -22,6 +22,17 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/storage', 'firebase/auth'],
+            'vendor-utils': ['lucide-react', 'date-fns', 'clsx', 'tailwind-merge'],
+            'vendor-viz': ['recharts', 'konva', 'react-konva'],
+            'vendor-pdf': ['jspdf', 'jspdf-autotable', 'jszip', 'html-to-image'],
+          }
+        }
+      }
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

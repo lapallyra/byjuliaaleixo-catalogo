@@ -509,6 +509,7 @@ export interface CommemorativeDate {
   marketing_phrase: string;
   priority: number;
   mobile_id?: 'carnaval' | 'pascoa' | 'corpus_christi' | 'mothers_day' | 'fathers_day' | 'black_friday';
+  is_national?: boolean;
   createdAt: any;
   updatedAt: any;
 }
