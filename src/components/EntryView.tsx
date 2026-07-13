@@ -222,11 +222,6 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         </div>
       </div>
 
-      {/* DYNAMIC COMMEMORATIVE BANNER */}
-      <div className="max-w-[1600px] mx-auto px-4 md:px-6 my-6 animate-in fade-in duration-150">
-        <CommemorativeBanner allProducts={allProducts} />
-      </div>
-
       {/* LUXURY ACTIVE NAVIGATION BAR */}
       <div className="w-full border-b border-[#EAE4DC]/50 bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
         <div className="max-w-[1600px] mx-auto px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -269,7 +264,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             </button>
           </nav>
 
-          {/* Search/Tracking capsule in white background */}
+          {/* Search/Tracking capsule in white background - Elegant, spacious, and legible */}
           <form 
             onSubmit={(e) => {
               e.preventDefault();
@@ -279,18 +274,23 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 navigate('/document');
               }
             }}
-            className="flex items-center gap-2 bg-[#FCFAF7] border border-[#EAE4DC] rounded-full px-4 py-1.5 text-[11px] text-[#666666] shadow-[0_1px_2px_0_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all w-full sm:w-auto md:max-w-[240px]"
+            className="flex items-center gap-2.5 bg-[#FCFAF7] border border-[#EAE4DC] rounded-full px-5 py-2.5 text-xs text-[#555555] shadow-[0_2px_6px_rgba(0,0,0,0.02)] hover:border-[#C2B7A8] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 w-full sm:w-72 md:w-80"
           >
-            <Search size={11} strokeWidth={2.5} className="text-[#8A8A8A]" />
+            <Search size={14} strokeWidth={2} className="text-[#8C7864]/80 shrink-0" />
             <input 
               type="text" 
               value={searchCode}
               onChange={(e) => setSearchCode(e.target.value)}
-              placeholder="encontre seu pedido aqui" 
-              className="bg-transparent focus:outline-none w-full text-[#1F1F1F] placeholder-[#8A8A8A] font-medium text-[11px] border-none p-0" 
+              placeholder="Encontre seu pedido aqui..." 
+              className="bg-transparent focus:outline-none w-full text-[#1F1F1F] placeholder-[#8C7864]/60 font-medium text-[13px] border-none p-0 tracking-[0.03em]" 
             />
           </form>
         </div>
+      </div>
+
+      {/* DYNAMIC COMMEMORATIVE BANNER */}
+      <div className="max-w-[1600px] mx-auto px-4 md:px-6 my-6 animate-in fade-in duration-150">
+        <CommemorativeBanner allProducts={allProducts} />
       </div>
 
       {/* BEAUTIFUL ROMANTIC CENTRAL TITLE */}

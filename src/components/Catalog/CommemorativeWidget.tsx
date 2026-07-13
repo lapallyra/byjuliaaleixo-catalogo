@@ -4,11 +4,13 @@ import { commemorativeDateService } from '../../services/commemorativeDateServic
 import { CommemorativeDate } from '../../types';
 import { Sparkles, Calendar, ArrowRight, Tag } from 'lucide-react';
 import { isToday } from 'date-fns';
-import { getMobileDateOccurrence } from '../../lib/commemorativeDateUtils';
+import { getMobileDateOccurrence, slugify } from '../../lib/commemorativeDateUtils';
+import { useNavigate } from 'react-router-dom';
 
 export function CommemorativeWidget() {
   const [dates, setDates] = useState<CommemorativeDate[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsub = commemorativeDateService.subscribe(setDates);
@@ -41,11 +43,18 @@ export function CommemorativeWidget() {
 
   const currentData = todayDates[currentIndex];
 
+  const handleNavigate = () => {
+    if (currentData) {
+      navigate(`/comemorativas/${slugify(currentData.name)}`);
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex-1 min-w-[300px] bg-[#161616] text-white rounded-[2rem] p-6 relative overflow-hidden shadow-xl"
+      onClick={handleNavigate}
+      className="flex-1 min-w-[300px] bg-[#161616] text-white rounded-[2rem] p-6 relative overflow-hidden shadow-xl cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all"
     >
       {/* Glitch/Shine effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
@@ -75,7 +84,13 @@ export function CommemorativeWidget() {
            <p className="text-[8px] font-medium italic opacity-90 leading-tight max-w-[120px] line-clamp-1">
               "{currentData.marketing_phrase}"
            </p>
-           <button className="bg-white text-black px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all flex items-center gap-2 shadow-xl whitespace-nowrap">
+           <button 
+             onClick={(e) => {
+               e.stopPropagation();
+               handleNavigate();
+             }}
+             className="bg-white text-black px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all flex items-center gap-2 shadow-xl whitespace-nowrap cursor-pointer"
+           >
              Coleção <ArrowRight size={10} />
            </button>
         </div>

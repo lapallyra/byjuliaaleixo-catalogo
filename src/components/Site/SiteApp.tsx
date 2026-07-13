@@ -20,6 +20,7 @@ import { TopAnnouncementBar } from '../TopAnnouncementBar';
 import { Footer } from '../Footer';
 import { CustomerSocialProofToast } from '../CustomerSocialProofToast';
 import { CompanyCatalogWrapper } from './CompanyCatalogWrapper';
+import { CommemorativeCampaignPage } from '../CommemorativeCampaignPage';
 import { INITIAL_CONFIG, PRODUCTS } from '../../constants';
 import { AppConfig, Product, CompanyId, CartItem } from '../../types';
 import { subscribeToAppConfig, subscribeToProducts } from '../../services/firebaseService';
@@ -137,6 +138,7 @@ export function SiteApp() {
       <div className="flex-grow flex flex-col">
         <Routes>
           <Route path="/" element={<EntryView config={effectiveConfig} allProducts={allProducts} />} />
+          <Route path="/comemorativas/:slug" element={<CommemorativeCampaignPage allProducts={allProducts} />} />
           <Route path="/vitrine" element={<VitrinePage />} />
           <Route path="/atelies" element={<AteliersPresentationView />} />
           <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />

@@ -70,3 +70,16 @@ export function getMobileDateOccurrence(mobileId: string, year: number): { day: 
   }
   return { day: date.getDate(), month: date.getMonth() + 1 };
 }
+
+export function slugify(text: string): string {
+  if (!text) return '';
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize('NFD') // separate accents from characters
+    .replace(/[\u0300-\u036f]/g, '') // remove accent symbols
+    .replace(/[^\w\s-]/g, '') // remove all non-word chars
+    .replace(/\s+/g, '-') // replace spaces with hyphens
+    .replace(/-+/g, '-') // replace multiple hyphens with single hyphen
+    .trim();
+}
