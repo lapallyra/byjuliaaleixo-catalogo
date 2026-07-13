@@ -2,6 +2,33 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <script id="service-worker-cleanup">
+      // Clean up legacy service workers and cached assets to prevent stale home loads
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          var unregisteredAny = false;
+          for (var i = 0; i < registrations.length; i++) {
+            registrations[i].unregister();
+            unregisteredAny = true;
+          }
+          if (unregisteredAny) {
+            console.log('Legacy Service Workers unregistered.');
+            window.location.reload();
+          }
+        }).catch(function(err) {
+          console.warn('Error clearing service workers:', err);
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(keys) {
+          keys.forEach(function(key) {
+            caches.delete(key);
+          });
+        }).catch(function(err) {
+          console.warn('Error clearing caches:', err);
+        });
+      }
+    </script>
     <meta http-equiv="Content-Language" content="pt-BR" />
     <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
