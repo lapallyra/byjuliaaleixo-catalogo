@@ -691,15 +691,15 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     <div className="space-y-8 pb-24 animate-in fade-in duration-200">
       
       {/* HEADER SECTION - Clean Premium Style */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 border-b border-slate-100 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 border-b border-pink-100 pb-5">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
-            <span className="p-2 rounded-xl bg-slate-100 text-slate-900 shadow-sm border border-slate-200/50">
+          <h2 className="text-2xl font-extrabold text-gray-800 tracking-tight flex items-center gap-2.5">
+            <span className="p-2 rounded-xl bg-pink-100/70 text-pink-600 shadow-sm border border-white/80 backdrop-blur-sm">
               <DollarSign className="w-6 h-6" />
             </span>
             Painel Executivo Financeiro
           </h2>
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1.5">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mt-1.5">
             Análise detalhada do fluxo de caixa e rentabilidade do ateliê
           </p>
         </div>
@@ -707,7 +707,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsNewEntryOpen(true)}
-            className="flex items-center gap-2.5 px-5 py-3 bg-slate-900 text-white font-extrabold rounded-xl text-xs shadow-[0_4px_12px_rgba(15,23,42,0.15),inset_0_1px_0_rgba(255,255,255,0.25)] border-b-[3px] border-b-slate-950 hover:-translate-y-[1px] active:translate-y-[1px] active:border-b-0 cursor-pointer transition-all duration-150"
+            className="flex items-center gap-2.5 px-5 py-3 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white font-extrabold rounded-xl text-xs shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer transition-all duration-150"
           >
             <Plus size={16} />
             Novo Lançamento
@@ -721,7 +721,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
           {alerts.map((alert, idx) => (
             <div
               key={idx}
-              className={`flex items-start gap-3.5 p-4 rounded-2xl border-l-[6px] shadow-sm animate-in slide-in-from-top-4 duration-200 ${
+              className={`flex items-start gap-3.5 p-4 rounded-[22px] border-l-[6px] shadow-sm animate-in slide-in-from-top-4 duration-200 ${
                 alert.type === "danger"
                   ? "bg-rose-50/70 border-rose-500 text-rose-900 border-y border-r border-rose-100/50"
                   : "bg-amber-50/70 border-amber-500 text-amber-900 border-y border-r border-amber-100/50"
@@ -743,10 +743,10 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       )}
 
       {/* FILTERS CONTROL RAIL - Reorganized into a powerful unified bar */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] border-b-[4px] border-b-slate-300/40 space-y-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-2 text-xs font-black uppercase text-slate-400 tracking-wider">
-            <Filter size={14} className="text-slate-500" />
+      <div className="bg-white/75 backdrop-blur-md rounded-[24px] border border-white/80 p-6 shadow-sm space-y-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-pink-50 pb-4">
+          <div className="flex items-center gap-2 text-xs font-black uppercase text-gray-400 tracking-wider">
+            <Filter size={14} className="text-pink-500" />
             Configuração de Filtros
           </div>
           
@@ -765,8 +765,8 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                 onClick={() => handleQuickFilter(btn.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-200 cursor-pointer ${
                   dateFilter === btn.id
-                    ? "bg-slate-900 text-white border-slate-950 shadow-sm border-b-[2px] border-b-slate-950 active:translate-y-[1px] active:border-b-0"
-                    : "bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100"
+                    ? "bg-gradient-to-b from-pink-400 to-pink-500 text-white border-transparent shadow-sm"
+                    : "bg-white/60 text-gray-500 border-pink-100/50 hover:bg-pink-50"
                 }`}
               >
                 {btn.label}
@@ -777,23 +777,23 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
 
         {/* Custom Date Ranges */}
         {dateFilter === "custom" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50/80 rounded-2xl border border-slate-200/60 animate-in zoom-in-95 duration-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-white/40 backdrop-blur-sm rounded-2xl border border-pink-100/50 animate-in zoom-in-95 duration-200">
             <div className="space-y-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Data Inicial</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Data Inicial</span>
               <input
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-850 outline-none focus:ring-2 focus:ring-slate-100 focus:border-slate-400 transition-all duration-200 shadow-inner"
+                className="w-full bg-white/60 border border-pink-100/80 rounded-xl px-4 py-2.5 text-xs font-bold text-gray-700 outline-none focus:ring-2 focus:ring-pink-100 focus:border-pink-300 transition-all duration-200"
               />
             </div>
             <div className="space-y-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Data Final</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">Data Final</span>
               <input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-850 outline-none focus:ring-2 focus:ring-slate-100 focus:border-slate-400 transition-all duration-200 shadow-inner"
+                className="w-full bg-white/60 border border-pink-100/80 rounded-xl px-4 py-2.5 text-xs font-bold text-gray-700 outline-none focus:ring-2 focus:ring-pink-100 focus:border-pink-300 transition-all duration-200"
               />
             </div>
           </div>
@@ -804,13 +804,13 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
           
           {/* Search box (Cliente / Pedido) */}
           <div className="relative md:col-span-2">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               placeholder="Buscar cliente, pedido ou categoria..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-slate-800 transition-all text-slate-800 shadow-inner focus:ring-2 focus:ring-slate-100"
+              className="w-full pl-10 pr-4 py-2.5 bg-white/60 border border-pink-100/80 rounded-xl text-xs font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 focus:ring-2 focus:ring-pink-50"
             />
           </div>
 
@@ -819,7 +819,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:bg-white focus:border-slate-800 transition-all text-slate-700 shadow-inner focus:ring-2 focus:ring-slate-100"
+              className="w-full bg-white/60 border border-pink-100/80 rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 focus:ring-2 focus:ring-pink-50"
             >
               <option value="all">Todas as transações</option>
               <option value="revenue">Apenas Receitas</option>
@@ -832,7 +832,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:bg-white focus:border-slate-800 transition-all text-slate-700 shadow-inner focus:ring-2 focus:ring-slate-100"
+              className="w-full bg-white/60 border border-pink-100/80 rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 focus:ring-2 focus:ring-pink-50"
             >
               <option value="all">Todos os Status</option>
               <option value="paid">Conciliados (Pagos)</option>
@@ -845,7 +845,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
             <select
               value={originFilter}
               onChange={(e) => setOriginFilter(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:bg-white focus:border-slate-800 transition-all text-slate-700 shadow-inner focus:ring-2 focus:ring-slate-100"
+              className="w-full bg-white/60 border border-pink-100/80 rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 focus:ring-2 focus:ring-pink-50"
             >
               <option value="all">Todas as Origens</option>
               <option value="pedido">Pedido</option>
@@ -871,7 +871,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                 setCustomStartDate("");
                 setCustomEndDate("");
               }}
-              className="text-xs font-extrabold text-slate-400 hover:text-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="text-xs font-bold text-gray-400 hover:text-pink-600 flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <X size={14} />
               Limpar Filtros Ativos
@@ -882,85 +882,85 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
 
       {/* 1. DASHBOARD EXECUTIVO */}
       <div className="space-y-4">
-        <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
-          <Layers size={14} className="text-slate-500" />
+        <h3 className="text-xs font-bold uppercase text-gray-400 tracking-widest flex items-center gap-2">
+          <Layers size={14} className="text-pink-500" />
           1. Dashboard Executivo
         </h3>
 
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
           
           {/* RECEITA BRUTA */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] border-b-[4px] border-b-emerald-500 hover:shadow-[0_12px_24px_rgba(0,0,0,0.04)] hover:-translate-y-[2px] transition-all duration-200">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-5 shadow-sm rounded-[22px] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Receita Bruta</span>
-              <div className="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Receita Bruta</span>
+              <div className="w-6 h-6 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
                 <ArrowUpRight size={14} />
               </div>
             </div>
-            <p className="text-lg font-black text-slate-900 font-mono tracking-tight">{formatCurrency(calculations.revenue)}</p>
-            <p className="text-[9px] font-semibold text-slate-400 mt-1">Conciliados no período</p>
+            <p className="text-lg font-black text-gray-800 font-mono tracking-tight">{formatCurrency(calculations.revenue)}</p>
+            <p className="text-[9px] font-semibold text-gray-400 mt-1">Conciliados no período</p>
           </div>
 
           {/* CUSTOS */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] border-b-[4px] border-b-rose-400 hover:shadow-[0_12px_24px_rgba(0,0,0,0.04)] hover:-translate-y-[2px] transition-all duration-200">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-5 shadow-sm rounded-[22px] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Custos Totais</span>
-              <div className="w-6 h-6 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Custos Totais</span>
+              <div className="w-6 h-6 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
                 <ArrowDownRight size={14} />
               </div>
             </div>
-            <p className="text-lg font-black text-slate-900 font-mono tracking-tight">{formatCurrency(calculations.costs)}</p>
-            <p className="text-[9px] font-semibold text-slate-400 mt-1">Insumos + Despesas</p>
+            <p className="text-lg font-black text-gray-800 font-mono tracking-tight">{formatCurrency(calculations.costs)}</p>
+            <p className="text-[9px] font-semibold text-gray-400 mt-1">Insumos + Despesas</p>
           </div>
 
           {/* LUCRO LÍQUIDO */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] border-b-[4px] border-b-blue-500 hover:shadow-[0_12px_24px_rgba(0,0,0,0.04)] hover:-translate-y-[2px] transition-all duration-200">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-5 shadow-sm rounded-[22px] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Lucro Líquido</span>
-              <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${calculations.profit >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Lucro Líquido</span>
+              <div className={`w-6 h-6 rounded-xl flex items-center justify-center ${calculations.profit >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
                 <Activity size={14} />
               </div>
             </div>
             <p className={`text-lg font-black font-mono tracking-tight ${calculations.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
               {formatCurrency(calculations.profit)}
             </p>
-            <p className="text-[9px] font-semibold text-slate-400 mt-1">Resultado líquido</p>
+            <p className="text-[9px] font-semibold text-gray-400 mt-1">Resultado líquido</p>
           </div>
 
           {/* MARGEM DE LUCRO */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] border-b-[4px] border-b-sky-500 hover:shadow-[0_12px_24px_rgba(0,0,0,0.04)] hover:-translate-y-[2px] transition-all duration-200">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-5 shadow-sm rounded-[22px] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Margem de Lucro</span>
-              <div className="w-6 h-6 rounded-lg bg-sky-50 flex items-center justify-center text-sky-600">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Margem de Lucro</span>
+              <div className="w-6 h-6 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600">
                 <TrendingUp size={14} />
               </div>
             </div>
-            <p className="text-lg font-black text-slate-900 font-mono tracking-tight">{calculations.margin.toFixed(1)}%</p>
-            <p className="text-[9px] font-semibold text-slate-400 mt-1">Rentabilidade do caixa</p>
+            <p className="text-lg font-black text-gray-800 font-mono tracking-tight">{calculations.margin.toFixed(1)}%</p>
+            <p className="text-[9px] font-semibold text-gray-400 mt-1">Rentabilidade do caixa</p>
           </div>
 
           {/* TICKET MÉDIO */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] border-b-[4px] border-b-indigo-400 hover:shadow-[0_12px_24px_rgba(0,0,0,0.04)] hover:-translate-y-[2px] transition-all duration-200">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-5 shadow-sm rounded-[22px] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Ticket Médio</span>
-              <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Ticket Médio</span>
+              <div className="w-6 h-6 rounded-xl bg-pink-50 flex items-center justify-center text-pink-500">
                 <Package size={14} />
               </div>
             </div>
-            <p className="text-lg font-black text-slate-900 font-mono tracking-tight">{formatCurrency(executiveMetrics.ticketMedio)}</p>
-            <p className="text-[9px] font-semibold text-slate-400 mt-1">Por venda no período</p>
+            <p className="text-lg font-black text-gray-800 font-mono tracking-tight">{formatCurrency(executiveMetrics.ticketMedio)}</p>
+            <p className="text-[9px] font-semibold text-gray-400 mt-1">Por venda no período</p>
           </div>
 
           {/* PEDIDOS EM ABERTO */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] border-b-[4px] border-b-amber-400 hover:shadow-[0_12px_24px_rgba(0,0,0,0.04)] hover:-translate-y-[2px] transition-all duration-200">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-5 shadow-sm rounded-[22px] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Fila Aberta</span>
-              <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Fila Aberta</span>
+              <div className="w-6 h-6 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
                 <ShoppingBag size={14} />
               </div>
             </div>
-            <p className="text-lg font-black text-slate-900 font-mono tracking-tight">{calculations.openOrders}</p>
-            <p className="text-[9px] font-semibold text-slate-400 mt-1">Pedidos não finalizados</p>
+            <p className="text-lg font-black text-gray-800 font-mono tracking-tight">{calculations.openOrders}</p>
+            <p className="text-[9px] font-semibold text-gray-400 mt-1">Pedidos não finalizados</p>
           </div>
 
         </div>
@@ -968,22 +968,22 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
 
       {/* 2. INDICADORES FINANCEIROS - Combines Resumo do Dia & Meta Financeira side-by-side */}
       <div className="space-y-4">
-        <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
-          <Activity size={14} className="text-slate-500" />
+        <h3 className="text-xs font-bold uppercase text-gray-400 tracking-widest flex items-center gap-2">
+          <Activity size={14} className="text-pink-500" />
           2. Indicadores Financeiros
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           
           {/* RESUMO DO DIA */}
-          <div className="md:col-span-5 bg-white rounded-3xl border border-slate-200 p-6 shadow-[0_8px_24px_rgba(0,0,0,0.01)] border-b-[4px] border-b-slate-300/60 flex flex-col justify-between">
+          <div className="md:col-span-5 bg-white/75 backdrop-blur-md border border-white/80 p-6 shadow-sm rounded-[22px] flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <Clock size={14} className="text-slate-500" />
+              <div className="flex items-center justify-between border-b border-pink-50 pb-3 mb-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                  <Clock size={14} className="text-pink-500" />
                   Resumo do Dia
                 </h4>
-                <span className="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-[9px] font-extrabold uppercase tracking-widest">
+                <span className="px-2.5 py-1 bg-pink-50 text-pink-600 rounded-lg text-[9px] font-extrabold uppercase tracking-widest">
                   Hoje
                 </span>
               </div>
@@ -1001,15 +1001,15 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-4 border-t border-slate-100 pt-4">
+            <div className="grid grid-cols-2 gap-4 mt-4 border-t border-pink-50 pt-4">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 block mb-0.5">Lucro do Dia</span>
-                <p className={`text-sm font-black font-mono ${dailySummary.lucro >= 0 ? "text-slate-800" : "text-rose-600"}`}>
+                <span className="text-[10px] font-bold text-gray-400 block mb-0.5">Lucro do Dia</span>
+                <p className={`text-sm font-black font-mono ${dailySummary.lucro >= 0 ? "text-gray-800" : "text-rose-600"}`}>
                   {formatCurrency(dailySummary.lucro)}
                 </p>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 block mb-0.5">Saldo Atual</span>
+                <span className="text-[10px] font-bold text-gray-400 block mb-0.5">Saldo Atual</span>
                 <p className={`text-sm font-black font-mono ${dailySummary.saldo >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                   {formatCurrency(dailySummary.saldo)}
                 </p>
@@ -1018,11 +1018,11 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
           </div>
 
           {/* META FINANCEIRA */}
-          <div className="md:col-span-7 bg-white rounded-3xl border border-slate-200 p-6 shadow-[0_8px_24px_rgba(0,0,0,0.01)] border-b-[4px] border-b-slate-300/60 flex flex-col justify-between">
+          <div className="md:col-span-7 bg-white/75 backdrop-blur-md border border-white/80 p-6 shadow-sm rounded-[22px] flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <Target size={14} className="text-slate-500" />
+              <div className="flex items-center justify-between border-b border-pink-50 pb-3 mb-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                  <Target size={14} className="text-pink-500" />
                   Meta Mensal
                 </h4>
 
@@ -1033,11 +1033,11 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                         type="number"
                         value={goalInputVal}
                         onChange={(e) => setGoalInputVal(e.target.value)}
-                        className="w-20 px-2 py-0.5 text-xs font-bold border rounded outline-none"
+                        className="w-20 px-2 py-0.5 text-xs font-bold border border-pink-100 rounded-xl outline-none text-gray-700"
                       />
                       <button
                         onClick={handleSaveGoal}
-                        className="p-1 bg-slate-900 text-white rounded text-[10px] font-bold"
+                        className="p-1 px-2 bg-gradient-to-b from-pink-400 to-pink-500 text-white rounded-lg text-[10px] font-bold"
                       >
                         OK
                       </button>
@@ -1048,7 +1048,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                         setGoalInputVal(monthlyGoal.toString());
                         setIsEditingGoal(true);
                       }}
-                      className="text-slate-400 hover:text-slate-800 p-1 rounded hover:bg-slate-100 transition-all"
+                      className="text-gray-400 hover:text-pink-500 p-1 rounded hover:bg-pink-50 transition-all"
                       title="Editar Meta"
                     >
                       <Edit2 size={13} />
@@ -1057,24 +1057,24 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-semibold text-slate-500">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-semibold text-gray-500">
                 <div>
-                  <span className="text-[10px] text-slate-400 block mb-0.5">Meta Definida</span>
-                  <span className="font-extrabold text-slate-800 font-mono text-sm">{formatCurrency(monthlyGoal)}</span>
+                  <span className="text-[10px] text-gray-400 block mb-0.5">Meta Definida</span>
+                  <span className="font-extrabold text-gray-800 font-mono text-sm">{formatCurrency(monthlyGoal)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block mb-0.5">Atingido (Mês)</span>
+                  <span className="text-[10px] text-gray-400 block mb-0.5">Atingido (Mês)</span>
                   <span className="font-extrabold text-emerald-600 font-mono text-sm">{formatCurrency(monthlyRevenueReached)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block mb-0.5">Restante</span>
-                  <span className="font-extrabold text-slate-800 font-mono text-sm">
+                  <span className="text-[10px] text-gray-400 block mb-0.5">Restante</span>
+                  <span className="font-extrabold text-gray-800 font-mono text-sm">
                     {formatCurrency(Math.max(0, monthlyGoal - monthlyRevenueReached))}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block mb-0.5">Progresso</span>
-                  <span className="font-extrabold text-slate-800 font-mono text-sm">
+                  <span className="text-[10px] text-gray-400 block mb-0.5">Progresso</span>
+                  <span className="font-extrabold text-gray-800 font-mono text-sm">
                     {((monthlyRevenueReached / (monthlyGoal || 1)) * 100).toFixed(0)}%
                   </span>
                 </div>
@@ -1082,9 +1082,9 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
             </div>
 
             <div className="mt-5 space-y-2">
-              <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200/50 shadow-inner relative">
+              <div className="w-full h-3 bg-pink-100/30 rounded-full overflow-hidden border border-pink-100/50 relative shadow-inner">
                 <div
-                  className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-500 shadow-sm"
+                  className="h-full bg-gradient-to-r from-pink-400 to-pink-500 rounded-full transition-all duration-500 shadow-sm"
                   style={{ width: `${Math.min(100, (monthlyRevenueReached / (monthlyGoal || 1)) * 100)}%` }}
                 />
               </div>
@@ -1102,26 +1102,26 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
         {/* ADDITIONAL EXECUTIVE STATS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* PANEL: INDICADORES ADICIONAIS */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] border-b-[3px] border-b-slate-350 space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-              <Info size={13} className="text-slate-400" />
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-5 shadow-sm rounded-[22px] space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+              <Info size={13} className="text-pink-500" />
               Indicadores Operacionais
             </h3>
             <div className="space-y-3.5">
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-                <span className="text-xs font-medium text-slate-500">Ticket Médio</span>
-                <span className="text-xs font-black text-slate-900 font-mono">{formatCurrency(executiveMetrics.ticketMedio)}</span>
+              <div className="flex justify-between items-center py-1.5 border-b border-pink-50">
+                <span className="text-xs font-medium text-gray-500">Ticket Médio</span>
+                <span className="text-xs font-black text-gray-800 font-mono">{formatCurrency(executiveMetrics.ticketMedio)}</span>
               </div>
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-                <span className="text-xs font-medium text-slate-500">Valor Médio do Pedido</span>
-                <span className="text-xs font-black text-slate-900 font-mono">{formatCurrency(executiveMetrics.avgOrderValue)}</span>
+              <div className="flex justify-between items-center py-1.5 border-b border-pink-50">
+                <span className="text-xs font-medium text-gray-500">Valor Médio do Pedido</span>
+                <span className="text-xs font-black text-gray-800 font-mono">{formatCurrency(executiveMetrics.avgOrderValue)}</span>
               </div>
-              <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
-                <span className="text-xs font-medium text-slate-500">Receita Acumulada</span>
+              <div className="flex justify-between items-center py-1.5 border-b border-pink-50">
+                <span className="text-xs font-medium text-gray-500">Receita Acumulada</span>
                 <span className="text-xs font-black text-emerald-600 font-mono">{formatCurrency(calculations.accumulatedRevenue)}</span>
               </div>
               <div className="flex justify-between items-center py-1.5">
-                <span className="text-xs font-medium text-slate-500">Resultado Acumulado</span>
+                <span className="text-xs font-medium text-gray-500">Resultado Acumulado</span>
                 <span className={`text-xs font-black font-mono ${calculations.accumulatedProfit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                   {formatCurrency(calculations.accumulatedProfit)}
                 </span>
@@ -1130,41 +1130,41 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
           </div>
 
           {/* PANEL: PRODUTO E CATEGORIA MAIS LUCRATIVO */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] border-b-[3px] border-b-slate-355 space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-              <TrendingUp size={13} className="text-slate-400" />
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-5 shadow-sm rounded-[22px] space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+              <TrendingUp size={13} className="text-pink-500" />
               Inteligência de Vendas
             </h3>
             <div className="space-y-4">
-              <div className="p-3.5 bg-emerald-50/50 border border-emerald-100/50 rounded-xl space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-850 block">Produto Mais Lucrativo</span>
-                <p className="text-xs font-black text-slate-950 truncate">{executiveMetrics.mostProfitableProduct}</p>
+              <div className="p-3.5 bg-pink-50/40 border border-pink-100/30 rounded-xl space-y-1 animate-in fade-in">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-pink-600 block">Produto Mais Lucrativo</span>
+                <p className="text-xs font-bold text-gray-800 truncate">{executiveMetrics.mostProfitableProduct}</p>
               </div>
-              <div className="p-3.5 bg-sky-50/50 border border-sky-100/50 rounded-xl space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-wider text-sky-850 block">Categoria Mais Lucrativa</span>
-                <p className="text-xs font-black text-slate-950 truncate">{executiveMetrics.mostProfitableCategory}</p>
+              <div className="p-3.5 bg-pink-50/40 border border-pink-100/30 rounded-xl space-y-1 animate-in fade-in">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-pink-600 block">Categoria Mais Lucrativa</span>
+                <p className="text-xs font-bold text-gray-800 truncate">{executiveMetrics.mostProfitableCategory}</p>
               </div>
             </div>
           </div>
 
           {/* PANEL: RESUMO DE FLUXO ESTIMADO */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] border-b-[3px] border-b-slate-360 space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-              <Activity size={13} className="text-slate-400" />
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-5 shadow-sm rounded-[22px] space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+              <Activity size={13} className="text-pink-500" />
               Previsão Operacional
             </h3>
             <div className="space-y-3.5">
-              <div className="flex justify-between text-xs py-1.5 border-b border-slate-100">
-                <span className="font-semibold text-slate-500">Entradas (Período)</span>
+              <div className="flex justify-between text-xs py-1.5 border-b border-pink-50">
+                <span className="font-semibold text-gray-500">Entradas (Período)</span>
                 <span className="font-bold text-emerald-600 font-mono">{formatCurrency(calculations.revenue)}</span>
               </div>
-              <div className="flex justify-between text-xs py-1.5 border-b border-slate-100">
-                <span className="font-semibold text-slate-500">Saídas (Custos)</span>
+              <div className="flex justify-between text-xs py-1.5 border-b border-pink-50">
+                <span className="font-semibold text-gray-500">Saídas (Custos)</span>
                 <span className="font-bold text-rose-600 font-mono">{formatCurrency(calculations.costs)}</span>
               </div>
-              <div className="pt-2 flex justify-between text-xs font-black">
-                <span>Saldo Previsto</span>
-                <span className={`font-mono ${calculations.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+              <div className="pt-2 flex justify-between text-xs font-bold">
+                <span className="text-gray-700">Saldo Previsto</span>
+                <span className={`font-mono font-extrabold ${calculations.profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
                   {formatCurrency(calculations.profit)}
                 </span>
               </div>
@@ -1175,17 +1175,17 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
 
       {/* 3. GRÁFICOS */}
       <div className="space-y-4">
-        <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
-          <BarChart3 size={14} className="text-slate-500" />
+        <h3 className="text-xs font-bold uppercase text-gray-400 tracking-widest flex items-center gap-2">
+          <BarChart3 size={14} className="text-pink-500" />
           3. Gráficos de Performance
         </h3>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* CHART 1: RECEITA X LUCRO HISTÓRICO */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.015)] border-b-[4px] border-b-slate-300/60">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-6 shadow-sm rounded-[22px]">
             <div className="mb-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-                <BarChart3 size={14} className="text-slate-500" />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+                <BarChart3 size={14} className="text-pink-500" />
                 Performance Mensal: Receita x Lucro
               </h3>
             </div>
@@ -1223,10 +1223,10 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
           </div>
 
           {/* CHART 2: ENTRADAS X SAÍDAS COMPACT */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.015)] border-b-[4px] border-b-slate-300/60">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 p-6 shadow-sm rounded-[22px]">
             <div className="mb-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
-                <Layers size={14} className="text-slate-500" />
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+                <Layers size={14} className="text-pink-500" />
                 Fluxo Comparativo: Entradas x Saídas
               </h3>
             </div>
@@ -1257,21 +1257,21 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
 
       {/* 4. LIVRO CAIXA */}
       <div className="space-y-4">
-        <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
-          <Receipt size={14} className="text-slate-500" />
+        <h3 className="text-xs font-bold uppercase text-gray-400 tracking-widest flex items-center gap-2">
+          <Receipt size={14} className="text-pink-500" />
           4. Livro Caixa (ledger)
         </h3>
 
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.015)] border-b-[4px] border-b-slate-300/40 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white/75 backdrop-blur-md border border-white/80 shadow-sm rounded-[22px] overflow-hidden">
+          <div className="p-6 border-b border-pink-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5 uppercase tracking-wider">
-                <Receipt size={16} className="text-slate-500" />
+              <h3 className="text-sm font-bold text-gray-800 flex items-center gap-1.5 uppercase tracking-wider">
+                <Receipt size={16} className="text-pink-500" />
                 Livro de Movimentações
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">Clique em qualquer lançamento para ver o detalhamento completo.</p>
+              <p className="text-xs text-gray-400 mt-0.5">Clique em qualquer lançamento para ver o detalhamento completo.</p>
             </div>
-            <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200/30">
+            <span className="text-xs font-bold text-gray-500 bg-pink-50/50 px-3 py-1.5 rounded-lg border border-pink-100/30">
               {transactionsWithRunningBalance.length} transação(ões) encontrada(s)
             </span>
           </div>
@@ -1279,7 +1279,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-slate-50 text-slate-500 font-black uppercase tracking-widest border-b border-slate-150">
+                <tr className="bg-pink-50/30 text-gray-500 font-bold uppercase tracking-wider border-b border-pink-100/80">
                   <th className="p-4 pl-6">Data</th>
                   <th className="p-4">Descrição</th>
                   <th className="p-4">Origem</th>
@@ -1290,10 +1290,10 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                   <th className="p-4 pr-6">Usuário</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium">
+              <tbody className="divide-y divide-pink-50/50 font-medium">
                 {transactionsWithRunningBalance.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-10 text-center text-slate-400 font-bold">
+                    <td colSpan={8} className="p-10 text-center text-gray-400 font-bold">
                       Nenhuma movimentação encontrada para os filtros selecionados.
                     </td>
                   </tr>
@@ -1305,12 +1305,12 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                       <tr
                         key={t.id}
                         onClick={() => setSelectedItem(t)}
-                        className="hover:bg-slate-50/70 cursor-pointer active:bg-slate-100/40 transition-all duration-150 border-l-[4px] border-l-transparent hover:border-l-slate-400"
+                        className="hover:bg-pink-50/20 cursor-pointer active:bg-pink-50/40 transition-all duration-150 border-l-[4px] border-l-transparent hover:border-l-pink-400"
                       >
-                        <td className="p-4 pl-6 font-mono font-bold text-slate-500">
+                        <td className="p-4 pl-6 font-mono font-bold text-gray-400">
                           {new Date(t.date + "T12:00:00").toLocaleDateString("pt-BR")}
                         </td>
-                        <td className="p-4 text-slate-800 font-bold">
+                        <td className="p-4 text-gray-800 font-bold">
                           {t.description}
                         </td>
                         <td className="p-4">
@@ -1342,7 +1342,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                         </td>
 
                         {/* Ledger balance column */}
-                        <td className="p-4 text-right font-black font-mono text-slate-900">
+                        <td className="p-4 text-right font-black font-mono text-gray-800">
                           {formatCurrency((t as any).runningBalance || 0)}
                         </td>
 
@@ -1357,7 +1357,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
                             {t.status === "paid" ? "Conciliado" : "Pendente"}
                           </span>
                         </td>
-                        <td className="p-4 pr-6 text-slate-500 font-semibold">{t.user || "Sistema"}</td>
+                        <td className="p-4 pr-6 text-gray-400 font-semibold">{t.user || "Sistema"}</td>
                       </tr>
                     );
                   })
@@ -1370,42 +1370,42 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
 
       {/* 5. HISTÓRICO DE AUDITORIA (ERP Logs) */}
       <div className="space-y-4">
-        <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
-          <Clock size={14} className="text-slate-500" />
+        <h3 className="text-xs font-bold uppercase text-gray-400 tracking-widest flex items-center gap-2">
+          <Clock size={14} className="text-pink-500" />
           5. Histórico & Auditoria
         </h3>
 
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.015)] border-b-[4px] border-b-slate-300/40 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="bg-white/75 backdrop-blur-md border border-white/80 p-6 shadow-sm rounded-[22px] space-y-4">
+          <div className="flex items-center justify-between border-b border-pink-50 pb-3">
             <div>
-              <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">Trilha de Eventos ERP</h4>
-              <p className="text-xs text-slate-400 mt-0.5">Últimos logs de auditoria e ações mapeadas pelo sistema</p>
+              <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Trilha de Eventos ERP</h4>
+              <p className="text-xs text-gray-400 mt-0.5">Últimos logs de auditoria e ações mapeadas pelo sistema</p>
             </div>
-            <span className="px-2 py-1 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-[10px] font-bold">
+            <span className="px-2 py-1 bg-pink-50 border border-pink-100 text-pink-600 rounded-lg text-[10px] font-bold">
               Seguro & Auditado
             </span>
           </div>
 
           <div className="space-y-3.5 max-h-[300px] overflow-y-auto pr-2">
             {auditLogs.length === 0 ? (
-              <p className="text-xs text-slate-400 font-semibold italic text-center py-6">Nenhum registro de auditoria disponível.</p>
+              <p className="text-xs text-gray-400 font-semibold italic text-center py-6">Nenhum registro de auditoria disponível.</p>
             ) : (
               auditLogs.slice(0, 15).map((log) => (
-                <div key={log.id} className="text-[11px] leading-relaxed p-4 bg-slate-50/50 hover:bg-slate-50 border border-slate-150 rounded-2xl flex items-start gap-3 transition-all">
-                  <div className="p-2 bg-white border border-slate-200 rounded-xl text-slate-600">
+                <div key={log.id} className="text-[11px] leading-relaxed p-4 bg-white/50 hover:bg-pink-50/20 border border-pink-100/50 rounded-2xl flex items-start gap-3 transition-all">
+                  <div className="p-2 bg-pink-50/50 border border-pink-100 text-pink-600 rounded-xl">
                     <User size={13} />
                   </div>
                   <div className="flex-1">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                      <span className="font-extrabold text-slate-800">{log.action}</span>
-                      <span className="font-bold text-slate-400 text-[10px] font-mono">
+                      <span className="font-extrabold text-gray-800">{log.action}</span>
+                      <span className="font-bold text-gray-400 text-[10px] font-mono">
                         {log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString("pt-BR") : log.date || ""}
                       </span>
                     </div>
-                    <p className="text-slate-500 font-semibold mt-0.5">{log.details || log.resourceName}</p>
-                    <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold text-slate-400">
+                    <p className="text-gray-500 font-semibold mt-0.5">{log.details || log.resourceName}</p>
+                    <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold text-gray-400">
                       <span>Operador:</span>
-                      <span className="text-slate-600">{log.user?.name || log.user?.email || "Sistema"}</span>
+                      <span className="text-pink-600">{log.user?.name || log.user?.email || "Sistema"}</span>
                     </div>
                   </div>
                 </div>

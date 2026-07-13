@@ -3,6 +3,7 @@ import path from "node:path";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { apiRouter } from "./src/server/routes/api";
 
 // Initialize Firebase Admin
 if (getApps().length === 0) {
@@ -19,6 +20,9 @@ async function startServer() {
 
   // Add JSON body parsing middleware
   app.use(express.json());
+
+  // Mount Checkout and Payment modular routers
+  app.use("/api", apiRouter);
 
   // Handle CORS and OPTIONS properly to prevent 405s
   app.use((req, res, next) => {

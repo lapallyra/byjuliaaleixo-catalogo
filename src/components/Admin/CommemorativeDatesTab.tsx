@@ -2,18 +2,15 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   Calendar,
   Search,
-  Filter,
   Plus,
   Trash2,
   Edit2,
   Bell,
   ArrowRight,
-  CheckCircle2,
   AlertCircle,
   Tag,
   Briefcase,
   Heart,
-  Moon,
   Sun,
   Crown,
   Sparkles,
@@ -21,9 +18,6 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  EyeOff,
-  MoreVertical,
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -32,8 +26,6 @@ import { CommemorativeDate, CategoryId } from "../../types";
 import {
   format,
   isToday,
-  isTomorrow,
-  isSameMonth,
   isAfter,
   isBefore,
   addDays,
@@ -43,8 +35,9 @@ import {
   endOfMonth,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getMobileDateOccurrence } from "../../lib/commemorativeDateUtils";
+import { getMobileDateOccurrence, slugify } from "../../lib/commemorativeDateUtils";
 import { HorizontalScroll } from "../shared/HorizontalScroll";
+import { ImageUpload } from "./ImageUpload";
 
 const categories: {
   id: CategoryId;
@@ -79,6 +72,23 @@ const categories: {
   { id: "evento", label: "Eventos Ateliê", icon: Calendar, color: "#8b5cf6" },
 ];
 
+function isValidDayMonth(day: number, month: number): boolean {
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > 31) return false;
+  
+  // Months with 30 days: April (4), June (6), September (9), November (11)
+  if ([4, 6, 9, 11].includes(month) && day > 30) {
+    return false;
+  }
+  
+  // February (2): max 29 days (to account for leap years)
+  if (month === 2 && day > 29) {
+    return false;
+  }
+  
+  return true;
+}
+
 export function CommemorativeDatesTab() {
   const [dates, setDates] = useState<CommemorativeDate[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -90,6 +100,19 @@ export function CommemorativeDatesTab() {
   const [editingDate, setEditingDate] =
     useState<Partial<CommemorativeDate> | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const openModal = (date: Partial<CommemorativeDate> | null) => {
+    setEditingDate(date);
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingDate(null);
+    setFormError(null);
+  };
 
   useEffect(() => {
     const unsub = commemorativeDateService.subscribe(setDates);
@@ -158,12 +181,35 @@ export function CommemorativeDatesTab() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     if (!editingDate?.name) return;
+
+    // 1. Name duplication validation (slug)
+    const currentSlug = slugify(editingDate.name);
+    const isDuplicateSlug = dates.some(
+      (d) => d.id !== editingDate?.id && slugify(d.name) === currentSlug
+    );
+    if (isDuplicateSlug) {
+      setFormError(
+        `Já existe outra campanha cadastrada com um nome que gera o mesmo endereço/slug ("${currentSlug}").`
+      );
+      return;
+    }
+
+    // 2. Day/Month validation if it is fixed-year (not mobile date)
+    if (editingDate.year_fixed) {
+      const day = Number(editingDate.day ?? 1);
+      const month = Number(editingDate.month ?? 1);
+      if (!isValidDayMonth(day, month)) {
+        setFormError(`A data informada (${day}/${month}) é inválida para o calendário.`);
+        return;
+      }
+    }
 
     const data = {
       ...editingDate,
-      day: Number(editingDate.day),
-      month: Number(editingDate.month),
+      day: Number(editingDate.day ?? 1),
+      month: Number(editingDate.month ?? 1),
       priority: Number(editingDate.priority || 1),
       active: editingDate.active ?? true,
       year_fixed: editingDate.year_fixed ?? true,
@@ -174,14 +220,16 @@ export function CommemorativeDatesTab() {
           : editingDate.hashtags || [],
     } as Omit<CommemorativeDate, "id" | "createdAt" | "updatedAt">;
 
-    if (editingDate.id) {
-      await commemorativeDateService.updateDate(editingDate.id, data);
-    } else {
-      await commemorativeDateService.addDate(data);
+    try {
+      if (editingDate.id) {
+        await commemorativeDateService.updateDate(editingDate.id, data);
+      } else {
+        await commemorativeDateService.addDate(data);
+      }
+      closeModal();
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : "Erro ao salvar a data comemorativa.");
     }
-
-    setIsModalOpen(false);
-    setEditingDate(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -219,15 +267,16 @@ export function CommemorativeDatesTab() {
           </div>
           <button
             onClick={() => {
-              setEditingDate({
+              openModal({
                 category: "comercial",
                 day: 1,
                 month: 1,
                 theme_color: "#3b82f6",
                 icon: "Calendar",
                 active: true,
+                recurrent: true,
+                year_fixed: true,
               });
-              setIsModalOpen(true);
             }}
             className="bg-black text-white px-6 py-3 rounded-2xl flex items-center gap-2 hover:scale-105 transition-all shadow-xl shadow-black/10 active:scale-95 group"
           >
@@ -420,8 +469,7 @@ export function CommemorativeDatesTab() {
                     <div className="flex flex-wrap items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => {
-                          setEditingDate(date);
-                          setIsModalOpen(true);
+                          openModal(date);
                         }}
                         className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-slate-50 rounded-xl text-[#8E8E93] hover:text-slate-900 transition-all text-[9px] font-medium tracking-normal"
                       >
@@ -599,7 +647,7 @@ export function CommemorativeDatesTab() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setIsModalOpen(false)}
+            onClick={closeModal}
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
           />
           <motion.div
@@ -617,7 +665,7 @@ export function CommemorativeDatesTab() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={closeModal}
                   className="p-3 bg-slate-100 hover:bg-slate-200 rounded-2xl transition-all"
                 >
                   <X size={20} />
@@ -681,7 +729,7 @@ export function CommemorativeDatesTab() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
                       Dia
@@ -695,7 +743,7 @@ export function CommemorativeDatesTab() {
                       onChange={(e) =>
                         setEditingDate({
                           ...editingDate,
-                          day: parseInt(e.target.value),
+                          day: parseInt(e.target.value) || 0,
                         })
                       }
                       className="w-full h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none disabled:opacity-30"
@@ -711,7 +759,7 @@ export function CommemorativeDatesTab() {
                       onChange={(e) =>
                         setEditingDate({
                           ...editingDate,
-                          month: parseInt(e.target.value),
+                          month: parseInt(e.target.value) || 1,
                         })
                       }
                       className="w-full h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none disabled:opacity-30"
@@ -724,31 +772,6 @@ export function CommemorativeDatesTab() {
                         </option>
                       ))}
                     </select>
-                  </div>
-                  <div className="flex flex-col justify-center">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <div
-                        className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${editingDate?.year_fixed ? "bg-indigo-600" : "bg-slate-200"}`}
-                      >
-                        <div
-                          className={`w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${editingDate?.year_fixed ? "ml-6" : "ml-0"}`}
-                        />
-                      </div>
-                      <input
-                        type="checkbox"
-                        className="hidden"
-                        checked={editingDate?.year_fixed}
-                        onChange={(e) =>
-                          setEditingDate({
-                            ...editingDate,
-                            year_fixed: e.target.checked,
-                          })
-                        }
-                      />
-                      <span className="text-[10px] font-medium tracking-normal text-slate-500 group-hover:text-slate-900">
-                        Data Fixa?
-                      </span>
-                    </label>
                   </div>
                 </div>
 
@@ -770,10 +793,125 @@ export function CommemorativeDatesTab() {
                   />
                 </div>
 
+                {/* Design Section (Banner + Theme Color Picker) */}
+                <div className="border-t border-slate-100 pt-8 space-y-6">
+                  <h4 className="text-xs font-semibold uppercase tracking-widest text-slate-900">
+                    Design da Campanha
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
+                        Cor Temática da Campanha
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={editingDate?.theme_color || "#3b82f6"}
+                          onChange={(e) =>
+                            setEditingDate({
+                              ...editingDate,
+                              theme_color: e.target.value,
+                            })
+                          }
+                          className="w-14 h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl p-1.5 cursor-pointer focus:ring-4 focus:ring-slate-100 transition-all outline-none animate-none"
+                        />
+                        <input
+                          type="text"
+                          value={editingDate?.theme_color || "#3b82f6"}
+                          onChange={(e) =>
+                            setEditingDate({
+                              ...editingDate,
+                              theme_color: e.target.value,
+                            })
+                          }
+                          placeholder="#3b82f6"
+                          className="flex-1 h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl px-6 text-sm font-bold uppercase focus:bg-white focus:ring-4 focus:ring-slate-100 transition-all outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <ImageUpload
+                        label="Banner da Campanha"
+                        path="datas_comemorativas"
+                        currentUrl={editingDate?.banner || ""}
+                        onUploadComplete={(url) =>
+                          setEditingDate({ ...editingDate, banner: url })
+                        }
+                        onRemove={() =>
+                          setEditingDate({ ...editingDate, banner: "" })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status and Rules Section */}
+                <div className="border-t border-slate-100 pt-8 space-y-6">
+                  <h4 className="text-xs font-semibold uppercase tracking-widest text-slate-900">
+                    Controles de Status e Regras
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    {[
+                      {
+                        key: 'active',
+                        label: 'Status Ativa',
+                        checked: editingDate?.active ?? true,
+                        color: 'bg-emerald-500',
+                        onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingDate({ ...editingDate, active: e.target.checked })
+                      },
+                      {
+                        key: 'recurrent',
+                        label: 'Recorrente Anual',
+                        checked: editingDate?.recurrent ?? true,
+                        color: 'bg-indigo-600',
+                        onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingDate({ ...editingDate, recurrent: e.target.checked })
+                      },
+                      {
+                        key: 'year_fixed',
+                        label: 'Data Fixa',
+                        checked: editingDate?.year_fixed ?? true,
+                        color: 'bg-indigo-600',
+                        onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEditingDate({ ...editingDate, year_fixed: e.target.checked })
+                      }
+                    ].map((toggle) => (
+                      <div key={toggle.key} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-center min-h-[72px]">
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                          <div
+                            className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${toggle.checked ? toggle.color : "bg-slate-200"}`}
+                          >
+                            <div
+                              className={`w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${toggle.checked ? "ml-6" : "ml-0"}`}
+                            />
+                          </div>
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={toggle.checked}
+                            onChange={toggle.onChange}
+                          />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-900">
+                            {toggle.label}
+                          </span>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {formError && (
+                  <div className="bg-rose-50 border border-rose-200 text-rose-700 px-6 py-4 rounded-2xl text-xs font-medium flex items-center gap-3 animate-in fade-in duration-300">
+                    <AlertCircle size={18} className="flex-shrink-0" />
+                    <span>{formError}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-4 pt-6">
                   <button
                     type="button"
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={closeModal}
                     className="px-8 py-4 rounded-2xl text-[10px] font-medium tracking-normal text-[#8E8E93] hover:text-slate-900 transition-all"
                   >
                     Cancelar

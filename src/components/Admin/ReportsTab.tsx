@@ -144,7 +144,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
             Inteligência de vendas e performance
           </p>
         </div>
-        <div className="flex items-center gap-3 bg-white border border-lilac/20 p-2 px-4 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-3 bg-white/75 backdrop-blur-md border border-white/80 p-2 px-4 rounded-2xl shadow-sm">
           <button
             onClick={() => {
               const rows = productRank.map((p, idx) => [
@@ -160,16 +160,16 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                 filters: `Período: ${selectedMonth}`
               });
             }}
-            className="flex items-center gap-2 p-2 hover:bg-slate-50 text-[#8E8E93] hover:text-lilac rounded-xl transition-all text-[9px] font-medium tracking-normal"
+            className="flex items-center gap-2 p-2 hover:bg-pink-50 text-gray-500 hover:text-pink-600 rounded-xl transition-all text-[9px] font-medium tracking-normal"
           >
             <Printer size={14} /> Abrir PDF
           </button>
-          <div className="w-px h-4 bg-slate-200" />
-          <Filter size={14} className="text-lilac" />
+          <div className="w-px h-4 bg-gray-200" />
+          <Filter size={14} className="text-pink-500" />
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="bg-transparent text-[10px] font-medium tracking-normal outline-none pr-4 cursor-pointer text-slate-900"
+            className="bg-transparent text-[10px] font-medium tracking-normal outline-none pr-4 cursor-pointer text-gray-800"
           >
             {[...Array(12)].map((_, i) => {
               const d = new Date();
@@ -187,15 +187,15 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
       </div>
 
       {/* Sales Volume Chart */}
-      <div className="p-8 rounded-2xl bg-white border border-lilac/10 shadow-sm">
+      <div className="p-8 rounded-[24px] bg-white/75 backdrop-blur-md border border-white/85 shadow-sm">
         <div className="flex justify-between items-center mb-8">
-          <h3 className="text-[10px] font-medium tracking-tight text-slate-900">
+          <h3 className="text-[10px] font-bold tracking-tight text-gray-800 uppercase">
             Volume de Vendas (Últimos 6 Meses)
           </h3>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-lilac" />
-              <span className="text-[8px] font-medium uppercase text-[#8E8E93]">
+              <div className="w-2.5 h-2.5 rounded-full bg-pink-500" />
+              <span className="text-[8px] font-bold uppercase text-gray-400">
                 Qtd Pedidos
               </span>
             </div>
@@ -213,26 +213,27 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                 dataKey="name"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 10, fontWeight: 900, fill: "#64748b" }}
+                tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 10, fontWeight: 900, fill: "#64748b" }}
+                tick={{ fontSize: 10, fontWeight: 700, fill: "#64748b" }}
               />
               <Tooltip
                 contentStyle={{
                   borderRadius: "1rem",
                   border: "1px solid #f1f5f9",
-                  boxShadow: "0 10px 15px -3px rgba(240,230,210,0.1)",
+                  backgroundColor: "rgba(255,255,255,0.9)",
+                  boxShadow: "0 10px 15px -3px rgba(0,0,0,0.03)",
                 }}
                 labelStyle={{
-                  fontWeight: 900,
-                  color: "#000",
+                  fontWeight: 700,
+                  color: "#1F1F1F",
                   marginBottom: "4px",
                 }}
               />
-              <Bar dataKey="vendas" fill="#a376f9" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="vendas" fill="#FF1493" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -241,12 +242,12 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
       {/* Main Rankings Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Leading Customers */}
-        <div className="p-8 rounded-2xl bg-white border border-lilac/10 shadow-sm">
+        <div className="p-8 rounded-[24px] bg-white/75 backdrop-blur-md border border-white/85 shadow-sm">
           <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 rounded-2xl bg-lilac/5 text-lilac">
-              <Trophy size={20} />
+            <div className="p-3 rounded-2xl bg-pink-500/10 text-pink-500 border border-pink-200/30">
+              <Trophy size={20} strokeWidth={1.5} />
             </div>
-            <h3 className="text-sm font-medium tracking-normal text-slate-900">
+            <h3 className="text-sm font-bold tracking-normal text-gray-800">
               Clientes em Destaque
             </h3>
           </div>
@@ -254,20 +255,20 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
             {customerRank.map((c, idx) => (
               <div
                 key={`customer-rank-final-${c.id}-${idx}`}
-                className="flex items-center gap-4 p-4 rounded-2xl hover:bg-lilac-baby/30 transition-all group border border-transparent hover:border-lilac/20"
+                className="flex items-center gap-4 p-4 rounded-2xl hover:bg-pink-50/50 transition-all group border border-transparent hover:border-pink-200/50"
               >
                 <span
-                  className={`w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-medium ${idx < 3 ? "bg-black text-white" : "bg-slate-100 text-[#8E8E93]"}`}
+                  className={`w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-bold ${idx < 3 ? "bg-pink-500 text-white" : "bg-gray-100 text-gray-400"}`}
                 >
                   {idx + 1}
                 </span>
                 <div className="flex-1">
                   <p className="text-xs font-bold text-gray-800">{c.name}</p>
-                  <p className="text-[9px] text-[#8E8E93] uppercase font-medium tracking-tighter">
+                  <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tight">
                     {c.ordersCount} pedidos confirmados
                   </p>
                 </div>
-                <span className="font-mono text-xs font-medium text-emerald-500">
+                <span className="font-mono text-xs font-semibold text-emerald-500">
                   {formatCurrency(c.totalSpent || 0)}
                 </span>
               </div>
@@ -276,12 +277,12 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         </div>
 
         {/* Leading Products */}
-        <div className="p-8 rounded-2xl bg-white border border-lilac/10 shadow-sm">
+        <div className="p-8 rounded-[24px] bg-white/75 backdrop-blur-md border border-white/85 shadow-sm">
           <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 rounded-2xl bg-blue-50 text-blue-500">
-              <TrendingUp size={20} />
+            <div className="p-3 rounded-2xl bg-pink-500/10 text-pink-500 border border-pink-200/30">
+              <TrendingUp size={20} strokeWidth={1.5} />
             </div>
-            <h3 className="text-sm font-medium tracking-normal text-slate-900">
+            <h3 className="text-sm font-bold tracking-normal text-gray-800">
               Produtos Mais Vendidos
             </h3>
           </div>
@@ -289,7 +290,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
             {productRank.map((p, idx) => (
               <div
                 key={`prod-rank-final-${p.id}-${idx}`}
-                className="flex items-center gap-4 p-4 rounded-2xl hover:bg-blue-50/50 transition-all group border border-transparent hover:border-blue-200"
+                className="flex items-center gap-4 p-4 rounded-2xl hover:bg-pink-50/50 transition-all group border border-transparent hover:border-pink-200/50"
               >
                 <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center border border-[#E5E5EA] overflow-hidden">
                   <ImageWithFallback
@@ -303,15 +304,15 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                   <p className="text-xs font-bold text-gray-800">
                     {p.product_name}
                   </p>
-                  <p className="text-[9px] text-[#8E8E93] uppercase font-medium">
+                  <p className="text-[9px] text-gray-400 uppercase font-bold">
                     {p.category}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-mono text-xs font-medium text-blue-500">
+                  <p className="font-mono text-xs font-semibold text-pink-500">
                     {p.sold || 0} unid.
                   </p>
-                  <p className="text-[8px] text-[#8E8E93] font-bold uppercase">
+                  <p className="text-[8px] text-gray-400 font-bold uppercase">
                     Vendido
                   </p>
                 </div>
@@ -329,14 +330,14 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
             label: "Favoritos do Ano",
             desc: "Produtos com maior rotatividade",
             icon: Star,
-            color: "text-amber-500",
+            color: "text-pink-500",
           },
           {
             id: "pagamentos",
             label: "Formas de Pagamento",
             desc: "Preferências de recebimento",
             icon: Layout,
-            color: "text-blue-500",
+            color: "text-pink-400",
           },
           {
             id: "estoque",
@@ -350,7 +351,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
             label: "Top Rentabilidade",
             desc: "Melhores margens líquidas",
             icon: Zap,
-            color: "text-lilac",
+            color: "text-pink-600",
           },
         ].map((insight) => (
           <div key={insight.id} className="space-y-4">
@@ -358,35 +359,35 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
               onClick={() =>
                 setActiveCard(activeCard === insight.id ? null : insight.id)
               }
-              className={`w-full p-8 rounded-2xl border transition-all text-left group flex flex-col shadow-sm ${activeCard === insight.id ? "bg-lilac/5 border-lilac" : "bg-white border-lilac/10 hover:border-lilac"}`}
+              className={`w-full p-8 rounded-[24px] border transition-all text-left group flex flex-col shadow-sm ${activeCard === insight.id ? "bg-pink-500/5 border-pink-500/30" : "bg-white/75 backdrop-blur-md border-white/85 hover:border-pink-300"}`}
             >
               <div
-                className={`p-3 rounded-2xl bg-white w-fit mb-6 ${insight.color}`}
+                className={`p-3 rounded-2xl bg-pink-500/10 w-fit mb-6 ${insight.color} border border-pink-200/30`}
               >
-                <insight.icon size={20} />
+                <insight.icon size={20} strokeWidth={1.5} />
               </div>
-              <h4 className="text-[10px] font-medium tracking-tight text-slate-900 transition-colors">
+              <h4 className="text-[10px] font-bold tracking-tight text-gray-800 uppercase transition-colors">
                 {insight.label}
               </h4>
-              <p className="text-[9px] text-[#8E8E93] mt-2 leading-relaxed font-bold">
+              <p className="text-[9px] text-gray-400 mt-2 leading-relaxed font-bold">
                 {insight.desc}
               </p>
               <div
-                className={`mt-6 pt-4 border-t border-gray-50 flex items-center justify-between transition-all ${activeCard === insight.id ? "opacity-100" : "opacity-40 group-hover:opacity-100"}`}
+                className={`mt-6 pt-4 border-t border-gray-100 flex items-center justify-between transition-all ${activeCard === insight.id ? "opacity-100" : "opacity-40 group-hover:opacity-100"}`}
               >
-                <span className="text-[8px] font-medium tracking-normal text-lilac">
+                <span className="text-[8px] font-bold tracking-normal text-pink-500">
                   Ver Detalhes
                 </span>
                 <ChevronDown
                   size={14}
-                  className={`text-lilac transition-transform duration-300 ${activeCard === insight.id ? "rotate-180" : ""}`}
+                  className={`text-pink-500 transition-transform duration-300 ${activeCard === insight.id ? "rotate-180" : ""}`}
                 />
               </div>
             </button>
 
             {/* Expandable Detail Area */}
             {activeCard === insight.id && (
-              <div className="p-6 rounded-2xl bg-white border border-lilac/10 animate-in slide-in-from-top-2 duration-300 shadow-inner">
+              <div className="p-6 rounded-[24px] bg-white/85 backdrop-blur-md border border-white/85 animate-in slide-in-from-top-2 duration-300 shadow-inner">
                 {insight.id === "vendas" && (
                   <div className="space-y-3">
                     {productRank.slice(0, 5).map((p, pIdx) => (
@@ -395,7 +396,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                         className="flex justify-between items-center text-[10px] border-b border-slate-200/50 pb-2 font-bold uppercase tracking-tight"
                       >
                         <span className="text-gray-500">{p.product_name}</span>
-                        <span className="text-slate-900 font-mono">
+                        <span className="text-pink-600 font-mono">
                           {p.sold} unid.
                         </span>
                       </div>
@@ -410,7 +411,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                     </div>
                     <div className="flex justify-between items-center text-[10px] pb-2 border-b border-slate-200/50 font-bold uppercase">
                       <span className="text-gray-500">Cartão de Crédito</span>
-                      <span className="text-blue-500 font-mono">22%</span>
+                      <span className="text-pink-500 font-mono">22%</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] pb-2 border-b border-slate-200/50 font-bold uppercase">
                       <span className="text-gray-500">PIX Parcelado</span>
@@ -418,7 +419,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                     </div>
                     <div className="flex justify-between items-center text-[10px] font-bold uppercase">
                       <span className="text-gray-500">Dinheiro/Outros</span>
-                      <span className="text-[#8E8E93] font-mono">3%</span>
+                      <span className="text-gray-400 font-mono">3%</span>
                     </div>
                   </div>
                 )}
@@ -431,7 +432,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                       >
                         <span className="text-gray-500">{ins.name}</span>
                         <span
-                          className={`font-mono ${ins.quantity < ins.criticalLimit ? "text-slate-9000" : "text-[#8E8E93]"}`}
+                          className={`font-mono ${ins.quantity < ins.criticalLimit ? "text-pink-600" : "text-gray-400"}`}
                         >
                           {ins.quantity}
                           {ins.unit}

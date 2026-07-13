@@ -9,27 +9,53 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email_verified == true; 
     }
     
-    function isAdmin() { 
+    function getUserData() {
+      return get(/databases/$(database)/documents/admin_users/$(request.auth.token.email)).data;
+    }
+
+    function isSuperAdmin() {
       return request.auth != null && (
                request.auth.token.email == 'juualleixo@gmail.com' ||
                request.auth.token.email == 'lapallyra@gmail.com'
              );
     }
 
+    function isAdmin() { 
+      return isSuperAdmin() || (
+        request.auth != null && 
+        exists(/databases/$(database)/documents/admin_users/$(request.auth.token.email)) &&
+        getUserData().active == true &&
+        getUserData().role == 'ADMINISTRADOR'
+      );
+    }
+    
+    function isStaff() {
+      return isSuperAdmin() || (
+        request.auth != null && 
+        exists(/databases/$(database)/documents/admin_users/$(request.auth.token.email)) &&
+        getUserData().active == true
+      );
+    }
+
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    match /admin_users/{userId} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
 
     // ----------------------------------------------------
     // SYSTEM NOTIFICATIONS
     // ----------------------------------------------------
     match /system_notifications/{configId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isStaff();
     }
 
     match /telegram_logs/{logId} {
       allow create: if true;
-      allow get, list, update, delete: if isAdmin();
+      allow get, list, update, delete: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -44,9 +70,9 @@ service cloud.firestore {
       }
       
       allow get, list: if true;
-      allow create: if isAdmin() && isValidId(productId) && isValidProduct(incoming());
-      allow update: if isAdmin() && isValidProduct(incoming());
-      allow delete: if isAdmin();
+      allow create: if isStaff() && isValidId(productId) && isValidProduct(incoming());
+      allow update: if isStaff() && isValidProduct(incoming());
+      allow delete: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -57,18 +83,18 @@ service cloud.firestore {
       allow create: if true;
       
       // Detalhes individuais: apenas admin (Proteção LGPD)
-      allow get: if isAdmin();
+      allow get: if isStaff();
 
       // Consulta de rastreio: permitida apenas se filtrar por código
       // Isso impede listagem total por usuários públicos
-      allow list: if isAdmin() || (
+      allow list: if isStaff() || (
         request.query.filters != null &&
         "code" in request.query.filters
       );
 
       // Atualização pós-venda: apenas campos não sensíveis
       // Removemos 'status' e 'batchId' da permissão pública
-      allow update: if isAdmin() || 
+      allow update: if isStaff() || 
         incoming().diff(existing()).affectedKeys().hasOnly([
           "roulettePrize",
           "roulettePlayed",
@@ -79,11 +105,11 @@ service cloud.firestore {
         ]);
 
       // Somente admin pode deletar
-      allow delete: if isAdmin();
+      allow delete: if isStaff();
 
       // Histórico de Versões do Pedido
       match /versions/{versionId} {
-        allow read, write: if isAdmin();
+        allow read, write: if isStaff();
       }
     }
 
@@ -91,15 +117,15 @@ service cloud.firestore {
     // CUSTOMERS
     // ----------------------------------------------------
     match /customers/{customerId} {
-      allow get, list: if isAdmin();
+      allow get, list: if isStaff();
       allow create: if true; 
-      allow update: if isAdmin() || (
+      allow update: if isStaff() || (
         incoming().diff(existing()).affectedKeys().hasOnly([
           'totalSpent', 'ordersCount', 'name', 'cpfCnpj', 'email', 
           'address', 'city', 'state', 'zipCode', 'number', 'neighborhood'
         ])
       );
-      allow delete: if isAdmin();
+      allow delete: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -107,12 +133,12 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /settings/{settingId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     match /appConfig/{configId} {
       allow get, list: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -122,7 +148,7 @@ service cloud.firestore {
       allow create: if incoming().keys().hasAll(['companyId', 'message', 'createdAt', 'read']) &&
                      incoming().message is string && incoming().message.size() <= 2000 &&
                      incoming().createdAt == request.time && incoming().read == false;
-      allow get, list, update, delete: if isAdmin();
+      allow get, list, update, delete: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -130,7 +156,7 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /checkout_funnel_logs/{logId} {
       allow create: if true;
-      allow get, list, update, delete: if isAdmin();
+      allow get, list, update, delete: if isStaff();
     }
 
     match /feedbacks/{feedbackId} {
@@ -139,7 +165,7 @@ service cloud.firestore {
                      incoming().text is string && incoming().text.size() > 0 && incoming().text.size() <= 2000 &&
                      incoming().stars is number && incoming().stars >= 1 && incoming().stars <= 5;
       allow get, list: if true;
-      allow update, delete: if isAdmin();
+      allow update, delete: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -147,17 +173,17 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /insumos/{insumoId} {
       allow get: if true; // Needed to check stock before taking
-      allow list: if isAdmin();
-      allow update: if isAdmin() || (
+      allow list: if isStaff();
+      allow update: if isStaff() || (
         incoming().diff(existing()).affectedKeys().hasOnly(['totalQuantity']) &&
         incoming().totalQuantity < existing().totalQuantity
       );
-      allow create, delete: if isAdmin();
+      allow create, delete: if isStaff();
     }
 
     match /insumo_movements/{movementId} {
       allow create: if true;
-      allow get, list, update, delete: if isAdmin();
+      allow get, list, update, delete: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -165,14 +191,14 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /finance/{entryId} {
       allow create: if true; // Allow sale revenue recording
-      allow get, list, update, delete: if isAdmin();
+      allow get, list, update, delete: if isStaff();
     }
 
     // ----------------------------------------------------
     // MONTHLY PROFIT HISTORY
     // ----------------------------------------------------
     match /monthly_profit_history/{entryId} {
-      allow get, list, create, update, delete: if isAdmin();
+      allow get, list, create, update, delete: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -181,7 +207,7 @@ service cloud.firestore {
     match /giftLists/{listId} {
       allow get, list, create: if true;
       allow update: if true; // Needed for item status updates by customers
-      allow delete: if isAdmin();
+      allow delete: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -189,7 +215,7 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /addons/{addonId} {
       allow list, get: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -206,9 +232,9 @@ service cloud.firestore {
       }
 
       allow list, get: if true;
-      allow create: if isAdmin() && isValidId(dateId) && isValidCommemorativeDate(incoming());
-      allow update: if isAdmin() && isValidCommemorativeDate(incoming());
-      allow delete: if isAdmin();
+      allow create: if isStaff() && isValidId(dateId) && isValidCommemorativeDate(incoming());
+      allow update: if isStaff() && isValidCommemorativeDate(incoming());
+      allow delete: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -228,8 +254,8 @@ service cloud.firestore {
 
       allow list, get: if true;
       allow create: if isSignedIn() && isValidId(reviewId) && isValidReview(incoming()) && incoming().userId == request.auth.uid;
-      allow update: if isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['adminReply', 'updatedAt']);
-      allow delete: if isAdmin();
+      allow update: if isStaff() && incoming().diff(existing()).affectedKeys().hasOnly(['adminReply', 'updatedAt']);
+      allow delete: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -237,7 +263,7 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /prizes/{prizeId} {
       allow list, get: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -245,7 +271,7 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /product_collections/{collectionId} {
       allow list, get: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -253,7 +279,7 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /product_campaigns/{campaignId} {
       allow list, get: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -261,7 +287,7 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /campaigns/{document=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -269,12 +295,12 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /media_folders/{folderId} {
       allow list, get: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     match /media_files/{fileId} {
       allow list, get: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     // ----------------------------------------------------
@@ -282,48 +308,56 @@ service cloud.firestore {
     // ----------------------------------------------------
     match /coupons/{couponId} {
       allow list, get: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     // ----------------------------------------------------
     // CHECKLIST & EVENTS
     // ----------------------------------------------------
     match /checklist/{itemId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isStaff();
     }
 
     match /events/{eventId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isStaff();
     }
 
     // ----------------------------------------------------
     // AUDIT LOGS
     // ----------------------------------------------------
     match /audit_logs/{logId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isStaff();
     }
 
     // ----------------------------------------------------
     // MANUFACTURING & SUPPLIES (ADMIN ONLY)
     // ----------------------------------------------------
     match /componentes/{componentId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isStaff();
     }
 
     match /purchase_orders/{purchaseId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isStaff();
     }
 
     match /suppliers/{supplierId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isStaff();
     }
 
     match /componente_movements/{movementId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isStaff();
     }
 
     match /productionBatches/{batchId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isStaff();
+    }
+
+    // ----------------------------------------------------
+    // PROMOTIONAL CAMPAIGNS
+    // ----------------------------------------------------
+    match /promotional_campaigns/{campaignId} {
+      allow list, get: if true;
+      allow write: if isStaff();
     }
 
     // ----------------------------------------------------

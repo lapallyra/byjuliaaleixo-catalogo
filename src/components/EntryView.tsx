@@ -12,6 +12,7 @@ import { LogoAndSignature } from './ui/LogoAndSignature';
 import { themes, getTheme } from '../lib/theme';
 import { motion, AnimatePresence } from 'motion/react';
 import { CommemorativeBanner } from './Catalog/CommemorativeBanner';
+import { PromotionalBanner } from './PromotionalBanner';
 
 interface EntryViewProps {
   config: AppConfig;
@@ -286,6 +287,11 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             />
           </form>
         </div>
+      </div>
+
+      {/* DYNAMIC PROMOTIONAL BANNER */}
+      <div className="w-full">
+        <PromotionalBanner />
       </div>
 
       {/* DYNAMIC COMMEMORATIVE BANNER */}

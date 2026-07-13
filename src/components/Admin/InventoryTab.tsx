@@ -540,46 +540,46 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
           { 
             label: "Aguardando Produção", 
             value: waitingCount, 
-            color: "text-orange-700 border-orange-100 bg-gradient-to-br from-orange-50/60 to-orange-100/10", 
+            color: "text-orange-700 border-orange-100/50 bg-gradient-to-br from-orange-50/40 to-orange-100/10", 
             led: "bg-orange-500",
             icon: <Clock size={16} className="text-orange-500" />
           },
           { 
             label: "Em Produção", 
             value: productionCount, 
-            color: "text-blue-700 border-blue-100 bg-gradient-to-br from-blue-50/60 to-blue-100/10", 
+            color: "text-blue-700 border-blue-100/50 bg-gradient-to-br from-blue-50/40 to-blue-100/10", 
             led: "bg-blue-500",
             icon: <Activity size={16} className="text-blue-500" />
           },
           { 
             label: "Controle de Qualidade", 
             value: conferencingCount, 
-            color: "text-purple-700 border-purple-100 bg-gradient-to-br from-purple-50/60 to-purple-100/10", 
+            color: "text-purple-700 border-purple-100/50 bg-gradient-to-br from-purple-50/40 to-purple-100/10", 
             led: "bg-purple-500",
             icon: <CheckCircle2 size={16} className="text-purple-500" />
           },
           { 
             label: "Prontos para Entrega", 
             value: readyCount, 
-            color: "text-emerald-700 border-emerald-100 bg-gradient-to-br from-emerald-50/60 to-emerald-100/10", 
+            color: "text-emerald-700 border-emerald-100/50 bg-gradient-to-br from-emerald-50/40 to-emerald-100/10", 
             led: "bg-emerald-500",
             icon: <ShoppingBag size={16} className="text-emerald-500" />
           },
           { 
             label: "Pedidos Atrasados", 
             value: delayedCount, 
-            color: `text-red-700 border-red-100 bg-gradient-to-br from-red-50/60 to-red-100/10 ${delayedCount > 0 ? "animate-pulse" : ""}`, 
+            color: `text-red-700 border-red-100/50 bg-gradient-to-br from-red-50/40 to-red-100/10 ${delayedCount > 0 ? "animate-pulse" : ""}`, 
             led: "bg-red-500",
             icon: <AlertTriangle size={16} className="text-red-500" />
           },
         ].map((ind, idx) => (
           <div 
             key={idx} 
-            className={`bg-white rounded-3xl border border-slate-200 shadow-[0_4px_20px_rgba(0,0,0,0.01)] p-5 transition-all hover:translate-y-[-1px] hover:shadow-[0_8px_25px_rgba(0,0,0,0.03)] ${ind.color}`}
+            className={`bg-white/75 backdrop-blur-md border border-white/80 p-5 shadow-sm rounded-[22px] transition-all hover:translate-y-[-1px] ${ind.color}`}
           >
             <div className="flex justify-between items-center mb-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">{ind.label}</span>
-              <div className="p-1.5 rounded-lg bg-white shadow-xs border border-slate-100">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 block">{ind.label}</span>
+              <div className="p-1.5 rounded-lg bg-white/80 border border-pink-100/50 shadow-sm">
                 {ind.icon}
               </div>
             </div>
@@ -592,23 +592,23 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
       </div>
 
       {/* SEARCH, ADD-ON ACTIONS, QUICK FILTERS AND DROPDOWNS */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-5">
+      <div className="bg-white/75 backdrop-blur-md border border-white/80 p-6 shadow-sm rounded-[22px] flex flex-col gap-5">
         
         {/* Switch mode and Batch creator CTA */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-          <div className="flex p-1 bg-slate-100 rounded-2xl w-fit">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-pink-100/50 pb-4">
+          <div className="flex p-1 bg-pink-50/50 border border-pink-100/20 rounded-2xl w-fit">
             <button
               onClick={() => setViewMode('pedidos')}
-              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
-                viewMode === 'pedidos' ? 'bg-white text-slate-900 shadow-xs scale-102' : 'text-slate-500 hover:text-slate-700'
+              className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                viewMode === 'pedidos' ? 'bg-white text-gray-800 shadow-sm scale-102 border border-pink-100/20' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               Pedidos Individuais
             </button>
             <button
               onClick={() => setViewMode('lotes')}
-              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
-                viewMode === 'lotes' ? 'bg-white text-slate-900 shadow-xs scale-102' : 'text-slate-500 hover:text-slate-700'
+              className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                viewMode === 'lotes' ? 'bg-white text-gray-800 shadow-sm scale-102 border border-pink-100/20' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               Lotes de Produção
@@ -618,7 +618,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
           {viewMode === 'pedidos' && selectedOrders.length > 0 && (
             <button
               onClick={() => setShowBatchModal(true)}
-              className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-98 shadow-[0_4px_12px_rgba(99,102,241,0.25)] animate-fade-in"
+              className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all active:scale-98 shadow-sm"
             >
               <Zap size={14} /> Criar Lote de Produção ({selectedOrders.length})
             </button>
@@ -628,11 +628,11 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
         {/* Filters and search layout */}
         <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
               placeholder="Pesquisar por Código do Pedido, Cliente ou Produto..."
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-800 outline-none focus:border-[#8E5BF5] focus:bg-white focus:ring-4 focus:ring-[#8E5BF5]/5 transition-all placeholder:text-slate-400"
+              className="w-full pl-12 pr-4 py-3 bg-white/50 border border-pink-100/60 rounded-2xl text-xs font-semibold text-gray-700 outline-none focus:border-pink-300 focus:bg-white focus:ring-4 focus:ring-pink-100/50 transition-all placeholder:text-gray-400"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -640,7 +640,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
 
           <div className="flex flex-wrap items-center gap-2">
             <select
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-600 outline-none focus:border-[#8E5BF5] transition-all cursor-pointer"
+              className="bg-white/50 border border-pink-100/60 rounded-xl px-3 py-2.5 text-xs font-bold text-gray-600 outline-none focus:border-pink-300 transition-all cursor-pointer"
               value={filterAtelier}
               onChange={(e) => setFilterAtelier(e.target.value)}
             >
@@ -651,7 +651,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
             </select>
 
             <select
-              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-600 outline-none focus:border-[#8E5BF5] transition-all cursor-pointer"
+              className="bg-white/50 border border-pink-100/60 rounded-xl px-3 py-2.5 text-xs font-bold text-gray-600 outline-none focus:border-pink-300 transition-all cursor-pointer"
               value={filterResponsavel}
               onChange={(e) => setFilterResponsavel(e.target.value)}
             >
@@ -664,7 +664,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
         </div>
 
         {/* Quick Filter Pill Buttons */}
-        <div className="border-t border-slate-100 pt-4 flex items-center justify-between flex-wrap gap-2">
+        <div className="border-t border-pink-50 pb-1 pt-4 flex items-center justify-between flex-wrap gap-2">
           <div className="flex flex-wrap gap-2">
             {[
               { id: "all", label: "Todos os Pedidos" },
@@ -677,10 +677,10 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
               <button
                 key={pill.id}
                 onClick={() => setActiveFilter(pill.id as any)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
+                className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
                   activeFilter === pill.id
-                    ? "bg-[#8E5BF5] text-white shadow-md shadow-[#8E5BF5]/20 scale-102"
-                    : "bg-slate-50 text-slate-500 border border-slate-200/60 hover:bg-slate-100"
+                    ? "bg-gradient-to-b from-pink-400 to-pink-500 text-white shadow-sm scale-102"
+                    : "bg-pink-50/20 text-gray-500 border border-pink-100/30 hover:bg-pink-100/20"
                 }`}
               >
                 {pill.label}
@@ -709,26 +709,26 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                 <div className="flex items-center justify-between px-2">
                   <div className="flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 rounded-full ${col.led}`} />
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
                       {col.label}
                     </h3>
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-black ${col.color}`}>
+                  <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold ${col.color}`}>
                     {col.items.length}
                   </span>
                 </div>
 
                 {/* Column Cards Drop Area */}
                 <div 
-                  className={`flex flex-col gap-3 min-h-[500px] p-3 rounded-3xl border transition-all ${
+                  className={`flex flex-col gap-3 min-h-[500px] p-3 rounded-[24px] border transition-all ${
                     isTargetColDraggedOver 
-                      ? "bg-slate-100/75 border-dashed border-[#8E5BF5] ring-4 ring-[#8E5BF5]/5" 
-                      : "bg-[#F9F9FB] border-slate-200/60"
+                      ? "bg-pink-100/30 border-dashed border-pink-400 ring-4 ring-pink-100/20" 
+                      : "bg-white/40 border-pink-100/30"
                   }`}
                 >
                   {col.items.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 text-[10px] font-black uppercase tracking-widest gap-2 bg-white/40">
-                      <Package size={24} className="text-slate-300" />
+                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed border-pink-200/50 rounded-2xl text-gray-400 text-[10px] font-bold uppercase tracking-widest gap-2 bg-white/40">
+                      <Package size={24} className="text-pink-300" />
                       Arrastar pedidos aqui
                     </div>
                   ) : (
@@ -751,10 +751,10 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                             draggable
                             onDragStart={(e: any) => handleDragStart(e, order.id)}
                             onClick={() => setSelectedItem(order)}
-                            className={`bg-white p-4 rounded-2xl shadow-xs border relative pl-6 transition-all cursor-grab active:cursor-grabbing hover:translate-y-[-2px] hover:shadow-md ${
+                            className={`bg-white/80 p-4 rounded-[20px] shadow-sm border relative pl-6 transition-all cursor-grab active:cursor-grabbing hover:translate-y-[-2px] hover:shadow-md ${
                               isSelected 
-                                ? "border-indigo-500 ring-2 ring-indigo-50" 
-                                : "border-slate-200/80 hover:border-slate-300"
+                                ? "border-pink-400 ring-2 ring-pink-100" 
+                                : "border-pink-100/40 hover:border-pink-200"
                             }`}
                           >
                             {/* Color-coded vertical LED strip on left margin */}
@@ -773,13 +773,13 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                                         : [...prev, order.id]
                                     );
                                   }}
-                                  className="mt-0.5 w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                  className="mt-0.5 w-4 h-4 rounded border-pink-200 text-pink-500 focus:ring-pink-400 cursor-pointer"
                                 />
                                 <div>
-                                  <span className="font-mono text-[9px] font-black text-[#cca062] uppercase tracking-widest block">
+                                  <span className="font-mono text-[9px] font-bold text-pink-500 uppercase tracking-widest block">
                                     #{order.code}
                                   </span>
-                                  <span className="text-xs font-extrabold text-slate-800 block leading-tight mt-0.5">
+                                  <span className="text-xs font-bold text-gray-800 block leading-tight mt-0.5">
                                     {order.customerName}
                                   </span>
                                 </div>
@@ -800,39 +800,39 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                                 </select>
                                 <MoreVertical
                                   size={14}
-                                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-slate-400 pointer-events-none hover:text-slate-600"
+                                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-gray-400 pointer-events-none hover:text-gray-600"
                                 />
                               </div>
                             </div>
 
                             {/* Products and quantity - No images */}
-                            <div className="text-[10px] text-slate-500 font-semibold line-clamp-2 h-7 leading-tight mb-3">
+                            <div className="text-[10px] text-gray-500 font-semibold line-clamp-2 h-7 leading-tight mb-3">
                               {order.items?.map((i) => `${i.quantity}x ${i.product_name}`).join(", ") || "Sem produtos"}
                             </div>
 
                             {/* Active Alerts List inside the card */}
                             {alerts.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mb-3">
-                                {alerts.map((al, idx) => (
-                                  <span 
-                                    key={idx} 
-                                    className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-wider flex items-center gap-1 border ${
-                                      al.type === 'danger' 
-                                        ? "bg-rose-50 text-rose-600 border-rose-100" 
-                                        : "bg-amber-50 text-amber-600 border-amber-100"
-                                    }`}
-                                  >
-                                    <AlertCircle size={9} />
-                                    {al.text}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
+                                <div className="flex flex-wrap gap-1 mb-3">
+                                  {alerts.map((al, idx) => (
+                                    <span 
+                                      key={idx} 
+                                      className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider flex items-center gap-1 border ${
+                                        al.type === 'danger' 
+                                          ? "bg-rose-50 text-rose-600 border-rose-100" 
+                                          : "bg-amber-50 text-amber-600 border-amber-100"
+                                      }`}
+                                    >
+                                      <AlertCircle size={9} />
+                                      {al.text}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
 
                             {/* Date of delivery & Priority metrics */}
-                            <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 mt-2">
-                              <div className="flex items-center gap-1.5 text-slate-400 font-semibold text-[10px]">
-                                <Calendar size={11} className={isOverdue ? "text-rose-500" : "text-slate-400"} />
+                            <div className="flex items-center justify-between pt-2.5 border-t border-pink-50 mt-2">
+                              <div className="flex items-center gap-1.5 text-gray-400 font-semibold text-[10px]">
+                                <Calendar size={11} className={isOverdue ? "text-rose-500" : "text-gray-400"} />
                                 <span className={isOverdue ? "text-rose-600 font-bold" : ""}>
                                   {formatFriendlyDate(order.deliveryDate)}
                                 </span>
@@ -840,7 +840,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
 
                               <div className="flex items-center gap-2">
                                 {/* Priority indicator dot */}
-                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border flex items-center gap-1 ${priorityStyle.bg} ${priorityStyle.text} border-slate-200/50`}>
+                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border flex items-center gap-1 ${priorityStyle.bg} ${priorityStyle.text} border-pink-100/50`}>
                                   <span className={`w-1 h-1 rounded-full ${priorityStyle.dot}`} />
                                   {priorityStyle.label}
                                 </span>
@@ -861,30 +861,30 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
         /* LOTES DE PRODUÇÃO VIEW */
         <div className="space-y-6">
           {batchSuggestions.length > 0 && (
-            <div className="bg-amber-50/70 border border-amber-200/60 rounded-3xl p-6 shadow-sm">
+            <div className="bg-amber-50/10 backdrop-blur-md border border-amber-200/30 rounded-[22px] p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-md shadow-amber-200">
+                <div className="p-2.5 bg-amber-500/85 text-white rounded-xl shadow-sm">
                   <Zap size={18} />
                 </div>
                 <div>
-                  <h3 className="text-xs font-black text-amber-900 uppercase tracking-widest">Sugestões de Agrupamento de Lote</h3>
-                  <p className="text-[10px] text-amber-600 font-semibold mt-0.5">Otimização de setup automático baseada em itens pendentes idênticos</p>
+                  <h3 className="text-xs font-bold text-amber-900 uppercase tracking-widest">Sugestões de Agrupamento de Lote</h3>
+                  <p className="text-[10px] text-amber-600/80 font-semibold mt-0.5">Otimização de setup automático baseada em itens pendentes idênticos</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {batchSuggestions.map((suggestion, idx) => (
-                  <div key={idx} className="bg-white p-5 rounded-2xl border border-amber-100 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
+                  <div key={idx} className="bg-white/80 p-5 rounded-[20px] border border-amber-100/30 shadow-xs flex flex-col justify-between hover:shadow-md transition-all">
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-[8px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded uppercase tracking-widest">Otimização</span>
-                        <span className="text-[10px] font-bold text-slate-400">{suggestion.orderIds?.length} Pedidos</span>
+                        <span className="text-[8px] font-bold text-amber-600 bg-amber-50/50 px-2 py-0.5 rounded uppercase tracking-widest">Otimização</span>
+                        <span className="text-[10px] font-bold text-gray-400">{suggestion.orderIds?.length} Pedidos</span>
                       </div>
-                      <h4 className="text-xs font-black text-slate-800 line-clamp-1 mb-1">{suggestion.productNames?.[0]}</h4>
+                      <h4 className="text-xs font-bold text-gray-800 line-clamp-1 mb-1">{suggestion.productNames?.[0]}</h4>
                       <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest mb-4">Aproveitamento Máximo</p>
                     </div>
                     <button 
                       onClick={() => handleCreateBatch(suggestion)}
-                      className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                      className="w-full py-2.5 bg-amber-500/90 hover:bg-amber-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                     >
                       Criar Lote Sugerido
                     </button>
@@ -897,13 +897,13 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
           {/* Batches list */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {batches.length === 0 ? (
-              <div className="col-span-full py-24 text-center text-slate-400 bg-white rounded-3xl border border-slate-200 shadow-sm p-10">
-                <Package size={48} className="mx-auto text-slate-300 mb-3" />
-                <p className="text-xs font-black uppercase tracking-wider text-slate-700">Nenhum lote de produção aberto</p>
-                <p className="text-[11px] text-slate-400 mt-1 mb-4">Selecione pedidos e agrupe-os ou clique para iniciar.</p>
+              <div className="col-span-full py-24 text-center text-gray-400 bg-white/75 backdrop-blur-md rounded-[22px] border border-white/80 p-10 shadow-sm">
+                <Package size={48} className="mx-auto text-pink-300 mb-3" />
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Nenhum lote de produção aberto</p>
+                <p className="text-[11px] text-gray-400 mt-1 mb-4">Selecione pedidos e agrupe-os ou clique para iniciar.</p>
                 <button 
                   onClick={() => setViewMode('pedidos')}
-                  className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                  className="px-6 py-2.5 bg-pink-50/30 border border-pink-100/40 hover:bg-pink-100/20 text-pink-600 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                 >
                   Voltar para Pedidos
                 </button>
@@ -913,35 +913,35 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                 <div 
                   key={batch.id} 
                   onClick={() => setSelectedBatch(batch)}
-                  className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-xs hover:shadow-md hover:border-[#8E5BF5]/30 transition-all cursor-pointer p-6 space-y-4"
+                  className="bg-white/75 backdrop-blur-md border border-white/80 rounded-[22px] overflow-hidden shadow-sm hover:shadow-md hover:border-pink-300/50 transition-all cursor-pointer p-6 space-y-4"
                 >
-                  <div className="flex justify-between items-start border-b border-slate-50 pb-3">
+                  <div className="flex justify-between items-start border-b border-pink-50 pb-3">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">LOTE #{batch.code}</span>
-                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${
+                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">LOTE #{batch.code}</span>
+                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-widest ${
                           batch.status === 'concluido' ? 'bg-emerald-50 text-emerald-600' :
                           batch.status === 'em_producao' ? 'bg-amber-50 text-amber-600' :
-                          'bg-slate-100 text-slate-500'
+                          'bg-gray-100 text-gray-500'
                         }`}>
                           {batch.status.replace('_', ' ')}
                         </span>
                       </div>
-                      <h3 className="text-sm font-black text-slate-800 line-clamp-1">{batch.productNames.join(', ')}</h3>
+                      <h3 className="text-sm font-bold text-gray-800 line-clamp-1">{batch.productNames.join(', ')}</h3>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-black text-slate-800">{batch.totalQuantity}</div>
-                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">Unidades</span>
+                      <div className="text-lg font-black text-gray-800">{batch.totalQuantity}</div>
+                      <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest block">Unidades</span>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-[9px] font-black text-slate-400 block uppercase tracking-wider mb-2">Pedidos Vinculados</span>
+                    <span className="text-[9px] font-bold text-gray-400 block uppercase tracking-wider mb-2">Pedidos Vinculados</span>
                     <div className="flex flex-wrap gap-1.5">
                       {batch.orderIds.map(orderId => {
                         const order = orders.find(o => o.id === orderId);
                         return (
-                          <span key={orderId} className="px-2 py-1 bg-slate-50 border border-slate-150 rounded-lg text-[10px] font-bold text-slate-600">
+                          <span key={orderId} className="px-2 py-1 bg-pink-50/20 border border-pink-100/20 rounded-lg text-[10px] font-bold text-gray-600">
                             #{order?.code || '???'}
                           </span>
                         );
@@ -953,7 +953,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                     {batch.status === 'aberto' && (
                       <button 
                         onClick={() => handleUpdateBatchStatus(batch.id, 'em_producao')}
-                        className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md"
+                        className="flex-1 py-3 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm"
                       >
                         Iniciar Produção
                       </button>
@@ -961,7 +961,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                     {batch.status === 'em_producao' && (
                       <button 
                         onClick={() => handleUpdateBatchStatus(batch.id, 'concluido')}
-                        className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md"
+                        className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm"
                       >
                         Concluir Lote
                       </button>
@@ -977,26 +977,26 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
       {/* DETAILED PRODUCTION DRAWER (RESUMO DA PRODUÇÃO) */}
       <AnimatePresence>
         {selectedItem && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-end bg-slate-900/60 backdrop-blur-md">
+          <div className="fixed inset-0 z-[150] flex items-center justify-end bg-gray-900/40 backdrop-blur-sm">
             <motion.div
               initial={{ x: "100%", opacity: 0.95 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="bg-slate-50 w-full max-w-4xl h-full shadow-2xl border-l border-slate-200 flex flex-col overflow-hidden"
+              className="bg-[#FDF8F5] w-full max-w-4xl h-full shadow-2xl border-l border-pink-100/40 flex flex-col overflow-hidden"
             >
               {/* Header */}
-              <div className="p-6 bg-white border-b border-slate-200 flex justify-between items-center shrink-0">
+              <div className="p-6 bg-white/85 backdrop-blur-md border-b border-pink-100/40 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-slate-100 rounded-2xl text-[#8E5BF5]">
+                  <div className="p-3 bg-pink-50 border border-pink-100/30 rounded-2xl text-pink-500">
                     <Package size={24} />
                   </div>
                   <div>
-                    <h3 className="text-base font-black tracking-tight text-slate-800 leading-tight">Resumo da Produção</h3>
+                    <h3 className="text-base font-bold tracking-tight text-gray-800 leading-tight">Resumo da Produção</h3>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] font-black text-[#cca062] uppercase tracking-wider">PEDIDO #{selectedItem.code}</span>
-                      <span className="text-slate-300">•</span>
-                      <span className="text-[10px] font-extrabold text-slate-500 uppercase">{selectedItem.customerName}</span>
+                      <span className="text-[10px] font-bold text-pink-500 uppercase tracking-wider">PEDIDO #{selectedItem.code}</span>
+                      <span className="text-pink-200">•</span>
+                      <span className="text-[10px] font-semibold text-gray-500 uppercase">{selectedItem.customerName}</span>
                     </div>
                   </div>
                 </div>
@@ -1004,7 +1004,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSelectedItem(null)}
-                    className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-all"
+                    className="p-2 hover:bg-pink-50/50 rounded-full text-gray-400 hover:text-gray-600 transition-all"
                   >
                     <X size={20} />
                   </button>
@@ -1015,8 +1015,8 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
                 {/* CARD 7 — TIMELINE STATUS FLOW TRACKER */}
-                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-4">TIMELINE DE EXECUÇÃO</span>
+                <div className="bg-white/75 backdrop-blur-md p-6 rounded-[22px] border border-white/80 shadow-sm">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block mb-4">TIMELINE DE EXECUÇÃO</span>
                   <div className="grid grid-cols-4 gap-2 relative">
                     {STAGES.map((st, sIdx) => {
                       const isActive = selectedItem.status === st.id;
@@ -1025,11 +1025,11 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                       return (
                         <div key={st.id} className="text-center flex flex-col items-center">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                            isActive ? `${st.led} text-white ring-4 ring-offset-2 ring-[#8E5BF5]/25` : isPast ? `${st.led} text-white` : "bg-slate-100 text-slate-400"
+                            isActive ? `${st.led} text-white ring-4 ring-offset-2 ring-pink-400/20` : isPast ? `${st.led} text-white` : "bg-gray-100 text-gray-400"
                           }`}>
                             {isPast && !isActive ? <Check size={14} /> : <span className="text-xs font-bold">{sIdx + 1}</span>}
                           </div>
-                          <span className={`text-[9px] font-black uppercase tracking-wider mt-2 block ${isActive ? st.text : "text-slate-400"}`}>
+                          <span className={`text-[9px] font-bold uppercase tracking-wider mt-2 block ${isActive ? st.text : "text-gray-400"}`}>
                             {st.label}
                           </span>
                         </div>
@@ -1045,63 +1045,63 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                   <div className="md:col-span-6 space-y-6">
                     
                     {/* CARD 1 — INFORMAÇÕES DO PEDIDO */}
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block border-b border-slate-50 pb-2">Informações do Pedido</span>
+                    <div className="bg-white/75 backdrop-blur-md p-5 rounded-[22px] border border-white/80 shadow-sm space-y-3">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block border-b border-pink-50 pb-2">Informações do Pedido</span>
                       <div className="space-y-2.5 text-xs font-semibold">
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-400">Cliente:</span>
-                          <span className="text-slate-800">{selectedItem.customerName}</span>
+                          <span className="text-gray-400">Cliente:</span>
+                          <span className="text-gray-800">{selectedItem.customerName}</span>
                         </div>
                         {selectedItem.contact && (
                           <div className="flex justify-between items-center">
-                            <span className="text-slate-400">Contato:</span>
-                            <span className="text-slate-800">{selectedItem.contact}</span>
+                            <span className="text-gray-400">Contato:</span>
+                            <span className="text-gray-800">{selectedItem.contact}</span>
                           </div>
                         )}
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-400">Data Prevista:</span>
-                          <span className="text-slate-800 font-mono">{formatFriendlyDate(selectedItem.deliveryDate)}</span>
+                          <span className="text-gray-400">Data Prevista:</span>
+                          <span className="text-gray-800 font-mono">{formatFriendlyDate(selectedItem.deliveryDate)}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-400">Prioridade:</span>
+                          <span className="text-gray-400">Prioridade:</span>
                           {(() => {
                             const pResult = calculateOrderPriority(selectedItem);
                             const pStyle = getPriorityLabelAndDot(pResult.priority);
                             return (
-                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${pStyle.bg} ${pStyle.text}`}>
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${pStyle.bg} ${pStyle.text}`}>
                                 {pStyle.label}
                               </span>
                             );
                           })()}
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-400">Setor/Ateliê:</span>
-                          <span className="text-slate-800">{selectedItem.atelier || "Não definido"}</span>
+                          <span className="text-gray-400">Setor/Ateliê:</span>
+                          <span className="text-gray-800">{selectedItem.atelier || "Não definido"}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-400">Funcionário/Responsável:</span>
-                          <span className="text-slate-800">{selectedItem.assignee || "Livre"}</span>
+                          <span className="text-gray-400">Funcionário/Responsável:</span>
+                          <span className="text-gray-800">{selectedItem.assignee || "Livre"}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* CARD 5 — HISTÓRICO DA PRODUÇÃO */}
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block border-b border-slate-50 pb-2">Histórico de Produção</span>
+                    <div className="bg-white/75 backdrop-blur-md p-5 rounded-[22px] border border-white/80 shadow-sm space-y-3">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block border-b border-pink-50 pb-2">Histórico de Produção</span>
                       <div className="space-y-3 max-h-[160px] overflow-y-auto pr-2 text-xs">
                         {(!selectedItem.history || selectedItem.history.length === 0) ? (
-                          <div className="text-slate-400 italic text-center py-4">Nenhum log de histórico.</div>
+                          <div className="text-gray-400 italic text-center py-4">Nenhum log de histórico.</div>
                         ) : (
                           selectedItem.history.map((log, lIdx) => (
-                            <div key={lIdx} className="border-l-2 border-slate-100 pl-3 relative space-y-0.5 pb-2">
-                              <span className="w-2 h-2 rounded-full bg-slate-300 absolute -left-1.25 top-1.5" />
+                            <div key={lIdx} className="border-l-2 border-pink-100/50 pl-3 relative space-y-0.5 pb-2">
+                              <span className="w-2 h-2 rounded-full bg-pink-300 absolute -left-1.25 top-1.5" />
                               <div className="flex justify-between items-center">
-                                <span className="font-extrabold text-slate-700 capitalize text-[11px]">{log.status.replace('_', ' ')}</span>
-                                <span className="text-[9px] font-semibold text-slate-400">
+                                <span className="font-bold text-gray-700 capitalize text-[11px]">{log.status.replace('_', ' ')}</span>
+                                <span className="text-[9px] font-semibold text-gray-400">
                                   {formatFriendlyDate(log.timestamp)}
                                 </span>
                               </div>
-                              <p className="text-[10px] text-slate-400 font-medium">{log.notes || "Movimentação registrada"}</p>
+                              <p className="text-[10px] text-gray-400 font-medium">{log.notes || "Movimentação registrada"}</p>
                             </div>
                           ))
                         )}
@@ -1109,18 +1109,18 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                     </div>
 
                     {/* CARD 6 — OBSERVAÇÕES */}
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block border-b border-slate-50 pb-2">Observações da Produção</span>
+                    <div className="bg-white/75 backdrop-blur-md p-5 rounded-[22px] border border-white/80 shadow-sm space-y-3">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block border-b border-pink-50 pb-2">Observações da Produção</span>
                       <textarea
                         value={tempObservations}
                         onChange={(e) => setTempObservations(e.target.value)}
                         placeholder="Insira notas de fabricação, especificações adicionais de material ou atrasos..."
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-700 h-24 outline-none focus:border-[#8E5BF5] resize-none"
+                        className="w-full p-3 bg-pink-50/20 border border-pink-100/30 rounded-2xl text-xs font-semibold text-gray-700 h-24 outline-none focus:border-pink-300 resize-none"
                       />
                       <button
                         onClick={handleSaveObservations}
                         disabled={isSavingObservations}
-                        className="w-full py-2.5 bg-[#8E5BF5] hover:bg-[#7946E0] text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                        className="w-full py-2.5 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
                       >
                         <Save size={13} />
                         {isSavingObservations ? "Salvando..." : "Salvar Observações"}
@@ -1133,10 +1133,10 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                   <div className="md:col-span-6 space-y-6">
 
                     {/* CONTROLE DE QUALIDADE CHECKLIST (Always visible on details drawer for best operations) */}
-                    <div className="bg-white p-5 rounded-3xl border border-[#8E5BF5]/20 shadow-xs space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-[#8E5BF5] block">Controle de Qualidade</span>
-                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${
+                    <div className="bg-white/75 backdrop-blur-md p-5 rounded-[22px] border border-pink-200/25 shadow-sm space-y-4">
+                      <div className="flex items-center justify-between border-b border-pink-50 pb-2.5">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-pink-500 block">Controle de Qualidade</span>
+                        <span className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-widest ${
                           isQCComplete(selectedItem) ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-amber-50 text-amber-600 border border-amber-100"
                         }`}>
                           {isQCComplete(selectedItem) ? "Conferido & Liberado" : "Pendente"}
@@ -1156,11 +1156,11 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                             <button
                               key={qcItem.field}
                               onClick={() => handleQCToggle(selectedItem, qcItem.field)}
-                              className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-200/50 transition-all text-left"
+                              className="w-full flex items-center justify-between p-3 bg-pink-50/10 border border-pink-100/20 hover:bg-pink-100/15 rounded-2xl transition-all text-left"
                             >
-                              <span className="text-xs font-bold text-slate-700">{qcItem.label}</span>
+                              <span className="text-xs font-semibold text-gray-700">{qcItem.label}</span>
                               <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${
-                                isChecked ? "bg-emerald-500 border-transparent text-white" : "bg-white border-slate-300 text-transparent"
+                                isChecked ? "bg-emerald-500 border-transparent text-white" : "bg-white border-pink-200 text-transparent"
                               }`}>
                                 <Check size={14} className="stroke-[3]" />
                               </div>
@@ -1171,16 +1171,16 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                     </div>
 
                     {/* CARD 2 — PRODUTOS */}
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block border-b border-slate-50 pb-2">Produtos no Lote</span>
+                    <div className="bg-white/75 backdrop-blur-md p-5 rounded-[22px] border border-white/80 shadow-sm space-y-3">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block border-b border-pink-50 pb-2">Produtos no Lote</span>
                       <div className="space-y-2">
                         {selectedItem.items?.map((item, idx) => (
-                          <div key={idx} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl flex justify-between items-center text-xs">
+                          <div key={idx} className="p-3 bg-pink-50/10 border border-pink-100/20 rounded-[18px] flex justify-between items-center text-xs">
                             <div>
-                              <span className="font-extrabold text-slate-800 block">{item.product_name}</span>
-                              {item.code && <span className="text-[9px] font-mono font-bold text-slate-400">SKU: {item.code}</span>}
+                              <span className="font-bold text-gray-800 block">{item.product_name}</span>
+                              {item.code && <span className="text-[9px] font-mono font-bold text-gray-400">SKU: {item.code}</span>}
                             </div>
-                            <span className="font-mono font-black text-[#8E5BF5] bg-purple-50 px-2 py-1 rounded-lg">
+                            <span className="font-mono font-bold text-pink-500 bg-pink-50 border border-pink-100/50 px-2 py-1 rounded-lg">
                               x{item.quantity}
                             </span>
                           </div>
@@ -1189,32 +1189,32 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                     </div>
 
                     {/* CARD 3 — COMPONENTES CONSUMIDOS & CARD 4 — CONSUMO DE ESTOQUE */}
-                    <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-                      <div className="flex justify-between items-center border-b border-slate-50 pb-2">
-                        <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Ficha Técnica & Consumo de Estoque</span>
-                        <span className="text-[8px] font-black text-slate-300 tracking-wider">Demanda Operacional</span>
+                    <div className="bg-white/75 backdrop-blur-md p-5 rounded-[22px] border border-white/80 shadow-sm space-y-4">
+                      <div className="flex justify-between items-center border-b border-pink-50 pb-2">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Ficha Técnica & Consumo de Estoque</span>
+                        <span className="text-[8px] font-bold text-gray-300 tracking-wider">Demanda Operacional</span>
                       </div>
 
                       <div className="space-y-3">
                         {getOrderComponents(selectedItem).length === 0 ? (
-                          <div className="text-xs text-slate-400 text-center py-4">Nenhum componente cadastrado na receita destes produtos.</div>
+                          <div className="text-xs text-gray-400 text-center py-4">Nenhum componente cadastrado na receita destes produtos.</div>
                         ) : (
                           getOrderComponents(selectedItem).map(({ insumo, quantityNeeded }) => {
                             const isInsufficient = insumo.quantity < quantityNeeded;
                             const isMissing = insumo.quantity === 0;
                             
                             return (
-                              <div key={insumo.id} className="p-3 bg-slate-50 border border-slate-100 rounded-2xl space-y-2">
+                              <div key={insumo.id} className="p-3 bg-pink-50/10 border border-pink-100/20 rounded-[18px] space-y-2">
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <span className="text-xs font-extrabold text-slate-700 block">{insumo.name}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase">{insumo.category}</span>
+                                    <span className="text-xs font-bold text-gray-700 block">{insumo.name}</span>
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase">{insumo.category}</span>
                                   </div>
                                   <div className="text-right">
-                                    <span className="font-mono font-black text-xs text-slate-800 block">
+                                    <span className="font-mono font-bold text-xs text-gray-800 block">
                                       {quantityNeeded} {insumo.unit}
                                     </span>
-                                    <span className="text-[9px] font-bold text-slate-400 block">
+                                    <span className="text-[9px] font-bold text-gray-400 block">
                                       Estoque: {insumo.quantity} {insumo.unit}
                                     </span>
                                   </div>
@@ -1222,15 +1222,15 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
 
                                 {/* Stock warning alerts on individual insumo bar */}
                                 {isMissing ? (
-                                  <div className="text-[9px] font-black text-rose-600 flex items-center gap-1">
+                                  <div className="text-[9px] font-bold text-rose-600 flex items-center gap-1">
                                     <AlertOctagon size={11} /> Componente em Falta (Estoque Zerado!)
                                   </div>
                                 ) : isInsufficient ? (
-                                  <div className="text-[9px] font-black text-amber-600 flex items-center gap-1">
+                                  <div className="text-[9px] font-bold text-amber-600 flex items-center gap-1">
                                     <AlertTriangle size={11} /> Estoque Insuficiente para Demanda
                                   </div>
                                 ) : (
-                                  <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                  <div className="w-full bg-pink-100/30 rounded-full h-1.5 overflow-hidden">
                                     <div 
                                       className="h-full bg-emerald-500 rounded-full"
                                       style={{ width: `${Math.min(100, (insumo.quantity / quantityNeeded) * 100)}%` }}
@@ -1257,27 +1257,27 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
       {/* DETAILED BATCH SUMMARY DRAWER */}
       <AnimatePresence>
         {selectedBatch && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-end bg-slate-900/60 backdrop-blur-md">
+          <div className="fixed inset-0 z-[150] flex items-center justify-end bg-gray-900/40 backdrop-blur-sm">
             <motion.div
               initial={{ x: "100%", opacity: 0.95 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: "100%", opacity: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="bg-slate-50 w-full max-w-2xl h-full shadow-2xl border-l border-slate-200 flex flex-col overflow-hidden"
+              className="bg-[#FDF8F5] w-full max-w-2xl h-full shadow-2xl border-l border-pink-100/40 flex flex-col overflow-hidden"
             >
-              <div className="p-6 bg-white border-b border-slate-200 flex justify-between items-center shrink-0">
+              <div className="p-6 bg-white/85 backdrop-blur-md border-b border-pink-100/40 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+                  <div className="p-3 bg-pink-50 border border-pink-100/30 text-pink-500 rounded-2xl">
                     <Zap size={24} />
                   </div>
                   <div>
-                    <h3 className="text-base font-black tracking-tight text-slate-800 leading-tight">Resumo do Lote</h3>
-                    <span className="text-[10px] font-black text-slate-400 block">LOTE #{selectedBatch.code}</span>
+                    <h3 className="text-base font-bold tracking-tight text-gray-800 leading-tight">Resumo do Lote</h3>
+                    <span className="text-[10px] font-bold text-pink-500 block">LOTE #{selectedBatch.code}</span>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedBatch(null)}
-                  className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600"
+                  className="p-2 hover:bg-pink-50/50 rounded-full text-gray-400 hover:text-gray-600"
                 >
                   <X size={20} />
                 </button>
@@ -1286,26 +1286,26 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 
                 {/* CARD — INFORMAÇÕES DO LOTE */}
-                <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block border-b border-slate-50 pb-2">Informações do Lote</span>
+                <div className="bg-white/75 backdrop-blur-md p-5 rounded-[22px] border border-white/80 shadow-sm space-y-3">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block border-b border-pink-50 pb-2">Informações do Lote</span>
                   <div className="grid grid-cols-2 gap-4 text-xs font-semibold">
                     <div>
-                      <span className="text-slate-400 block">Total de Peças:</span>
-                      <span className="text-slate-800 font-bold text-sm">{selectedBatch.totalQuantity} unidades</span>
+                      <span className="text-gray-400 block">Total de Peças:</span>
+                      <span className="text-gray-800 font-bold text-sm">{selectedBatch.totalQuantity} unidades</span>
                     </div>
                     <div>
-                      <span className="text-slate-400 block">Status Operacional:</span>
-                      <span className="text-slate-800 font-bold capitalize">{selectedBatch.status.replace('_', ' ')}</span>
+                      <span className="text-gray-400 block">Status Operacional:</span>
+                      <span className="text-gray-800 font-bold capitalize">{selectedBatch.status.replace('_', ' ')}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* CARD — PRODUTOS NO LOTE */}
-                <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block border-b border-slate-50 pb-2">Mix de Produtos</span>
+                <div className="bg-white/75 backdrop-blur-md p-5 rounded-[22px] border border-white/80 shadow-sm space-y-3">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block border-b border-pink-50 pb-2">Mix de Produtos</span>
                   <div className="space-y-2">
                     {selectedBatch.productNames.map((name, index) => (
-                      <div key={index} className="p-2.5 bg-slate-50 rounded-xl font-bold text-xs text-slate-700">
+                      <div key={index} className="p-2.5 bg-pink-50/10 border border-pink-100/20 rounded-xl font-bold text-xs text-gray-700">
                         {name}
                       </div>
                     ))}
@@ -1313,21 +1313,21 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                 </div>
 
                 {/* CARD — COMPONENTES & ESTOQUE */}
-                <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-4">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block border-b border-slate-50 pb-2">Ficha Técnica Consolidada</span>
+                <div className="bg-white/75 backdrop-blur-md p-5 rounded-[22px] border border-white/80 shadow-sm space-y-4">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block border-b border-pink-50 pb-2">Ficha Técnica Consolidada</span>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {selectedBatch.consolidatedInsumos?.map((insumo, idx) => (
-                      <div key={idx} className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center text-xs">
-                        <span className="font-extrabold text-slate-700">{insumo.name}</span>
-                        <span className="font-mono font-black text-slate-900">{insumo.quantity} {insumo.unit}</span>
+                      <div key={idx} className="p-3 bg-pink-50/10 border border-pink-100/20 rounded-[18px] flex justify-between items-center text-xs">
+                        <span className="font-bold text-gray-700">{insumo.name}</span>
+                        <span className="font-mono font-bold text-gray-950">{insumo.quantity} {insumo.unit}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* CARD — PEDIDOS VINCULADOS */}
-                <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block border-b border-slate-50 pb-2">Pedidos Vinculados</span>
+                <div className="bg-white/75 backdrop-blur-md p-5 rounded-[22px] border border-white/80 shadow-sm space-y-3">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block border-b border-pink-50 pb-2">Pedidos Vinculados</span>
                   <div className="space-y-2">
                     {selectedBatch.orderIds.map(orderId => {
                       const order = orders.find(o => o.id === orderId);
@@ -1340,13 +1340,13 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                               setSelectedItem(order);
                             }
                           }}
-                          className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-100 flex justify-between items-center cursor-pointer transition-all text-xs"
+                          className="p-3 bg-pink-50/10 border border-pink-100/20 hover:bg-pink-100/15 rounded-[18px] flex justify-between items-center cursor-pointer transition-all text-xs"
                         >
                           <div>
-                            <span className="font-mono font-black text-[#cca062] block">#{order?.code}</span>
-                            <span className="font-extrabold text-slate-700 block">{order?.customerName}</span>
+                            <span className="font-mono font-bold text-pink-500 block">#{order?.code}</span>
+                            <span className="font-bold text-gray-700 block">{order?.customerName}</span>
                           </div>
-                          <ChevronRight size={16} className="text-slate-400" />
+                          <ChevronRight size={16} className="text-pink-400" />
                         </div>
                       );
                     })}
@@ -1362,28 +1362,28 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
       {/* QC BLOCKING WARNING ALERT MODAL */}
       <AnimatePresence>
         {qcAlertOrder && (
-          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden"
+              className="bg-white/90 backdrop-blur-md rounded-[22px] w-full max-w-md shadow-2xl border border-white/80 overflow-hidden"
             >
-              <div className="p-6 bg-rose-600 text-white flex items-center gap-3">
+              <div className="p-6 bg-gradient-to-r from-rose-500 to-pink-500 text-white flex items-center gap-3">
                 <AlertOctagon size={24} className="animate-bounce" />
                 <div>
-                  <h3 className="text-base font-black uppercase tracking-wider">Controle de Qualidade Pendente</h3>
-                  <span className="text-[10px] text-white/80 font-bold block">Pedido #{qcAlertOrder.code} - {qcAlertOrder.customerName}</span>
+                  <h3 className="text-base font-bold uppercase tracking-wider">Controle de Qualidade Pendente</h3>
+                  <span className="text-[10px] text-white/80 font-semibold block">Pedido #{qcAlertOrder.code} - {qcAlertOrder.customerName}</span>
                 </div>
               </div>
 
               <div className="p-6 space-y-4">
-                <p className="text-xs font-semibold text-slate-600 leading-relaxed">
-                  Para avançar o pedido para <strong className="text-slate-800">"Pronto para Entrega"</strong>, você deve conferir e liberar todos os itens do Controle de Qualidade primeiro!
+                <p className="text-xs font-semibold text-gray-600 leading-relaxed">
+                  Para avançar o pedido para <strong className="text-gray-800">"Pronto para Entrega"</strong>, você deve conferir e liberar todos os itens do Controle de Qualidade primeiro!
                 </p>
 
                 {/* Checklist controls directly embedded in warning for lightning fast operation */}
-                <div className="space-y-2.5 p-4 bg-slate-50 rounded-2xl border border-slate-150">
+                <div className="space-y-2.5 p-4 bg-pink-50/10 border border-pink-100/20 rounded-2xl">
                   {[
                     { field: "productsChecked" as const, label: "Produto conferido" },
                     { field: "personalizationChecked" as const, label: "Personalização conferida" },
@@ -1396,11 +1396,11 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                       <button
                         key={qcItem.field}
                         onClick={() => handleQCToggle(qcAlertOrder, qcItem.field)}
-                        className="w-full flex items-center justify-between p-2.5 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 transition-all text-left"
+                        className="w-full flex items-center justify-between p-2.5 bg-white/60 hover:bg-pink-50/20 rounded-xl border border-pink-100/20 transition-all text-left"
                       >
-                        <span className="text-xs font-bold text-slate-700">{qcItem.label}</span>
+                        <span className="text-xs font-bold text-gray-700">{qcItem.label}</span>
                         <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
-                          isChecked ? "bg-emerald-500 border-transparent text-white" : "bg-white border-slate-300 text-transparent"
+                          isChecked ? "bg-emerald-500 border-transparent text-white" : "bg-white border-pink-200 text-transparent"
                         }`}>
                           <Check size={11} className="stroke-[3]" />
                         </div>
@@ -1409,11 +1409,11 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                   })}
                 </div>
 
-                <div className="flex gap-2 pt-2 border-t border-slate-100">
+                <div className="flex gap-2 pt-2 border-t border-pink-50">
                   <button
                     type="button"
                     onClick={() => setQcAlertOrder(null)}
-                    className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-center"
+                    className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-center"
                   >
                     Fechar
                   </button>
@@ -1423,7 +1423,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                       setSelectedItem(qcAlertOrder);
                       setQcAlertOrder(null);
                     }}
-                    className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all text-center shadow-md shadow-rose-600/20"
+                    className="flex-1 py-3 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-center shadow-md shadow-pink-500/10"
                   >
                     Abrir Resumo Completo
                   </button>
@@ -1437,21 +1437,21 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
       {/* MODAL DE CRIAÇÃO DE LOTE */}
       <AnimatePresence>
         {showBatchModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl border border-slate-100"
+              className="bg-white/85 backdrop-blur-md rounded-[24px] w-full max-w-lg overflow-hidden shadow-2xl border border-white/80"
             >
-              <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+              <div className="p-6 border-b border-pink-100/20 flex items-center justify-between bg-pink-50/10">
                 <div>
-                  <h3 className="text-base font-black text-slate-800">Novo Lote de Produção</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Agrupamento de {selectedOrders.length} pedidos selecionados</p>
+                  <h3 className="text-base font-bold text-gray-800">Novo Lote de Produção</h3>
+                  <p className="text-[10px] font-bold text-pink-500 uppercase tracking-wider mt-0.5">Agrupamento de {selectedOrders.length} pedidos selecionados</p>
                 </div>
                 <button 
                   onClick={() => setShowBatchModal(false)} 
-                  className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600"
+                  className="w-10 h-10 rounded-xl bg-white border border-pink-100/30 flex items-center justify-center text-gray-400 hover:text-gray-600"
                 >
                   <X size={18} />
                 </button>
@@ -1459,21 +1459,21 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
 
               <div className="p-6 space-y-6">
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 block">Identificação do Lote</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5 block">Identificação do Lote</label>
                   <input 
                     type="text" 
                     placeholder="Ex: LOTE-COSTURA-JULHO"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition-all placeholder:text-slate-300"
+                    className="w-full px-4 py-3 bg-pink-50/20 border border-pink-100/30 rounded-xl text-xs font-semibold text-gray-800 outline-none focus:border-pink-300 focus:bg-white transition-all placeholder:text-gray-300"
                     value={newBatchName}
                     onChange={(e) => setNewBatchName(e.target.value)}
                   />
                 </div>
 
-                <div className="p-5 bg-indigo-50 rounded-2xl border border-indigo-100 text-xs">
-                  <p className="font-extrabold text-indigo-900 leading-relaxed mb-1">
+                <div className="p-5 bg-pink-50/30 rounded-2xl border border-pink-100/20 text-xs">
+                  <p className="font-bold text-pink-950 leading-relaxed mb-1">
                     Agrupamento Inteligente
                   </p>
-                  <p className="font-semibold text-indigo-700 leading-relaxed">
+                  <p className="font-semibold text-pink-700 leading-relaxed">
                     O sistema gerará uma ficha técnica única consolidando todas as matérias-primas necessárias para os {selectedOrders.length} pedidos selecionados.
                   </p>
                 </div>
@@ -1481,13 +1481,13 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                 <div className="flex items-center gap-3 pt-2">
                    <button 
                      onClick={() => setShowBatchModal(false)}
-                     className="flex-1 py-3 text-[10px] font-black text-slate-400 uppercase tracking-wider hover:text-slate-600 transition-all text-center"
+                     className="flex-1 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-all text-center"
                    >
                      Cancelar
                    </button>
                    <button 
                      onClick={() => handleCreateBatch({ code: newBatchName })}
-                     className="flex-[2] py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-center shadow-lg"
+                     className="flex-[2] py-3 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all text-center shadow-lg"
                    >
                      Confirmar e Criar Lote
                    </button>

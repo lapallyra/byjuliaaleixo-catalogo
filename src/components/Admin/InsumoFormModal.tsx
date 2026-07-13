@@ -108,19 +108,19 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-all animate-fade-in">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm transition-all animate-fade-in">
       <div 
-        className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] border border-[#E5E5EA] animate-scale-up"
+        className="bg-white rounded-[22px] w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] border border-pink-100/40 animate-scale-up"
         id="insumo-form-modal"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#8E5BF5] to-[#7946E0] p-6 text-white flex justify-between items-center shrink-0">
+        <div className="bg-gradient-to-r from-pink-400 to-pink-500 p-6 text-white flex justify-between items-center shrink-0">
           <div>
-            <h2 className="text-xl font-black tracking-tight flex items-center gap-2">
-              <Package size={22} className="text-[#E5D5FF]" />
+            <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+              <Package size={22} className="text-pink-100" />
               {editing?.id ? "Editar Item de Estoque" : "Novo Item de Estoque"}
             </h2>
-            <p className="text-[#F5F5F7] text-xs opacity-90 mt-1 font-semibold">
+            <p className="text-pink-50/90 text-xs mt-1 font-semibold">
               Cadastro unificado de insumos consumíveis e componentes de produtos.
             </p>
           </div>
@@ -134,31 +134,31 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
         </div>
 
         {/* Steps Progress Indicator */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center shrink-0">
+        <div className="px-6 py-4 bg-pink-50/10 border-b border-pink-100/20 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2 w-full">
             {[1, 2, 3].map((s) => (
               <React.Fragment key={s}>
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       step === s
-                        ? "bg-[#8E5BF5] text-white shadow-[0_0_12px_rgba(142,91,245,0.4)]"
+                        ? "bg-pink-500 text-white shadow-[0_0_12px_rgba(236,72,153,0.3)]"
                         : step > s
                         ? "bg-emerald-500 text-white"
-                        : "bg-slate-200 text-slate-500"
+                        : "bg-gray-200 text-gray-500"
                     }`}
                   >
                     {s}
                   </div>
                   <span
                     className={`text-[10px] font-bold uppercase tracking-wider ${
-                      step === s ? "text-[#8E5BF5]" : "text-slate-400"
+                      step === s ? "text-pink-500" : "text-gray-400"
                     }`}
                   >
                     {s === 1 ? "Identificação" : s === 2 ? "Controle" : "Custo"}
                   </span>
                 </div>
-                {s < 3 && <div className="flex-1 h-[2px] bg-slate-200 mx-2" />}
+                {s < 3 && <div className="flex-1 h-[2px] bg-pink-100/20 mx-2" />}
               </React.Fragment>
             ))}
           </div>
@@ -170,8 +170,8 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
           {step === 1 && (
             <div className="space-y-5 animate-slide-in">
               {/* Type Switch / Checkbox - Single Checkbox or Gorgeous 3D Segmented Control */}
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/60 space-y-4">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+              <div className="bg-pink-50/10 p-5 rounded-[18px] border border-pink-100/20 space-y-4">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block">
                   Tipo de Item (Selecione ou clique no botão)
                 </label>
                 
@@ -182,16 +182,16 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                     onClick={() => setFormData(prev => ({ ...prev, classification: "insumo", category: prev.category || "Consumível" }))}
                     className={`p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
                       formData.classification === "insumo"
-                        ? "border-[#8E5BF5] bg-white shadow-md shadow-[#8E5BF5]/5"
-                        : "border-slate-200 bg-slate-100/50 hover:border-slate-300"
+                        ? "border-pink-300 bg-white shadow-md shadow-pink-500/5"
+                        : "border-pink-100/30 bg-pink-50/5 hover:border-pink-200"
                     }`}
                   >
-                    <div className={`p-2 rounded-lg ${formData.classification === "insumo" ? "bg-[#8E5BF5]/10 text-[#8E5BF5]" : "bg-slate-200 text-slate-500"}`}>
+                    <div className={`p-2 rounded-lg ${formData.classification === "insumo" ? "bg-pink-50 text-pink-500" : "bg-gray-100 text-gray-500"}`}>
                       <Percent size={18} />
                     </div>
                     <div>
-                      <span className="block font-black text-xs text-slate-800">Insumo</span>
-                      <span className="text-[10px] text-slate-400 font-medium">Material consumível</span>
+                      <span className="block font-bold text-xs text-gray-800">Insumo</span>
+                      <span className="text-[10px] text-gray-400 font-medium">Material consumível</span>
                     </div>
                   </button>
 
@@ -200,25 +200,25 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                     onClick={() => setFormData(prev => ({ ...prev, classification: "componente", category: prev.category || "Físico" }))}
                     className={`p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3 ${
                       formData.classification === "componente"
-                        ? "border-[#8E5BF5] bg-white shadow-md shadow-[#8E5BF5]/5"
-                        : "border-slate-200 bg-slate-100/50 hover:border-slate-300"
+                        ? "border-pink-300 bg-white shadow-md shadow-pink-500/5"
+                        : "border-pink-100/30 bg-pink-50/5 hover:border-pink-200"
                     }`}
                   >
-                    <div className={`p-2 rounded-lg ${formData.classification === "componente" ? "bg-[#8E5BF5]/10 text-[#8E5BF5]" : "bg-slate-200 text-slate-500"}`}>
+                    <div className={`p-2 rounded-lg ${formData.classification === "componente" ? "bg-pink-50 text-pink-500" : "bg-gray-100 text-gray-500"}`}>
                       <Box size={18} />
                     </div>
                     <div>
-                      <span className="block font-black text-xs text-slate-800">Componente</span>
-                      <span className="text-[10px] text-slate-400 font-medium">Parte do produto final</span>
+                      <span className="block font-bold text-xs text-gray-800">Componente</span>
+                      <span className="text-[10px] text-gray-400 font-medium">Parte do produto final</span>
                     </div>
                   </button>
                 </div>
 
                 {/* Single Checkbox representation requested as well */}
-                <label className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-150 cursor-pointer hover:bg-slate-50/50 transition-all">
+                <label className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-pink-100/20 cursor-pointer hover:bg-pink-50/25 transition-all">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 text-[#8E5BF5] border-slate-300 rounded focus:ring-[#8E5BF5]"
+                    className="w-4 h-4 text-pink-500 border-pink-200 rounded focus:ring-pink-400"
                     checked={formData.classification === "componente"}
                     onChange={(e) => {
                       const isComponent = e.target.checked;
@@ -230,21 +230,21 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                     }}
                   />
                   <div>
-                    <span className="text-xs font-bold text-slate-700">Este item faz parte do produto final (Componente)</span>
-                    <span className="block text-[10px] text-slate-400 font-semibold">Deixe desmarcado se for um material consumível (Insumo)</span>
+                    <span className="text-xs font-bold text-gray-700">Este item faz parte do produto final (Componente)</span>
+                    <span className="block text-[10px] text-gray-400 font-semibold">Deixe desmarcado se for um material consumível (Insumo)</span>
                   </div>
                 </label>
               </div>
 
               {/* Nome */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Nome do Item <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   placeholder="Ex: Fita de Cetim 22mm, Caixa Cartonada Rosa"
-                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white outline-none transition-all text-[#1C1C1E]"
+                  className="w-full p-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold focus:border-pink-300 focus:bg-white outline-none transition-all text-[#1C1C1E]"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, name: e.target.value }))
@@ -257,13 +257,13 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Código interno */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Código Interno / SKU
                   </label>
                   <input
                     type="text"
                     placeholder="Ex: INS-001, COMP-449"
-                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white outline-none transition-all text-[#1C1C1E]"
+                    className="w-full p-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold focus:border-pink-300 focus:bg-white outline-none transition-all text-[#1C1C1E]"
                     value={formData.code}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, code: e.target.value }))
@@ -274,13 +274,13 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
 
                 {/* Categoria */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Categoria
                   </label>
                   <input
                     type="text"
                     placeholder="Ex: Embalagem, Papelaria, Aviamento"
-                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white outline-none transition-all text-[#1C1C1E]"
+                    className="w-full p-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold focus:border-pink-300 focus:bg-white outline-none transition-all text-[#1C1C1E]"
                     value={formData.category}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, category: e.target.value }))
@@ -298,11 +298,11 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Unidade */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Unidade de Medida
                   </label>
                   <select
-                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white outline-none transition-all text-[#1C1C1E] appearance-none"
+                    className="w-full p-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold focus:border-pink-300 focus:bg-white outline-none transition-all text-[#1C1C1E] appearance-none"
                     value={formData.unit}
                     onChange={(e) =>
                       setFormData((prev) => ({
@@ -327,14 +327,14 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
 
                 {/* Localização */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    <MapPin size={12} className="text-slate-400" />
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                    <MapPin size={12} className="text-gray-400" />
                     Localização no Ateliê (Opcional)
                   </label>
                   <input
                     type="text"
                     placeholder="Ex: Prateleira B, Gaveta 4"
-                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white outline-none transition-all text-[#1C1C1E]"
+                    className="w-full p-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold focus:border-pink-300 focus:bg-white outline-none transition-all text-[#1C1C1E]"
                     value={formData.location || ""}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, location: e.target.value }))
@@ -347,7 +347,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Quantidade Inicial */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Quantidade em Estoque (Atual)
                   </label>
                   <input
@@ -355,7 +355,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                     step="any"
                     min="0"
                     placeholder="0"
-                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white outline-none transition-all text-[#1C1C1E]"
+                    className="w-full p-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold focus:border-pink-300 focus:bg-white outline-none transition-all text-[#1C1C1E]"
                     value={quantityStr}
                     onChange={(e) => setQuantityStr(e.target.value)}
                     required
@@ -365,7 +365,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
 
                 {/* Estoque mínimo */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-rose-600">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider text-rose-600">
                     Ponto de Reposição (Estoque Mínimo)
                   </label>
                   <input
@@ -373,7 +373,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                     step="any"
                     min="0"
                     placeholder="0"
-                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white outline-none transition-all text-[#1C1C1E]"
+                    className="w-full p-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold focus:border-pink-300 focus:bg-white outline-none transition-all text-[#1C1C1E]"
                     value={formData.minQuantity}
                     onChange={(e) =>
                       setFormData((prev) => ({
@@ -395,12 +395,12 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Investimento (Valor Pago Total) */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    <DollarSign size={13} className="text-slate-400" />
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                    <DollarSign size={13} className="text-gray-400" />
                     Valor Total Pago (Investimento)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
                       R$
                     </span>
                     <input
@@ -408,7 +408,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                       step="0.01"
                       min="0"
                       placeholder="0,00"
-                      className="w-full pl-9 pr-3.5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white outline-none transition-all text-[#1C1C1E]"
+                      className="w-full pl-9 pr-3.5 py-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold focus:border-pink-300 focus:bg-white outline-none transition-all text-[#1C1C1E]"
                       value={investimentoStr}
                       onChange={(e) => setInvestimentoStr(e.target.value)}
                       required
@@ -419,12 +419,12 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
 
                 {/* Valor Unitário Calculado */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Custo Unitário Calculado (Último custo)
                   </label>
-                  <div className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-[#1C1C1E] flex items-center justify-between">
-                    <span className="text-slate-400">R$</span>
-                    <span className="font-mono text-sm text-[#8E5BF5]">
+                  <div className="w-full p-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-bold text-[#1C1C1E] flex items-center justify-between">
+                    <span className="text-gray-400">R$</span>
+                    <span className="font-mono text-sm text-pink-500">
                       {formData.unitCost ? formData.unitCost.toFixed(4) : "0.0000"}
                     </span>
                   </div>
@@ -435,11 +435,11 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Custo Médio (pode iniciar igual ao Unitário) */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Custo Médio de Aquisição
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
                       R$
                     </span>
                     <input
@@ -447,7 +447,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                       step="0.0001"
                       min="0"
                       placeholder="0,00"
-                      className="w-full pl-9 pr-3.5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white outline-none transition-all text-[#1C1C1E]"
+                      className="w-full pl-9 pr-3.5 py-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold focus:border-pink-300 focus:bg-white outline-none transition-all text-[#1C1C1E]"
                       value={formData.unitCost || 0}
                       onChange={(e) =>
                         setFormData((prev) => ({
@@ -462,13 +462,13 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
 
                 {/* Fornecedor Principal */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Fornecedor Principal (Opcional)
                   </label>
                   <input
                     type="text"
                     placeholder="Ex: Distribuidora de Papéis, Armarinho..."
-                    className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white outline-none transition-all text-[#1C1C1E]"
+                    className="w-full p-3.5 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold focus:border-pink-300 focus:bg-white outline-none transition-all text-[#1C1C1E]"
                     value={formData.supplier || ""}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, supplier: e.target.value }))
@@ -479,10 +479,10 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
               </div>
 
               {/* Informações adicionais */}
-              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200/50 flex gap-3 text-emerald-800 text-[11px] leading-relaxed">
-                <Info size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+              <div className="p-4 bg-pink-50/20 rounded-[18px] border border-pink-100/10 flex gap-3 text-pink-900 text-[11px] leading-relaxed">
+                <Info size={16} className="text-pink-500 shrink-0 mt-0.5" />
                 <p>
-                  <strong className="block font-black mb-0.5">Cálculo de Custo Médio & Estoque:</strong>
+                  <strong className="block font-bold mb-0.5">Cálculo de Custo Médio & Estoque:</strong>
                   Ao salvar, o sistema atualizará o custo ponderado do estoque. Estes valores serão integrados nas Fichas Técnicas dos produtos para cálculo exato de margens.
                 </p>
               </div>
@@ -490,12 +490,12 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
           )}
 
           {/* Action Footer */}
-          <div className="pt-4 border-t border-[#E5E5EA] flex gap-3 shrink-0">
+          <div className="pt-4 border-t border-pink-100/20 flex gap-3 shrink-0">
             {step > 1 ? (
               <button
                 type="button"
                 onClick={handleBack}
-                className="px-5 py-3.5 bg-slate-100 hover:bg-slate-200 text-[#1C1C1E] rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1"
+                className="px-5 py-3.5 bg-gray-100 hover:bg-gray-200 text-[#1C1C1E] rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1"
                 id="back-step-btn"
               >
                 <ChevronLeft size={16} /> Voltar
@@ -504,7 +504,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-[#1C1C1E] rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                className="flex-1 py-3.5 bg-gray-100 hover:bg-gray-200 text-[#1C1C1E] rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
                 id="cancel-insumo-btn"
               >
                 Cancelar
@@ -515,7 +515,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
               <button
                 type="button"
                 onClick={handleNext}
-                className="flex-1 py-3.5 bg-[#8E5BF5] hover:bg-[#7946E0] text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md"
+                className="flex-1 py-3.5 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md"
                 id="next-step-btn"
               >
                 Avançar <ChevronRight size={16} />

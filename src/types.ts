@@ -626,6 +626,24 @@ export interface PurchaseOrder {
   updatedAt: any;
 }
 
+export interface PromotionalCampaign {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  marketing_phrase?: string;
+  active: boolean;
+  startDate?: string;
+  endDate?: string;
+  banner?: string;
+  bannerMobile?: string;
+  theme_color?: string;
+  products: string[]; // Product IDs
+  priority: number;
+  createdAt: any;
+  updatedAt: any;
+}
+
 export interface Campaign {
   id: string;
   internalName?: string;
@@ -676,7 +694,9 @@ export type AuditActionType =
   | 'Alerta'
   | 'Alteração de Preço' 
   | 'Alteração de Ficha Técnica' 
-  | 'Alteração de Prazo';
+  | 'Alteração de Prazo'
+  | 'Exportação'
+  | 'Restauração';
 
 export interface AuditLog {
   id?: string;
@@ -702,3 +722,15 @@ export interface AuditLog {
 }
 
 
+
+export type UserRole = 'ADMINISTRADOR' | 'ATENDIMENTO' | 'PRODUCAO' | 'FINANCEIRO';
+
+export interface AdminUser {
+  id?: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  active: boolean;
+  lastLogin?: any; // Firestore timestamp
+  createdAt: any;
+}

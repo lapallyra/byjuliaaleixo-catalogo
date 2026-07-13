@@ -404,51 +404,51 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
 
   return (
-    <div className="space-y-10 pb-12 font-sans selection:bg-indigo-100 selection:text-indigo-900 relative">
+    <div className="space-y-10 pb-12 font-sans selection:bg-pink-100 selection:text-pink-900 relative">
       
       {/* BLOCO 01: META DO MÊS */}
       <section>
         <div className="clean-3d-card p-8 flex flex-col justify-between relative overflow-hidden group border border-slate-100">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50/50 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none group-hover:bg-emerald-100/50 transition-colors" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-pink-50/30 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none group-hover:bg-pink-100/30 transition-colors" />
           
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-3d-deep">
-                  <Target size={24} />
+                <div className="w-12 h-12 rounded-2xl bg-pink-500/10 text-pink-500 flex items-center justify-center border border-pink-200/50 shadow-sm">
+                  <Target size={24} strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900">Meta Mensal</h3>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Objetivo de faturamento para o mês atual</p>
+                  <h3 className="text-lg font-bold text-gray-800">Meta Mensal</h3>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Objetivo de faturamento para o mês atual</p>
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-black text-slate-900">{monthlyMetrics.percent.toFixed(0)}%</span>
+                <span className="text-2xl font-black text-gray-800">{monthlyMetrics.percent.toFixed(0)}%</span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alcançado</p>
-                <p className="text-xl font-black text-emerald-600">{formatCurrency(monthlyMetrics.reached)}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Alcançado</p>
+                <p className="text-xl font-bold text-emerald-600">{formatCurrency(monthlyMetrics.reached)}</p>
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Restante</p>
-                <p className="text-xl font-black text-slate-900">{formatCurrency(monthlyMetrics.remaining)}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Restante</p>
+                <p className="text-xl font-bold text-gray-800">{formatCurrency(monthlyMetrics.remaining)}</p>
               </div>
               <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Meta Fixa</p>
-                <p className="text-xl font-black text-slate-400">{formatCurrency(2500)}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Meta Fixa</p>
+                <p className="text-xl font-bold text-gray-400">{formatCurrency(2500)}</p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <div className="w-full h-4 bg-slate-50 rounded-full border border-slate-100 overflow-hidden p-0.5 shadow-inner">
+              <div className="w-full h-4 bg-gray-50 rounded-full border border-gray-100 overflow-hidden p-0.5 shadow-inner">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${monthlyMetrics.percent}%` }}
                   transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                  className="h-full rounded-full bg-gradient-to-r from-pink-400 to-pink-600 shadow-[0_0_10px_rgba(255,20,147,0.3)]"
                 />
               </div>
             </div>
@@ -463,10 +463,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         <div className="clean-3d-card p-8 flex flex-col h-[400px] border border-slate-100">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-3d-deep">
-                <CheckCircle2 size={20} />
+              <div className="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center border border-pink-200/50 shadow-sm">
+                <CheckCircle2 size={20} strokeWidth={1.5} />
               </div>
-              <h3 className="text-lg font-black text-slate-900">Checklist Diário</h3>
+              <h3 className="text-lg font-bold text-gray-800">Checklist Diário</h3>
             </div>
           </div>
 
@@ -485,18 +485,18 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     onClick={() => toggleChecklistItem(item)}
                     className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
                       item.completed 
-                        ? 'bg-emerald-600 border-emerald-600 text-white' 
-                        : 'bg-white border-slate-200 text-transparent hover:border-emerald-500'
+                        ? 'bg-pink-500 border-pink-500 text-white' 
+                        : 'bg-white border-gray-200 text-transparent hover:border-pink-500'
                     }`}
                   >
                     <CheckCircle2 size={14} />
                   </button>
-                  <span className={`text-sm font-medium flex-1 ${item.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+                  <span className={`text-sm font-medium flex-1 ${item.completed ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
                     {item.text}
                   </span>
                   <button 
                     onClick={() => deleteChecklistItem(item.id)}
-                    className="p-2 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
+                    className="p-2 text-gray-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -512,11 +512,11 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
               onChange={(e) => setNewChecklistItem(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddChecklistItem()}
               placeholder="Adicionar tarefa..."
-              className="flex-1 h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-300 focus:bg-white transition-all shadow-inner"
+              className="flex-1 h-12 bg-white/60 border border-white/70 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-pink-300 focus:bg-white transition-all shadow-inner"
             />
             <button 
               onClick={handleAddChecklistItem}
-              className="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-indigo-600 transition-all shadow-lg active:scale-95"
+              className="w-12 h-12 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-xl flex items-center justify-center transition-all shadow-md active:scale-95"
             >
               <Plus size={20} />
             </button>
@@ -703,48 +703,48 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       {/* EVENT MODAL */}
       <AnimatePresence>
         {isEventModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1F1F1F]/15 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100"
+              className="bg-white/90 backdrop-blur-2xl rounded-[28px] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.05)] w-full max-w-md overflow-hidden border border-white/80"
             >
-              <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-                <h2 className="text-lg font-black text-slate-900">Novo Evento</h2>
+              <div className="p-6 border-b border-white/50 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-800">Novo Evento</h2>
                 <button
                   onClick={() => setIsEventModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
+                  className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors"
                 >
                   <X size={16} />
                 </button>
               </div>
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Título</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Título</label>
                   <input
                     type="text"
                     value={newEvent.title}
                     onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                    className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-300 focus:bg-white transition-all shadow-inner"
+                    className="w-full h-12 bg-white/60 border border-white/70 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-pink-300 focus:bg-white transition-all shadow-inner"
                     placeholder="Ex: Lançamento de Inverno"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Data</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Data</label>
                   <input
                     type="date"
                     value={newEvent.date}
                     onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                    className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-300 focus:bg-white transition-all shadow-inner text-slate-700"
+                    className="w-full h-12 bg-white/60 border border-white/70 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-pink-300 focus:bg-white transition-all shadow-inner text-gray-700"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Categoria</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Categoria</label>
                   <select
                     value={newEvent.category}
                     onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value as any })}
-                    className="w-full h-12 bg-slate-50 border border-slate-100 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-indigo-300 focus:bg-white transition-all shadow-inner text-slate-700"
+                    className="w-full h-12 bg-white/60 border border-white/70 rounded-xl px-4 text-sm font-medium focus:outline-none focus:border-pink-300 focus:bg-white transition-all shadow-inner text-gray-700"
                   >
                     <option value="personalizado">Personalizado</option>
                     <option value="global">Global</option>
@@ -754,7 +754,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 </div>
                 <button
                   onClick={handleCreateEvent}
-                  className="w-full h-12 bg-indigo-600 text-white rounded-xl font-bold mt-4 shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 transition-colors"
+                  className="w-full h-12 bg-gradient-to-b from-pink-400 to-pink-500 text-white rounded-xl font-bold mt-4 shadow-md hover:from-pink-500 hover:to-pink-600 transition-colors"
                 >
                   Salvar Evento
                 </button>
@@ -769,16 +769,15 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
 // COMPONENTES AUXILIARES
 
-const FlipDigit = ({ digit, color = 'indigo' }: { digit: string, color?: 'indigo' | 'emerald' | 'slate' | 'pink' }) => {
+const FlipDigit = ({ digit, color = 'pink' }: { digit: string, color?: 'indigo' | 'emerald' | 'slate' | 'pink' }) => {
   return (
     <motion.div
-      initial={{ y: 20, opacity: 0 }}
+      initial={{ y: 15, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className={`w-14 h-20 rounded-2xl flex items-center justify-center text-4xl font-black shadow-3d-soft border border-slate-100 ${
-        color === 'indigo' ? 'bg-indigo-600 text-white' :
-        color === 'emerald' ? 'bg-emerald-600 text-white' :
-        color === 'pink' ? 'bg-pink-500 text-white' :
-        'bg-slate-900 text-white'
+      className={`w-14 h-20 rounded-2xl flex items-center justify-center text-4xl font-black shadow-3d-soft border border-white/80 bg-white/80 backdrop-blur-md ${
+        color === 'pink' ? 'text-pink-600' :
+        color === 'emerald' ? 'text-emerald-600' :
+        'text-gray-800'
       }`}
     >
       {digit}

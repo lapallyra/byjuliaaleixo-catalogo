@@ -35,6 +35,7 @@ import {
   Search,
   Bell,
   LogOut,
+  Database,
   Settings,
   User,
   X,
@@ -73,6 +74,7 @@ import { ReportsTab } from "./Admin/ReportsTab";
 import { SettingsTab } from "./Admin/SettingsTab";
 import { GiftListsTab } from "./Admin/GiftListsTab";
 import { CommemorativeDatesTab } from "./Admin/CommemorativeDatesTab";
+import { PromotionalCampaignsTab } from "./Admin/PromotionalCampaignsTab";
 import { AddonsTab } from "./Admin/AddonsTab";
 import { PrizesTab } from "./Admin/PrizesTab";
 import { FeedbacksTab } from "./Admin/FeedbacksTab";
@@ -96,6 +98,8 @@ import { AdminNotificationPortal } from "./AdminNotificationPortal";
 import { Sidebar } from "./Admin/Sidebar";
 import { useAdminOrchestrator } from "./AdminOrchestratorSystem";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
+import { UsersTab } from "./Admin/UsersTab";
+import { BackupTab } from "./Admin/BackupTab";
 import { safeFormatISO } from "../lib/dateUtils";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { ImageWithFallback } from "./ImageWithFallback";
@@ -112,6 +116,7 @@ type TabType =
   | "deliveries"
   | "gift-lists"
   | "commemorative-dates"
+  | "promotional-campaigns"
   | "reports"
   | "settings"
   | "addons"
@@ -128,7 +133,9 @@ type TabType =
   | "purchases"
   | "efficiency"
   | "control_center"
-  | "coupons";
+  | "coupons"
+  | "users"
+  | "backup";
 
 interface AdminDashboardProps {
   onGoBack: () => void;
@@ -144,7 +151,7 @@ const TabLoader = () => (
 );
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
-  const { user, isAdmin, loading, logout } = useAuth();
+  const { user, isAdmin, role, loading, logout } = useAuth();
   const orchestrator = useAdminOrchestrator();
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [selectedCompanyId, setSelectedCompanyId] =
@@ -304,42 +311,52 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     );
   }
 
-  const menuItems: { id: TabType; label: string; icon: any; group: string }[] = [
-    { id: "dashboard", label: "Resumo Geral", group: "Dashboard", icon: LayoutDashboard },
+  const allMenuItems: { id: TabType; label: string; icon: any; group: string; allowedRoles?: string[] }[] = [
+    { id: "dashboard", label: "Dashboard", group: "Dashboard", icon: LayoutDashboard },
     
     // Operação
-    { id: "orders", label: "Pedidos", group: "Operação", icon: ShoppingBag },
-    { id: "products", label: "Produtos", group: "Operação", icon: Box },
-    { id: "clients", label: "Clientes", group: "Operação", icon: User },
-    { id: "gift-lists", label: "Lista de Presentes", group: "Operação", icon: Gift },
+    { id: "orders", label: "Pedidos", group: "Operação", icon: ShoppingBag, allowedRoles: ["ADMINISTRADOR", "ATENDIMENTO"] },
+    { id: "products", label: "Produtos", group: "Operação", icon: Box, allowedRoles: ["ADMINISTRADOR", "PRODUCAO"] },
+    { id: "clients", label: "Clientes", group: "Operação", icon: User, allowedRoles: ["ADMINISTRADOR", "ATENDIMENTO"] },
+    { id: "gift-lists", label: "Lista de Presentes", group: "Operação", icon: Gift, allowedRoles: ["ADMINISTRADOR", "ATENDIMENTO"] },
     
     // Produção
-    { id: "control_center", label: "Painel de Operação", group: "Produção", icon: Zap },
-    { id: "inventory", label: "Produção", group: "Produção", icon: Archive },
-    { id: "efficiency", label: "Eficiência Operacional", group: "Produção", icon: Activity },
-    { id: "purchases", label: "Estoque", group: "Estoque", icon: Package },
-    { id: "deliveries", label: "Entregas", group: "Produção", icon: Truck },
-    { id: "financeiro", label: "Financeiro", group: "Financeiro", icon: DollarSign },
-    { id: "auditoria", label: "Engenharia & Custos", group: "Produção", icon: FileCheck },
-    { id: "kits", label: "Kits & Combos", group: "Produção", icon: PackagePlus },
+    { id: "control_center", label: "Painel de Operação", group: "Produção", icon: Zap, allowedRoles: ["ADMINISTRADOR", "PRODUCAO"] },
+    { id: "inventory", label: "Produção", group: "Produção", icon: Archive, allowedRoles: ["ADMINISTRADOR", "PRODUCAO"] },
+    { id: "efficiency", label: "Eficiência Operacional", group: "Produção", icon: Activity, allowedRoles: ["ADMINISTRADOR", "PRODUCAO"] },
+    { id: "purchases", label: "Estoque", group: "Estoque", icon: Package, allowedRoles: ["ADMINISTRADOR", "PRODUCAO"] },
+    { id: "deliveries", label: "Entregas", group: "Produção", icon: Truck, allowedRoles: ["ADMINISTRADOR", "PRODUCAO"] },
+    { id: "financeiro", label: "Financeiro", group: "Financeiro", icon: DollarSign, allowedRoles: ["ADMINISTRADOR", "FINANCEIRO"] },
+    { id: "auditoria", label: "Engenharia & Custos", group: "Produção", icon: FileCheck, allowedRoles: ["ADMINISTRADOR", "PRODUCAO", "FINANCEIRO"] },
+    { id: "kits", label: "Kits & Combos", group: "Produção", icon: PackagePlus, allowedRoles: ["ADMINISTRADOR", "PRODUCAO"] },
 
     // Financeiro
-    { id: "funnel", label: "Checkout & Pagamentos", group: "Financeiro", icon: TrendingUp },
-    { id: "reports", label: "Relatórios", group: "Financeiro", icon: BarChart3 },
+    { id: "funnel", label: "Checkout & Pagamentos", group: "Financeiro", icon: TrendingUp, allowedRoles: ["ADMINISTRADOR", "FINANCEIRO"] },
+    { id: "reports", label: "Relatórios", group: "Financeiro", icon: BarChart3, allowedRoles: ["ADMINISTRADOR", "FINANCEIRO"] },
 
     // Marketing
-    { id: "campaigns", label: "Campanhas", group: "Marketing", icon: Megaphone },
-    { id: "collections", label: "Coleções", group: "Marketing", icon: Layers },
-    { id: "feedbacks", label: "Avaliações", group: "Marketing", icon: Star },
-    { id: "coupons", label: "Cupons", group: "Marketing", icon: Tag },
+    { id: "campaigns", label: "Campanhas Gerais", group: "Marketing", icon: Megaphone, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "promotional-campaigns", label: "Campanhas Promocionais", group: "Marketing", icon: Megaphone, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "commemorative-dates", label: "Datas Comemorativas", group: "Marketing", icon: Star, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "collections", label: "Coleções", group: "Marketing", icon: Layers, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "feedbacks", label: "Avaliações", group: "Marketing", icon: Star, allowedRoles: ["ADMINISTRADOR", "ATENDIMENTO"] },
+    { id: "coupons", label: "Cupons", group: "Marketing", icon: Tag, allowedRoles: ["ADMINISTRADOR"] },
 
     // Sistema
-    { id: "settings", label: "Configurações", group: "Sistema", icon: Settings },
-    { id: "notifications", label: "Notificações", group: "Sistema", icon: Bell },
-    { id: "integrations", label: "Integrações", group: "Sistema", icon: Sparkles },
-    { id: "addons", label: "Adicionais", group: "Sistema", icon: Star },
-    { id: "activity-logs", label: "Atividades", group: "Sistema", icon: Activity },
+    { id: "settings", label: "Configurações", group: "Sistema", icon: Settings, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "users", label: "Usuários e Permissões", group: "Sistema", icon: User, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "backup", label: "Backup e Recuperação", group: "Sistema", icon: Database, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "notifications", label: "Notificações", group: "Sistema", icon: Bell, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "integrations", label: "Integrações", group: "Sistema", icon: Sparkles, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "addons", label: "Adicionais", group: "Sistema", icon: Star, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "activity-logs", label: "Atividades", group: "Sistema", icon: Activity, allowedRoles: ["ADMINISTRADOR"] },
   ];
+
+  const menuItems = allMenuItems.filter(item => {
+    if (isAdmin) return true;
+    if (!item.allowedRoles) return true; // dashboard is available to all
+    return item.allowedRoles.includes(role || "");
+  });
 
   const menuGroups = [
     "Dashboard",
@@ -470,10 +487,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                                         setActiveTab(item.id);
                                         setIsMobileMenuOpen(false);
                                       }}
-                                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative ${isActive ? "text-[#FF1493] font-bold bg-[#FF1493]/10" : "text-[#8E8E93]"}`}
+                                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative ${isActive ? "bg-gradient-to-b from-pink-400 to-pink-500 text-white font-bold shadow-md" : "text-[#8E8E93] hover:text-[#FF1493]"}`}
                                     >
                                       {isActive && (
-                                        <div className="absolute left-1 w-1 h-1 bg-[#FF1493] rounded-full shadow-[0_0_8px_#FF1493]" />
+                                        <div className="absolute left-1 w-1 h-1 bg-white rounded-full shadow-[0_0_8px_#FFF]" />
                                       )}
                                       <span className="text-[11px] tracking-wide">
                                         {item.label}
@@ -819,6 +836,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   {activeTab === "commemorative-dates" && (
                     <CommemorativeDatesTab />
                   )}
+                  {activeTab === "promotional-campaigns" && (
+                    <PromotionalCampaignsTab products={products} />
+                  )}
                   {activeTab === "reports" && (
                     <ReportsTab
                       companyId={selectedCompanyId}
@@ -844,6 +864,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   )}
                   {activeTab === "settings" && (
                     <SettingsTab companyId={selectedCompanyId} />
+                  )}
+                  {activeTab === "users" && (
+                    <UsersTab />
+                  )}
+                  {activeTab === "backup" && (
+                    <BackupTab />
                   )}
                   {activeTab === "addons" && (
                     <AddonsTab companyId={selectedCompanyId} />

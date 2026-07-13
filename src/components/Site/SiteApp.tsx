@@ -21,6 +21,7 @@ import { Footer } from '../Footer';
 import { CustomerSocialProofToast } from '../CustomerSocialProofToast';
 import { CompanyCatalogWrapper } from './CompanyCatalogWrapper';
 import { CommemorativeCampaignPage } from '../CommemorativeCampaignPage';
+import { PromotionalCampaignPage } from '../PromotionalCampaignPage';
 import { INITIAL_CONFIG, PRODUCTS } from '../../constants';
 import { AppConfig, Product, CompanyId, CartItem } from '../../types';
 import { subscribeToAppConfig, subscribeToProducts } from '../../services/firebaseService';
@@ -139,6 +140,7 @@ export function SiteApp() {
         <Routes>
           <Route path="/" element={<EntryView config={effectiveConfig} allProducts={allProducts} />} />
           <Route path="/comemorativas/:slug" element={<CommemorativeCampaignPage allProducts={allProducts} />} />
+          <Route path="/promocao/:slug" element={<PromotionalCampaignPage allProducts={allProducts} />} />
           <Route path="/vitrine" element={<VitrinePage />} />
           <Route path="/atelies" element={<AteliersPresentationView />} />
           <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />

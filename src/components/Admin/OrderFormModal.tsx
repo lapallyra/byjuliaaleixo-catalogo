@@ -348,12 +348,15 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
               >
                 <option value="novo pedido">NOVO PEDIDO</option>
                 <option value="quote">ORÇAMENTO</option>
-                <option value="approval">APROVAÇÃO DA ARTE</option>
-                <option value="waiting_deposit">AGUARDANDO SINAL</option>
+                <option value="waiting_deposit">SINAL</option>
+                <option value="approval">APROVAÇÃO</option>
                 <option value="production">EM PRODUÇÃO</option>
-                <option value="assembly">EM MONTAGEM</option>
-                <option value="ready">PRONTO PARA ENTREGA</option>
-                <option value="delivered">ENTREGUE</option>
+                <option value="assembly">MONTAGEM</option>
+                <option value="conferencing">CONFERÊNCIA</option>
+                <option value="packaging">EMBALAGEM</option>
+                <option value="ready">PRONTO PARA ENTREGAR</option>
+                <option value="delivery">ENVIADO/ENTREGA</option>
+                <option value="delivered">ENTREGUE/RECEBIDO</option>
                 <option value="cancelled">CANCELADO</option>
               </select>
             </div>

@@ -98,6 +98,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
   const [pixTimeLeft, setPixTimeLeft] = useState(600); // 10 minutes countdown
   const [isPaying, setIsPaying] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
+  const [paymentRedirectStatus, setPaymentRedirectStatus] = useState<"success" | "pending" | "failure" | null>(null);
   const [payingError, setPayingError] = useState<string | null>(null);
   const [siteSettings, setSiteSettings] = useState<any>(null);
   const [globalSettings, setGlobalSettings] = useState<any>(null);
@@ -155,12 +156,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
 
               // Handle redirect from Mercado Pago approval in client's browser
               const params = new URLSearchParams(window.location.search);
-              const paymentStatusFromUrl = params.get('payment_status') || params.get('status');
+              const paymentStatusFromUrl = params.get('payment_status') || params.get('status') || params.get('collection_status');
               let fetchedStatus = fetched.status || "pending";
 
-              if (paymentStatusFromUrl === 'approved') {
+              if (paymentStatusFromUrl === 'approved' || paymentStatusFromUrl === 'success') {
                 fetchedStatus = 'paid';
                 setIsPaid(true);
+                setPaymentRedirectStatus('success');
                 playSuccessSound();
                 try {
                   const purchaseInfo = {
@@ -177,21 +179,28 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                 await updateOrder(fetched.id, { status: 'paid' });
                 // Strip the redirection search parameters
                 navigate(window.location.pathname, { replace: true });
-              } else if (fetchedStatus === 'paid') {
+              } else if (paymentStatusFromUrl === 'pending' || paymentStatusFromUrl === 'in_process') {
+                setPaymentRedirectStatus('pending');
+                navigate(window.location.pathname, { replace: true });
+              } else if (paymentStatusFromUrl === 'rejected' || paymentStatusFromUrl === 'cancelled' || paymentStatusFromUrl === 'failed' || paymentStatusFromUrl === 'failure') {
+                setPaymentRedirectStatus('failure');
+                navigate(window.location.pathname, { replace: true });
+              } else if (fetchedStatus === 'paid' || fetched.paymentStatus === 'paid') {
                 setIsPaid(true);
+                setPaymentRedirectStatus('success');
               }
 
               // Permission Logic
               if (!isAdmin) {
                 // Clients start at Step 2
-                if (fetchedStatus === "paid" || fetchedStatus === "waiting_payment") {
+                if (fetchedStatus === "paid" || fetchedStatus === "waiting_payment" || paymentStatusFromUrl) {
                   setStep(3);
                 } else {
                   setStep(2);
                 }
               } else {
                 // Admin can jump steps based on status
-                if (fetchedStatus === "waiting_payment" || fetchedStatus === "paid") {
+                if (fetchedStatus === "waiting_payment" || fetchedStatus === "paid" || paymentStatusFromUrl) {
                   setStep(3);
                 } else {
                   setStep(1);
@@ -935,20 +944,21 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           </div>
         )}
 
-        {step === 3 && isPaid ? (
-          <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] border border-emerald-100 p-8 sm:p-12 text-center space-y-8 shadow-md">
+        {step === 3 && (paymentRedirectStatus === 'success' || (isPaid && !paymentRedirectStatus)) ? (
+          <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] border border-emerald-100 p-8 sm:p-12 text-center space-y-8 shadow-md animate-in fade-in duration-300">
             <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mx-auto">
               <CheckCircle2 size={48} className="animate-pulse" />
             </div>
             <div className="space-y-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00AF54] bg-[#E5FDF1] px-5 py-2.2 rounded-full inline-block">
-                Pagamento Confirmado
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00AF54] bg-[#E5FDF1] px-5 py-2 rounded-full inline-block">
+                Pagamento Recebido
               </span>
               <h2 className="text-2.5xl font-extrabold uppercase text-[#111111] font-sans tracking-tight">
                 Recebimento Efetuado! 🎉
               </h2>
-              <p className="text-xs text-[#6D5443] max-w-md mx-auto leading-relaxed">
-                Nós já registramos o pagamento do seu pedido <strong>#{order?.code || ''}</strong> em nosso ateliê virtual. Os detalhes técnicos já foram encaminhados para a equipe de design exclusivo e em breve entraremos em contato.
+              <p className="text-xs text-[#6D5443] max-w-md mx-auto leading-relaxed font-medium">
+                Seu pagamento foi recebido com sucesso no valor de <strong>R$ {total.toFixed(2).replace('.', ',')}</strong> para o pedido <strong>#{order?.code || ''}</strong>. 
+                A confirmação definitiva e a atualização de status ocorrerão automaticamente via webhook em alguns instantes.
               </p>
             </div>
 
@@ -963,30 +973,154 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
               </div>
               <div className="flex justify-between text-xs pt-3">
                 <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Titular</span>
-                <span className="font-extrabold text-slate-800 uppercase">{customerForm.nome || 'Cliente'}</span>
+                <span className="font-extrabold text-slate-800 uppercase">{customerForm.nome || order?.customerName || 'Cliente'}</span>
               </div>
               <div className="flex justify-between text-xs pt-3">
                 <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Contato</span>
-                <span className="font-extrabold text-slate-800">{customerForm.contato}</span>
+                <span className="font-extrabold text-slate-800">{customerForm.contato || order?.contact || '-'}</span>
               </div>
             </div>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+              {order?.code && (
+                <button
+                  onClick={() => navigate(`/rastreamento?code=${order.code}`)}
+                  className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Acompanhar Pedido</span>
+                </button>
+              )}
               <a
-                href={`https://wa.me/55${customerForm.contato.replace(/\D/g, '')}?text=${encodeURIComponent(
+                href={`https://wa.me/55${(customerForm.contato || order?.contact || '').replace(/\D/g, '')}?text=${encodeURIComponent(
                   `Olá! Acabei de finalizar o pagamento do pedido #${order?.code || ''} no valor de R$ ${total.toFixed(2).replace('.', ',')} no Ateliê.`
                 )}`}
                 target="_blank"
                 rel="noreferrer"
                 className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
               >
-                <span>Falar com Ateliê via WhatsApp</span>
+                <span>Falar via WhatsApp</span>
               </a>
               <button
                 onClick={() => navigate('/')}
-                className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all"
               >
                 Voltar ao Catálogo
+              </button>
+            </div>
+          </div>
+        ) : step === 3 && paymentRedirectStatus === 'pending' ? (
+          <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] border border-amber-100 p-8 sm:p-12 text-center space-y-8 shadow-md animate-in fade-in duration-300">
+            <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 mx-auto">
+              <Clock size={48} className="animate-pulse text-amber-500" />
+            </div>
+            <div className="space-y-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 bg-amber-50 px-5 py-2 rounded-full inline-block">
+                Pagamento em Análise
+              </span>
+              <h2 className="text-2.5xl font-extrabold uppercase text-[#111111] font-sans tracking-tight">
+                Transação em Análise ⏳
+              </h2>
+              <p className="text-xs text-[#6D5443] max-w-md mx-auto leading-relaxed font-medium">
+                Seu pagamento para o pedido <strong>#{order?.code || ''}</strong> está em análise pelo Mercado Pago. 
+                Assim que a instituição financeira liberar, o pedido será atualizado automaticamente pelo nosso sistema.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-100/80 p-5 rounded-2xl text-left divide-y divide-slate-150 space-y-3">
+              <div className="flex justify-between text-xs pt-1">
+                <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Pedido</span>
+                <span className="font-extrabold text-slate-800">#{order?.code || 'PALLYRA'}</span>
+              </div>
+              <div className="flex justify-between text-xs pt-3">
+                <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Valor</span>
+                <span className="font-mono text-slate-900 font-extrabold">R$ {total.toFixed(2).replace('.', ',')}</span>
+              </div>
+              <div className="flex justify-between text-xs pt-3">
+                <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Titular</span>
+                <span className="font-extrabold text-slate-800 uppercase">{customerForm.nome || order?.customerName || 'Cliente'}</span>
+              </div>
+            </div>
+
+            <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+              {order?.code && (
+                <button
+                  onClick={() => navigate(`/rastreamento?code=${order.code}`)}
+                  className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Acompanhar Pedido</span>
+                </button>
+              )}
+              <a
+                href={`https://wa.me/55${(customerForm.contato || order?.contact || '').replace(/\D/g, '')}?text=${encodeURIComponent(
+                  `Olá! Meu pagamento do pedido #${order?.code || ''} no valor de R$ ${total.toFixed(2).replace('.', ',')} está em análise no Mercado Pago.`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <span>Falar via WhatsApp</span>
+              </a>
+              <button
+                onClick={() => navigate('/')}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all"
+              >
+                Voltar ao Catálogo
+              </button>
+            </div>
+          </div>
+        ) : step === 3 && paymentRedirectStatus === 'failure' ? (
+          <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] border border-red-100 p-8 sm:p-12 text-center space-y-8 shadow-md animate-in fade-in duration-300">
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-500 mx-auto">
+              <AlertCircle size={48} className="text-red-500" />
+            </div>
+            <div className="space-y-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600 bg-red-50 px-5 py-2 rounded-full inline-block">
+                Pagamento Não Aprovado
+              </span>
+              <h2 className="text-2.5xl font-extrabold uppercase text-[#111111] font-sans tracking-tight">
+                Ops! Pagamento Recusado ❌
+              </h2>
+              <p className="text-xs text-[#6D5443] max-w-md mx-auto leading-relaxed font-medium">
+                Infelizmente, a transação para o pedido <strong>#{order?.code || ''}</strong> não pôde ser autorizada pelo Mercado Pago. 
+                Você pode tentar realizar o pagamento novamente utilizando o mesmo pedido e escolhendo outra forma ou cartão.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-100/80 p-5 rounded-2xl text-left divide-y divide-slate-150 space-y-3">
+              <div className="flex justify-between text-xs pt-1">
+                <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Pedido</span>
+                <span className="font-extrabold text-slate-800">#{order?.code || 'PALLYRA'}</span>
+              </div>
+              <div className="flex justify-between text-xs pt-3">
+                <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Valor Total</span>
+                <span className="font-mono text-slate-900 font-extrabold">R$ {total.toFixed(2).replace('.', ',')}</span>
+              </div>
+            </div>
+
+            <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => {
+                  setPaymentRedirectStatus(null);
+                  setIsPaid(false);
+                  setStep(3);
+                }}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>Tentar Novamente</span>
+              </button>
+              {order?.code && (
+                <button
+                  onClick={() => navigate(`/rastreamento?code=${order.code}`)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Acompanhar Pedido</span>
+                </button>
+              )}
+              <button
+                onClick={() => navigate('/')}
+                className="bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all"
+              >
+                Ir para o Início
               </button>
             </div>
           </div>

@@ -83,7 +83,11 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
   // Find the matching commemorative date based on the slugified name
   const commemorativeDate = useMemo(() => {
     if (!slug || dates.length === 0) return null;
-    return dates.find(d => slugify(d.name) === slug) || null;
+    const found = dates.find(d => slugify(d.name) === slug) || null;
+    if (found && !found.active) {
+      return null;
+    }
+    return found;
   }, [dates, slug]);
 
   const getFullDate = (d: CommemorativeDate, year = new Date().getFullYear()) => {

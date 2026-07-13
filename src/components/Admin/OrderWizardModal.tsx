@@ -171,49 +171,49 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-      <div className="bg-[#FAF9F6] w-full max-w-4xl max-h-[95vh] rounded-3xl border border-[#E5E5EA] shadow-2xl flex flex-col overflow-hidden relative">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/35 backdrop-blur-sm">
+      <div className="bg-[#FDF8F5]/90 backdrop-blur-xl w-full max-w-4xl max-h-[95vh] rounded-[28px] border border-white shadow-2xl flex flex-col overflow-hidden relative">
         
         {/* Header */}
-        <div className="bg-white border-b border-[#E5E5EA] p-6 shrink-0 flex items-start justify-between">
+        <div className="bg-white/50 border-b border-white p-6 shrink-0 flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-[#1C1C1E] tracking-tight">
+            <h2 className="text-2xl font-extrabold text-gray-800 tracking-tight">
               Novo Pedido
             </h2>
-            <p className="text-sm text-[#8E8E93] mt-1">
+            <p className="text-xs font-medium text-gray-400 mt-1">
               Cadastre um novo pedido para iniciar o fluxo de produção.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-[#F5F5F7] text-[#8E8E93] transition-all"
+            className="p-2 rounded-full hover:bg-pink-50 text-gray-400 hover:text-pink-600 transition-all"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
 
         {/* Content */}
-        <form id="new-order-form" onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
+        <form id="new-order-form" onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
           
           {/* Section: Dados do Pedido */}
-          <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm">
-            <h3 className="text-xs font-bold text-[#8E8E93] uppercase tracking-wider mb-6">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 rounded-[22px] p-6 shadow-sm">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest block border-b border-white pb-2 mb-6">
               Dados do Pedido
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Cliente */}
               <div className="space-y-1 relative" ref={dropdownRef}>
-                <label className="text-sm font-semibold text-[#1C1C1E] block">
-                  Cliente <span className="text-rose-500">*</span>
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Cliente <span className="text-pink-500">*</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8E93]" size={16} />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                     <input
                       type="text"
                       placeholder="Digite para buscar..."
-                      className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:bg-white focus:border-[#1C1C1E] transition-all"
+                      className="w-full bg-white/60 border border-pink-100/85 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
                       value={customerSearch}
                       onChange={(e) => {
                         setCustomerSearch(e.target.value);
@@ -227,7 +227,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsNewCustomerModalOpen(true)}
-                    className="p-3 bg-[#F5F5F7] hover:bg-[#E5E5EA] border border-[#E5E5EA] rounded-xl text-[#1C1C1E] transition-colors"
+                    className="p-3 bg-white/80 border border-white/90 hover:bg-pink-50 rounded-xl text-gray-700 transition-all"
                     title="Novo Cliente"
                   >
                     <Plus size={20} />
@@ -235,9 +235,9 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                 </div>
                 {/* Dropdown Smart Search */}
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-12 mt-1 bg-white border border-[#E5E5EA] rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-12 mt-1 bg-white/95 backdrop-blur-md border border-pink-100/50 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto">
                     {filteredCustomers.length === 0 ? (
-                      <div className="p-4 text-sm text-[#8E8E93] text-center">
+                      <div className="p-4 text-sm text-gray-400 text-center">
                         Nenhum cliente encontrado.
                       </div>
                     ) : (
@@ -249,15 +249,15 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                             setCustomerSearch(c.name);
                             setIsDropdownOpen(false);
                           }}
-                          className="px-4 py-3 hover:bg-[#F5F5F7] cursor-pointer flex justify-between items-center border-b border-[#F2F2F7] last:border-0"
+                          className="px-4 py-3 hover:bg-pink-50/50 cursor-pointer flex justify-between items-center border-b border-pink-50/30 last:border-0"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-[#E5E5EA] flex items-center justify-center shrink-0">
-                              <User size={14} className="text-[#8E8E93]" />
+                            <div className="w-8 h-8 rounded-full bg-pink-100/50 flex items-center justify-center shrink-0">
+                              <User size={14} className="text-pink-600" />
                             </div>
                             <div>
-                              <p className="text-sm font-semibold text-[#1C1C1E]">{c.name}</p>
-                              {c.contact && <p className="text-xs text-[#8E8E93]">{c.contact}</p>}
+                              <p className="text-sm font-semibold text-gray-700">{c.name}</p>
+                              {c.contact && <p className="text-xs text-gray-400">{c.contact}</p>}
                             </div>
                           </div>
                         </div>
@@ -265,40 +265,40 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                     )}
                   </div>
                 )}
-                <p className="text-[11px] text-[#8E8E93] mt-1 pl-1">
+                <p className="text-[11px] text-gray-400 mt-1 pl-1">
                   Se não existir, clique no +
                 </p>
               </div>
 
               {/* Data do Pedido */}
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-[#1C1C1E] block">
+                <label className="text-[11px] font-bold text-gray-400 block">
                   Data do Pedido
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8E8E93]" size={16} />
+                  <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type="date"
                     required
                     value={orderDate}
                     onChange={(e) => setOrderDate(e.target.value)}
-                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:bg-white focus:border-[#1C1C1E] transition-all"
+                    className="w-full bg-white/60 border border-pink-100/85 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
                   />
                 </div>
-                <p className="text-[11px] text-[#8E8E93] mt-1 pl-1">
+                <p className="text-[11px] text-gray-400 mt-1 pl-1">
                   Altere apenas se o pedido for retroativo.
                 </p>
               </div>
 
               {/* Status Inicial */}
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-[#1C1C1E] block">
-                  Status Inicial <span className="text-rose-500">*</span>
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Status Inicial <span className="text-pink-500">*</span>
                 </label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as Order["status"])}
-                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:border-[#1C1C1E] transition-all text-[#1C1C1E]"
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
                 >
                   <option value="pending">Pendente</option>
                   <option value="waiting_payment">Aguardando Pagamento</option>
@@ -309,14 +309,14 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
 
               {/* Origem do Pedido */}
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-[#1C1C1E] block">
-                  Origem do Pedido <span className="text-rose-500">*</span>
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Origem do Pedido <span className="text-pink-500">*</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <select
                     value={origin}
                     onChange={(e) => setOrigin(e.target.value)}
-                    className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3 text-sm font-medium outline-none focus:bg-white focus:border-[#1C1C1E] transition-all text-[#1C1C1E]"
+                    className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
                   >
                     {originsList.map(o => (
                       <option key={o.id} value={o.id}>{o.label}</option>
@@ -327,7 +327,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsAddingOrigin(true)}
-                    className="p-3 bg-[#F5F5F7] hover:bg-[#E5E5EA] border border-[#E5E5EA] rounded-xl text-[#1C1C1E] transition-colors"
+                    className="p-3 bg-white/80 border border-white/90 hover:bg-pink-50 rounded-xl text-gray-700 transition-all"
                     title="Adicionar Origem"
                   >
                     <Plus size={20} />
@@ -340,7 +340,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                     <input 
                       type="text" 
                       placeholder="Nova Origem..." 
-                      className="flex-1 bg-white border border-[#E5E5EA] rounded-lg px-3 py-1.5 text-sm outline-none"
+                      className="flex-1 bg-white/60 border border-pink-100/80 rounded-xl px-3 py-1.5 text-sm outline-none"
                       value={newOrigin}
                       onChange={e => setNewOrigin(e.target.value)}
                       autoFocus
@@ -355,14 +355,14 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                         setNewOrigin("");
                         setIsAddingOrigin(false);
                       }}
-                      className="px-3 py-1.5 bg-[#1C1C1E] text-white rounded-lg text-xs font-bold"
+                      className="px-4 py-2 bg-gradient-to-b from-pink-400 to-pink-500 text-white rounded-xl text-xs font-bold shadow-sm"
                     >
                       OK
                     </button>
                     <button 
                       type="button"
                       onClick={() => setIsAddingOrigin(false)}
-                      className="p-1.5 text-[#8E8E93] hover:bg-[#F2F2F7] rounded-lg"
+                      className="p-2 text-gray-400 hover:bg-pink-50 rounded-xl"
                     >
                       <X size={16} />
                     </button>
@@ -373,38 +373,38 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
           </div>
 
           {/* Section: Prazos */}
-          <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm">
-             <h3 className="text-xs font-bold text-[#8E8E93] uppercase tracking-wider mb-6">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 rounded-[22px] p-6 shadow-sm">
+             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest block border-b border-white pb-2 mb-6">
               Prazos
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div className="space-y-1">
-                <label className="text-sm font-semibold text-[#1C1C1E] block">
+                <label className="text-[11px] font-bold text-gray-400 block">
                   Previsão para Produção
                 </label>
                 <input
                   type="date"
                   value={productionDate}
                   onChange={(e) => setProductionDate(e.target.value)}
-                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-[#1C1C1E] transition-all text-[#1C1C1E]"
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
                 />
-                <p className="text-[11px] text-[#8E8E93] mt-1 pl-1">
+                <p className="text-[11px] text-gray-400 mt-1 pl-1">
                   Opcional. Aparece no calendário de produção.
                 </p>
               </div>
 
                <div className="space-y-1">
-                <label className="text-sm font-semibold text-[#1C1C1E] block">
+                <label className="text-[11px] font-bold text-gray-400 block">
                   Previsão de Entrega
                 </label>
                 <input
                   type="date"
                   value={deliveryDate}
                   onChange={(e) => setDeliveryDate(e.target.value)}
-                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-[#1C1C1E] transition-all text-[#1C1C1E]"
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
                 />
-                <p className="text-[11px] text-[#8E8E93] mt-1 pl-1">
+                <p className="text-[11px] text-gray-400 mt-1 pl-1">
                   Opcional. Auxilia no acompanhamento dos prazos.
                 </p>
               </div>
@@ -412,8 +412,8 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
           </div>
 
           {/* Section: Descrição */}
-          <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm">
-            <h3 className="text-xs font-bold text-[#8E8E93] uppercase tracking-wider mb-6">
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 rounded-[22px] p-6 shadow-sm">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest block border-b border-white pb-2 mb-6">
               Descrição do Pedido
             </h3>
             
@@ -422,9 +422,9 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                   placeholder="Ex.: Tema, cores, nomes, datas, observações ou qualquer detalhe importante."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-[#1C1C1E] transition-all text-[#1C1C1E] min-h-[120px] resize-y"
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 min-h-[120px] resize-y"
                 />
-                <p className="text-[11px] text-[#8E8E93] mt-1 pl-1">
+                <p className="text-[11px] text-gray-400 mt-1 pl-1">
                   Escreva uma descrição curta para identificar rapidamente este pedido.
                 </p>
             </div>
@@ -433,11 +433,11 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
         </form>
 
         {/* Footer */}
-        <div className="bg-white border-t border-[#E5E5EA] p-6 shrink-0 flex items-center justify-end gap-3">
+        <div className="bg-white/50 border-t border-white p-6 shrink-0 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-3 bg-[#F5F5F7] text-[#1C1C1E] rounded-xl font-bold text-sm transition-all hover:bg-[#E5E5EA]"
+            className="px-6 py-3 bg-white border border-white/90 text-gray-600 hover:bg-pink-50 rounded-xl font-bold text-sm transition-all shadow-sm"
           >
             Cancelar
           </button>
@@ -445,7 +445,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
             form="new-order-form"
             type="submit"
             disabled={isSaving}
-            className="flex items-center gap-2 px-8 py-3 bg-[#1C1C1E] text-white rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-8 py-3 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-xl font-bold text-sm shadow-md transition-all disabled:opacity-50"
           >
             {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
             Salvar Pedido
@@ -456,42 +456,42 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
 
       {/* Quick Add Customer Modal */}
       {isNewCustomerModalOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-           <form onSubmit={handleCreateCustomer} className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl animate-in zoom-in-95">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-[#1C1C1E]">Novo Cliente</h3>
-                <button type="button" onClick={() => setIsNewCustomerModalOpen(false)} className="text-[#8E8E93] hover:text-[#1C1C1E]">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/35 backdrop-blur-sm animate-in fade-in duration-150">
+           <form onSubmit={handleCreateCustomer} className="bg-[#FDF8F5]/95 backdrop-blur-lg border border-white/80 w-full max-w-md rounded-[24px] p-6 shadow-2xl animate-in zoom-in-95 duration-150">
+              <div className="flex justify-between items-center mb-6 border-b border-pink-100 pb-2">
+                <h3 className="text-lg font-extrabold text-gray-800">Novo Cliente</h3>
+                <button type="button" onClick={() => setIsNewCustomerModalOpen(false)} className="text-gray-400 hover:text-pink-600">
                   <X size={20} />
                 </button>
               </div>
 
               <div className="space-y-4">
                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-[#1C1C1E] block">Nome *</label>
+                    <label className="text-[11px] font-bold text-gray-400 block">Nome *</label>
                     <input 
                       required
                       type="text"
                       value={newCustomer.name}
                       onChange={e => setNewCustomer({...newCustomer, name: e.target.value})}
-                      className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-sm outline-none focus:bg-white focus:border-[#1C1C1E]"
+                      className="w-full bg-white/60 border border-pink-100/80 rounded-xl px-4 py-2.5 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
                     />
                  </div>
                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-[#1C1C1E] block">Telefone (Opcional)</label>
+                    <label className="text-[11px] font-bold text-gray-400 block">Telefone (Opcional)</label>
                     <input 
                       type="text"
                       value={newCustomer.contact}
                       onChange={e => setNewCustomer({...newCustomer, contact: e.target.value})}
-                      className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-sm outline-none focus:bg-white focus:border-[#1C1C1E]"
+                      className="w-full bg-white/60 border border-pink-100/80 rounded-xl px-4 py-2.5 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
                     />
                  </div>
               </div>
 
               <div className="mt-8 flex justify-end gap-3">
-                 <button type="button" onClick={() => setIsNewCustomerModalOpen(false)} className="px-4 py-2 text-sm font-semibold text-[#8E8E93] hover:text-[#1C1C1E]">
+                 <button type="button" onClick={() => setIsNewCustomerModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-400 hover:text-pink-600 transition-colors">
                    Cancelar
                  </button>
-                 <button type="submit" disabled={isRegisteringCustomer} className="px-6 py-2 bg-[#1C1C1E] text-white rounded-lg text-sm font-bold disabled:opacity-50 flex items-center gap-2">
+                 <button type="submit" disabled={isRegisteringCustomer} className="px-6 py-2 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white rounded-xl text-sm font-bold shadow-md transition-all disabled:opacity-50 flex items-center gap-2">
                    {isRegisteringCustomer && <Loader2 size={14} className="animate-spin" />}
                    Salvar
                  </button>

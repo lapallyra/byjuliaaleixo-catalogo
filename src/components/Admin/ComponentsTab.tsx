@@ -383,16 +383,16 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
       </div>
 
       {/* SEARCH, ADD & QUICK FILTERS */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-5">
+      <div className="bg-white/75 backdrop-blur-md p-6 rounded-[22px] border border-white/80 shadow-sm flex flex-col gap-5">
         
         {/* Top bar with search input and Novo Item button */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-lg">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
               placeholder="Pesquisar por nome, código interno ou categoria..."
-              className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200/70 rounded-2xl text-xs font-semibold focus:border-[#8E5BF5] focus:bg-white focus:ring-4 focus:ring-[#8E5BF5]/5 outline-none transition-all text-[#1C1C1E]"
+              className="w-full pl-12 pr-4 py-3.5 bg-pink-50/10 border border-pink-100/20 rounded-2xl text-xs font-semibold focus:border-pink-300 focus:bg-white focus:ring-4 focus:ring-pink-300/10 outline-none transition-all text-[#1C1C1E]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -400,34 +400,34 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
           
           <button
             onClick={() => { setEditingComponente({}); setIsModalOpen(true); }}
-            className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#8E5BF5] to-[#7946E0] hover:from-[#7946E0] hover:to-[#6837CD] text-white px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] shadow-[0_4px_15px_rgba(142,91,245,0.35)] shrink-0"
+            className="flex items-center justify-center gap-2 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white px-6 py-4 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-md shadow-pink-500/10 shrink-0"
           >
             <Plus size={16} /> Novo Item de Estoque
           </button>
         </div>
 
         {/* Horizontal quick filter badges */}
-        <div className="border-t border-slate-100 pt-4">
+        <div className="border-t border-pink-50 pt-4">
           <div className="flex flex-wrap gap-2">
             {[
               { id: "all", label: "Todos os Itens", count: totalInsumosCount },
               { id: "insumo", label: "Insumos (Consumíveis)", count: activeInsumos.filter(c => c.classification === "insumo" || !c.classification).length },
               { id: "componente", label: "Componentes (Físicos)", count: activeInsumos.filter(c => c.classification === "componente").length },
-              { id: "baixo_minimo", label: "Abaixo do Mínimo", count: lowStockCount, badge: "bg-amber-100 text-amber-700 font-black" },
-              { id: "critico", label: "Estoque Crítico (Zerado)", count: criticalStockCount, badge: "bg-rose-100 text-rose-700 font-black" }
+              { id: "baixo_minimo", label: "Abaixo do Mínimo", count: lowStockCount, badge: "bg-amber-100 text-amber-700 font-bold" },
+              { id: "critico", label: "Estoque Crítico (Zerado)", count: criticalStockCount, badge: "bg-rose-100 text-rose-700 font-bold" }
             ].map((f) => (
               <button
                 key={f.id}
                 onClick={() => setFilterType(f.id as any)}
-                className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-2 border ${
+                className={`px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-2 border ${
                   filterType === f.id
-                    ? "bg-[#8E5BF5] text-white border-transparent shadow-[0_4px_12px_rgba(142,91,245,0.25)] scale-[1.02]"
-                    : "bg-slate-50 text-slate-500 border-slate-200/60 hover:bg-slate-100"
+                    ? "bg-pink-500 text-white border-transparent shadow-[0_4px_12px_rgba(236,72,153,0.15)] scale-[1.02]"
+                    : "bg-pink-50/10 text-gray-500 border-pink-100/20 hover:bg-pink-50/20"
                 }`}
               >
                 {f.label}
                 <span className={`px-1.5 py-0.5 rounded-md text-[9px] ${
-                  filterType === f.id ? "bg-white/25 text-white" : f.badge || "bg-slate-200 text-slate-600"
+                  filterType === f.id ? "bg-white/25 text-white" : f.badge || "bg-pink-50 text-pink-700"
                 }`}>
                   {f.count}
                 </span>
@@ -499,7 +499,7 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
                       {/* Name / SKU */}
                       <td className="p-5">
                         <div>
-                          <span className="font-extrabold text-xs text-slate-800 hover:text-[#8E5BF5] transition-colors">{item.name}</span>
+                          <span className="font-extrabold text-xs text-slate-800 hover:text-pink-500 transition-colors">{item.name}</span>
                           {item.code && (
                             <span className="block font-mono text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{item.code}</span>
                           )}
@@ -637,19 +637,19 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
                 <div className="grid grid-cols-2 gap-3">
                   {/* Quantity */}
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Quantidade</label>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Quantidade</label>
                     <div className="relative">
                       <input
                         type="number"
                         step="any"
                         min="0.01"
                         required
-                        className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#8E5BF5]"
+                        className="w-full p-3 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-bold outline-none focus:border-pink-300"
                         placeholder="0"
                         value={quickQty}
                         onChange={(e) => setQuickQty(e.target.value)}
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-extrabold uppercase">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 font-bold uppercase">
                         {quickAction.item.unit}
                       </span>
                     </div>
@@ -658,14 +658,14 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
                   {/* Optional Cost/Investment (Only on Entry) */}
                   {quickAction.type === "entrada" ? (
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Custo Unitário (Opcional)</label>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Custo Unitário (Opcional)</label>
                       <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">R$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">R$</span>
                         <input
                           type="number"
                           step="0.0001"
                           min="0"
-                          className="w-full pl-8 pr-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-[#8E5BF5]"
+                          className="w-full pl-8 pr-3 p-3 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-bold outline-none focus:border-pink-300"
                           placeholder="0,00"
                           value={quickCost}
                           onChange={(e) => setQuickCost(e.target.value)}
@@ -674,8 +674,8 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
                     </div>
                   ) : (
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Estoque Atual</label>
-                      <div className="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl text-xs font-black text-slate-600 font-mono">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Estoque Atual</label>
+                      <div className="w-full p-3 bg-gray-100 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 font-mono">
                         {quickAction.item.quantity} {quickAction.item.unit}
                       </div>
                     </div>
@@ -684,12 +684,12 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
 
                 {/* Reason */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Motivo / Descrição</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Motivo / Descrição</label>
                   <input
                     type="text"
                     required
                     placeholder={quickAction.type === "entrada" ? "Ex: Compra com fornecedor, Ajuste de balanço" : "Ex: Consumo de produção, Perda"}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-[#8E5BF5]"
+                    className="w-full p-3 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold outline-none focus:border-pink-300"
                     value={quickReason}
                     onChange={(e) => setQuickReason(e.target.value)}
                   />
@@ -697,20 +697,20 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
 
                 {/* Origin/Destination */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
                     {quickAction.type === "entrada" ? "Origem / Fornecedor" : "Origem / Destino"} (Opcional)
                   </label>
                   <input
                     type="text"
                     placeholder="Ex: Ateliê Central, Setor de Costura"
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-[#8E5BF5]"
+                    className="w-full p-3 bg-pink-50/10 border border-pink-100/20 rounded-xl text-xs font-semibold outline-none focus:border-pink-300"
                     value={quickOrigin}
                     onChange={(e) => setQuickOrigin(e.target.value)}
                   />
                 </div>
 
                 {/* Buttons */}
-                <div className="flex gap-2 pt-2 border-t border-slate-100">
+                <div className="flex gap-2 pt-2 border-t border-pink-50">
                   <button
                     type="button"
                     onClick={() => setQuickAction({ type: null, item: null })}
@@ -853,7 +853,7 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
                       <div className="space-y-3">
                         <div className="flex justify-between items-center">
                           <span className="text-xs text-slate-400 font-semibold">Custo Unitário:</span>
-                          <span className="text-sm font-black text-[#8E5BF5] font-mono">{formatCurrency(selectedItem.unitCost || 0)}</span>
+                          <span className="text-sm font-black text-pink-500 font-mono">{formatCurrency(selectedItem.unitCost || 0)}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-xs text-slate-400 font-semibold">Custo Médio:</span>
@@ -946,7 +946,7 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
                                 </div>
                               </div>
                               <div className="text-right shrink-0">
-                                <span className="text-xs font-black text-[#8E5BF5] block">{quantityNeeded} {selectedItem.unit}</span>
+                                <span className="text-xs font-black text-pink-500 block">{quantityNeeded} {selectedItem.unit}</span>
                                 <span className="text-[9px] text-slate-400 font-bold block">p/ unidade</span>
                               </div>
                             </div>

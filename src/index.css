@@ -455,21 +455,18 @@ html {
     --theme-text: #333333;
   }
 
-  /* Admin Dashboard Premium Theme - Dark Edition */
-  .admin-bg {
-    background-color: #0b0507; /* dark wine/black */
+  /* Admin Dashboard Premium Theme - Glass 3D Clean Edition */
+  .admin-bg,
+  .feminine-admin {
+    background-color: #FDF8F5 !important;
     background-image: 
-      radial-gradient(at 0% 0%, rgba(198, 166, 100, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, rgba(131, 24, 67, 0.15) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(255, 105, 180, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(255, 182, 193, 0.08) 0px, transparent 50%) !important;
+    min-height: 100dvh;
   }
 
   body:has(.feminine-admin) {
-    background-color: #0b0507 !important;
-  }
-
-  .feminine-admin {
-    background-color: #0b0507;
-    min-height: 100dvh;
+    background-color: #FDF8F5 !important;
   }
 
   .feminine-admin svg.lucide {
@@ -492,28 +489,29 @@ html {
   .feminine-admin .text-slate-900, 
   .feminine-admin .text-slate-800,
   .feminine-admin .text-slate-700 {
-    color: #374151 !important; /* gray-700 for better legibility */
+    color: #1F1F1F !important;
   }
 
   .feminine-admin label,
   .feminine-admin .text-slate-900,
   .feminine-admin h1, .feminine-admin h2, .feminine-admin h3,
   .feminine-admin h4 {
-    color: #1f2937 !important; /* gray-800 or black soft */
+    color: #1F1F1F !important;
     font-weight: 600 !important;
   }
 
   .feminine-admin input::placeholder,
   .feminine-admin textarea::placeholder {
-    color: #9ca3af !important; /* gray-400 for better visibility */
+    color: #8A8A8A !important;
     opacity: 1;
   }
   
   .feminine-admin input, 
   .feminine-admin textarea,
   .feminine-admin select {
-    color: #4b5563 !important; /* gray-600 */
-    border-color: #e5e7eb !important;
+    color: #1F1F1F !important;
+    border-color: rgba(255, 255, 255, 0.7) !important;
+    background-color: rgba(255, 255, 255, 0.65) !important;
   }
 
   .feminine-admin .text-\[#A09898\],
@@ -521,69 +519,72 @@ html {
   .feminine-admin .text-slate-400,
   .feminine-admin .text-gray-400,
   .feminine-admin .text-gray-500 {
-    color: #4b5563 !important; /* Force gray-600/700 for readability */
+    color: #666666 !important;
   }
 
   .feminine-admin .text-slate-500 {
-    color: #4b5563 !important; /* gray-600 */
+    color: #666666 !important;
   }
   
-  /* Pink revision: Rosa médio sofisticado */
+  /* Feminine Accent & Indicators */
   .feminine-admin .text-lilac,
   .feminine-admin .text-pink-500 {
-    color: #db2777 !important; /* pink-600 */
+    color: #FF1493 !important; /* Hot pink */
   }
   
   .feminine-admin .bg-lilac,
   .feminine-admin .bg-pink-500,
   .feminine-admin .accent-lilac {
-    background-color: #db2777 !important;
-    accent-color: #db2777 !important;
+    background-color: #FF1493 !important;
+    accent-color: #FF1493 !important;
   }
 
   .feminine-admin .bg-lilac\/10 {
-    background-color: rgba(219, 39, 119, 0.1) !important;
+    background-color: rgba(255, 20, 147, 0.1) !important;
   }
 
   .feminine-admin .border-lilac {
-    border-color: #db2777 !important;
+    border-color: #FF1493 !important;
   }
   
   .feminine-admin .border-slate-100,
   .feminine-admin .border-gray-100,
   .feminine-admin .border-lilac\/10,
   .feminine-admin .border-lilac\/20 {
-    border-color: #f3f4f6 !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
   }
   
   .feminine-admin .bg-slate-100,
   .feminine-admin .bg-gray-50,
   .feminine-admin .bg-slate-50 {
-    background-color: #f9fafb !important;
+    background-color: rgba(255, 255, 255, 0.5) !important;
   }
 
   .feminine-admin .bg-white {
-    background-color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.7) !important;
   }
 
   .feminine-admin .text-gold {
-    color: #C6A664 !important;
+    color: #FF1493 !important; /* Standardize with hot pink as accent */
   }
 
   .feminine-admin .text-lilac {
-    color: #C6A664 !important; /* Gold for accents */
+    color: #FF1493 !important;
   }
   
   .feminine-admin .bg-lilac {
-    background-color: #3e1b29 !important; /* Dark wine */
+    background-color: #FF1493 !important;
   }
 
   .feminine-admin .border-lilac {
-    border-color: #C6A664 !important; /* Gold border */
+    border-color: #FF1493 !important;
   }
 
   .feminine-admin * {
-    border-radius: 20px !important; /* Softer radius everywhere */
+    border-radius: 24px !important; /* Premium rounded Glass 3D */
   }
 
   .glass-premium {
@@ -861,34 +862,43 @@ html {
 }
 
 /* ==========================================================================
-   ERP-114 — Quiet Luxury Light Admin Overrides
+   ERP-141.a — Design System Glass 3D Clean Overrides
    ========================================================================== */
 
 /* Scoped variables for admin */
 :root:has(.admin-wrapper) {
-  --admin-bg-primary: #FFFFFF;
-  --admin-bg-secondary: #FCFAF7;
-  --admin-sidebar-bg: #FAF8F5;
-  --admin-border: #EAE4DC;
+  --admin-bg-primary: #FDF8F5;
+  --admin-bg-secondary: #FFFBF9;
+  --admin-sidebar-bg: rgba(255, 255, 255, 0.45);
+  --admin-border: rgba(255, 255, 255, 0.7);
   --admin-text-primary: #1F1F1F;
-  --admin-text-secondary: #666666;
+  --admin-text-secondary: #4B5563;
   --admin-text-auxiliary: #8A8A8A;
-  --admin-hover-neutral: #F4EFE8;
+  --admin-hover-neutral: rgba(255, 255, 255, 0.75);
 }
 
 /* Let's target the admin wrapper and all its contents */
 .admin-wrapper {
-  background-color: #FFFFFF !important;
+  background-color: #FDF8F5 !important;
   color: #1F1F1F !important;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(255, 182, 193, 0.04) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(255, 105, 180, 0.03) 0px, transparent 50%) !important;
 }
 
-/* Main background area */
+/* Force standard line width for icons to be delicate outline */
+.admin-wrapper svg.lucide,
+.feminine-admin svg.lucide {
+  stroke-width: 1.4 !important;
+}
+
+/* Main background area - Premium Cream Tone */
 .admin-wrapper main,
 .admin-wrapper .bg-slate-50,
 .admin-wrapper .bg-gray-50,
 .admin-wrapper .bg-[#F5F5F7],
 .admin-wrapper .bg-[#F9F9F9] {
-  background-color: #FFFFFF !important;
+  background-color: #FDF8F5 !important;
 }
 
 /* Secondary backgrounds */
@@ -898,32 +908,60 @@ html {
 .admin-wrapper .bg-slate-50\/40,
 .admin-wrapper .bg-gray-50\/80,
 .admin-wrapper .bg-[#FCFAF7] {
-  background-color: #FCFAF7 !important;
+  background-color: rgba(255, 255, 255, 0.4) !important;
 }
 
-/* Cards & containers with clean breathing room */
+/* Cards & containers with clean breathing room - GLASS 3D MILKY look */
 .admin-wrapper .bg-white,
 .admin-wrapper [class*="bg-white"],
 .admin-wrapper .clean-3d-card,
 .admin-wrapper .glass-premium,
-.admin-wrapper .glass-card {
-  background-color: #FFFFFF !important;
-  border-color: #EAE4DC !important;
-  box-shadow: 0 4px 12px 0 rgba(142, 142, 147, 0.03), 0 1px 2px 0 rgba(142, 142, 147, 0.02) !important;
+.admin-wrapper .glass-card,
+.admin-wrapper div[class*="rounded-"].bg-white,
+.admin-wrapper div[class*="rounded-"][class*="bg-white"] {
+  background-color: rgba(255, 255, 255, 0.76) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border-radius: 24px !important;
+  box-shadow: 
+    0 10px 30px -10px rgba(142, 142, 147, 0.05),
+    0 1px 2px 0 rgba(0, 0, 0, 0.01),
+    inset 0 1px 2.5px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1.5px rgba(0, 0, 0, 0.01) !important;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-/* Force extremely soft shadows */
+/* Hover state for Glass Cards */
+.admin-wrapper .bg-white:hover,
+.admin-wrapper [class*="bg-white"]:hover,
+.admin-wrapper .clean-3d-card:hover,
+.admin-wrapper .glass-premium:hover,
+.admin-wrapper .glass-card:hover,
+.admin-wrapper div[class*="rounded-"].bg-white:hover,
+.admin-wrapper div[class*="rounded-"][class*="bg-white"]:hover {
+  transform: translateY(-2.5px) !important;
+  background-color: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 
+    0 15px 35px -10px rgba(142, 142, 147, 0.09),
+    0 4px 10px 0 rgba(142, 142, 147, 0.03),
+    inset 0 1.5px 3px rgba(255, 255, 255, 0.98),
+    inset 0 -1.5px 2px rgba(0, 0, 0, 0.015) !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Force extremely soft shadows on standard classes */
 .admin-wrapper [class*="shadow-"] {
-  box-shadow: 0 4px 12px 0 rgba(142, 142, 147, 0.03), 0 1px 2px 0 rgba(142, 142, 147, 0.02) !important;
+  box-shadow: 0 10px 30px -10px rgba(142, 142, 147, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.01) !important;
 }
 
-/* Borders */
+/* Soft translucent borders */
 .admin-wrapper *,
 .admin-wrapper [class*="border-"] {
-  border-color: #EAE4DC !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-/* Primary text */
+/* Primary text - Clean Charcoal with High Contrast */
 .admin-wrapper h1,
 .admin-wrapper h2,
 .admin-wrapper h3,
@@ -945,7 +983,7 @@ html {
 .admin-wrapper .text-slate-600,
 .admin-wrapper .text-gray-700,
 .admin-wrapper .text-gray-600 {
-  color: #666666 !important;
+  color: #4B5563 !important;
 }
 
 /* Auxiliary text */
@@ -959,28 +997,32 @@ html {
   color: #8A8A8A !important;
 }
 
-/* Hovers */
+/* Hovers on auxiliary items */
 .admin-wrapper .hover\:bg-slate-100:hover,
 .admin-wrapper .hover\:bg-gray-100:hover,
 .admin-wrapper .hover\:bg-[#F0F0F0]:hover,
 .admin-wrapper .hover\:bg-slate-50:hover,
 .admin-wrapper .hover\:bg-gray-50:hover,
 .admin-wrapper .hover\:bg-[#F4EFE8]:hover {
-  background-color: #F4EFE8 !important;
+  background-color: rgba(255, 255, 255, 0.6) !important;
 }
 
-/* Inputs, Selects and Textareas */
+/* Inputs, Selects and Textareas - Premium Liquid Inset Depth */
 .admin-wrapper input,
 .admin-wrapper textarea,
 .admin-wrapper select,
 [role="dialog"] input,
 [role="dialog"] textarea,
 [role="dialog"] select {
-  background-color: #FFFFFF !important;
-  border: 1px solid #EAE4DC !important;
+  background-color: rgba(255, 255, 255, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
   color: #1F1F1F !important;
   outline: none !important;
-  transition: all 0.2s ease-in-out !important;
+  border-radius: 14px !important;
+  box-shadow: 
+    inset 0 1.5px 3px rgba(0, 0, 0, 0.02),
+    0 1px 1px rgba(255, 255, 255, 0.8) !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .admin-wrapper input:focus,
@@ -989,8 +1031,11 @@ html {
 [role="dialog"] input:focus,
 [role="dialog"] textarea:focus,
 [role="dialog"] select:focus {
-  border-color: #f97316 !important; /* Laranja de foco padronizado */
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12) !important;
+  border-color: rgba(255, 20, 147, 0.45) !important; /* Elegant focus border */
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 
+    0 0 0 4px rgba(255, 20, 147, 0.08),
+    inset 0 1px 2px rgba(0, 0, 0, 0.01) !important;
 }
 
 .admin-wrapper input::placeholder,
@@ -1008,28 +1053,28 @@ html {
 }
 
 .admin-wrapper table thead tr th {
-  background-color: #FCFAF7 !important;
-  color: #666666 !important;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  color: #4B5563 !important;
   font-weight: 600 !important;
-  border-bottom: 1px solid #EAE4DC !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.8) !important;
   text-transform: uppercase !important;
   font-size: 10px !important;
   letter-spacing: 0.05em !important;
-  padding-top: 12px !important;
-  padding-bottom: 12px !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
 }
 
 .admin-wrapper table tbody tr td {
-  background-color: #FFFFFF !important;
+  background-color: rgba(255, 255, 255, 0.6) !important;
   color: #1F1F1F !important;
-  border-bottom: 1px solid #EAE4DC !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
   padding-top: 14px !important;
   padding-bottom: 14px !important;
-  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
 }
 
 .admin-wrapper table tbody tr:hover td {
-  background-color: #FCFAF7 !important;
+  background-color: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* Dialogs/Modals Styling */
@@ -1037,131 +1082,169 @@ html {
 .modal-content,
 .bg-white:has(h2),
 .bg-white:has(h3) {
-  background-color: #FFFFFF !important;
-  border-color: #EAE4DC !important;
-  box-shadow: 0 10px 40px -10px rgba(142, 142, 147, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 
+    0 20px 60px -15px rgba(0, 0, 0, 0.1),
+    inset 0 1px 2px rgba(255, 255, 255, 0.95) !important;
+  border-radius: 26px !important;
 }
 
-/* Secondary Buttons - Neutros */
+/* Standard Buttons - 3D Soft Milky Glass */
+.admin-wrapper button:not(.bg-orange-500):not(.bg-pink-500):not(.bg-pink-600):not([class*="bg-[#FF1493]"]):not([class*="bg-pink-500"]):not(.text-white),
 .admin-wrapper button.bg-slate-100,
 .admin-wrapper button.bg-gray-100,
 .admin-wrapper button.bg-slate-50,
 .admin-wrapper button.bg-gray-50,
 .admin-wrapper button.border-slate-200 {
-  background-color: #FFFFFF !important;
-  border: 1px solid #EAE4DC !important;
-  color: #666666 !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 244, 240, 0.8) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  color: #4B5563 !important;
+  border-radius: 14px !important;
+  box-shadow: 
+    0 3px 6px rgba(0, 0, 0, 0.02),
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.02) !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+.admin-wrapper button:hover:not(:disabled):not(.bg-orange-500):not(.bg-pink-500):not(.bg-pink-600):not([class*="bg-[#FF1493]"]):not([class*="bg-pink-500"]):not(.text-white),
 .admin-wrapper button.bg-slate-100:hover,
 .admin-wrapper button.bg-gray-100:hover,
 .admin-wrapper button.bg-slate-50:hover,
 .admin-wrapper button.bg-gray-50:hover,
 .admin-wrapper button.border-slate-200:hover {
-  background-color: #F4EFE8 !important;
-  color: #1F1F1F !important;
-  border-color: #D3C9BE !important;
+  transform: translateY(-1.5px) !important;
+  color: #FF1493 !important; /* Interactive hot pink */
+  border-color: rgba(255, 20, 147, 0.25) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(252, 246, 242, 0.9) 100%) !important;
+  box-shadow: 
+    0 6px 14px rgba(142, 142, 147, 0.08),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.95),
+    inset 0 -1.5px 2px rgba(0, 0, 0, 0.01) !important;
 }
 
-/* ==========================================================================
-   ERP-115 — Microinterações, Transições e Animações Globais
-   ========================================================================== */
-
-/* Buttons Smooth Interactions */
-.admin-wrapper button,
-.admin-wrapper a[role="button"] {
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+.admin-wrapper button:active:not(:disabled):not(.bg-orange-500):not(.bg-pink-500):not(.bg-pink-600):not([class*="bg-[#FF1493]"]):not([class*="bg-pink-500"]):not(.text-white),
+.admin-wrapper button.bg-slate-100:active,
+.admin-wrapper button.bg-gray-100:active,
+.admin-wrapper button.bg-slate-50:active,
+.admin-wrapper button.bg-gray-50:active,
+.admin-wrapper button.border-slate-200:active {
+  transform: translateY(0.5px) scale(0.98) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(255, 255, 255, 0.5) !important;
 }
 
-.admin-wrapper button:hover:not(:disabled),
-.admin-wrapper a[role="button"]:hover {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px 0 rgba(142, 142, 147, 0.12) !important;
+/* Highlight / Accent Buttons (Hot Pink Gradient) */
+.admin-wrapper button.bg-orange-500,
+.admin-wrapper button.bg-pink-500,
+.admin-wrapper button.bg-pink-600,
+.admin-wrapper button[class*="bg-[#FF1493]"],
+.admin-wrapper button[class*="bg-pink-500"],
+.admin-wrapper .bg-[#FF1493],
+.admin-wrapper .bg-pink-500 {
+  background: linear-gradient(180deg, #FF69B4 0%, #FF1493 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #FFFFFF !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 
+    0 4px 12px rgba(255, 20, 147, 0.15), 
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.4), 
+    inset 0 -1.5px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
-.admin-wrapper button:active:not(:disabled),
-.admin-wrapper a[role="button"]:active {
-  transform: translateY(0px) scale(0.97) !important;
+.admin-wrapper button.bg-orange-500:hover,
+.admin-wrapper button.bg-pink-500:hover,
+.admin-wrapper button.bg-pink-600:hover,
+.admin-wrapper button[class*="bg-[#FF1493]"]:hover,
+.admin-wrapper button[class*="bg-pink-500"]:hover,
+.admin-wrapper .bg-[#FF1493]:hover,
+.admin-wrapper .bg-pink-500:hover {
+  transform: translateY(-1.5px) !important;
+  background: linear-gradient(180deg, #FF7DBA 0%, #FF2E9D 100%) !important;
+  box-shadow: 
+    0 8px 18px rgba(255, 20, 147, 0.22), 
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.5), 
+    inset 0 -1.5px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
-.admin-wrapper button:disabled {
-  opacity: 0.45 !important;
-  cursor: not-allowed !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-/* Cards Hover Elevating Visuals */
-.admin-wrapper div[class*="rounded-"].bg-white,
-.admin-wrapper div[class*="rounded-"][class*="bg-white"],
-.admin-wrapper .clean-3d-card,
-.admin-wrapper .glass-premium,
-.admin-wrapper .glass-card {
-  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.admin-wrapper div[class*="rounded-"].bg-white:hover,
-.admin-wrapper div[class*="rounded-"][class*="bg-white"]:hover,
-.admin-wrapper .clean-3d-card:hover,
-.admin-wrapper .glass-premium:hover,
-.admin-wrapper .glass-card:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 10px 24px 0 rgba(142, 142, 147, 0.08), 0 2px 6px 0 rgba(142, 142, 147, 0.03) !important;
-  border-color: #D3C9BE !important;
-}
-
-/* Modal Animations: Smooth Fade In & Slide Up */
-@keyframes admin-modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes admin-backdrop-in {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-  }
-  to {
-    opacity: 1;
-    backdrop-filter: blur(4px);
-  }
-}
-
-.admin-wrapper [role="dialog"],
-.admin-wrapper .modal-content,
-[role="dialog"] .modal-content {
-  animation: admin-modal-in 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-}
-
-.admin-wrapper .fixed.inset-0:not(.z-40) {
-  animation: admin-backdrop-in 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+.admin-wrapper button.bg-orange-500:active,
+.admin-wrapper button.bg-pink-500:active,
+.admin-wrapper button.bg-pink-600:active,
+.admin-wrapper button[class*="bg-[#FF1493]"]:active,
+.admin-wrapper button[class*="bg-pink-500"]:active {
+  transform: translateY(0.5px) scale(0.98) !important;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.15), 
+    0 1px 1px rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Sidebar Menu smooth items & gradual color changes */
+.admin-wrapper aside {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
 .admin-wrapper aside button {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.admin-wrapper aside button.bg-orange-500 {
-  background-color: #f97316 !important;
+/* Active tab styles - pure white text and hot pink gradient */
+.admin-wrapper aside button.active-tab-btn {
+  background: linear-gradient(180deg, #FF69B4 0%, #FF1493 100%) !important;
   color: #FFFFFF !important;
-  box-shadow: 0 4px 12px 0 rgba(249, 115, 22, 0.15) !important;
+  box-shadow: 
+    0 4px 12px rgba(255, 20, 147, 0.15), 
+    inset 0 1px 1.5px rgba(255, 255, 255, 0.4), 
+    inset 0 -1px 1.5px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 14px !important;
 }
 
-.admin-wrapper aside button.bg-orange-500:hover {
-  background-color: #ea580c !important;
+.admin-wrapper aside button.active-tab-btn span,
+.admin-wrapper aside button.active-tab-btn svg {
   color: #FFFFFF !important;
-  transform: translateY(-1px) !important;
+  stroke: #FFFFFF !important;
 }
 
-/* Standardized, Elegant Spinners and Loaders */
+/* Inactive tab styles - quiet elegant neutral text */
+.admin-wrapper aside button.inactive-tab-btn,
+.admin-wrapper aside button:not(.active-tab-btn) {
+  color: #666666 !important;
+  background-color: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  border-radius: 14px !important;
+}
+
+.admin-wrapper aside button.inactive-tab-btn span,
+.admin-wrapper aside button.inactive-tab-btn svg,
+.admin-wrapper aside button:not(.active-tab-btn) span,
+.admin-wrapper aside button:not(.active-tab-btn) svg {
+  color: #666666 !important;
+}
+
+/* Hovering turns text to Branco Puro and background to Hot Pink gradient */
+.admin-wrapper aside button.inactive-tab-btn:hover,
+.admin-wrapper aside button:not(.active-tab-btn):hover {
+  background: linear-gradient(180deg, #FF69B4 0%, #FF1493 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 4px 12px rgba(255, 20, 147, 0.15) !important;
+}
+
+.admin-wrapper aside button.inactive-tab-btn:hover span,
+.admin-wrapper aside button.inactive-tab-btn:hover svg,
+.admin-wrapper aside button:not(.active-tab-btn):hover span,
+.admin-wrapper aside button:not(.active-tab-btn):hover svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* Elegant standard spinners and loaders */
 @keyframes spin-premium {
   to {
     transform: rotate(360deg);
@@ -1170,24 +1253,27 @@ html {
 
 .admin-wrapper .animate-spin {
   animation: spin-premium 0.75s linear infinite !important;
-  border-top-color: #f97316 !important;
+  border-top-color: #FF1493 !important;
 }
 
-/* Acessibilidade: Prefers Reduced Motion */
-@media (prefers-reduced-motion: reduce) {
-  .admin-wrapper *,
-  .admin-wrapper button,
-  .admin-wrapper div,
-  .admin-wrapper [role="dialog"],
-  .admin-wrapper .modal-content,
-  .admin-wrapper .fixed.inset-0,
-  .perspective-1000,
-  .preserve-3d,
-  .backface-hidden {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-  }
+/* Custom Scrollbars */
+.admin-wrapper * {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(255, 20, 147, 0.15) transparent !important;
+}
+
+.admin-wrapper *::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.admin-wrapper *::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 20, 147, 0.15) !important;
+  border-radius: 10px !important;
+}
+
+.admin-wrapper *:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 20, 147, 0.3) !important;
 }
 
 /* 3D Card Flip Utilities */

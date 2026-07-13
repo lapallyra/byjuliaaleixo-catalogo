@@ -1208,6 +1208,11 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
 
     await updateDoc(doc(db, 'orders', orderId), sanitize(finalData));
 
+    if (orderSnap?.exists?.()) {
+      const dbOrderData = orderSnap.data() as Order;
+      await createAuditLog('Pedidos', 'Alteração', orderId, dbOrderData.code || orderId, { oldData: dbOrderData, newData: { ...dbOrderData, ...finalData } }, dbOrderData.companyId);
+    }
+
     // Finance status synchronization, restoration and shielding (ERP-087, ERP-088, ERP-103)
     try {
       const dbOrderData = orderSnap?.exists() ? (orderSnap.data() as Order) : null;

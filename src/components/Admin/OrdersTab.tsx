@@ -205,33 +205,37 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
   const getStatusInfo = (status: string) => {
     const s = status.toLowerCase();
     const map: Record<string, { label: string; color: string; shadow: string; bgLight: string; text: string }> = {
-      "orçamento": { label: "Orçamento", color: "bg-[#7FFF00]", shadow: "shadow-[2px_0_20px_rgba(127,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "novo pedido": { label: "Novo Pedido", color: "bg-[#37FD12]", shadow: "shadow-[2px_0_20px_rgba(55,253,18,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "aguardando sinal": { label: "Aguardando Sinal", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "aguardando aprovação cliente": { label: "Aprovação de Arte", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "em produção": { label: "Em Produção", color: "bg-[#FFD100]", shadow: "shadow-[2px_0_20px_rgba(255,209,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "montagem": { label: "Montagem", color: "bg-[#BD02FC]", shadow: "shadow-[2px_0_20px_rgba(189,2,252,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "pronto para entregar": { label: "Pronto p/ Entregar", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "enviado": { label: "Enviado", color: "bg-[#FFFFFF]", shadow: "shadow-[2px_0_20px_rgba(255,255,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "recebido": { label: "Recebido", color: "bg-[#3FFF00]", shadow: "shadow-[2px_0_20px_rgba(63,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "aguardando o pagamento restante": { label: "Aguardando Pagto", color: "bg-[#FFFF66]", shadow: "shadow-[2px_0_20px_rgba(255,255,102,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "concluído (pagamento completo)": { label: "Pago", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "cancelled": { label: "Cancelado", color: "bg-[#EC7216]", shadow: "shadow-[2px_0_20px_rgba(236,114,22,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "orçamento": { label: "ORÇAMENTO", color: "bg-[#7FFF00]", shadow: "shadow-[2px_0_20px_rgba(127,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "novo pedido": { label: "NOVO PEDIDO", color: "bg-[#37FD12]", shadow: "shadow-[2px_0_20px_rgba(55,253,18,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "aguardando sinal": { label: "SINAL", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "aguardando aprovação cliente": { label: "APROVAÇÃO", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "em produção": { label: "EM PRODUÇÃO", color: "bg-[#FFD100]", shadow: "shadow-[2px_0_20px_rgba(255,209,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "montagem": { label: "MONTAGEM", color: "bg-[#BD02FC]", shadow: "shadow-[2px_0_20px_rgba(189,2,252,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "conferência": { label: "CONFERÊNCIA", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "embalagem": { label: "EMBALAGEM", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "pronto para entregar": { label: "PRONTO PARA ENTREGAR", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "enviado": { label: "ENVIADO/ENTREGA", color: "bg-[#FFFFFF]", shadow: "shadow-[2px_0_20px_rgba(255,255,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "recebido": { label: "ENTREGUE/RECEBIDO", color: "bg-[#3FFF00]", shadow: "shadow-[2px_0_20px_rgba(63,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "aguardando o pagamento restante": { label: "Aguardando Pagamento Restante", color: "bg-[#FFFF66]", shadow: "shadow-[2px_0_20px_rgba(255,255,102,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "concluído (pagamento completo)": { label: "ENTREGUE/RECEBIDO", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "cancelled": { label: "CANCELADO", color: "bg-[#EC7216]", shadow: "shadow-[2px_0_20px_rgba(236,114,22,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       
-      "pending": { label: "Pendente", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "adjustments_requested": { label: "Ajustes", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "pending": { label: "SINAL", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "adjustments_requested": { label: "ARTE", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
       
       // Fallbacks para compatibilidade
-      "quote": { label: "Orçamento", color: "bg-[#7FFF00]", shadow: "shadow-[2px_0_20px_rgba(127,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "waiting_payment": { label: "Aguardando Pagamento", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "waiting_deposit": { label: "Aguardando Sinal", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "approval": { label: "Aprovação de Arte", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "production": { label: "Em Produção", color: "bg-[#FFD100]", shadow: "shadow-[2px_0_20px_rgba(255,209,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "assembly": { label: "Montagem", color: "bg-[#BD02FC]", shadow: "shadow-[2px_0_20px_rgba(189,2,252,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "ready": { label: "Pronto", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "delivery": { label: "Enviado", color: "bg-[#FFFFFF]", shadow: "shadow-[2px_0_20px_rgba(255,255,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "delivered": { label: "Concluído", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" },
-      "fully_paid": { label: "Pago", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" }
+      "quote": { label: "ORÇAMENTO", color: "bg-[#7FFF00]", shadow: "shadow-[2px_0_20px_rgba(127,255,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "waiting_payment": { label: "SINAL", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "waiting_deposit": { label: "SINAL", color: "bg-[#0080FF]", shadow: "shadow-[2px_0_20px_rgba(0,128,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "approval": { label: "APROVAÇÃO", color: "bg-[#FBBD04]", shadow: "shadow-[2px_0_20px_rgba(251,189,4,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "production": { label: "EM PRODUÇÃO", color: "bg-[#FFD100]", shadow: "shadow-[2px_0_20px_rgba(255,209,0,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "assembly": { label: "MONTAGEM", color: "bg-[#BD02FC]", shadow: "shadow-[2px_0_20px_rgba(189,2,252,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "conferencing": { label: "CONFERÊNCIA", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "packaging": { label: "EMBALAGEM", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "ready": { label: "PRONTO PARA ENTREGAR", color: "bg-[#C7EA46]", shadow: "shadow-[2px_0_20px_rgba(199,234,70,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "delivery": { label: "ENVIADO/ENTREGA", color: "bg-[#FFFFFF]", shadow: "shadow-[2px_0_20px_rgba(255,255,255,0.7)]", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "delivered": { label: "ENTREGUE/RECEBIDO", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" },
+      "fully_paid": { label: "ENTREGUE/RECEBIDO", color: "bg-transparent", shadow: "shadow-none", text: "text-slate-700", bgLight: "bg-slate-100" }
     };
     return map[s] || { label: status, color: "bg-gray-500", shadow: "shadow-[2px_0_20px_rgba(107,114,128,0.7)]", text: "text-gray-700", bgLight: "bg-gray-100" };
   };

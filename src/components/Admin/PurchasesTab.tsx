@@ -205,7 +205,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsInsumoModalOpen(true)}
-            className="flex items-center gap-2 bg-[#8E5BF5] hover:bg-[#7946E0] text-white px-4 py-2.5 rounded-xl font-extrabold transition-all text-sm shadow-md"
+            className="flex items-center gap-2 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-md"
           >
             <Plus size={18} /> + (NOVO) Insumo
           </button>
@@ -219,10 +219,10 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200">
+      <div className="flex items-center gap-2 border-b border-pink-100/30">
         <button 
           onClick={() => setActiveTab('items')}
-          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'items' ? 'border-[#8E5BF5] text-[#8E5BF5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'items' ? 'border-pink-500 text-pink-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
           <div className="flex items-center gap-2">
             <Package size={18} />
@@ -231,7 +231,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
         </button>
         <button 
           onClick={() => setActiveTab('suggestions')}
-          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'suggestions' ? 'border-[#8E5BF5] text-[#8E5BF5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'suggestions' ? 'border-pink-500 text-pink-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
           <div className="flex items-center gap-2">
             <TrendingDown size={18} />
@@ -245,7 +245,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
         </button>
         <button 
           onClick={() => setActiveTab('history')}
-          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'history' ? 'border-[#8E5BF5] text-[#8E5BF5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'history' ? 'border-pink-500 text-pink-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
           <div className="flex items-center gap-2">
             <History size={18} />
@@ -254,7 +254,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
         </button>
         <button 
           onClick={() => setActiveTab('suppliers')}
-          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'suppliers' ? 'border-[#8E5BF5] text-[#8E5BF5]' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+          className={`px-4 py-3 text-sm font-bold transition-all border-b-2 ${activeTab === 'suppliers' ? 'border-pink-500 text-pink-500' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
           <div className="flex items-center gap-2">
             <Truck size={18} />

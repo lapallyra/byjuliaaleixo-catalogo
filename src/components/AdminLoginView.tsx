@@ -29,13 +29,11 @@ export function AdminLoginView() {
         </button>
       </div>
     );
-  }
-
-  if (loading) {
+  }  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-slate-950">
-        <div className="w-12 h-12 border-4 border-lilac border-t-transparent rounded-full animate-spin" />
-        <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-lilac">Verificando Credenciais...</p>
+      <div className="flex flex-col items-center justify-center h-screen bg-[#FDF8F5]">
+        <div className="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
+        <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-pink-600">Verificando Credenciais...</p>
       </div>
     );
   }
@@ -79,80 +77,83 @@ export function AdminLoginView() {
   };
 
   return (
-    <div className="feminine-admin min-h-screen bg-[#0b0507] flex flex-col items-center justify-center p-8 text-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed" style={{backgroundBlendMode: 'overlay'}}>
+    <div className="min-h-screen bg-[#FDF8F5] flex flex-col items-center justify-center p-6 text-center relative">
       <div className="absolute top-6 left-6">
         <button 
           onClick={() => window.history.back()}
-          className="w-10 h-10 bg-[#140b0e] text-rose-300 rounded-full flex items-center justify-center hover:bg-[#2b141e] hover:text-rose-100 transition-all border border-rose-900/30 shadow-lg"
+          className="w-10 h-10 bg-white/80 text-gray-600 rounded-full flex items-center justify-center hover:bg-white hover:text-pink-600 transition-all border border-white/80 shadow-md"
         >
           <ArrowLeft size={16} />
         </button>
       </div>
-      {user && !isAdmin ? (
-        <>
-          <div className="w-20 h-20 bg-rose-500/10 rounded-[2rem] flex items-center justify-center mb-6 border border-rose-500/20">
-            <span className="text-4xl">🚫</span>
-          </div>
-          <h1 className="text-3xl font-black text-rose-100 mb-4 uppercase tracking-tighter italic">Acesso Negado</h1>
-          <p className="text-rose-300 mb-8 max-w-sm font-sans text-xs uppercase tracking-widest leading-loose">
-            Sua conta ({user.email}) não possui permissões administrativas. Entre em contato com o suporte se isso for um erro.
-          </p>
-          <div className="flex flex-col gap-4 w-full max-w-xs">
-            <button 
-              onClick={logout}
-              className="bg-[#C6A664] text-[#0b0507] font-bold py-4 px-10 rounded-2xl hover:scale-105 transition-all shadow-[0_20px_60px_rgba(198,166,100,0.2)] uppercase tracking-widest text-[10px]"
-            >
-              Sair e tentar com outra conta
-            </button>
-            <button 
-              onClick={() => window.location.href = '/'}
-              className="text-white hover:text-[#C6A664] font-bold py-4 px-10 border border-white/20 rounded-2xl hover:bg-white/5 transition-all uppercase tracking-widest text-[10px]"
-            >
-              Voltar para Loja
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="w-24 h-24 bg-[#C6A664]/5 rounded-[2.5rem] flex items-center justify-center mb-8 border border-[#C6A664]/20 shadow-[0_0_30px_rgba(198,166,100,0.1)]">
-            <LogIn className="text-[#C6A664]" size={40} />
-          </div>
-          <h2 className="text-3xl font-black text-rose-50 mb-4 uppercase tracking-tighter italic">Painel Restrito</h2>
-          <p className="text-rose-300 mb-8 max-w-sm font-sans text-xs uppercase tracking-widest leading-loose opacity-80">
-            Acesso exclusivo para administração. Identifique-se.
-          </p>
-          <div className="flex flex-col gap-4 w-full max-w-xs">
-            {error && (
-              <p className="text-[10px] font-bold uppercase tracking-widest text-rose-400 mb-4 p-4 bg-rose-500/10 rounded-2xl border border-rose-500/20 leading-relaxed">
-                {error}
-              </p>
-            )}
-            <button 
-              onClick={handleLogin}
-              disabled={isLoggingIn}
-              className={`${isLoggingIn ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'} bg-[#C6A664] text-[#0b0507] font-bold py-4 px-10 rounded-2xl transition-all shadow-[0_20px_60px_rgba(198,166,100,0.25)] uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 w-full`}
-            >
-              {isLoggingIn && <div className="w-3 h-3 border-2 border-[#0b0507] border-t-transparent rounded-full animate-spin" />}
-              {isLoggingIn ? 'Carregando...' : 'Entrar com Google'}
-            </button>
 
-            {!isLoggingIn && (
+      <div className="max-w-md w-full bg-white/75 backdrop-blur-xl border border-white/80 p-8 md:p-12 rounded-[28px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05),_inset_0_1px_2px_rgba(255,255,255,0.9)] flex flex-col items-center">
+        {user && !isAdmin ? (
+          <>
+            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mb-6 border border-rose-100">
+              <span className="text-3xl">🚫</span>
+            </div>
+            <h1 className="text-2xl font-black text-gray-800 mb-2 uppercase tracking-tight">Acesso Negado</h1>
+            <p className="text-gray-500 mb-8 font-sans text-xs uppercase tracking-widest leading-loose">
+              Sua conta ({user.email}) não possui permissões administrativas. Entre em contato com o suporte se isso for um erro.
+            </p>
+            <div className="flex flex-col gap-3 w-full">
               <button 
-                onClick={handleRedirectLogin}
-                className="text-rose-400 hover:text-white transition-all text-[8px] uppercase font-black tracking-widest mt-2 opacity-60 hover:opacity-100"
+                onClick={logout}
+                className="bg-gradient-to-b from-pink-400 to-pink-500 text-white font-bold py-4 px-10 rounded-[14px] hover:from-pink-500 hover:to-pink-600 transition-all shadow-[0_10px_20px_rgba(255,20,147,0.15)] uppercase tracking-widest text-[10px]"
               >
-                Problemas com o popup? Tente aqui
+                Sair e tentar com outra conta
               </button>
-            )}
-            <button 
-              onClick={() => window.location.href = '/'} 
-              className="text-rose-300 hover:text-white transition-all text-[9px] uppercase font-black tracking-[0.3em] mt-4 flex items-center justify-center gap-2 opacity-50 hover:opacity-100"
-            >
-              <ArrowLeft size={12} /> Sair da Área Restrita
-            </button>
-          </div>
-        </>
-      )}
+              <button 
+                onClick={() => window.location.href = '/'}
+                className="text-gray-700 bg-white border border-gray-200 font-bold py-4 px-10 rounded-[14px] hover:bg-gray-50 transition-all uppercase tracking-widest text-[10px]"
+              >
+                Voltar para Loja
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="w-20 h-20 bg-pink-50/50 rounded-2xl flex items-center justify-center mb-6 border border-pink-100/80 shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.9)]">
+              <LogIn className="text-pink-500" size={32} strokeWidth={1.5} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2 uppercase tracking-tight">Painel Restrito</h2>
+            <p className="text-gray-500 mb-8 font-sans text-xs uppercase tracking-widest leading-relaxed">
+              Acesso exclusivo para administração. Identifique-se.
+            </p>
+            <div className="flex flex-col gap-3 w-full">
+              {error && (
+                <p className="text-[10px] font-bold uppercase tracking-widest text-rose-500 mb-4 p-4 bg-rose-50/50 rounded-2xl border border-rose-100 leading-relaxed">
+                  {error}
+                </p>
+              )}
+              <button 
+                onClick={handleLogin}
+                disabled={isLoggingIn}
+                className={`${isLoggingIn ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'} bg-gradient-to-b from-pink-500 to-pink-600 text-white font-bold py-4 px-10 rounded-[14px] transition-all shadow-[0_10px_25px_rgba(255,20,147,0.18)] uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 w-full`}
+              >
+                {isLoggingIn && <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {isLoggingIn ? 'Carregando...' : 'Entrar com Google'}
+              </button>
+
+              {!isLoggingIn && (
+                <button 
+                  onClick={handleRedirectLogin}
+                  className="text-pink-500 hover:text-pink-600 transition-all text-[8px] uppercase font-bold tracking-widest mt-2"
+                >
+                  Problemas com o popup? Tente aqui
+                </button>
+              )}
+              <button 
+                onClick={() => window.location.href = '/'} 
+                className="text-gray-400 hover:text-gray-600 transition-all text-[9px] uppercase font-bold tracking-wider mt-4 flex items-center justify-center gap-2"
+              >
+                <ArrowLeft size={12} strokeWidth={1.5} /> Sair da Área Restrita
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
