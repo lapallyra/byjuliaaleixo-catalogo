@@ -29,6 +29,8 @@ import { subscribeToAppConfig, subscribeToProducts } from '../../services/fireba
 export function SiteApp() {
   const [config, setConfig] = useState<AppConfig>(INITIAL_CONFIG);
   const [allProducts, setAllProducts] = useState<Product[]>(PRODUCTS);
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
+  const [isProductsLoaded, setIsProductsLoaded] = useState(false);
   const effectiveConfig = config || INITIAL_CONFIG;
   const location = useLocation();
 
@@ -52,10 +54,12 @@ export function SiteApp() {
   useEffect(() => {
     const unsubConfig = subscribeToAppConfig((newConfig) => {
       setConfig(prev => ({ ...prev, ...newConfig }));
+      setIsConfigLoaded(true);
     });
     
     const unsubProducts = subscribeToProducts((loaded) => {
       if (loaded.length > 0) setAllProducts(loaded);
+      setIsProductsLoaded(true);
     });
 
     return () => {
@@ -132,6 +136,15 @@ export function SiteApp() {
     window.addEventListener('giftlist-updated', handleGiftListUpdate);
     return () => window.removeEventListener('giftlist-updated', handleGiftListUpdate);
   }, []);
+
+  if (!isConfigLoaded || !isProductsLoaded) {
+    return (
+      <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-500 font-medium text-xs tracking-widest uppercase">Carregando...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen neumo-bg">
