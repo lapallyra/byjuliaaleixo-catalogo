@@ -187,7 +187,7 @@ async function startServer() {
 
     app.use(express.static(distPath));
     // Use regex catch-all to guarantee direct navigation to SPA paths (e.g. /admin) never 404
-    app.get(/.*/, (req, res) => {
+    app.get("*all", (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'), (err) => {
         if (err) {
           console.error(`Error sending index.html from "${distPath}":`, err);
