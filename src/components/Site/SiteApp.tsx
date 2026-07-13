@@ -139,7 +139,7 @@ export function SiteApp() {
 
   if (!isConfigLoaded || !isProductsLoaded) {
     return (
-      <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-[#FDFCF0] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin mb-4"></div>
         <p className="text-slate-500 font-medium text-xs tracking-widest uppercase">Carregando...</p>
       </div>

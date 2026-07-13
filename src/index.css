@@ -28,6 +28,15 @@ html {
   --color-lilac: #E9D5FF;
   --color-lilac-baby: #F5EBFF;
   --color-deep-black: #050505;
+  --color-off-white: #FAF9F6;
+  --color-cream: #FDFCF0;
+  --color-white: #FAF9F6;
+  --color-neutral-50: #FDFCF0;
+  --color-neutral-100: #F9F7F2;
+  --color-gray-50: #FDFCF0;
+  --color-gray-100: #F9F7F2;
+  --color-slate-50: #FDFCF0;
+  --color-slate-100: #F9F7F2;
   --font-pinyon: "Pinyon Script", cursive;
   --font-gloock: "Gloock", serif;
   --font-monsieur: "Monsieur La Doulaise", cursive;
@@ -212,7 +221,7 @@ html {
     min-height: 100dvh;
     margin: 0;
     padding: 0;
-    background-color: #ffffff;
+    background-color: #FAF9F6;
     color: #050505;
     font-family: inherit;
     line-height: 1.25;
@@ -583,9 +592,9 @@ html {
     border-color: #FF1493 !important;
   }
 
-  .feminine-admin * {
-    border-radius: 24px !important; /* Premium rounded Glass 3D */
-  }
+  /* .feminine-admin * {
+    border-radius: 24px !important; 
+  } */
 
   .glass-premium {
     background: rgba(255, 255, 255, 0.7);
@@ -756,10 +765,10 @@ html {
   }
 
   /* Vitrine (Standard UI) - Neumorphic */
-  .neumo-bg { @apply bg-[#EBEBEB]; }
-  .neumo-card { @apply bg-[#EBEBEB] rounded-3xl p-4 shadow-[6px_6px_12px_#D1D1D1,-6px_-6px_12px_#FFFFFF]; }
-  .neumo-button { @apply bg-[#EBEBEB] rounded-full flex items-center justify-center transition-all shadow-[4px_4px_8px_#D1D1D1,-4px_-4px_8px_#FFFFFF] active:shadow-[inset_4px_4px_8px_#D1D1D1,inset_-4px_-4px_8px_#FFFFFF]; }
-  .neumo-input { @apply bg-[#EBEBEB] rounded-full px-4 py-2 shadow-[inset_2px_2px_4px_#D1D1D1,inset_-2px_-2px_4px_#FFFFFF]; }
+  .neumo-bg { @apply bg-[#FDFCF0]; }
+  .neumo-card { @apply bg-[#FAF9F6] rounded-3xl p-4 shadow-[6px_6px_12px_#E8E4D9,-6px_-6px_12px_#FFFFFF]; }
+  .neumo-button { @apply bg-[#FAF9F6] rounded-full flex items-center justify-center transition-all shadow-[4px_4px_8px_#E8E4D9,-4px_-4px_8px_#FFFFFF] active:shadow-[inset_4px_4px_8px_#E8E4D9,inset_-4px_-4px_8px_#FFFFFF]; }
+  .neumo-input { @apply bg-[#FAF9F6] rounded-full px-4 py-2 shadow-[inset_2px_2px_4px_#E8E4D9,inset_-2px_-2px_4px_#FFFFFF]; }
 
   /* Scoped Admin Premium Design System (Clean Glassy 3D) */
   .admin-wrapper .clean-3d-card {
@@ -917,7 +926,7 @@ html {
 .admin-wrapper .clean-3d-card,
 .admin-wrapper .glass-premium,
 .admin-wrapper .glass-card,
-.admin-wrapper div[class*="rounded-"].bg-white,
+/* .admin-wrapper div[class*="rounded-"].bg-white,
 .admin-wrapper div[class*="rounded-"][class*="bg-white"] {
   background-color: rgba(255, 255, 255, 0.76) !important;
   backdrop-filter: blur(20px) !important;
@@ -930,7 +939,7 @@ html {
     inset 0 1px 2.5px rgba(255, 255, 255, 0.95),
     inset 0 -1px 1.5px rgba(0, 0, 0, 0.01) !important;
   transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
+} */
 
 /* Hover state for Glass Cards */
 .admin-wrapper .bg-white:hover,

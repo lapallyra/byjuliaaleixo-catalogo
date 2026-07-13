@@ -62,7 +62,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-[480px] flex flex-col border border-neutral-100/50 rounded-2xl overflow-hidden bg-white mx-auto animate-pulse">
+      <div className="w-full max-w-[480px] flex flex-col border border-neutral-100/50 rounded-none overflow-hidden bg-white mx-auto animate-pulse">
         <div className="flex flex-row h-[200px] sm:h-[220px]">
           <div className="w-[50%] bg-neutral-100 shrink-0 border-r border-neutral-100/50"></div>
           <div className="flex-1 p-5 flex flex-col items-center justify-center gap-4">
@@ -86,7 +86,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <>
       <div 
-        className="group w-full max-w-[480px] flex flex-col cursor-pointer transition-all duration-200 hover:shadow-xl hover:shadow-neutral-200/40 hover:-translate-y-0.5 border border-neutral-100 rounded-2xl overflow-hidden bg-white relative mx-auto"
+        className="group w-full max-w-[480px] flex flex-col cursor-pointer transition-all duration-200 hover:shadow-xl hover:shadow-neutral-200/40 hover:-translate-y-0.5 border border-neutral-100 rounded-none overflow-hidden bg-white relative mx-auto"
         onClick={(e) => {
           e.stopPropagation();
           if (onClick) {
@@ -164,7 +164,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* TAG INFERIOR (MAIS ELEGANTE E COM REFINAMENTO DE COR NO HOVER) */}
         {!isFeatured && (
-          <div className="w-full py-2.5 px-4 bg-[#fcf9f5] border-t border-[#ebdfcf] transition-all duration-300 group-hover:bg-[#FAF6F0] group-hover:border-[#D4AF37]/30">
+          <div className="w-full py-2.5 px-4 bg-white border-t border-[#ebdfcf] transition-all duration-300 group-hover:bg-[#FAF6F0] group-hover:border-[#D4AF37]/30">
             <h3 className="text-[11px] font-black uppercase tracking-[0.25em] text-[#3A312D] truncate text-center transition-colors duration-300 group-hover:text-[#D4AF37]">
               {product.product_name}
             </h3>

@@ -1208,7 +1208,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 value={listSearchCode}
                 onChange={(e) => setListSearchCode(e.target.value.toUpperCase())}
                 placeholder="Ex: LUISA"
-                className="w-full text-center tracking-[0.15em] font-semibold text-sm uppercase px-4 py-2.5 bg-[#faf8f5] border border-[#e8dcc8]/40 rounded-xl focus:outline-none focus:border-[#cca062] mb-4 text-[#3A312D] font-poppins"
+                className="w-full text-center tracking-[0.15em] font-semibold text-sm uppercase px-4 py-2.5 bg-[#FDFCF0] border border-[#e8dcc8]/40 rounded-xl focus:outline-none focus:border-[#cca062] mb-4 text-[#3A312D] font-poppins"
               />
 
               <div className="flex gap-3">

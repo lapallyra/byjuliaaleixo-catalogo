@@ -30,7 +30,7 @@ export function PromotionalBanner() {
   const currentCampaign = activeCampaigns[currentIndex];
 
   return (
-    <div className="relative w-full overflow-hidden bg-[#FAF8F5]">
+    <div className="relative w-full overflow-hidden bg-white">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentCampaign.id}

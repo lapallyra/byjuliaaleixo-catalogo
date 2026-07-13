@@ -100,23 +100,23 @@ export const CatalogHeader: React.FC<{
       )}
 
       {/* Faixa acima do topo (Announcement Bar) */}
-      <div className="w-full bg-[#fdfcf0] text-[#3A312D] text-[10px] sm:text-[11px] text-center py-2 px-4 font-sans tracking-wide border-b border-[#3A312D]/5">
+      <div className="w-full bg-white text-[#3A312D] text-[10px] sm:text-[11px] text-center py-2 px-4 font-sans tracking-wide border-b border-[#3A312D]/5">
         Compras acima de <span className="font-bold">R$ 300,00</span> ganha <span className="italic">presente surpresa</span>.
       </div>
 
       <div className="max-w-[1600px] mx-auto px-4 py-4 flex items-center justify-between">
         {/* Left Side: Logo and Atelier Name */}
         <div className="flex items-center gap-3 group cursor-pointer relative" onClick={onGoBack}>
-          <div className="w-12 h-12 bg-white border border-[#e8dcc8]/60 rounded-full flex items-center justify-center shadow-sm overflow-hidden transition-transform duration-300 group-hover:scale-105">
+          <div className="w-[120px] h-[120px] bg-white border border-[#e8dcc8]/60 rounded-full flex items-center justify-center shadow-sm overflow-hidden transition-transform duration-300 group-hover:scale-105">
             {logoUrl ? (
               <img 
                 src={logoUrl} 
                 alt="Logo" 
-                className="w-10 h-10 object-contain rounded-full"
+                className="w-[100px] h-[100px] object-contain rounded-full"
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <span className="text-xl">{companyId === 'pallyra' ? '📓' : '💅'}</span>
+              <span className="text-6xl">{companyId === 'pallyra' ? '📓' : '💅'}</span>
             )}
           </div>
           <div className="flex flex-col">

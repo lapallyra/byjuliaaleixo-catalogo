@@ -97,7 +97,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       return realFeedbacks
         .map(fb => ({
           stars: fb.stars || 5,
-          text: `"${fb.text}"`,
+          text: fb.text ? (fb.text.startsWith('"') ? fb.text : `"${fb.text}"`) : "",
           author: fb.name || "Cliente",
           atelier: "Depoimento Real",
           colorTagBg: 'bg-emerald-50',
@@ -105,7 +105,33 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         }));
     }
 
-    return [];
+    // Default fallbacks if no approved feedbacks yet
+    return [
+      {
+        stars: 5,
+        text: "\"O atendimento da Júlia é simplesmente impecável. Cada detalhe do meu presente foi pensado com muito carinho e a embalagem é um sonho!\"",
+        author: "Camila Fernandes",
+        atelier: "Atendimento",
+        colorTagBg: 'bg-rose-50',
+        colorTagText: 'text-rose-600'
+      },
+      {
+        stars: 5,
+        text: "\"Estou apaixonada pelo meu kit. A qualidade é altíssima e a personalização ficou exatamente como eu imaginei. Recomendo muito!\"",
+        author: "Mariana Costa",
+        atelier: "Qualidade",
+        colorTagBg: 'bg-amber-50',
+        colorTagText: 'text-amber-600'
+      },
+      {
+        stars: 5,
+        text: "\"Melhor experiência de compra que já tive. A atenção aos detalhes e o cuidado com que tudo é feito é perceptível em cada peça.\"",
+        author: "Beatriz Santos",
+        atelier: "Experiência",
+        colorTagBg: 'bg-blue-50',
+        colorTagText: 'text-blue-600'
+      }
+    ];
   }, [realFeedbacks]);
 
   useEffect(() => {
@@ -114,6 +140,10 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       setActiveFeedbackIndex((prev) => (prev + 1) % feedbacksDynamic.length);
     }, 5000);
     return () => clearInterval(timer);
+  }, [feedbacksDynamic.length]);
+
+  useEffect(() => {
+    setActiveFeedbackIndex(0);
   }, [feedbacksDynamic.length]);
 
   useEffect(() => {
@@ -275,7 +305,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 navigate('/document');
               }
             }}
-            className="flex items-center gap-2.5 bg-[#FCFAF7] border border-[#EAE4DC] rounded-full px-5 py-2.5 text-xs text-[#555555] shadow-[0_2px_6px_rgba(0,0,0,0.02)] hover:border-[#C2B7A8] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 w-full sm:w-72 md:w-80"
+            className="flex items-center gap-2.5 bg-[#FDFCF0] border border-[#EAE4DC] rounded-full px-5 py-2.5 text-xs text-[#555555] shadow-[0_2px_6px_rgba(0,0,0,0.02)] hover:border-[#C2B7A8] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 w-full sm:w-72 md:w-80"
           >
             <Search size={14} strokeWidth={2} className="text-[#8C7864]/80 shrink-0" />
             <input 
@@ -316,7 +346,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                   return {
                     frontBg: 'bg-white',
                     frontBorder: 'border-neutral-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.02)]',
-                    frontIsotipoBg: 'bg-[#fafafa] border-neutral-100',
+                    frontIsotipoBg: 'bg-[#FDFCF0] border-neutral-100',
                     frontLogoFilter: '',
                     backBg: 'bg-[#121212]',
                     backBorder: 'border-[#cca062]/40 shadow-[0_8px_24px_rgba(204,160,98,0.15)]',
@@ -329,7 +359,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                   return {
                     frontBg: 'bg-white',
                     frontBorder: 'border-neutral-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.02)]',
-                    frontIsotipoBg: 'bg-[#fafafa] border-neutral-100',
+                    frontIsotipoBg: 'bg-[#FDFCF0] border-neutral-100',
                     frontLogoFilter: '',
                     backBg: 'bg-[#4a1213]',
                     backBorder: 'border-[#cca062]/40 shadow-[0_8px_24px_rgba(204,160,98,0.15)]',
@@ -342,7 +372,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                   return {
                     frontBg: 'bg-white',
                     frontBorder: 'border-neutral-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.02)]',
-                    frontIsotipoBg: 'bg-[#fafafa] border-neutral-100',
+                    frontIsotipoBg: 'bg-[#FDFCF0] border-neutral-100',
                     frontLogoFilter: '',
                     backBg: 'bg-[#c96b71]',
                     backBorder: 'border-[#c96b71]/20 shadow-[0_8px_24px_rgba(201,107,113,0.15)]',
@@ -356,7 +386,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                   return {
                     frontBg: 'bg-white',
                     frontBorder: 'border-neutral-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.02)]',
-                    frontIsotipoBg: 'bg-[#fafafa] border-neutral-100',
+                    frontIsotipoBg: 'bg-[#FDFCF0] border-neutral-100',
                     frontLogoFilter: '',
                     backBg: 'bg-gradient-to-b from-[#FAF9F6] to-[#FFF0F2]',
                     backBorder: 'border-[#ebd9cb] shadow-[0_8px_24px_rgba(235,217,203,0.3)]',
@@ -400,7 +430,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                     {/* FRONT FACE: Polaroid Image Area (Neutral Base State) */}
                     <div className={`absolute inset-0 w-full h-full backface-hidden rounded-2xl border p-4 pb-12 flex flex-col items-center justify-start shadow-[0_4px_12px_rgba(0,0,0,0.02)] transition-all duration-300 ${cardTheme.frontBg} ${cardTheme.frontBorder}`}>
                       {/* Photo Area (Mask) - Single visual frame */}
-                      <div className="w-full aspect-square rounded-xl bg-[#fafafa] border border-neutral-100 overflow-hidden relative flex items-center justify-center p-0 shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)]">
+                      <div className="w-full aspect-square rounded-xl bg-[#FDFCF0] border border-neutral-100 overflow-hidden relative flex items-center justify-center p-0 shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)]">
                         {customSettings[atelier.id]?.store_isotipo ? (
                           <ImageWithFallback 
                             src={customSettings[atelier.id]?.store_isotipo} 
@@ -480,7 +510,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             
             {/* STEP 1 */}
-            <div className="text-center group p-6 bg-[#FCFAF7] border border-[#EAE4DC] rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
+            <div className="text-center group p-6 bg-white border border-[#EAE4DC] rounded-none shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
               <span className="font-poppins text-3xl font-light text-[#cca062] mb-1">
                 01
               </span>
@@ -494,7 +524,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             </div>
 
             {/* STEP 2 */}
-            <div className="text-center group p-6 bg-[#FCFAF7] border border-[#EAE4DC] rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
+            <div className="text-center group p-6 bg-white border border-[#EAE4DC] rounded-none shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
               <span className="font-poppins text-3xl font-light text-[#cca062] mb-1">
                 02
               </span>
@@ -508,7 +538,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             </div>
 
             {/* STEP 3 */}
-            <div className="text-center group p-6 bg-[#FCFAF7] border border-[#EAE4DC] rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
+            <div className="text-center group p-6 bg-white border border-[#EAE4DC] rounded-none shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
               <span className="font-poppins text-3xl font-light text-[#cca062] mb-1">
                 03
               </span>
@@ -522,7 +552,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             </div>
 
             {/* STEP 4 */}
-            <div className="text-center group p-6 bg-[#FCFAF7] border border-[#EAE4DC] rounded-[24px] shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
+            <div className="text-center group p-6 bg-white border border-[#EAE4DC] rounded-none shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:border-[#D3C9BE] transition-all duration-150 flex flex-col items-center select-none">
               <span className="font-poppins text-3xl font-light text-[#cca062] mb-1">
                 04
               </span>
@@ -540,7 +570,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </section>
 
       {/* KITS SELECIONADOS (Step 4) */}
-      <section id="kits" className="scroll-mt-24 py-16 bg-[#FCFAF7] border-y border-[#EAE4DC] px-4 sm:px-6">
+      <section id="kits" className="scroll-mt-24 py-16 bg-[#FDFCF0] border-y border-[#EAE4DC] px-4 sm:px-6">
         <div className="max-w-[1400px] mx-auto">
           <div className="text-center mb-10">
             <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#cca062] block mb-2 font-poppins">Combinações Perfeitas</span>
@@ -577,11 +607,11 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       
       {/* MONTE SEU KIT EXPLAINER (Step 5) */}
       <section className="my-16 max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="bg-white border border-[#EAE4DC] rounded-[32px] p-8 sm:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.015)] flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-[#FCFAF7] rounded-br-full pointer-events-none" />
+        <div className="bg-white border border-[#EAE4DC] rounded-none p-8 sm:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.015)] flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-none pointer-events-none" />
           
           <div className="max-w-xl text-center lg:text-left relative z-10">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FCFAF7] mb-4 border border-[#EAE4DC]">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FDFCF0] mb-4 border border-[#EAE4DC]">
               <Sparkles size={11} className="text-[#cca062]" />
               <span className="text-[9px] font-bold uppercase tracking-widest text-[#cca062] font-poppins">Amor Personalizado</span>
             </div>
@@ -605,7 +635,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
       </section>
 
       {/* FEEDBACK QUE AMAMOS - AVALIAÇÕES (Step 6) */}
-      <section id="feedbacks" className="scroll-mt-24 py-16 bg-[#FCFAF7] border-t border-[#EAE4DC] px-4 sm:px-6">
+      <section id="feedbacks" className="scroll-mt-24 py-16 bg-[#FDFCF0] border-t border-[#EAE4DC] px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
             <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#cca062] block mb-2 font-poppins">Nossos Clientes</span>
@@ -618,7 +648,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
           {/* AUTOMATED CAROUSEL DEPOIMENTOS */}
           <div className="max-w-2xl mx-auto relative px-4 text-center select-none min-h-[200px] flex flex-col justify-between">
-            <div className="bg-white border border-[#EAE4DC] rounded-[24px] p-6 sm:p-8 shadow-xs">
+            <div className="bg-white border border-[#EAE4DC] rounded-none p-6 sm:p-8 shadow-xs">
               <div className="flex items-center justify-center gap-1 text-[#cca062] mb-4">
                 <span className="text-[11px] font-bold mr-1 text-[#cca062]/80 font-poppins">5.0</span>
                 <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
@@ -626,11 +656,8 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               <p className="text-xs sm:text-sm font-light text-[#1F1F1F] leading-relaxed italic mb-6">
                 {feedbacksDynamic[activeFeedbackIndex]?.text || ""}
               </p>
-              <div className="flex items-center justify-between pt-4 border-t border-[#EAE4DC]">
+              <div className="flex items-center justify-center pt-4 border-t border-[#EAE4DC]">
                 <span className="font-poppins font-semibold text-xs text-[#1F1F1F]">{feedbacksDynamic[activeFeedbackIndex]?.author || "Cliente"}</span>
-                <span className={`text-[8px] sm:text-[9px] uppercase tracking-widest font-bold ${feedbacksDynamic[activeFeedbackIndex]?.colorTagBg || "bg-[#FCFAF7]"} ${feedbacksDynamic[activeFeedbackIndex]?.colorTagText || "text-[#cca062]"} px-3 py-1 rounded-full border border-[#EAE4DC] font-poppins`}>
-                  {feedbacksDynamic[activeFeedbackIndex]?.atelier || "Depoimento"}
-                </span>
               </div>
             </div>
 
@@ -655,19 +682,19 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
       {/* SEÇÃO EDITORIAL: CONEXÃO COM A MARCA - MINHA HISTÓRIA (Step 7) */}
       <section id="sobre-julia" className="scroll-mt-24 py-20 bg-white px-4 sm:px-6 relative overflow-hidden border-t border-b border-[#EAE4DC]">
-        <div className="absolute -bottom-10 left-1/3 w-72 h-72 rounded-full bg-[#FCFAF7]/50 blur-[120px] pointer-events-none" />
+        <div className="absolute -bottom-10 left-1/3 w-72 h-72 rounded-full bg-[#FDFCF0]/50 blur-[120px] pointer-events-none" />
         
         <div className="max-w-[1400px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
             
             {/* LADO ESQUERDO: Portrait Editorial Photograph */}
             <div className="lg:col-span-5 flex justify-center w-full">
-              <div className="relative w-full max-w-[380px] rounded-[32px] overflow-hidden shadow-xs border border-[#EAE4DC] bg-[#FCFAF7] p-2.5 transition-transform duration-150 hover:scale-[1.01]">
-                <div className="w-full h-full rounded-[24px] overflow-hidden aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5]">
+              <div className="relative w-full max-w-[380px] rounded-none overflow-hidden shadow-xs border border-[#EAE4DC] bg-white p-2.5 transition-transform duration-150 hover:scale-[1.01]">
+                <div className="w-full h-full rounded-none overflow-hidden aspect-[4/5] sm:aspect-[3/4] lg:aspect-[4/5]">
                   <ImageWithFallback
                     src="https://i.imgur.com/KRLgtno.jpg"
                     alt="Júlia Aleixo no Ateliê"
-                    className="w-full h-full object-cover rounded-[22px]"
+                    className="w-full h-full object-cover rounded-none"
                     isThumbnail={false}
                   />
                 </div>
@@ -721,7 +748,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             className="absolute inset-0 bg-black/10 backdrop-blur-sm transition-opacity duration-200 ease-out animate-fade-in duration-200" 
           />
           
-          <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 border border-[#EAE4DC] p-6 sm:p-10 shadow-lg scrollbar-thin animate-fade-in">
+          <div className="bg-white rounded-none w-full max-w-2xl max-h-[90vh] overflow-y-auto relative z-10 border border-[#EAE4DC] p-6 sm:p-10 shadow-lg scrollbar-thin animate-fade-in">
             <button 
               onClick={() => setIsStoryOpen(false)}
               className="absolute top-5 right-5 w-8 h-8 rounded-full border border-[#EAE4DC] bg-white flex items-center justify-center text-[#cca062] hover:bg-[#1F1F1F] hover:text-white hover:border-[#1F1F1F] transition-colors cursor-pointer"

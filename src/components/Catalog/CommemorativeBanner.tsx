@@ -215,7 +215,7 @@ export function CommemorativeBanner({ allProducts = [], onSearch }: Commemorativ
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
-        className="relative w-full rounded-[24px] overflow-hidden bg-[#FAF8F5] flex flex-col pt-4 pb-7 px-6 md:px-12 select-none min-h-[200px] md:min-h-[250px]"
+        className="relative w-full overflow-hidden bg-white flex flex-col pt-4 pb-7 px-6 md:px-12 select-none min-h-[200px] md:min-h-[250px]"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onTouchStart={onTouchStart}
@@ -247,7 +247,7 @@ export function CommemorativeBanner({ allProducts = [], onSearch }: Commemorativ
                 </motion.div>
               );
             })() : (
-              <div className="absolute inset-0 bg-[#FAF8F5] flex items-center justify-center">
+              <div className="absolute inset-0 bg-white flex items-center justify-center">
                 <span className="font-mea-culpa text-2xl text-[#8C7864]/40">Coleção Especial</span>
               </div>
             )}
@@ -258,14 +258,14 @@ export function CommemorativeBanner({ allProducts = [], onSearch }: Commemorativ
           <div 
             className="absolute inset-0 pointer-events-none z-20 hidden md:block"
             style={{
-              background: 'linear-gradient(to right, #FAF8F5 0%, rgba(250, 248, 245, 0.98) 12%, rgba(250, 248, 245, 0.9) 25%, rgba(250, 248, 245, 0.5) 60%, rgba(250, 248, 245, 0) 100%)'
+              background: 'linear-gradient(to right, #FFFFFF 0%, rgba(255, 255, 255, 0.98) 12%, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.5) 60%, rgba(255, 255, 255, 0) 100%)'
             }}
           />
           {/* Mobile Transition (Top-to-Bottom) */}
           <div 
             className="absolute inset-0 pointer-events-none z-20 block md:hidden"
             style={{
-              background: 'linear-gradient(to bottom, #FAF8F5 0%, rgba(250, 248, 245, 0.95) 20%, rgba(250, 248, 245, 0.7) 45%, rgba(250, 248, 245, 0) 100%)'
+              background: 'linear-gradient(to bottom, #FFFFFF 0%, rgba(255, 255, 255, 0.95) 20%, rgba(255, 255, 255, 0.7) 45%, rgba(255, 255, 255, 0) 100%)'
             }}
           />
         </div>
