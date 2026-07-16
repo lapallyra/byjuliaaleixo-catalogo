@@ -56,7 +56,7 @@ export function PromotionalBanner() {
             </div>
           )}
           
-          <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 max-w-[1400px] mx-auto">
+          <div className="relative z-10 h-full flex flex-col justify-center px-4 md:px-8 max-w-[1400px] mx-auto">
             <motion.h2 
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -87,6 +87,9 @@ export function PromotionalBanner() {
               <ChevronRight size={16} />
             </motion.div>
           </div>
+
+          {/* Bottom Gradient for smooth transition */}
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#FCFAF7] to-transparent z-20 pointer-events-none opacity-40" />
         </motion.div>
       </AnimatePresence>
 

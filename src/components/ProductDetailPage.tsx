@@ -10,11 +10,16 @@ import {
   ChevronLeft, 
   ChevronRight,
   Check,
-  ArrowLeft
+  ArrowLeft,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { Product, CompanyId, Variation } from '../types';
 import { getTheme } from '../lib/theme';
 import { ImageWithFallback } from './ImageWithFallback';
+import { getAddons } from '../services/firebaseService';
+import { cleanOptionName, extractPriceFromOption } from '../utils/priceUtils';
+import { uploadImage, compressImage } from '../services/firebaseStorageService';
 
 interface ProductDetailPageProps {
   product: Product;
@@ -40,10 +45,31 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [isWholesaleActive, setIsWholesaleActive] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const images = [
+  // Custom personalization states
+  const [personalizationValues, setPersonalizationValues] = useState<Record<string, string>>({});
+  const [uploadingFieldId, setUploadingFieldId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Addons states
+  const [availableAddons, setAvailableAddons] = useState<any[]>([]);
+  const [selectedAddons, setSelectedAddons] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchAddons = async () => {
+      const addons = await getAddons(companyId);
+      setAvailableAddons(addons.filter(a => a.active));
+    };
+    fetchAddons();
+  }, [companyId]);
+
+  const productImages = [
     product.image || product.main_image,
+    product.image_hover,
     ...(product.images || [])
   ].filter(Boolean) as string[];
+
+  const images = productImages.filter((img, index, self) => self.indexOf(img) === index);
 
   const hasWholesale = product.isWholesaleEnabled && product.wholesale_min_qty && product.wholesale_min_qty > 0;
 
@@ -54,6 +80,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     setImageIndex(0);
     setIsWholesaleActive(false);
     setIsFavorite(false);
+    setPersonalizationValues({});
+    setSelectedAddons([]);
+    setUploadError(null);
     
     if (product.variations && product.variations.length > 0) {
       const initial: Record<string, string> = {};
@@ -102,6 +131,19 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     const option = variation?.options.find(o => o.name === optName);
     if (option && option.price) {
       currentPrice += option.price;
+    }
+  });
+
+  // Add personalization embedded prices if any
+  Object.values(personalizationValues).forEach(val => {
+    currentPrice += extractPriceFromOption(val);
+  });
+
+  // Add selected addons prices
+  selectedAddons.forEach(addonId => {
+    const addon = availableAddons.find(a => a.id === addonId);
+    if (addon && addon.price) {
+      currentPrice += addon.price;
     }
   });
 
@@ -235,25 +277,22 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
           {/* Variações */}
           {product.variations && product.variations.length > 0 && (
-            <div className="space-y-8 mb-12">
-              {product.variations.map((v: Variation) => (
-                <div key={v.id} className="space-y-4">
-                  <h3 className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-neutral-400">
-                    {v.name}
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {v.options.map((opt) => (
+            <div className="space-y-6 mb-10 pt-6 border-t border-neutral-100">
+              {product.variations.map((v: Variation, vIdx) => (
+                <div key={`v-group-${vIdx}`} className="space-y-3">
+                  <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.textMuted}`}>{v.name}:</h4>
+                  <div className="flex flex-wrap gap-2.5">
+                    {v.options.map((opt, oIdx) => (
                       <button
-                        key={opt.name}
+                        key={`var-${vIdx}-${oIdx}`}
                         onClick={() => setSelectedVariations({ ...selectedVariations, [v.name]: opt.name })}
-                        className={`px-6 py-3 rounded-2xl text-xs font-sans font-bold uppercase tracking-wider transition-all border ${
-                          selectedVariations[v.name] === opt.name
-                            ? 'bg-neutral-900 border-neutral-900 text-white shadow-lg scale-105'
-                            : 'bg-white border-neutral-100 text-neutral-500 hover:border-neutral-300'
+                        className={`px-5 py-3 text-xs font-bold rounded-2xl border-2 transition-all duration-150 uppercase tracking-widest ${
+                          selectedVariations[v.name] === opt.name 
+                            ? `scale-[1.03] shadow-md ${theme.btnPrimary} border-transparent` 
+                            : `${theme.btnSecondary}`
                         }`}
                       >
-                        {opt.name}
-                        {opt.price > 0 && <span className="ml-2 opacity-60">+ R$ {opt.price.toFixed(2)}</span>}
+                        {cleanOptionName(opt.name)} {opt.price > 0 ? `(+R$ ${opt.price.toFixed(2).replace('.', ',')})` : ''}
                       </button>
                     ))}
                   </div>
@@ -262,8 +301,201 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             </div>
           )}
 
+          {/* Advanced Personalizations */}
+          {product.personalizationSettings && product.personalizationSettings.length > 0 && (
+            <div className="border-t border-neutral-100 pt-6 space-y-6">
+              <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.textMuted}`}>Personalização:</h4>
+              <div className="space-y-4">
+                {product.personalizationSettings.map((field) => (
+                  <div key={field.id} className="space-y-2">
+                    {field.type !== 'image' && (
+                      <label className={`text-[11px] font-bold opacity-60 ${theme.textPrimary} flex items-center gap-1`}>
+                        {field.label} {field.isRequired && <span className="text-rose-500">*</span>}
+                      </label>
+                    )}
+                    {field.type === 'text' && (
+                      <input 
+                        type="text" 
+                        placeholder={field.placeholder || ''}
+                        maxLength={field.charLimit}
+                        value={personalizationValues[field.id] || ''}
+                        onChange={(e) => setPersonalizationValues({...personalizationValues, [field.id]: e.target.value})}
+                        className={`w-full p-4 rounded-xl border border-black/10 text-sm focus:ring-2 outline-none bg-transparent ${theme.textPrimary}`}
+                        style={{ outlineColor: theme.accentColor }}
+                      />
+                    )}
+                    {field.type === 'select' && field.options && (
+                      <div className="flex flex-wrap gap-2">
+                        {field.options.map((opt, oIdx) => (
+                          <button
+                            key={oIdx}
+                            onClick={() => setPersonalizationValues({...personalizationValues, [field.id]: opt})}
+                            className={`px-4 py-2.5 text-[11px] font-bold rounded-xl border-2 transition-all duration-150 uppercase tracking-widest ${
+                              personalizationValues[field.id] === opt 
+                                ? `scale-[1.03] shadow-md ${theme.btnPrimary} border-transparent` 
+                                : `${theme.btnSecondary}`
+                            }`}
+                          >
+                            {cleanOptionName(opt)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {field.type === 'image' && (
+                      <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200 text-left">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[11px] font-bold text-slate-800 flex items-center gap-1">
+                            Imagens de Referência {field.isRequired && <span className="text-rose-500">*</span>}
+                          </span>
+                          <p className="text-[10px] text-slate-500 leading-relaxed font-semibold">
+                            Adicione até 2 imagens que servirão de inspiração.
+                          </p>
+                        </div>
+
+                        {((personalizationValues[field.id] || "").split(",").filter(Boolean)).length > 0 && (
+                          <div className="flex flex-wrap gap-3 pt-1">
+                            {(personalizationValues[field.id] || "").split(",").filter(Boolean).map((imgUrl, imgIdx) => (
+                              <div key={imgIdx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 group bg-white shadow-xs">
+                                <img src={imgUrl.trim()} alt={`Referência ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const currentUrls = (personalizationValues[field.id] || "").split(",").filter(Boolean);
+                                    const updatedUrls = currentUrls.filter((_, i) => i !== imgIdx);
+                                    setPersonalizationValues({
+                                      ...personalizationValues,
+                                      [field.id]: updatedUrls.join(",")
+                                    });
+                                  }}
+                                  className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-lg opacity-90 hover:opacity-100 shadow-sm transition-all flex items-center justify-center"
+                                >
+                                  <X size={10} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {((personalizationValues[field.id] || "").split(",").filter(Boolean)).length < 2 && (
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              id={`ref-upload-page-${field.id}`}
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+
+                                const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+                                if (!allowedTypes.includes(file.type)) {
+                                  setUploadError("Formato não suportado. PNG, JPG ou WEBP.");
+                                  return;
+                                }
+
+                                try {
+                                  setUploadingFieldId(field.id);
+                                  setUploadProgress(0);
+
+                                  const compressedFile = await compressImage(file);
+                                  const path = `sales_personalization/ref_${Date.now()}`;
+                                  const { promise } = uploadImage(compressedFile, path, (progress) => {
+                                    setUploadProgress(Math.round(progress));
+                                  });
+
+                                  const url = await promise;
+                                  const currentUrls = (personalizationValues[field.id] || "").split(",").filter(Boolean);
+                                  const updatedUrls = [...currentUrls, url];
+                                  setPersonalizationValues({
+                                    ...personalizationValues,
+                                    [field.id]: updatedUrls.join(",")
+                                  });
+                                } catch (err) {
+                                  console.error(err);
+                                  setUploadError("Erro ao enviar a imagem de referência.");
+                                } finally {
+                                  setUploadingFieldId(null);
+                                  setUploadProgress(0);
+                                }
+                              }}
+                              disabled={uploadingFieldId !== null}
+                            />
+                            
+                            {uploadingFieldId === field.id ? (
+                              <div className="flex flex-col items-center justify-center p-6 border border-dashed border-slate-200 bg-white rounded-xl space-y-2">
+                                <Loader2 className="animate-spin text-indigo-500" size={20} />
+                                <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500">
+                                  Enviando... {uploadProgress}%
+                                </span>
+                              </div>
+                            ) : (
+                              <label
+                                htmlFor={`ref-upload-page-${field.id}`}
+                                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 bg-white rounded-xl hover:border-slate-300 transition-all cursor-pointer text-slate-500 hover:text-slate-700"
+                              >
+                                <Upload size={16} className="mb-1" />
+                                <span className="text-[10px] uppercase tracking-wider font-black">
+                                  Enviar Imagem
+                                </span>
+                              </label>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Addons */}
+          {availableAddons.length > 0 && (
+            <div className="border-t border-neutral-100 pt-6 space-y-4">
+              <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.textMuted}`}>Serviços Adicionais:</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {availableAddons.map(addon => (
+                  <button
+                    key={addon.id}
+                    onClick={() => {
+                      if (selectedAddons.includes(addon.id)) {
+                        setSelectedAddons(selectedAddons.filter(id => id !== addon.id));
+                      } else {
+                        setSelectedAddons([...selectedAddons, addon.id]);
+                      }
+                    }}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+                      selectedAddons.includes(addon.id) 
+                        ? 'border-transparent shadow-md bg-black/5' 
+                        : 'border-black/5 bg-transparent opacity-70 hover:opacity-100'
+                    }`}
+                    style={{
+                      borderColor: selectedAddons.includes(addon.id) ? theme.accentColor : undefined
+                    }}
+                  >
+                    {addon.image && (
+                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-black/5 bg-white">
+                        <ImageWithFallback src={addon.image} alt={addon.name} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-xs font-bold ${theme.textPrimary} truncate`}>{addon.name}</p>
+                      {addon.price > 0 && <p className="text-[10px] text-neutral-400 font-semibold">+ R$ {addon.price.toFixed(2)}</p>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {uploadError && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-semibold">
+              {uploadError}
+            </div>
+          )}
+
           {/* AÇÕES DE COMPRA */}
-          <div className="space-y-6 mt-auto">
+          <div className="space-y-6 mt-8 pt-6 border-t border-neutral-100">
             <div className="flex flex-col sm:flex-row items-center gap-4">
               {/* Seletor de Quantidade */}
               <div className="flex flex-col gap-2 w-full sm:w-auto">
@@ -301,8 +533,36 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
               {/* Botão Adicionar */}
               <button 
-                onClick={() => onAddToCart(product, quantity)}
-                className="flex-1 w-full flex items-center justify-center gap-3 bg-neutral-900 text-white py-5 px-8 rounded-2xl text-xs font-sans font-bold uppercase tracking-[0.2em] hover:bg-neutral-800 transition-all shadow-xl shadow-neutral-200 active:scale-[0.98]"
+                onClick={() => {
+                  // Validate required personalization fields
+                  if (product.personalizationSettings) {
+                    for (const field of product.personalizationSettings) {
+                      if (field.isRequired && !personalizationValues[field.id]?.trim()) {
+                        setUploadError(`Por favor, preencha o campo obrigatório "${field.label}"`);
+                        return;
+                      }
+                    }
+                  }
+
+                  const selectedVariationString = Object.entries(selectedVariations)
+                    .map(([varName, optName]) => `${varName}: ${optName}`)
+                    .join(', ');
+
+                  const packedProduct: Product & { 
+                    selectedVariation?: string; 
+                    personalizationValues?: Record<string, string>; 
+                    selectedAddons?: any[];
+                  } = {
+                    ...product,
+                    retail_price: currentPrice,
+                    selectedVariation: selectedVariationString || undefined,
+                    personalizationValues: Object.keys(personalizationValues).length > 0 ? personalizationValues : undefined,
+                    selectedAddons: selectedAddons.length > 0 ? selectedAddons : undefined
+                  };
+
+                  onAddToCart(packedProduct, quantity);
+                }}
+                className={`flex-1 w-full flex items-center justify-center gap-3 py-5 px-8 rounded-2xl text-xs font-sans font-bold uppercase tracking-[0.2em] transition-all shadow-xl active:scale-[0.98] ${theme.btnPrimary}`}
               >
                 <ShoppingCart size={18} />
                 Adicionar ao Carrinho

@@ -104,7 +104,7 @@ export const CatalogHeader: React.FC<{
         Compras acima de <span className="font-bold">R$ 300,00</span> ganha <span className="italic">presente surpresa</span>.
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="max-w-[1850px] mx-auto px-4 py-4 flex items-center justify-between">
         {/* Left Side: Logo and Atelier Name */}
         <div className="flex items-center gap-3 group cursor-pointer relative" onClick={onGoBack}>
           <div className="w-[120px] h-[120px] bg-white border border-[#e8dcc8]/60 rounded-full flex items-center justify-center shadow-sm overflow-hidden transition-transform duration-300 group-hover:scale-105">
@@ -173,7 +173,7 @@ export const CatalogHeader: React.FC<{
 
       {/* Faixa abaixo do HEADER (Secondary Navigation Bar) */}
       <nav className="w-full border-t border-neutral-100 bg-white/50 backdrop-blur-sm">
-        <div className="max-w-[1600px] mx-auto px-4 h-12 flex items-center justify-center gap-6 sm:gap-12">
+        <div className="max-w-[1850px] mx-auto px-4 h-12 flex items-center justify-center gap-6 sm:gap-12">
           <button onClick={onViewAll} className="text-[11px] sm:text-[13px] font-bold text-[#3A312D] hover:text-[#D4AF37] uppercase tracking-widest transition-colors cursor-pointer">
             Atelie
           </button>

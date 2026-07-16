@@ -160,8 +160,8 @@ export function SiteApp() {
           <Route path="/kits" element={<KitsView allProducts={allProducts} setCarts={setUnifiedCart} />} />
           <Route path="/kit-meukit" element={<KitConstructor allProducts={allProducts} setCarts={setUnifiedCart} />} />
           <Route path="/sobrenos" element={<AboutMeView />} />
-          <Route path="/listadepresentes-info" element={<GiftListInfoView />} />
-          <Route path="/listadepresentes/:code" element={<GiftListView setCarts={setUnifiedCart} config={effectiveConfig} />} />
+          <Route path="/listadepresentes" element={<GiftListInfoView />} />
+          <Route path="/consulta/:code" element={<GiftListView setCarts={setUnifiedCart} config={effectiveConfig} />} />
           
           <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="pallyra" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} />} />
           <Route path="/comamorguennita" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="guennita" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} />} />

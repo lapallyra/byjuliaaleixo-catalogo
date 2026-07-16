@@ -1382,7 +1382,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
                 <div className="flex items-center gap-2 w-full md:w-auto">
                   {/* Public Page Link button */}
                   <a
-                    href={`/listadepresentes/${activeSelectedList.code}`}
+                    href={`/consulta/${activeSelectedList.code}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 md:flex-initial bg-white border border-[#E5E5EA] border-b-[3px] border-b-gray-200 hover:border-b-gray-300 hover:bg-gray-50 active:border-b active:translate-y-[1.5px] shadow-xs rounded-xl px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-rose-500 flex items-center justify-center gap-1.5 transition-all"

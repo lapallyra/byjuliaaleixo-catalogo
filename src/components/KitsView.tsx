@@ -53,22 +53,25 @@ export const KitsView: React.FC<KitsViewProps> = ({ allProducts, setCarts }) => 
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] font-sans pb-20">
-      <header className="bg-white/80 backdrop-blur-md border-b border-neutral-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <div className="min-h-screen bg-[#FFF9F6] font-sans pb-20 relative overflow-x-hidden select-none">
+      {/* BACKGROUND GRAPHICS */}
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
+
+      <header className="bg-white/80 backdrop-blur-md border-b border-[#EAE4DC] sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate('/')} 
-              className="p-2 hover:bg-neutral-50 rounded-full transition-colors text-neutral-400 hover:text-neutral-900"
+              className="p-2 hover:bg-neutral-50 rounded-full transition-colors text-neutral-400 hover:text-neutral-900 cursor-pointer"
             >
               <ChevronLeft size={24} />
             </button>
-            <h1 className="text-lg font-serif italic text-neutral-900">Kits Prontos</h1>
+            <h1 className="text-lg font-serif italic text-[#6d5443]">Kits Prontos</h1>
           </div>
           <div className="flex gap-4">
              <button 
               onClick={() => navigate('/kit-meukit')}
-              className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-neutral-900 transition-colors"
+              className="text-[10px] font-bold uppercase tracking-widest text-[#cca062] hover:text-[#c36266] transition-colors cursor-pointer"
             >
               Monte seu Kit
             </button>
@@ -76,16 +79,16 @@ export const KitsView: React.FC<KitsViewProps> = ({ allProducts, setCarts }) => 
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12 relative z-10">
         <div className="mb-12 text-center">
-          <h2 className="text-4xl font-serif italic text-neutral-900 mb-4">Combinações Exclusivas</h2>
-          <p className="text-neutral-500 max-w-xl mx-auto">Kits cuidadosamente montados para surpreender em qualquer ocasião.</p>
+          <h2 className="text-4xl font-serif italic text-[#6d5443] mb-4">Combinações Exclusivas</h2>
+          <p className="text-[#8c7864] max-w-xl mx-auto text-sm">Kits cuidadosamente montados para surpreender em qualquer ocasião.</p>
         </div>
 
         {kits.length === 0 ? (
-          <div className="text-center py-20 bg-white border border-neutral-100 rounded-[3rem] shadow-sm">
+          <div className="text-center py-20 bg-white border border-[#EAE4DC] rounded-[2rem] shadow-xs">
             <Gift className="mx-auto text-neutral-200 mb-4" size={48} />
-            <p className="text-neutral-400 font-medium">Nenhum kit pronto disponível no momento.</p>
+            <p className="text-[#8c7864] font-medium">Nenhum kit pronto disponível no momento.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">

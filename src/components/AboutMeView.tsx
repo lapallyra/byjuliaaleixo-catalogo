@@ -32,8 +32,11 @@ export const AboutMeView: React.FC = () => {
   const photo = aboutSettings?.about_me_photo || "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?q=80&w=800&auto=format&fit=crop";
 
   return (
-    <div className="bg-[#fffdfa] min-h-screen text-[#6d5443] font-sans selection:bg-[#e8dcc8] selection:text-[#3A312D] py-12 px-6 md:px-12 select-none overflow-x-hidden">
-      <div className="max-w-5xl mx-auto">
+    <div className="bg-[#FFF9F6] min-h-screen text-[#6d5443] font-sans selection:bg-[#e8dcc8] selection:text-[#3A312D] py-12 px-6 select-none overflow-x-hidden relative">
+      {/* BACKGROUND GRAPHICS */}
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
+      
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         
         {/* BACK ACTION */}
         <button 
@@ -84,34 +87,34 @@ export const AboutMeView: React.FC = () => {
             </motion.div>
 
             {/* RIGHT: TEXT PROFILE */}
-            <div className="md:col-span-7 space-y-8 text-gray-700 leading-relaxed text-sm">
+            <div className="md:col-span-7 space-y-8 text-[#6d5443] leading-relaxed text-sm">
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="bg-white border border-[#e8dcc8]/50 rounded-[2rem] p-8 md:p-10 shadow-xs space-y-4"
+                className="space-y-6"
               >
-                <div className="flex items-center gap-3 text-[#cca062] mb-2">
+                <div className="flex items-center gap-3 text-[#cca062]">
                   <Smile size={24} />
                   <h2 id="about-me-greeting" className="font-serif text-xl sm:text-2xl text-[#6d5443] tracking-wide font-normal">
                     {title}
                   </h2>
                 </div>
                 
-                <p className="whitespace-pre-line text-gray-600 font-medium">
+                <p className="whitespace-pre-line text-gray-700 font-medium text-sm leading-relaxed">
                   {bio}
                 </p>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-                  <div className="border border-[#e8dcc8]/40 rounded-2xl p-4 bg-[#fffdfa]/65">
+                  <div className="border border-[#e8dcc8]/40 rounded-2xl p-4 bg-white/60 shadow-xs">
                     <h4 className="font-bold text-[#cca062] text-[10px] uppercase tracking-wider mb-1">La Pallyra</h4>
                     <p className="text-[11px] text-gray-500 leading-relaxed">Encadernações e papelaria afetiva para organizar e guardar ideias.</p>
                   </div>
-                  <div className="border border-[#e8dcc8]/40 rounded-2xl p-4 bg-[#fffdfa]/65">
+                  <div className="border border-[#e8dcc8]/40 rounded-2xl p-4 bg-white/60 shadow-xs">
                     <h4 className="font-bold text-[#5b2122] text-[10px] uppercase tracking-wider mb-1">Guennita</h4>
                     <p className="text-[11px] text-gray-500 leading-relaxed">Romantismo infinito em delicados buquês de cetim exclusivos.</p>
                   </div>
-                  <div className="border border-[#e8dcc8]/40 rounded-2xl p-4 bg-[#fffdfa]/65">
+                  <div className="border border-[#e8dcc8]/40 rounded-2xl p-4 bg-white/60 shadow-xs">
                     <h4 className="font-bold text-[#c96b71] text-[10px] uppercase tracking-wider mb-1">Mimada Sim</h4>
                     <p className="text-[11px] text-gray-500 leading-relaxed">Lembranças criativas e alegres para decorar suas festas de alma.</p>
                   </div>
@@ -127,7 +130,7 @@ export const AboutMeView: React.FC = () => {
                 <h3 className="font-serif text-lg tracking-wider text-[#6d5443] flex items-center gap-2">
                   <Award size={18} className="text-[#cca062]" /> Nosso Propósito
                 </h3>
-                <p className="text-gray-600 leading-relaxed font-medium whitespace-pre-line">
+                <p className="text-gray-700 leading-relaxed font-medium whitespace-pre-line text-sm">
                   {purpose}
                 </p>
               </motion.div>

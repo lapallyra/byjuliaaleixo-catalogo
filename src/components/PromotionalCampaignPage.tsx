@@ -72,18 +72,21 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] selection:bg-[#EAE4DC] selection:text-[#1F1F1F]">
-      <header className="fixed top-0 inset-x-0 h-20 bg-[#FAF8F5]/80 backdrop-blur-xl z-50 border-b border-[#EAE4DC] flex items-center px-6">
+    <div className="min-h-screen bg-[#FFF9F6] selection:bg-[#EAE4DC] selection:text-[#1F1F1F] relative overflow-x-hidden select-none">
+      {/* BACKGROUND GRAPHICS */}
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
+
+      <header className="fixed top-0 inset-x-0 h-20 bg-[#FFF9F6]/80 backdrop-blur-xl z-50 border-b border-[#EAE4DC] flex items-center px-4 sm:px-6">
         <button
           onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-full bg-white border border-[#EAE4DC] flex items-center justify-center text-[#1F1F1F] hover:bg-[#F4EFE8] transition-colors"
+          className="w-10 h-10 rounded-full bg-white border border-[#EAE4DC] flex items-center justify-center text-[#1F1F1F] hover:bg-[#F4EFE8] transition-colors cursor-pointer"
         >
           <ArrowLeft size={18} />
         </button>
-        <h1 className="ml-6 text-lg font-serif text-[#1F1F1F] truncate">{campaign.name}</h1>
+        <h1 className="ml-6 text-lg font-serif text-[#6d5443] truncate">{campaign.name}</h1>
       </header>
 
-      <main className="pt-20 pb-24">
+      <main className="pt-20 pb-24 relative z-10">
         {/* Banner Section */}
         <section 
           className="relative min-h-[40vh] md:min-h-[50vh] flex flex-col items-center justify-center p-8 overflow-hidden text-center"
@@ -94,9 +97,9 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
               <picture>
                 <source media="(max-width: 768px)" srcSet={campaign.bannerMobile || campaign.banner} />
                 <img 
-                  src={campaign.banner} 
-                  alt={campaign.name} 
-                  className="w-full h-full object-cover opacity-60 mix-blend-overlay"
+                   src={campaign.banner} 
+                   alt={campaign.name} 
+                   className="w-full h-full object-cover opacity-60 mix-blend-overlay"
                 />
               </picture>
               <div className="absolute inset-0 bg-black/30" />
@@ -137,7 +140,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
         </section>
 
         {!isActive ? (
-          <div className="max-w-xl mx-auto mt-16 p-8 bg-white border border-[#EAE4DC] rounded-3xl text-center shadow-sm">
+          <div className="max-w-xl mx-auto mt-16 p-8 bg-white border border-[#EAE4DC] rounded-3xl text-center shadow-xs">
             <div className="w-16 h-16 bg-[#F4EFE8] rounded-full flex items-center justify-center mx-auto mb-6 text-[#8A8A8A]">
               <Info size={24} />
             </div>
@@ -147,16 +150,16 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
             </p>
             <button
               onClick={() => navigate('/')}
-              className="bg-[#1F1F1F] text-white px-8 py-4 rounded-full font-sans text-xs uppercase tracking-widest hover:bg-[#333333] transition-colors"
+              className="bg-[#1F1F1F] text-white px-8 py-4 rounded-full font-sans text-xs uppercase tracking-widest hover:bg-[#333333] transition-colors cursor-pointer"
             >
               Ver Outros Produtos
             </button>
           </div>
         ) : (
-          <section className="max-w-[1400px] mx-auto px-6 mt-16">
+          <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-16">
             <div className="flex items-center gap-3 mb-12">
-              <ShoppingBag className="text-[#1F1F1F]" size={24} />
-              <h2 className="text-2xl font-serif text-[#1F1F1F]">
+              <ShoppingBag className="text-[#6d5443]" size={24} />
+              <h2 className="text-2xl font-serif text-[#6d5443]">
                 Produtos em Destaque
               </h2>
             </div>

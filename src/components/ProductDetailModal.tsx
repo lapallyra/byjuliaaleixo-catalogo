@@ -88,11 +88,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     });
   };
 
-  const productImages = product.images && product.images.length > 0 
-    ? product.images 
-    : [product.image, product.image_hover].filter(Boolean) as string[];
+  const productImages = [
+    product.image || product.main_image,
+    product.image_hover,
+    ...(product.images || [])
+  ].filter(Boolean) as string[];
   
-  const images = productImages.slice(0, 5); 
+  const images = productImages.filter((img, index, self) => self.indexOf(img) === index).slice(0, 5); 
   
   const wholesaleMinQty = product.wholesale_min_qty || 5;
   const isWholesaleActive = product.isWholesaleEnabled && quantity >= wholesaleMinQty && product.wholesale_price > 0;
@@ -497,6 +499,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
           )}
 
+          {uploadError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-semibold mb-2">
+              {uploadError}
+            </div>
+          )}
+
           <div className="flex items-center justify-between gap-4 pt-1">
             <div>
               <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Valor Total</p>
@@ -507,6 +515,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
             <button
               onClick={() => {
+                // Validate required personalization fields
+                if (product.personalizationSettings) {
+                  for (const field of product.personalizationSettings) {
+                    if (field.isRequired && !personalizationValues[field.id]?.trim()) {
+                      setUploadError(`Por favor, preencha o campo obrigatório "${field.label}"`);
+                      return;
+                    }
+                  }
+                }
+
                 const selectedVariationString = Object.entries(selectedVariations)
                   .map(([varName, optName]) => `${varName}: ${optName}`)
                   .join(', ');
@@ -520,7 +538,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 onAddToCart(packedProduct, quantity);
                 onClose();
               }}
-              className="flex-grow px-6 py-4 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg shadow-neutral-200 active:scale-95 flex items-center justify-center gap-2"
+              className={`flex-grow px-6 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${theme.btnPrimary}`}
             >
               <ShoppingCart size={14} />
               {isKitConstructor ? 'Adicionar ao Kit' : 'Adicionar à Sacola'}

@@ -13,8 +13,8 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
   const navigate = useNavigate();
 
   return (
-    <footer className="bg-white border-t border-[#e8dcc8]/25 pt-16 pb-10 px-4 md:px-8 font-sans overflow-hidden mt-auto">
-      <div className="max-w-[1700px] mx-auto flex flex-col md:flex-row justify-between gap-8 mb-10">
+    <footer className="bg-[#FCFAF7] border-t border-[#C8A165]/20 pt-16 pb-10 px-4 md:px-8 font-sans overflow-hidden mt-auto">
+      <div className="max-w-[1850px] mx-auto flex flex-col md:flex-row justify-between gap-8 mb-10">
         <div className="md:w-[20%] flex flex-col items-center md:items-start text-center md:text-left">
           <div className="mb-4 flex flex-col items-center md:items-start cursor-pointer hover:opacity-90 transition-opacity" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <LogoAndSignature small={true} />
@@ -45,7 +45,7 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
              <li><a href="/#kits" className="hover:text-[#cca062] transition-colors">Kits Prontos</a></li>
              <li><button onClick={() => navigate('/kit-meukit')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Monte seu Kit</button></li>
              <li><button onClick={() => navigate('/colecoes')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Coleções</button></li>
-             <li><button onClick={() => navigate('/listadepresentes-info')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Lista de Presentes</button></li>
+             <li><button onClick={() => navigate('/listadepresentes')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Lista de Presentes</button></li>
            </ul>
         </div>
         

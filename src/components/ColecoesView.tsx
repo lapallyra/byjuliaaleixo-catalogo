@@ -201,8 +201,11 @@ export const ColecoesView: React.FC<ColecoesViewProps> = ({ allProducts = [] }) 
   );
 
   return (
-    <div className="bg-[#fffdfa] min-h-screen text-[#6d5443] font-sans selection:bg-[#e8dcc8] selection:text-[#3A312D] py-12 px-6 md:px-12 select-none overflow-x-hidden">
-      <div className="max-w-5xl mx-auto">
+    <div className="bg-[#FFF9F6] min-h-screen text-[#6d5443] font-sans selection:bg-[#e8dcc8] selection:text-[#3A312D] py-12 px-6 select-none overflow-x-hidden relative">
+      {/* BACKGROUND GRAPHICS */}
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
+      
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         
         {/* BACK TO HOME */}
         <button 

@@ -215,7 +215,7 @@ export function CommemorativeBanner({ allProducts = [], onSearch }: Commemorativ
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 10 }}
-        className="relative w-full overflow-hidden bg-white flex flex-col pt-4 pb-7 px-6 md:px-12 select-none min-h-[200px] md:min-h-[250px]"
+        className="relative w-full overflow-hidden bg-[#FFF9F6] flex flex-col pt-4 pb-7 px-2 md:px-4 select-none min-h-[200px] md:min-h-[250px]"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onTouchStart={onTouchStart}
@@ -247,25 +247,25 @@ export function CommemorativeBanner({ allProducts = [], onSearch }: Commemorativ
                 </motion.div>
               );
             })() : (
-              <div className="absolute inset-0 bg-white flex items-center justify-center">
+              <div className="absolute inset-0 bg-[#FFF9F6] flex items-center justify-center">
                 <span className="font-mea-culpa text-2xl text-[#8C7864]/40">Coleção Especial</span>
               </div>
             )}
           </AnimatePresence>
 
           {/* DEGRADÊ EXTREMAMENTE SUAVE: Elimina a divisão perceptível entre texto e imagem */}
-          {/* Desktop Transition (Left-to-Right) */}
+          {/* Desktop Transition (Left-to-Right + Bottom Fade) */}
           <div 
             className="absolute inset-0 pointer-events-none z-20 hidden md:block"
             style={{
-              background: 'linear-gradient(to right, #FFFFFF 0%, rgba(255, 255, 255, 0.98) 12%, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.5) 60%, rgba(255, 255, 255, 0) 100%)'
+              background: 'linear-gradient(to right, #FFF9F6 0%, rgba(255, 249, 246, 0.98) 12%, rgba(255, 249, 246, 0.9) 25%, rgba(255, 249, 246, 0.5) 60%, rgba(255, 249, 246, 0) 100%), linear-gradient(to top, #FCFAF7 0%, transparent 20%)'
             }}
           />
-          {/* Mobile Transition (Top-to-Bottom) */}
+          {/* Mobile Transition (Top-to-Bottom + Bottom Fade) */}
           <div 
             className="absolute inset-0 pointer-events-none z-20 block md:hidden"
             style={{
-              background: 'linear-gradient(to bottom, #FFFFFF 0%, rgba(255, 255, 255, 0.95) 20%, rgba(255, 255, 255, 0.7) 45%, rgba(255, 255, 255, 0) 100%)'
+              background: 'linear-gradient(to bottom, #FFF9F6 0%, rgba(255, 249, 246, 0.95) 20%, rgba(255, 249, 246, 0.7) 45%, rgba(255, 249, 246, 0) 100%), linear-gradient(to top, #FCFAF7 0%, transparent 15%)'
             }}
           />
         </div>
@@ -276,7 +276,7 @@ export function CommemorativeBanner({ allProducts = [], onSearch }: Commemorativ
         </div>
 
         {/* Conteúdo sobreposto */}
-        <div className="relative z-20 w-full flex flex-col justify-between flex-grow">
+        <div className="relative z-20 w-full flex flex-col justify-between flex-grow px-2 md:px-4">
           
           <AnimatePresence mode="wait">
             <motion.div

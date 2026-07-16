@@ -39,7 +39,21 @@ async function startServer() {
   app.post("/api/createPreference", async (req, res) => {
     console.log("HIT /api/createPreference POST", req.body);
     try {
-      const accessToken = req.body.accessToken || process.env.MERCADOPAGO_ACCESS_TOKEN;
+      let accessToken = req.body.accessToken || process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN;
+      if (!accessToken) {
+        const companyId = req.body.companyId || "pallyra";
+        const settingsSnap = await dbAdmin.collection("settings").doc(companyId).get();
+        if (settingsSnap.exists) {
+          accessToken = settingsSnap.data()?.mercadopago_token;
+        }
+        if (!accessToken) {
+          const globalSnap = await dbAdmin.collection("settings").doc("global").get();
+          if (globalSnap.exists) {
+            accessToken = globalSnap.data()?.mercadopago_token;
+          }
+        }
+      }
+
       if (!accessToken) {
         throw new Error("MERCADOPAGO_ACCESS_TOKEN is missing. Please configure it in the Admin Settings.");
       }
@@ -157,7 +171,7 @@ async function startServer() {
     app.use(vite.middlewares);
 
     // Fallback for SPA routing in development
-    app.get("*", async (req, res, next) => {
+    app.get(/.*/, async (req, res, next) => {
       // Don't intercept API calls or static assets/file requests with extensions
       if (req.originalUrl.startsWith("/api") || req.originalUrl.includes(".")) {
         return next();
@@ -187,7 +201,7 @@ async function startServer() {
 
     app.use(express.static(distPath));
     // Use standard catch-all to guarantee direct navigation to SPA paths (e.g. /admin) never 404
-    app.get("*", (req, res) => {
+    app.get(/.*/, (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'), (err) => {
         if (err) {
           console.error(`Error sending index.html from "${distPath}":`, err);

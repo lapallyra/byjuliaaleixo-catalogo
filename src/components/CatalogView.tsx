@@ -514,7 +514,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       if (list) {
         setIsSearchingList(false);
         setListSearchCode('');
-        navigate(`/listadepresentes/${list.code}`);
+        navigate(`/consulta/${list.code}`);
       } else {
         setToast({ message: "Lista não encontrada. Verifique o código.", type: 'success' });
       }
@@ -886,7 +886,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
               {!selectedCategory && !searchQuery && highlights.length > 0 && (
                 <div ref={highlightsScrollRef} className="border-b border-[#e8dcc8]/10 pb-4">
-                  <div className="max-w-[1600px] mx-auto px-4 pt-6 pb-2 text-left">
+                  <div className="max-w-[1850px] mx-auto px-4 pt-6 pb-2 text-left">
                     <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
                       Lançamentos
                     </span>
@@ -913,7 +913,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   if (campaignProducts.length === 0) return null;
                   return (
                     <div key={camp.id} className="border-b border-[#e8dcc8]/10 pb-4 mt-4">
-                      <div className="max-w-[1600px] mx-auto px-4 pt-6 pb-2 text-left">
+                      <div className="max-w-[1850px] mx-auto px-4 pt-6 pb-2 text-left">
                         <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
                           {camp.subtitle || "Seleção Exclusiva"}
                         </span>
@@ -943,7 +943,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   const highlightProd = companyProducts.find(p => p.id === camp.highlightProductId);
                   if (!highlightProd) return null;
                   return (
-                    <div key={camp.id} className="max-w-[1600px] mx-auto px-4 py-8 border-b border-[#e8dcc8]/10">
+                    <div key={camp.id} className="max-w-[1850px] mx-auto px-4 py-8 border-b border-[#e8dcc8]/10">
                       <div className="bg-white rounded-3xl p-6 md:p-12 border border-[#e8dcc8]/35 shadow-xs flex flex-col md:flex-row items-center gap-8 md:gap-16">
                         <div className="w-full md:w-1/2 aspect-square rounded-2xl overflow-hidden bg-neutral-50 border border-neutral-100">
                           <img src={highlightProd.image} className="w-full h-full object-cover hover:scale-103 transition-transform duration-500" referrerPolicy="no-referrer" />
@@ -996,7 +996,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               {/* Main Scroll Content */}
               <main className="p-2 md:p-4 relative">
 
-                <div className="max-w-[1600px] mx-auto h-full flex flex-col pt-4">
+                <div className="max-w-[1850px] mx-auto h-full flex flex-col pt-4">
                   
                   <CatalogInfoBar 
                     selectedCategory={selectedCategory}
@@ -1141,7 +1141,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
     {/* Footer Legal & Copyright - Full Width and Side-by-Side */}
     <footer className={`flex-shrink-0 w-full pt-10 pb-20 border-t ${theme.borderLine} text-center space-y-4 px-6 bg-white/80 backdrop-blur-md relative z-10`}>
-        <div className="max-w-[1600px] mx-auto">
+        <div className="max-w-[1850px] mx-auto">
           <p className={`text-[8px] font-sans font-black tracking-[0.3em] mb-4 uppercase text-neutral-800 opacity-60 text-center`}>Avisos Legais, Direitos e Produção</p>
           <p className="text-[9px] leading-relaxed font-medium font-sans text-neutral-500 max-w-5xl mx-auto text-center px-4">
             Ao realizar um pedido em nossa plataforma, você consente com os termos regulados de confecção artesanal exclusiva. O ciclo de produção e entrega dos produtos sob encomenda respeita o prazo especificado em cada item, dependendo da especificidade, complexidade e ordem de fila de solicitações do ateliê. As fotografias são meramente ilustrativas e editoriais; cores e acabamentos podem sofrer mudanças de cor dependendo da configuração de seu dispositivo. Dados de faturamento coletados operam sob conformidade e proteção legal vigentes.

@@ -73,12 +73,26 @@ export function CompanyCatalogWrapper({
   }, [location.search, config, navigate, location.pathname, handleClearCart]);
   
   const handleAddToCart = (product: Product, quantity: number = 1) => {
+    // Generate a unique ID for different configurations of variations or personalizations
+    const variationKey = (product as any).selectedVariation || "";
+    const personalizationKey = (product as any).personalizationValues 
+      ? Object.entries((product as any).personalizationValues).map(([k, v]) => `${k}:${v}`).join(',')
+      : "";
+    const addonKey = (product as any).selectedAddons 
+      ? (product as any).selectedAddons.join(',') 
+      : "";
+    
+    // Create unique cart item ID
+    const cartItemId = [product.id, variationKey, personalizationKey, addonKey]
+      .filter(Boolean)
+      .join('_');
+
     setCart((prev: CartItem[]) => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
+      const existingIdx = prev.findIndex(item => item.id === cartItemId);
+      if (existingIdx > -1) {
+        return prev.map((item, idx) => idx === existingIdx ? { ...item, quantity: item.quantity + quantity } : item);
       }
-      return [...prev, { ...product, quantity }];
+      return [...prev, { ...product, id: cartItemId, productId: product.id, quantity }];
     });
   };
 

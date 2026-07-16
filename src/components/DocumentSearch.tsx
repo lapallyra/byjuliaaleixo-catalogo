@@ -40,7 +40,7 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
     const { data: fetchedList, status } = await getGiftListWithStatus(searchVal);
     if (status === 'found' && fetchedList) {
       setLoading(false);
-      navigate(`/listadepresentes/${fetchedList.code}`);
+      navigate(`/consulta/${fetchedList.code}`);
       return;
     } else if (status === 'expired') {
       setError('Esta lista de presentes expirou (mais de 60 dias).');

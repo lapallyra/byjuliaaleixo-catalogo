@@ -257,10 +257,63 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                        
                        {/* Render Selections */}
                        {(item.selectedVariation || (item.selectedAddons && item.selectedAddons.length > 0) || item.personalizationValues) && (
-                         <div className={`text-[10px] ${theme.textSecondary} space-y-0.5 opacity-80 leading-tight`}>
-                           {item.selectedVariation && <p className="truncate">{item.selectedVariation}</p>}
-                           {item.selectedAddons && item.selectedAddons.length > 0 && <p className="truncate">+{item.selectedAddons.length} Serv. Adicional(is)</p>}
-                           {item.personalizationValues && Object.keys(item.personalizationValues).length > 0 && <p className="truncate">Personalizado</p>}
+                         <div className={`text-[10px] ${theme.textSecondary} space-y-1 opacity-90 leading-normal border-t ${theme.borderLine} pt-1.5 mt-1.5`}>
+                           {item.selectedVariation && (
+                             <p className="font-semibold text-slate-800">Variação: <span className="font-normal">{item.selectedVariation}</span></p>
+                           )}
+                           
+                           {item.selectedAddons && item.selectedAddons.length > 0 && (
+                             <p className="font-semibold text-slate-800">
+                               Serviços: <span className="font-normal">+{item.selectedAddons.length} Adicional(is)</span>
+                             </p>
+                           )}
+
+                           {item.personalizationValues && Object.keys(item.personalizationValues).length > 0 && (
+                             <div className="space-y-1">
+                               <p className="font-bold text-rose-500 uppercase tracking-wider text-[8px]">Personalização:</p>
+                               {item.personalizationSettings?.map((setting) => {
+                                 const val = item.personalizationValues?.[setting.id];
+                                 if (!val) return null;
+
+                                 if (setting.type === 'image') {
+                                   const imgUrls = val.split(',').filter(Boolean);
+                                   if (imgUrls.length === 0) return null;
+                                   return (
+                                     <div key={setting.id} className="flex items-center gap-1.5 mt-0.5">
+                                       <span className="font-semibold">{setting.label}:</span>
+                                       <div className="flex gap-1">
+                                         {imgUrls.map((url, uIdx) => (
+                                           <a 
+                                             key={uIdx} 
+                                             href={url} 
+                                             target="_blank" 
+                                             referrerPolicy="no-referrer"
+                                             rel="noreferrer" 
+                                             className="w-5 h-5 rounded border border-black/10 overflow-hidden block hover:scale-105 transition-transform"
+                                           >
+                                             <img src={url} alt="Ref" className="w-full h-full object-cover" />
+                                           </a>
+                                         ))}
+                                       </div>
+                                     </div>
+                                   );
+                                 }
+
+                                 return (
+                                   <p key={setting.id} className="text-[10px] text-slate-700">
+                                     <span className="font-semibold">{setting.label}:</span> {val}
+                                   </p>
+                                 );
+                               })}
+
+                               {/* Fallback in case settings are missing but values exist */}
+                               {!item.personalizationSettings && Object.entries(item.personalizationValues).map(([k, v]) => (
+                                 <p key={k} className="text-[10px] text-slate-700">
+                                   <span className="font-semibold">{k}:</span> {v}
+                                 </p>
+                               ))}
+                             </div>
+                           )}
                          </div>
                        )}
 

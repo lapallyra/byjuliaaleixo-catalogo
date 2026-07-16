@@ -18,7 +18,9 @@ import {
   FileText,
   Copy,
   Clock,
-  Lock
+  Lock,
+  Upload,
+  X
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
@@ -43,6 +45,8 @@ import {
 } from "../types";
 import { useAuth } from "./AuthProvider";
 import { getPublicAtelierImage } from "../utils/atelierImage";
+import { db } from "../lib/firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 interface CheckoutPageProps {
   config: AppConfig;
@@ -53,7 +57,9 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [isAdjusting, setIsAdjusting] = useState(false);
+  const [adjustmentComment, setAdjustmentComment] = useState("");
   const [order, setOrder] = useState<Partial<Order> | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -191,20 +197,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
               }
 
               // Permission Logic
-              if (!isAdmin) {
-                // Clients start at Step 2
-                if (fetchedStatus === "paid" || fetchedStatus === "waiting_payment" || paymentStatusFromUrl) {
-                  setStep(3);
-                } else {
-                  setStep(2);
-                }
+              // Sequences always progress: 1 Personalização → 2 Dados e Endereço → 3 Revisão → 4 Pagamento
+              if (fetchedStatus === "paid" || fetched.paymentStatus === "paid" || paymentStatusFromUrl === "approved" || paymentStatusFromUrl === "success") {
+                setStep(4);
               } else {
-                // Admin can jump steps based on status
-                if (fetchedStatus === "waiting_payment" || fetchedStatus === "paid" || paymentStatusFromUrl) {
-                  setStep(3);
-                } else {
-                  setStep(1);
-                }
+                setStep(1);
               }
             } else {
               // Not found
@@ -715,7 +712,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           </div>
 
           <div className="flex items-center gap-2">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3, 4].map((s) => (
               <div 
                 key={s}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
@@ -728,7 +725,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
               >
                 <span className="text-[10px] font-black">{s}</span>
                 <span className="text-[9px] font-black uppercase tracking-widest hidden md:inline">
-                  {s === 1 ? "Pedido" : s === 2 ? "Cadastro" : "Pagamento"}
+                  {s === 1 ? "Personalização" : s === 2 ? "Dados e Endereço" : s === 3 ? "Revisão" : "Pagamento"}
                 </span>
                 {step > s && <CheckCircle2 size={12} />}
               </div>
@@ -738,69 +735,488 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
       </header>
 
       <main className="max-w-7xl mx-auto p-6 md:p-8 mt-4">
-        {step === 1 && isAdmin && (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            <div className="xl:col-span-2 space-y-8">
-              <section className="bg-white rounded-[2.5rem] p-8 border border-lilac/10 shadow-sm">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-3">
-                    <Users size={16} className="text-lilac" /> 1. Cliente
-                  </h2>
-                  <button 
-                    onClick={() => setIsCreatingCustomer(!isCreatingCustomer)}
-                    className={`text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all ${
-                      isCreatingCustomer ? "bg-rose-50 text-rose-500" : "bg-lilac/5 text-lilac hover:bg-lilac/10"
-                    }`}
-                  >
-                    {isCreatingCustomer ? "Cancelar" : "+ Novo Cliente"}
-                  </button>
-                </div>
-
-                {isCreatingCustomer ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Completo</label>
-                      <input 
-                        type="text" 
-                        placeholder="Nome do cliente"
-                        className="w-full bg-[#FAF9F6] border border-lilac/10 rounded-2xl px-6 py-4 text-sm font-bold focus:border-lilac outline-none transition-all"
-                        value={newCustomerData.name}
-                        onChange={(e) => setNewCustomerData({ ...newCustomerData, name: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">WhatsApp</label>
-                      <input 
-                        type="text" 
-                        placeholder="(00) 0 0000-0000"
-                        className="w-full bg-[#FAF9F6] border border-lilac/10 rounded-2xl px-6 py-4 text-sm font-bold focus:border-lilac outline-none transition-all"
-                        value={newCustomerData.contact}
-                        onChange={(e) => setNewCustomerData({ ...newCustomerData, contact: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                    <select
-                      className="w-full pl-16 pr-6 py-5 bg-[#FAF9F6] border border-lilac/10 rounded-[1.5rem] text-sm font-bold appearance-none focus:border-lilac outline-none transition-all cursor-pointer"
-                      value={selectedCustomerId}
-                      onChange={(e) => setSelectedCustomerId(e.target.value)}
+        {step === 1 && (
+          urlId === "new" && isAdmin ? (
+            // Original Admin new order creation panel
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+              <div className="xl:col-span-2 space-y-8">
+                <section className="bg-white rounded-[2.5rem] p-8 border border-lilac/10 shadow-sm">
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-3">
+                      <Users size={16} className="text-lilac" /> 1. Cliente
+                    </h2>
+                    <button 
+                      onClick={() => setIsCreatingCustomer(!isCreatingCustomer)}
+                      className={`text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all ${
+                        isCreatingCustomer ? "bg-rose-50 text-rose-500" : "bg-lilac/5 text-lilac hover:bg-lilac/10"
+                      }`}
                     >
-                      <option value="">Buscar cliente na lista...</option>
-                      {allCustomers.map(c => (
-                        <option key={c.id} value={c.id}>{c.name} - {c.contact}</option>
-                      ))}
-                    </select>
+                      {isCreatingCustomer ? "Cancelar" : "+ Novo Cliente"}
+                    </button>
                   </div>
-                )}
-              </section>
-              {renderProductList(false)}
+
+                  {isCreatingCustomer ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome Completo</label>
+                        <input 
+                          type="text" 
+                          placeholder="Nome do cliente"
+                          className="w-full bg-[#FAF9F6] border border-lilac/10 rounded-2xl px-6 py-4 text-sm font-bold focus:border-lilac outline-none transition-all"
+                          value={newCustomerData.name}
+                          onChange={(e) => setNewCustomerData({ ...newCustomerData, name: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">WhatsApp</label>
+                        <input 
+                          type="text" 
+                          placeholder="(00) 0 0000-0000"
+                          className="w-full bg-[#FAF9F6] border border-lilac/10 rounded-2xl px-6 py-4 text-sm font-bold focus:border-lilac outline-none transition-all"
+                          value={newCustomerData.contact}
+                          onChange={(e) => setNewCustomerData({ ...newCustomerData, contact: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                      <select
+                        className="w-full pl-16 pr-6 py-5 bg-[#FAF9F6] border border-lilac/10 rounded-[1.5rem] text-sm font-bold appearance-none focus:border-lilac outline-none transition-all cursor-pointer"
+                        value={selectedCustomerId}
+                        onChange={(e) => setSelectedCustomerId(e.target.value)}
+                      >
+                        <option value="">Buscar cliente na lista...</option>
+                        {allCustomers.map(c => (
+                          <option key={c.id} value={c.id}>{c.name} - {c.contact}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </section>
+                {renderProductList(false)}
+              </div>
+              <div className="space-y-8">
+                {renderFinancialSummary(false)}
+              </div>
             </div>
-            <div className="space-y-8">
-              {renderFinancialSummary(false)}
-            </div>
-          </div>
+          ) : (
+            // Existing order: Client/Admin Personalization & Approvals flow
+            (() => {
+              const orderHasPersonalization = items.some(item => {
+                const p = allProducts.find(prod => prod.id === item.productId || prod.id === item.id);
+                return p?.personalizationSettings && p.personalizationSettings.length > 0;
+              });
+
+              if (!orderHasPersonalization) {
+                // Requirement 2: Keep step 1 visible, fields disabled, friendly message
+                return (
+                  <div className="max-w-4xl mx-auto bg-white rounded-[2.5rem] border border-lilac/10 p-8 sm:p-12 text-center space-y-8 shadow-sm">
+                    <div className="w-20 h-20 bg-lilac/5 rounded-full flex items-center justify-center text-lilac mx-auto">
+                      <Package size={36} />
+                    </div>
+                    <div className="space-y-3">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-lilac bg-lilac/5 px-5 py-2 rounded-full inline-block">
+                        Etapa 01: Personalização
+                      </span>
+                      <h2 className="text-2xl font-black uppercase text-slate-900 tracking-tight">
+                        Personalização Não Necessária
+                      </h2>
+                      <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed font-medium">
+                        Este produto ou os itens selecionados não necessitam de personalização ou customizações de arte adicionais. Você pode avançar diretamente para o preenchimento de seus dados de entrega.
+                      </p>
+                    </div>
+                    <div className="pt-4 flex justify-center">
+                      <button
+                        onClick={() => setStep(2)}
+                        className="bg-slate-900 hover:bg-slate-800 text-white font-black text-[10px] uppercase tracking-widest py-5 px-10 rounded-2xl transition-all shadow-md flex items-center gap-2"
+                      >
+                        <span>Avançar para Dados e Endereço</span>
+                        <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Requirement 3: Admin created order has "Approved / Adjustments" flow
+              if (order?.source === "admin" || (order?.source as any) === "quote" || (order?.source as any) === "internal") {
+                return (
+                  <div className="max-w-4xl mx-auto bg-white rounded-[2.5rem] border border-lilac/10 p-8 sm:p-12 space-y-8 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-lilac/15 pb-6">
+                      <div>
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-lilac bg-lilac/5 px-4 py-1.5 rounded-full inline-block mb-2">
+                          Etapa 01: Personalização
+                        </span>
+                        <h2 className="text-2xl font-black uppercase text-slate-900 tracking-tight">
+                          Aprovação de Arte e Personalização
+                        </h2>
+                      </div>
+                      <div className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                        order?.approvalStatus === 'approved' 
+                          ? 'bg-emerald-50 text-emerald-600' 
+                          : order?.approvalStatus === 'adjustments_requested'
+                            ? 'bg-amber-50 text-amber-600'
+                            : 'bg-blue-50 text-blue-600'
+                      }`}>
+                        {order?.approvalStatus === 'approved' 
+                          ? 'Aprovada' 
+                          : order?.approvalStatus === 'adjustments_requested'
+                            ? 'Ajustes Solicitados'
+                            : 'Pendente de Aprovação'}
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Resumo dos Itens Personalizados:</h3>
+                      <div className="space-y-4">
+                        {items.map((item, idx) => (
+                          <div key={item.id || idx} className="p-5 bg-[#FAF9F6] border border-lilac/10 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                              <img src={item.image} className="w-12 h-12 rounded-xl object-cover border border-lilac/10" />
+                              <div>
+                                <p className="text-sm font-black text-slate-900 uppercase">{item.product_name}</p>
+                                <p className="text-[10px] font-bold text-lilac">Qtd: {item.quantity}</p>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              {item.personalizationValues && Object.keys(item.personalizationValues).length > 0 ? (
+                                Object.entries(item.personalizationValues).map(([key, val]) => {
+                                  const prod = allProducts.find(p => p.id === item.productId || p.id === item.id);
+                                  const field = (prod?.personalizationSettings || item.personalizationSettings)?.find(s => s.id === key);
+                                  const label = field?.label || key;
+                                  
+                                  if (field?.type === 'image') {
+                                    const imgUrls = val.split(',').filter(Boolean);
+                                    if (imgUrls.length === 0) return null;
+                                    return (
+                                      <div key={key} className="text-xs text-slate-700 font-medium flex items-center gap-1.5 mt-1">
+                                        <span className="font-bold uppercase text-[9px] text-slate-400 mr-1">{label}:</span>
+                                        <div className="flex gap-1">
+                                          {imgUrls.map((url, uIdx) => (
+                                            <a 
+                                              key={uIdx} 
+                                              href={url} 
+                                              target="_blank" 
+                                              referrerPolicy="no-referrer"
+                                              rel="noreferrer" 
+                                              className="w-6 h-6 rounded border border-black/10 overflow-hidden block hover:scale-105 transition-transform"
+                                            >
+                                              <img src={url} alt="Ref" className="w-full h-full object-cover" />
+                                            </a>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <p key={key} className="text-xs text-slate-700 font-medium">
+                                      <span className="font-bold uppercase text-[9px] text-slate-400 mr-1">{label}:</span> {val}
+                                    </p>
+                                  );
+                                })
+                              ) : (
+                                <p className="text-xs italic text-slate-400">Personalização descrita em observações gerais.</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {order?.observations && (
+                      <div className="p-6 bg-slate-50 border border-slate-100 rounded-2xl">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Instruções de Arte Adicionais:</h4>
+                        <p className="text-xs font-semibold text-slate-700 whitespace-pre-wrap">{order.observations}</p>
+                      </div>
+                    )}
+
+                    <div className="pt-6 border-t border-lilac/10 space-y-4">
+                      {order?.approvalStatus !== 'approved' ? (
+                        <>
+                          <div className="flex flex-col sm:flex-row gap-4">
+                            <button
+                              onClick={async () => {
+                                if (order?.id) {
+                                  await updateOrder(order.id, { approvalStatus: 'approved' });
+                                  setOrder(prev => prev ? { ...prev, approvalStatus: 'approved' } : null);
+                                }
+                              }}
+                              className="flex-1 py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-md"
+                            >
+                              <CheckCircle2 size={16} /> Aprovar Arte e Continuar
+                            </button>
+                            <button
+                              onClick={() => setIsAdjusting(true)}
+                              className="flex-1 py-5 bg-white border border-rose-200 text-rose-500 hover:bg-rose-50 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm"
+                            >
+                              <AlertCircle size={16} /> Solicitar Ajustes de Arte
+                            </button>
+                          </div>
+
+                          {isAdjusting && (
+                            <div className="bg-[#FFF8F8] border border-rose-100 p-6 rounded-3xl space-y-4 animate-in slide-in-from-top-4 duration-300">
+                              <label className="text-[9px] font-black text-rose-400 uppercase tracking-widest block">Descreva os Ajustes Desejados:</label>
+                              <textarea
+                                value={adjustmentComment}
+                                onChange={(e) => setAdjustmentComment(e.target.value)}
+                                rows={4}
+                                className="w-full bg-white border border-rose-100 rounded-2xl p-4 text-xs font-semibold outline-none focus:border-rose-350"
+                                placeholder="Por favor, detalhe o que deseja mudar na arte..."
+                              />
+                              <div className="flex gap-4">
+                                <button
+                                  onClick={async () => {
+                                    if (!order?.id || !adjustmentComment.trim()) return;
+                                    try {
+                                      const nextVersion = (order.currentVersion || 1) + 1;
+                                      await addDoc(collection(db, 'orders', order.id, 'versions'), {
+                                        orderId: order.id,
+                                        version: nextVersion,
+                                        data: order,
+                                        comment: adjustmentComment,
+                                        author: 'customer',
+                                        createdAt: serverTimestamp()
+                                      });
+                                      await updateOrder(order.id, { 
+                                        approvalStatus: 'adjustments_requested',
+                                        currentVersion: nextVersion 
+                                      });
+                                      setOrder(prev => prev ? { ...prev, approvalStatus: 'adjustments_requested', currentVersion: nextVersion } : null);
+                                      setIsAdjusting(false);
+                                      setAdjustmentComment('');
+                                    } catch (e) {
+                                      console.error(e);
+                                    }
+                                  }}
+                                  className="px-6 py-3 bg-rose-500 text-white rounded-xl text-xs font-bold hover:bg-rose-600 transition-colors"
+                                >
+                                  Enviar Solicitação
+                                </button>
+                                <button
+                                  onClick={() => setIsAdjusting(false)}
+                                  className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition-colors"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="p-4 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-2xl flex items-center gap-3 text-xs font-semibold">
+                            <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
+                            <span>Arte aprovada com sucesso! Você pode avançar com o preenchimento dos dados.</span>
+                          </div>
+                          <div className="flex justify-end">
+                            <button
+                              onClick={() => setStep(2)}
+                              className="px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl flex items-center gap-2 transition-all shadow-md"
+                            >
+                              <span>Avançar para Cadastro</span> <ArrowRight size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+
+              // Standard catalog order with personalization: editable fields
+              return (
+                <div className="max-w-4xl mx-auto bg-white rounded-[2.5rem] border border-lilac/10 p-8 sm:p-12 space-y-8 shadow-sm">
+                  <div className="border-b border-lilac/15 pb-6">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-lilac bg-lilac/5 px-4 py-1.5 rounded-full inline-block mb-2">
+                      Etapa 01: Personalização
+                    </span>
+                    <h2 className="text-2xl font-black uppercase text-slate-900 tracking-tight">
+                      Personalização do seu Pedido
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-1 font-medium">Insira abaixo os dados de personalização para cada item:</p>
+                  </div>
+
+                  <div className="space-y-8">
+                    {items.map((item, idx) => {
+                      const p = allProducts.find(prod => prod.id === item.productId || prod.id === item.id);
+                      const hasFields = p?.personalizationSettings && p.personalizationSettings.length > 0;
+                      
+                      return (
+                        <div key={item.id || idx} className="p-6 bg-slate-50/50 border border-lilac/5 rounded-3xl space-y-6">
+                          <div className="flex items-center gap-4">
+                            <img src={item.image} className="w-12 h-12 rounded-xl object-cover border border-lilac/10" />
+                            <div>
+                              <h4 className="text-sm font-black text-slate-900 uppercase">{item.product_name}</h4>
+                              <p className="text-[10px] font-bold text-lilac">Código: #{item.code || item.id}</p>
+                            </div>
+                          </div>
+
+                          {hasFields ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {p.personalizationSettings.map(field => (
+                                <div key={field.id} className="space-y-2">
+                                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                    {field.label} {field.isRequired && <span className="text-rose-500">*</span>}
+                                  </label>
+                                  {field.type === 'select' ? (
+                                    <select
+                                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-lilac transition-all"
+                                      value={item.personalizationValues?.[field.id] || ""}
+                                      onChange={(e) => {
+                                        const updatedItems = [...items];
+                                        updatedItems[idx] = {
+                                          ...item,
+                                          personalizationValues: {
+                                            ...(item.personalizationValues || {}),
+                                            [field.id]: e.target.value
+                                          }
+                                        };
+                                        setItems(updatedItems);
+                                      }}
+                                    >
+                                      <option value="">Selecione uma opção...</option>
+                                      {field.options?.map((opt, oIdx) => (
+                                        <option key={oIdx} value={opt}>{opt}</option>
+                                      ))}
+                                    </select>
+                                  ) : field.type === 'image' ? (
+                                    <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200 text-left">
+                                      <div className="flex flex-wrap gap-2">
+                                        {(item.personalizationValues?.[field.id] || "").split(",").filter(Boolean).map((imgUrl, imgIdx) => (
+                                          <div key={imgIdx} className="relative w-14 h-14 rounded-xl overflow-hidden border border-slate-200 group bg-white shadow-xs">
+                                            <img src={imgUrl.trim()} alt="Ref" className="w-full h-full object-cover" />
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const currentUrls = (item.personalizationValues?.[field.id] || "").split(",").filter(Boolean);
+                                                const updatedUrls = currentUrls.filter((_, i) => i !== imgIdx);
+                                                const updatedItems = [...items];
+                                                updatedItems[idx] = {
+                                                  ...item,
+                                                  personalizationValues: {
+                                                    ...(item.personalizationValues || {}),
+                                                    [field.id]: updatedUrls.join(",")
+                                                  }
+                                                };
+                                                setItems(updatedItems);
+                                              }}
+                                              className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow-sm flex items-center justify-center transition-colors"
+                                            >
+                                              <X size={10} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      
+                                      {((item.personalizationValues?.[field.id] || "").split(",").filter(Boolean)).length < 2 && (
+                                        <div className="relative">
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            id={`checkout-upload-${item.id}-${field.id}`}
+                                            className="hidden"
+                                            onChange={async (e) => {
+                                              const file = e.target.files?.[0];
+                                              if (!file) return;
+                                              const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+                                              if (!allowedTypes.includes(file.type)) {
+                                                alert("Formato não suportado. PNG, JPG ou WEBP.");
+                                                return;
+                                              }
+                                              try {
+                                                const { compressImage, uploadImage } = await import("../services/firebaseStorageService");
+                                                const compressedFile = await compressImage(file);
+                                                const path = `sales_personalization/ref_${Date.now()}`;
+                                                const { promise } = uploadImage(compressedFile, path);
+                                                const url = await promise;
+                                                const currentUrls = (item.personalizationValues?.[field.id] || "").split(",").filter(Boolean);
+                                                const updatedUrls = [...currentUrls, url];
+                                                const updatedItems = [...items];
+                                                updatedItems[idx] = {
+                                                  ...item,
+                                                  personalizationValues: {
+                                                    ...(item.personalizationValues || {}),
+                                                    [field.id]: updatedUrls.join(",")
+                                                  }
+                                                };
+                                                setItems(updatedItems);
+                                              } catch (err) {
+                                                console.error(err);
+                                                alert("Erro ao enviar a imagem de referência.");
+                                              }
+                                            }}
+                                          />
+                                          <label
+                                            htmlFor={`checkout-upload-${item.id}-${field.id}`}
+                                            className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-50 cursor-pointer transition-colors"
+                                          >
+                                            <Upload size={12} />
+                                            <span>Adicionar Imagem</span>
+                                          </label>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <input
+                                      type="text"
+                                      className="w-full bg-white border border-lilac/10 rounded-2xl px-6 py-4 text-sm font-bold outline-none focus:border-lilac transition-all"
+                                      placeholder={field.placeholder || `Digite ${field.label.toLowerCase()}...`}
+                                      value={item.personalizationValues?.[field.id] || ""}
+                                      onChange={(e) => {
+                                        const updatedItems = [...items];
+                                        updatedItems[idx] = {
+                                          ...item,
+                                          personalizationValues: {
+                                            ...(item.personalizationValues || {}),
+                                            [field.id]: e.target.value
+                                          }
+                                        };
+                                        setItems(updatedItems);
+                                      }}
+                                    />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-slate-400 font-semibold italic">Este item específico não possui campos de personalização adicionais.</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="pt-6 border-t border-lilac/10 flex justify-end">
+                    <button
+                      onClick={() => {
+                        let isValid = true;
+                        for (const item of items) {
+                          const p = allProducts.find(prod => prod.id === item.productId || prod.id === item.id);
+                          if (p?.personalizationSettings) {
+                            for (const field of p.personalizationSettings) {
+                              if (field.isRequired && !item.personalizationValues?.[field.id]?.trim()) {
+                                alert(`O campo "${field.label}" é obrigatório para o produto "${item.product_name}".`);
+                                isValid = false;
+                                return;
+                              }
+                            }
+                          }
+                        }
+                        if (isValid) {
+                          setStep(2);
+                        }
+                      }}
+                      className="px-10 py-5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-md"
+                    >
+                      <span>Salvar e Avançar</span> <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })()
+          )
         )}
 
         {step === 2 && (
@@ -944,7 +1360,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           </div>
         )}
 
-        {step === 3 && (paymentRedirectStatus === 'success' || (isPaid && !paymentRedirectStatus)) ? (
+        {step === 4 && (paymentRedirectStatus === 'success' || (isPaid && !paymentRedirectStatus)) ? (
           <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] border border-emerald-100 p-8 sm:p-12 text-center space-y-8 shadow-md animate-in fade-in duration-300">
             <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mx-auto">
               <CheckCircle2 size={48} className="animate-pulse" />
@@ -1008,7 +1424,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
               </button>
             </div>
           </div>
-        ) : step === 3 && paymentRedirectStatus === 'pending' ? (
+        ) : step === 4 && paymentRedirectStatus === 'pending' ? (
           <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] border border-amber-100 p-8 sm:p-12 text-center space-y-8 shadow-md animate-in fade-in duration-300">
             <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 mx-auto">
               <Clock size={48} className="animate-pulse text-amber-500" />
@@ -1068,7 +1484,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
               </button>
             </div>
           </div>
-        ) : step === 3 && paymentRedirectStatus === 'failure' ? (
+        ) : step === 4 && paymentRedirectStatus === 'failure' ? (
           <div className="max-w-2xl mx-auto bg-white rounded-[2.5rem] border border-red-100 p-8 sm:p-12 text-center space-y-8 shadow-md animate-in fade-in duration-300">
             <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-500 mx-auto">
               <AlertCircle size={48} className="text-red-500" />
@@ -1102,7 +1518,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                 onClick={() => {
                   setPaymentRedirectStatus(null);
                   setIsPaid(false);
-                  setStep(3);
+                  setStep(4);
                 }}
                 className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-4 px-8 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
               >
@@ -1125,17 +1541,148 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
             </div>
           </div>
         ) : step === 3 ? (
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <section className="bg-white rounded-[2.5rem] p-8 sm:p-10 border border-lilac/10 shadow-sm text-center flex flex-col justify-start">
-               {/* Back to Step 2 */}
-               <div className="flex justify-start w-full mb-3">
-                 <button 
-                   onClick={() => setStep(2)}
-                   className="text-[9.5px] font-black uppercase tracking-widest text-[#6D5443] hover:text-[#111111] flex items-center gap-1 transition-all"
-                 >
-                   <ChevronLeft size={12} /> Voltar para Cadastro
-                 </button>
-               </div>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="xl:col-span-2 space-y-8">
+              {/* Back Button */}
+              <div className="flex justify-start w-full">
+                <button 
+                  onClick={() => setStep(2)}
+                  className="text-[9.5px] font-black uppercase tracking-widest text-[#6D5443] hover:text-[#111111] flex items-center gap-1 transition-all"
+                >
+                  <ChevronLeft size={12} /> Voltar para Dados e Endereço
+                </button>
+              </div>
+
+              {/* Bento Section for Reviewing all Data */}
+              <section className="bg-white rounded-[2.5rem] p-8 border border-lilac/10 shadow-sm text-left space-y-8">
+                <h2 className="text-sm font-black text-slate-900 uppercase tracking-[0.2em] pb-4 border-b border-slate-100 flex items-center gap-3">
+                  <FileText size={16} className="text-lilac" /> Revisão dos Seus Dados
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Customer Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Informações Pessoais</h3>
+                    <div className="space-y-2">
+                      <p className="text-xs text-slate-500 font-semibold uppercase">Nome Completo</p>
+                      <p className="text-sm font-bold text-slate-800">{customerForm.nome || 'Não informado'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs text-slate-500 font-semibold uppercase">WhatsApp / Contato</p>
+                      <p className="text-sm font-bold text-slate-800">{customerForm.contato || 'Não informado'}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs text-slate-500 font-semibold uppercase">CPF / CNPJ</p>
+                      <p className="text-sm font-bold text-slate-800">{customerForm.cpfCnpj || 'Não informado'}</p>
+                    </div>
+                  </div>
+
+                  {/* Delivery Address */}
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Endereço de Entrega</h3>
+                    <div className="space-y-2">
+                      <p className="text-xs text-slate-500 font-semibold uppercase">Rua, Número e Complemento</p>
+                      <p className="text-sm font-bold text-slate-800 uppercase">{customerForm.endereco || 'Retirada em loja / Ateliê'}, {customerForm.numero} {customerForm.complemento}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs text-slate-500 font-semibold uppercase">Cidade / Estado</p>
+                      <p className="text-sm font-bold text-slate-800 uppercase">{customerForm.cidade} {customerForm.estado ? `/ ${customerForm.estado}` : ''}</p>
+                    </div>
+                    {customerForm.cep && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-slate-500 font-semibold uppercase">CEP</p>
+                        <p className="text-sm font-bold font-mono text-lilac">{customerForm.cep}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Personalization Summary */}
+                <div className="space-y-4 pt-6 border-t border-slate-100">
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Personalizações Escolhidas</h3>
+                  <div className="space-y-3">
+                    {items.map((item, idx) => (
+                      <div key={item.id || idx} className="p-4 bg-[#FAF9F6] border border-lilac/5 rounded-2xl flex items-center justify-between">
+                        <span className="text-xs font-black text-slate-800 uppercase">{item.product_name}</span>
+                        <div className="text-right text-xs">
+                          {item.personalizationValues && Object.keys(item.personalizationValues).length > 0 ? (
+                            Object.entries(item.personalizationValues).map(([key, val]) => {
+                              const prod = allProducts.find(p => p.id === item.productId || p.id === item.id);
+                              const field = (prod?.personalizationSettings || item.personalizationSettings)?.find(s => s.id === key);
+                              const label = field?.label || key;
+                              
+                              if (field?.type === 'image') {
+                                const imgUrls = val.split(',').filter(Boolean);
+                                if (imgUrls.length === 0) return null;
+                                return (
+                                  <div key={key} className="flex items-center justify-end gap-1 mt-0.5">
+                                    <span className="font-bold uppercase text-[9px] text-slate-400 mr-1">{label}:</span>
+                                    <div className="flex gap-0.5">
+                                      {imgUrls.map((url, uIdx) => (
+                                        <a 
+                                          key={uIdx} 
+                                          href={url} 
+                                          target="_blank" 
+                                          referrerPolicy="no-referrer"
+                                          rel="noreferrer" 
+                                          className="w-5 h-5 rounded border border-black/10 overflow-hidden block hover:scale-105 transition-transform"
+                                        >
+                                          <img src={url} alt="Ref" className="w-full h-full object-cover" />
+                                        </a>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <p key={key} className="text-slate-600 font-medium">
+                                  <span className="font-bold uppercase text-[9px] text-slate-400 mr-1">{label}:</span> {val}
+                                </p>
+                              );
+                            })
+                          ) : (
+                            <span className="text-slate-400 italic">Sem campos adicionais</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {renderProductList(true)}
+            </div>
+
+            <div className="space-y-8">
+              {renderFinancialSummary(true)}
+
+              <section className="bg-white rounded-[2.5rem] p-8 border border-lilac/10 shadow-sm text-center space-y-4">
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  Ao avançar, seu pedido será reservado e você será direcionado para escolher o método de pagamento seguro (Pix ou Cartão de Crédito).
+                </p>
+                <button
+                  onClick={() => setStep(4)}
+                  className="w-full py-5 bg-slate-900 hover:bg-slate-800 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl transition-all shadow-md flex items-center justify-center gap-2"
+                >
+                  <span>Confirmar e Escolher Pagamento</span> <ArrowRight size={14} />
+                </button>
+              </section>
+            </div>
+          </div>
+        ) : step === 4 ? (
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="xl:col-span-2">
+              <section className="bg-white rounded-[2.5rem] p-8 sm:p-10 border border-lilac/10 shadow-sm text-center flex flex-col justify-start">
+                {/* Back to Step 3 */}
+                <div className="flex justify-start w-full mb-3">
+                  <button 
+                    onClick={() => setStep(3)}
+                    className="text-[9.5px] font-black uppercase tracking-widest text-[#6D5443] hover:text-[#111111] flex items-center gap-1 transition-all"
+                  >
+                    <ChevronLeft size={12} /> Voltar para Revisão
+                  </button>
+                </div>
 
                <div className="inline-flex p-5 rounded-full bg-[#FAF8F5] text-[#D4AF37] mb-6 mx-auto">
                  <Clock size={36} />
@@ -1309,6 +1856,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                  </div>
                )}
             </section>
+            </div>
 
              <div className="space-y-8">
               {renderFinancialSummary(true)}

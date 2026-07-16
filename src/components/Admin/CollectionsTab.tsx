@@ -421,7 +421,7 @@ export const CollectionsTab: React.FC<CollectionsTabProps> = React.memo(({ produ
 
                 {/* Actions Grid */}
                 <div className="grid grid-cols-5 gap-1.5 pt-6 border-t border-[#E5E5EA] mt-6">
-                  {/* View */}
+                  {/* Visualizar */}
                   <button
                     onClick={() => {
                       setViewingCollection(col);
@@ -587,7 +587,7 @@ export const CollectionsTab: React.FC<CollectionsTabProps> = React.memo(({ produ
                       />
                     </div>
 
-                    {/* Highlight Color & Order & Status */}
+                    {/* Cor de Destaque & Ordem & Status */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-[10px] uppercase font-black text-[#8E8E93] ml-1 flex items-center gap-1">
@@ -723,7 +723,7 @@ export const CollectionsTab: React.FC<CollectionsTabProps> = React.memo(({ produ
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Add Products Column */}
+                    {/* Coluna de Adicionar Produtos */}
                     <div className="space-y-4">
                       <label className="text-[10px] uppercase font-black text-[#1C1C1E] tracking-wider block">
                         Pesquisar & Adicionar Produtos

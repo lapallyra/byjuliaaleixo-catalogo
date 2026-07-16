@@ -61,10 +61,24 @@ export const paymentController = {
 
       console.log(`[paymentController.createPreference] Order '${orderId}' verified. Total: R$ ${totalValue}`);
 
-      // 3. Initialize Mercado Pago with dynamic key from environment (Lazy initialization to prevent app crash if missing)
-      const accessToken = process.env.MP_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN;
+      // 3. Initialize Mercado Pago with dynamic key (env or Firestore settings)
+      let accessToken = process.env.MP_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN;
       if (!accessToken) {
-        throw new Error("O token de acesso do Mercado Pago (MP_ACCESS_TOKEN) não está configurado nas variáveis de ambiente.");
+        const companyId = orderData.companyId || "pallyra";
+        const settingsSnap = await dbAdmin.collection("settings").doc(companyId).get();
+        if (settingsSnap.exists) {
+          accessToken = settingsSnap.data()?.mercadopago_token;
+        }
+        if (!accessToken) {
+          const globalSnap = await dbAdmin.collection("settings").doc("global").get();
+          if (globalSnap.exists) {
+            accessToken = globalSnap.data()?.mercadopago_token;
+          }
+        }
+      }
+
+      if (!accessToken) {
+        throw new Error("O token de acesso do Mercado Pago não está configurado nem nas variáveis de ambiente nem nas configurações do Ateliê.");
       }
 
       const client = new MercadoPagoConfig({

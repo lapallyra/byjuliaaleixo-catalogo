@@ -254,10 +254,12 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
     (campaignProducts.length > 0 ? (campaignProducts[0].image || campaignProducts[0].main_image) : null);
 
   return (
-    <div className="min-h-screen bg-[#FCFAF7] pb-20">
+    <div className="min-h-screen bg-[#FFF9F6] pb-20 relative overflow-x-hidden select-none">
+      {/* BACKGROUND GRAPHICS */}
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
       
       {/* Botão flutuante de voltar */}
-      <div className="max-w-[1400px] mx-auto px-4 pt-6 sm:px-6 relative z-30">
+      <div className="max-w-6xl mx-auto px-4 pt-6 sm:px-6 relative z-30">
         <button 
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[#8C7864] hover:text-[#3A312D] transition-colors cursor-pointer bg-white/80 backdrop-blur-xs py-2 px-4 rounded-full border border-[#EAE4DC] shadow-xs"
@@ -266,21 +268,21 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
         </button>
       </div>
 
-      {/* Hero seguindo exatamente a identidade visual do banner da Home (versão expandida) */}
-      <header className="max-w-[1400px] mx-auto px-4 mt-4 sm:px-6 relative">
-        <div className="relative w-full rounded-[32px] overflow-hidden bg-white border border-[#EAE4DC] flex flex-col md:flex-row min-h-[420px] shadow-sm select-none">
+      {/* Hero seguindo exatamente a identidade visual do banner da Home (versão expandida, unboxed) */}
+      <header className="max-w-6xl mx-auto px-4 mt-4 sm:px-6 relative">
+        <div className="relative w-full flex flex-col md:flex-row min-h-[420px] select-none items-center gap-8 py-4">
           
           {/* Lado Esquerdo: Conteúdo Editorial */}
-          <div className="w-full md:w-[48%] flex flex-col justify-between p-8 sm:p-12 md:p-16 relative z-10">
+          <div className="w-full md:w-[48%] flex flex-col justify-between py-6 relative z-10">
             
             {/* Bubble Hearts Background floating exclusively in left half */}
-            <div className="absolute inset-0 z-0 overflow-hidden rounded-l-[32px]">
+            <div className="absolute inset-0 z-0 overflow-hidden">
               <BubbleHearts themeColor={themeColor} />
             </div>
 
             <div className="relative z-10 flex-grow flex flex-col justify-center">
               
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FCFAF7] border border-[#EAE4DC] mb-6 self-start">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/80 border border-[#EAE4DC] mb-6 self-start shadow-xs">
                 <Sparkles size={11} className="animate-pulse" style={{ color: themeColor }} />
                 <span className="text-[9px] font-bold uppercase tracking-widest text-[#8C7864] font-sans">
                   Coleção de Afeto
@@ -329,7 +331,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
           </div>
 
           {/* Lado Direito / Background: Foto grande que ocupa a metade direita toda */}
-          <div className="w-full md:w-[52%] relative h-[250px] md:h-auto overflow-hidden">
+          <div className="w-full md:w-[52%] relative h-[250px] md:h-[420px] overflow-hidden rounded-[2rem] border border-[#EAE4DC] shadow-sm">
             {bannerImage ? (
               <ImageWithFallback 
                 src={bannerImage} 
@@ -338,7 +340,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
                 containerClassName="w-full h-full"
               />
             ) : (
-              <div className="w-full h-full bg-[#FAF8F5] flex items-center justify-center">
+              <div className="w-full h-full bg-white flex items-center justify-center">
                 <span className="font-mea-culpa text-3xl text-[#8C7864]/40">Coleção Especial</span>
               </div>
             )}
@@ -348,14 +350,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
             <div 
               className="absolute inset-0 pointer-events-none z-20 hidden md:block"
               style={{
-                background: 'linear-gradient(to right, #FFFFFF 0%, rgba(255, 255, 255, 0.98) 10%, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.5) 60%, rgba(255, 255, 255, 0) 100%)'
-              }}
-            />
-            {/* Mobile Overlay (Top-to-Bottom) */}
-            <div 
-              className="absolute inset-0 pointer-events-none z-20 block md:hidden"
-              style={{
-                background: 'linear-gradient(to bottom, #FFFFFF 0%, rgba(255, 255, 255, 0.95) 20%, rgba(255, 255, 255, 0.7) 45%, rgba(255, 255, 255, 0) 100%)'
+                background: 'linear-gradient(to right, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 40%, rgba(255, 255, 255, 0) 100%)'
               }}
             />
           </div>
@@ -364,7 +359,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
       </header>
 
       {/* Seção principal de produtos */}
-      <main className="max-w-[1400px] mx-auto px-4 mt-16 sm:px-6">
+      <main className="max-w-6xl mx-auto px-4 mt-16 sm:px-6 relative z-10">
 
         {/* CASO EXISTA UM KIT RELACIONADO, DESTACÁ-LO ANTES */}
         {kits.length > 0 && (

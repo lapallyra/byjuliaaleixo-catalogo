@@ -93,18 +93,21 @@ export function VitrinePage() {
   const otherCampaignProducts = campaignProducts.filter(p => p.id !== featuredProduct?.id).slice(0, 8);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans">
-      <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="min-h-screen bg-[#FFF9F6] text-gray-900 font-sans relative overflow-x-hidden select-none">
+      {/* BACKGROUND GRAPHICS */}
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
+
+      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 py-12 relative z-10">
         {/* Campaign Section */}
         <section className="mb-20">
-          <h1 className="text-4xl md:text-5xl font-light mb-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-serif italic text-[#6d5443] mb-4 text-center">
             {catalogCampaign?.title || "Campanha da Semana"}
           </h1>
-          <p className="text-center text-gray-500 mb-10 text-lg">
+          <p className="text-center text-[#8c7864] mb-10 text-sm">
             {catalogCampaign?.description || "Descubra nossas seleções exclusivas desta semana."}
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-gray-50 p-8 rounded-3xl border border-gray-100">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center py-8">
             {featuredProduct && (
               <div className="space-y-6">
                 <div className="text-xs font-bold tracking-[0.2em] uppercase text-[#cca062]">Destaque da Campanha</div>
