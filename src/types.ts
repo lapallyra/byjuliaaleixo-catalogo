@@ -1,5 +1,14 @@
 export type CompanyId = 'pallyra' | 'guennita' | 'mimada' | 'tuttymimo';
 
+export interface CrmSettings {
+  id?: string;
+  companyId: CompanyId;
+  usePhoneId: boolean;
+  requireCpf: boolean;
+  alertIncomplete: boolean;
+  allowEditCheckout: boolean;
+}
+
 export interface Product {
   id: string;
   code: string;
@@ -245,6 +254,7 @@ export interface Order {
   assignee?: string;
   atelier?: string;
   batchId?: string;
+  customerId?: string;
 }
 
 export interface ProductionBatch {
@@ -271,29 +281,88 @@ export interface ProductionBatch {
   }[];
 }
 
+export interface CustomerAddress {
+  id: string;
+  alias?: string;
+  zipCode: string;
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  isMain: boolean;
+}
+
+export interface CustomerContact {
+  id: string;
+  name?: string;
+  phone: string;
+  email?: string;
+  type: 'Principal' | 'Financeiro' | 'Entrega' | 'Outro';
+  isMain: boolean;
+}
+
+export interface CustomerTag {
+  id: string;
+  name: string;
+  color: string;
+  active: boolean;
+}
+
+export interface CustomerNote {
+  id: string;
+  date: string;
+  userId: string;
+  userName: string;
+  note: string;
+  type: 'internal' | 'commercial';
+}
+
 export interface Customer {
   id: string;
   code: string; // 5 digits
   name: string;
-  contact: string;
-  email?: string;
+  contact?: string; // Legacy field
+  phone?: string;
+  email?: string; // Legacy field
   cpfCnpj?: string;
   birthDate?: string;
-  address?: string;
-  number?: string;
-  neighborhood?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
+  address?: string; // Legacy field
+  number?: string; // Legacy field
+  neighborhood?: string; // Legacy field
+  city?: string; // Legacy field
+  state?: string; // Legacy field
+  zipCode?: string; // Legacy field
+  contacts?: CustomerContact[]; // New field
+  addresses?: CustomerAddress[]; // New field
+  tags?: CustomerTag[];
+  internalNotes?: CustomerNote[];
+  commercialNotes?: CustomerNote[];
   totalSpent: number;
   ordersCount: number;
   pendingBalance?: number;
   createdAt: any;
   companyId: CompanyId;
   status?: 'Ativo' | 'Inativo' | 'Cadastro Incompleto';
-  notes?: string;
+  notes?: string; // Legacy field
   avatarUrl?: string;
   lastPurchaseDate?: string;
+  favoriteProductIds?: string[];
+}
+
+export interface Memory {
+  id?: string;
+  customerId: string;
+  customerEmail?: string;
+  customerName?: string;
+  personName: string;
+  date: string; // ISO Date (YYYY-MM-DD)
+  eventType: 'Aniversário' | 'Casamento' | 'Maternidade' | 'Outro';
+  notes?: string;
+  giftPreferences?: string;
+  themeOrColors?: string;
+  createdAt: any; // Firestore Timestamp
 }
 
 export interface Review {

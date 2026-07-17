@@ -408,6 +408,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
         customerName: customer?.name || newCustomerData.name,
         contact: customer?.contact || newCustomerData.contact,
         customerCpfCnpj: customer?.cpfCnpj || "",
+        customerId: customerId || undefined,
         status: generateLink ? "waiting_payment" : "quote",
         source: "admin",
       };

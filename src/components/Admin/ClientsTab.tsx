@@ -36,7 +36,7 @@ import {
   Archive,
 } from "lucide-react";
 import { CSVHandler } from "./CSVHandler";
-import { Customer, CompanyId, Order } from "../../types";
+import { Customer, CompanyId, Order, CustomerContact, CustomerAddress, CustomerTag, CustomerNote } from "../../types";
 import {
   deleteCustomer,
   updateCustomer,
@@ -44,9 +44,14 @@ import {
   
 } from "../../services/firebaseService";
 import { exportGenericReportPDF } from "../../utils/pdfGenerator";
+import { calculateCustomerMetrics } from "../../utils/customerMetrics";
 import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
 import { HorizontalScroll } from "../shared/HorizontalScroll";
 import { motion, AnimatePresence } from "motion/react";
+import { fetchAddressByCep } from "../../utils/address";
+import { ContactsSection, AddressesSection } from "./CustomerFormSections";
+import { TagsSection } from "./TagsSection";
+import { NotesSection } from "./NotesSection";
 
 const translateStatus = (status: string): string => {
   const s = (status || "").toLowerCase();
@@ -76,6 +81,8 @@ const translateStatus = (status: string): string => {
 };
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
+import { normalizePhone, isOrderFromCustomer } from "../../utils/customerUtils";
+
 interface ClientsTabProps {
   orders?: Order[];
   companyId: CompanyId;
@@ -91,7 +98,9 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
 }) => {
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState("");
-  const [quickFilter, setQuickFilter] = useState<"Todos" | "PF" | "PJ" | "ComPedidos" | "SemPedidos" | "Recorrentes" | "Aniversariantes">("Todos");
+  const [isFetchingAddress, setIsFetchingAddress] = useState(false);
+  const [quickFilter, setQuickFilter] = useState<"Todos" | "PF" | "PJ" | "ComPedidos" | "SemPedidos" | "Recorrentes" | "Aniversariantes" | "VIP" | "Inativos" | "Novos" | "MaiorLTV" | "MaiorFreq">("Todos");
+  const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "newest" | "oldest" | "revenue" | "orders">("newest");
 
   // Pagination
@@ -115,7 +124,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
   // Active drawer tab
-  const [drawerTab, setDrawerTab] = useState<"details" | "orders" | "products" | "timeline" | "notes">("details");
+  const [drawerTab, setDrawerTab] = useState<"details" | "intelligence" | "orders" | "products" | "timeline" | "notes">("details");
 
   // CRM internal note state inside drawer
   const [noteText, setNoteText] = useState("");
@@ -140,6 +149,11 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
     zipCode: "",
     status: "Ativo" as "Ativo" | "Inativo" | "Cadastro Incompleto",
     notes: "",
+    contacts: [] as CustomerContact[],
+    addresses: [] as CustomerAddress[],
+    tags: [] as CustomerTag[],
+    internalNotes: [] as CustomerNote[],
+    commercialNotes: [] as CustomerNote[],
   });
 
   // Sync internal notes text when selected customer changes
@@ -221,6 +235,131 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
   };
 
   // Pre-process customer fields for search to avoid repeating replace, trim, and toLowerCase inside loops
+  const birthdayCustomers = useMemo(() => {
+    return customers.filter((c) => {
+      if (!c.birthDate) return false;
+      try {
+        const parts = c.birthDate.split("/");
+        if (parts.length < 2) return false;
+        const [day, month] = parts;
+        const currentYear = new Date().getFullYear();
+        const birthDate = new Date(
+          currentYear,
+          parseInt(month) - 1,
+          parseInt(day)
+        );
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const nextWeek = new Date();
+        nextWeek.setDate(today.getDate() + 7);
+        nextWeek.setHours(23, 59, 59, 999);
+        return birthDate >= today && birthDate <= nextWeek;
+      } catch (e) {
+        return false;
+      }
+    });
+  }, [customers]);
+
+  // Global customer metrics map for quick summary, optimized using O(N+M) mapping
+  const customerMetricsMap = useMemo(() => {
+    const map = new Map<string, {
+      activeOrders: number;
+      lastPurchaseDate: Date | null;
+      isRecurrent: boolean;
+      topProducts: string[];
+      metrics: any;
+    }>();
+
+    // Map sales by normalized match identifiers (phone, CPF/CNPJ, and lowercase trimmed name)
+    const salesByCustomerId = new Map<string, any[]>();
+    const salesByPhone = new Map<string, any[]>();
+    const salesByCpf = new Map<string, any[]>();
+    const salesByName = new Map<string, any[]>();
+
+    sales.forEach((o) => {
+      const orderCustomerId = o.customerId;
+      const orderPhone = o.contact ? o.contact.replace(/\D/g, "") : "";
+      const orderCpf = o.customerCpfCnpj ? o.customerCpfCnpj.replace(/\D/g, "") : "";
+      const orderName = o.customerName ? o.customerName.toLowerCase().trim() : "";
+
+      if (orderCustomerId) {
+        if (!salesByCustomerId.has(orderCustomerId)) salesByCustomerId.set(orderCustomerId, []);
+        salesByCustomerId.get(orderCustomerId)!.push(o);
+      }
+      if (orderPhone) {
+        if (!salesByPhone.has(orderPhone)) salesByPhone.set(orderPhone, []);
+        salesByPhone.get(orderPhone)!.push(o);
+      }
+      if (orderCpf) {
+        if (!salesByCpf.has(orderCpf)) salesByCpf.set(orderCpf, []);
+        salesByCpf.get(orderCpf)!.push(o);
+      }
+      if (orderName) {
+        if (!salesByName.has(orderName)) salesByName.set(orderName, []);
+        salesByName.get(orderName)!.push(o);
+      }
+    });
+
+    customers.forEach((c) => {
+      const cleanPhone = c.contact ? c.contact.replace(/\D/g, "") : "";
+      const cleanCpf = c.cpfCnpj ? c.cpfCnpj.replace(/\D/g, "") : "";
+      const lowerName = c.name ? c.name.toLowerCase().trim() : "";
+
+      // Deduplicate matching orders using a Set to prevent double counting
+      const matchedSalesSet = new Set<any>();
+
+      if (c.id && salesByCustomerId.has(c.id)) {
+        salesByCustomerId.get(c.id)!.forEach((o) => matchedSalesSet.add(o));
+      }
+      if (cleanPhone && salesByPhone.has(cleanPhone)) {
+        salesByPhone.get(cleanPhone)!.forEach((o) => matchedSalesSet.add(o));
+      }
+      if (cleanCpf && salesByCpf.has(cleanCpf)) {
+        salesByCpf.get(cleanCpf)!.forEach((o) => matchedSalesSet.add(o));
+      }
+      if (lowerName && salesByName.has(lowerName)) {
+        salesByName.get(lowerName)!.forEach((o) => matchedSalesSet.add(o));
+      }
+
+      const cSales = Array.from(matchedSalesSet);
+
+      let activeCount = 0;
+      let lastDate: Date | null = null;
+      const productsMap: { [name: string]: number } = {};
+
+      cSales.forEach((o) => {
+        if (["pending", "processing", "production", "shipped"].includes(o.status || "")) {
+          activeCount++;
+        }
+        const oDate = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt || 0);
+        if (!lastDate || oDate > lastDate) {
+          lastDate = oDate;
+        }
+
+        o.items?.forEach((item) => {
+          const pName = item.product_name || "Produto";
+          productsMap[pName] = (productsMap[pName] || 0) + (item.quantity || 1);
+        });
+      });
+
+      const topProducts = Object.entries(productsMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map((entry) => entry[0]);
+
+      const metrics = calculateCustomerMetrics(c, cSales);
+
+      map.set(c.id, {
+        activeOrders: activeCount,
+        lastPurchaseDate: lastDate,
+        isRecurrent: cSales.length > 1,
+        topProducts,
+        metrics
+      });
+    });
+
+    return map;
+  }, [customers, sales]);
   const preprocessedCustomers = useMemo(() => {
     return customers.map((c) => {
       return {
@@ -253,11 +392,20 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
         if (!matchesSearch) return false;
 
         // Quick Filters
+        const metricsData = customerMetricsMap.get(c.id)?.metrics;
         if (quickFilter === "PF" && c.cpfCnpj && c.cpfCnpj.length > 14) return false; // Basic PF check
         if (quickFilter === "PJ" && c.cpfCnpj && c.cpfCnpj.length <= 14) return false; // Basic PJ check
         if (quickFilter === "ComPedidos" && (c.ordersCount || 0) === 0) return false;
         if (quickFilter === "SemPedidos" && (c.ordersCount || 0) > 0) return false;
-        if (quickFilter === "Recorrentes" && (c.ordersCount || 0) < 2) return false;
+        if (quickFilter === "Recorrentes" && metricsData?.segment !== "Recorrente") return false;
+        if (quickFilter === "Novos" && metricsData?.segment !== "Novo") return false;
+        if (quickFilter === "VIP" && metricsData?.segment !== "VIP") return false;
+        if (quickFilter === "Inativos" && metricsData?.segment !== "Inativo") return false;
+        if (quickFilter === "MaiorLTV" && (!metricsData || metricsData.ltv < 1000)) return false; // Exemplo para filtro rápido
+        if (quickFilter === "MaiorFreq" && (!metricsData || metricsData.frequency === 0 || metricsData.frequency > 30)) return false; // Frequência menor que 30 dias
+
+        if (selectedTagFilter && !c.tags?.some(t => t.name === selectedTagFilter && t.active)) return false;
+
         if (quickFilter === "Aniversariantes") {
           if (!c.birthDate) return false;
           const [, month] = c.birthDate.split("/");
@@ -297,135 +445,12 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
   }, []);
 
   // Birthday reminder for upcoming 7 days
-  const birthdayCustomers = useMemo(() => {
-    return customers.filter((c) => {
-      if (!c.birthDate) return false;
-      try {
-        const parts = c.birthDate.split("/");
-        if (parts.length < 2) return false;
-        const [day, month] = parts;
-        const currentYear = new Date().getFullYear();
-        const birthDate = new Date(
-          currentYear,
-          parseInt(month) - 1,
-          parseInt(day)
-        );
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const nextWeek = new Date();
-        nextWeek.setDate(today.getDate() + 7);
-        nextWeek.setHours(23, 59, 59, 999);
-        return birthDate >= today && birthDate <= nextWeek;
-      } catch (e) {
-        return false;
-      }
-    });
-  }, [customers]);
-
-  // Global customer metrics map for quick summary, optimized using O(N+M) mapping
-  const customerMetricsMap = useMemo(() => {
-    const map = new Map<string, {
-      activeOrders: number;
-      lastPurchaseDate: Date | null;
-      isRecurrent: boolean;
-      topProducts: string[];
-    }>();
-
-    // Map sales by normalized match identifiers (phone, CPF/CNPJ, and lowercase trimmed name)
-    const salesByPhone = new Map<string, any[]>();
-    const salesByCpf = new Map<string, any[]>();
-    const salesByName = new Map<string, any[]>();
-
-    sales.forEach((o) => {
-      const orderPhone = o.contact ? o.contact.replace(/\D/g, "") : "";
-      const orderCpf = o.customerCpfCnpj ? o.customerCpfCnpj.replace(/\D/g, "") : "";
-      const orderName = o.customerName ? o.customerName.toLowerCase().trim() : "";
-
-      if (orderPhone) {
-        if (!salesByPhone.has(orderPhone)) salesByPhone.set(orderPhone, []);
-        salesByPhone.get(orderPhone)!.push(o);
-      }
-      if (orderCpf) {
-        if (!salesByCpf.has(orderCpf)) salesByCpf.set(orderCpf, []);
-        salesByCpf.get(orderCpf)!.push(o);
-      }
-      if (orderName) {
-        if (!salesByName.has(orderName)) salesByName.set(orderName, []);
-        salesByName.get(orderName)!.push(o);
-      }
-    });
-
-    customers.forEach((c) => {
-      const cleanPhone = c.contact ? c.contact.replace(/\D/g, "") : "";
-      const cleanCpf = c.cpfCnpj ? c.cpfCnpj.replace(/\D/g, "") : "";
-      const lowerName = c.name ? c.name.toLowerCase().trim() : "";
-
-      // Deduplicate matching orders using a Set to prevent double counting
-      const matchedSalesSet = new Set<any>();
-
-      if (cleanPhone && salesByPhone.has(cleanPhone)) {
-        salesByPhone.get(cleanPhone)!.forEach((o) => matchedSalesSet.add(o));
-      }
-      if (cleanCpf && salesByCpf.has(cleanCpf)) {
-        salesByCpf.get(cleanCpf)!.forEach((o) => matchedSalesSet.add(o));
-      }
-      if (lowerName && salesByName.has(lowerName)) {
-        salesByName.get(lowerName)!.forEach((o) => matchedSalesSet.add(o));
-      }
-
-      const cSales = Array.from(matchedSalesSet);
-
-      let activeCount = 0;
-      let lastDate: Date | null = null;
-      const productsMap: { [name: string]: number } = {};
-
-      cSales.forEach((o) => {
-        if (["pending", "processing", "production", "shipped"].includes(o.status || "")) {
-          activeCount++;
-        }
-        const oDate = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt || 0);
-        if (!lastDate || oDate > lastDate) {
-          lastDate = oDate;
-        }
-
-        o.items?.forEach((item) => {
-          const pName = item.product_name || "Produto";
-          productsMap[pName] = (productsMap[pName] || 0) + (item.quantity || 1);
-        });
-      });
-
-      const topProducts = Object.entries(productsMap)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .map((entry) => entry[0]);
-
-      map.set(c.id, {
-        activeOrders: activeCount,
-        lastPurchaseDate: lastDate,
-        isRecurrent: cSales.length > 1,
-        topProducts,
-      });
-    });
-
-    return map;
-  }, [customers, sales]);
 
   // Correlate sales to active selected customer for timeline, history, and aggregate products
   const customerOrders = useMemo(() => {
     if (!activeCustomer) return [];
-    const cleanPhone = activeCustomer.contact.replace(/\D/g, "");
-    const cleanCpf = activeCustomer.cpfCnpj?.replace(/\D/g, "");
-
-    return sales.filter((o) => {
-      const orderPhone = o.contact?.replace(/\D/g, "");
-      const orderCpf = o.customerCpfCnpj?.replace(/\D/g, "");
-
-      return (
-        (cleanPhone && orderPhone === cleanPhone) ||
-        (cleanCpf && orderCpf === cleanCpf) ||
-        (o.customerName && o.customerName.toLowerCase() === activeCustomer.name.toLowerCase())
-      );
-    });
+    
+    return sales.filter((o) => isOrderFromCustomer(o, activeCustomer));
   }, [sales, activeCustomer]);
 
   // Get most bought products for this client
@@ -532,22 +557,32 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
     return events.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [activeCustomer, customerOrders]);
 
+  const activeCustomerMetrics = useMemo(() => activeCustomer ? calculateCustomerMetrics(activeCustomer, customerOrders) : null, [activeCustomer, customerOrders]);
+
   // CRM notes updates
-  const handleSaveNotes = async () => {
+  const handleSaveNotes = async (internalNotes?: CustomerNote[], commercialNotes?: CustomerNote[]) => {
     if (!activeCustomer) return;
     setSavingNotes(true);
     try {
-      await updateCustomer(activeCustomer.id, {
-        notes: noteText,
-      });
-      // Update local object representation in drawer
+      const updates: any = {};
+      
+      if (internalNotes !== undefined) updates.internalNotes = internalNotes;
+      if (commercialNotes !== undefined) updates.commercialNotes = commercialNotes;
+      
+      if (noteText !== activeCustomer.notes) {
+        updates.notes = noteText;
+      }
+
+      await updateCustomer(activeCustomer.id, updates);
+      
       setSelectedCustomer({
         ...activeCustomer,
-        notes: noteText,
+        ...updates
       });
+
       orchestrator.dispatchEvent({
         type: 'FEEDBACK',
-        message: 'Notas e observações atualizadas com sucesso!',
+        message: 'Notas atualizadas com sucesso!',
         priority: 'HIGH',
         customerName: '',
         productName: '',
@@ -618,6 +653,11 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
       zipCode: "",
       status: "Ativo",
       notes: "",
+      contacts: [],
+      addresses: [],
+      tags: [],
+      internalNotes: [],
+      commercialNotes: [],
     });
     setIsModalOpen(true);
   };
@@ -638,6 +678,33 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
       zipCode: customer.zipCode || "",
       status: customer.status || "Ativo",
       notes: customer.notes || "",
+      contacts: customer.contacts || [{
+        id: Math.random().toString(),
+        phone: customer.contact || "",
+        email: customer.email || "",
+        type: 'Principal',
+        isMain: true
+      }],
+      addresses: customer.addresses || [{
+        id: Math.random().toString(),
+        zipCode: customer.zipCode || "",
+        street: customer.address || "",
+        number: customer.number || "",
+        neighborhood: customer.neighborhood || "",
+        city: customer.city || "",
+        state: customer.state || "",
+        isMain: true
+      }],
+      tags: customer.tags || [],
+      internalNotes: customer.internalNotes || (customer.notes ? [{
+        id: Math.random().toString(),
+        date: new Date().toISOString(),
+        userId: 'system',
+        userName: 'Sistema',
+        note: customer.notes,
+        type: 'internal'
+      }] : []),
+      commercialNotes: customer.commercialNotes || [],
     });
     setIsModalOpen(true);
   };
@@ -677,6 +744,8 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
           ...formData,
           status: finalStatus,
           companyId,
+          contacts: formData.contacts,
+          addresses: formData.addresses
         });
         orchestrator.dispatchEvent({
           type: 'FEEDBACK',
@@ -693,6 +762,8 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
           companyId,
           totalSpent: 0,
           ordersCount: 0,
+          contacts: formData.contacts,
+          addresses: formData.addresses
         });
         orchestrator.dispatchEvent({
           type: 'FEEDBACK',
@@ -990,10 +1061,13 @@ Histórico de Compras:
             { id: "Todos", label: "Todos" },
             { id: "PF", label: "Pessoa Física" },
             { id: "PJ", label: "Pessoa Jurídica" },
-            { id: "ComPedidos", label: "Com Pedidos" },
-            { id: "SemPedidos", label: "Sem Pedidos" },
             { id: "Recorrentes", label: "Recorrentes" },
-            { id: "Aniversariantes", label: "Aniversariantes do mês" }
+            { id: "Novos", label: "Novos" },
+            { id: "VIP", label: "VIP" },
+            { id: "Inativos", label: "Inativos" },
+            { id: "MaiorLTV", label: "Maior LTV" },
+            { id: "MaiorFreq", label: "Maior Freq." },
+            { id: "Aniversariantes", label: "Aniversariantes" }
           ].map(f => (
             <button
               key={f.id}
@@ -1064,6 +1138,13 @@ Histórico de Compras:
                           Recorrente
                         </span>
                       )}
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {c.tags?.filter(t => t.active).map(t => (
+                          <span key={t.id} style={{ backgroundColor: t.color }} className="text-[8px] font-black text-white px-1.5 py-[1px] rounded uppercase tracking-widest">
+                            {t.name}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -1276,6 +1357,7 @@ Histórico de Compras:
               <HorizontalScroll className="border-b border-[#E5E5EA] bg-white text-xs shrink-0 w-full">
                 {[
                   { id: "details", label: "Dados Gerais" },
+                  { id: "intelligence", label: "Inteligência" },
                   { id: "orders", label: `Pedidos (${customerOrders.length})` },
                   { id: "products", label: "Produtos" },
                   { id: "timeline", label: "Histórico CRM" },
@@ -1299,106 +1381,150 @@ Histórico de Compras:
               <div className="flex-1 overflow-y-auto p-6 bg-[#FAF9F6]/30">
                 {drawerTab === "details" && (
                   <div className="space-y-6">
-                    {/* Personal data panel */}
-                    <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-3xs space-y-4">
-                      <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-[#cca062] border-b border-[#F2F2F7] pb-2">
-                        Dados Pessoais
-                      </h5>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] block">CPF / CNPJ</span>
-                          <span className="text-xs font-bold text-[#1C1C1E]">
-                            {activeCustomer.cpfCnpj ? formatCPFOrCNPJ(activeCustomer.cpfCnpj) : "Não Informado"}
-                          </span>
+                    {/* Dados Principais */}
+                    <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-3xs">
+                      <div className="flex justify-between items-start mb-4">
+                        <h4 className="text-[#1C1C1E] font-bold uppercase tracking-wider text-xs flex items-center gap-2">
+                          <User size={14} className="text-[#cca062]" /> Dados Principais
+                        </h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Nome</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.name}</span>
                         </div>
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] block">Nascimento</span>
-                          <span className="text-xs font-bold text-[#1C1C1E]">{activeCustomer.birthDate || "Não Informado"}</span>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Contato</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.contact || "-"}</span>
                         </div>
-                        <div className="space-y-1 col-span-2">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] block">E-mail</span>
-                          <span className="text-xs font-bold text-[#1C1C1E] break-all">{activeCustomer.email || "Não Informado"}</span>
+                        <div className="col-span-2 md:col-span-1">
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Email</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E] break-all">{activeCustomer.email || "-"}</span>
                         </div>
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] block">Telefone</span>
-                          <span className="text-xs font-bold text-[#1C1C1E]">{formatPhone(activeCustomer.contact)}</span>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">CPF/CNPJ</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.cpfCnpj || "-"}</span>
                         </div>
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] block">Data de Cadastro</span>
-                          <span className="text-xs font-bold text-[#1C1C1E]">
-                            {activeCustomer.createdAt?.toDate
-                              ? activeCustomer.createdAt.toDate().toLocaleDateString("pt-BR")
-                              : new Date(activeCustomer.createdAt || Date.now()).toLocaleDateString("pt-BR")}
-                          </span>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Aniversário</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.birthDate || "-"}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Address panel */}
-                    <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-3xs space-y-4">
-                      <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-[#cca062] border-b border-[#F2F2F7] pb-2 flex items-center gap-1.5">
-                        <MapPin size={12} /> Endereço de Entrega
-                      </h5>
-                      {activeCustomer.address ? (
-                        <div className="space-y-2">
-                          <p className="text-xs font-bold text-[#1C1C1E] uppercase">
-                            {activeCustomer.address}, nº {activeCustomer.number || "S/N"}
-                          </p>
-                          <p className="text-xs font-semibold text-[#8E8E93] uppercase">
-                            Bairro: {activeCustomer.neighborhood || "Não Informado"}
-                          </p>
-                          <p className="text-xs font-bold text-[#cca062] uppercase">
-                            {activeCustomer.city} - {activeCustomer.state} {activeCustomer.zipCode ? `| CEP: ${activeCustomer.zipCode}` : ""}
-                          </p>
+                    {/* Endereço */}
+                    <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-3xs">
+                      <div className="flex justify-between items-start mb-4">
+                        <h4 className="text-[#1C1C1E] font-bold uppercase tracking-wider text-xs flex items-center gap-2">
+                          <MapPin size={14} className="text-[#cca062]" /> Endereço
+                        </h4>
+                        <button 
+                          className="text-[#cca062] hover:text-[#b08750] transition-colors"
+                          onClick={() => {
+                            if (activeCustomer.address) {
+                              const search = `${activeCustomer.address}, ${activeCustomer.addressNumber || ""} - ${activeCustomer.city || ""}`;
+                              window.open(`https://maps.google.com/?q=${encodeURIComponent(search)}`, '_blank');
+                            }
+                          }}
+                        >
+                          <ExternalLink size={14} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+                        <div className="col-span-2">
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Endereço Completo</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E]">
+                            {activeCustomer.address ? `${activeCustomer.address}, ${activeCustomer.addressNumber || "S/N"}` : "-"}
+                            {activeCustomer.addressComplement && ` (${activeCustomer.addressComplement})`}
+                          </span>
                         </div>
-                      ) : (
-                        <p className="text-xs italic text-[#8E8E93]">Nenhum endereço cadastrado para este cliente.</p>
-                      )}
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Bairro</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.neighborhood || "-"}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Cidade/UF</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.city ? `${activeCustomer.city}/${activeCustomer.state || ""}` : "-"}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">CEP</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.cep || "-"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {drawerTab === "intelligence" && (
+                  <div className="p-6 space-y-6">
+                    {/* Resumo Comercial */}
+                    <div className="bg-gradient-to-r from-[#cca062]/10 to-transparent p-5 rounded-2xl border border-[#cca062]/20">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-[#cca062]/20 text-[#cca062] rounded-lg">
+                          <Activity size={18} />
+                        </div>
+                        <h4 className="text-[#1C1C1E] font-bold uppercase tracking-wider text-xs">Resumo Comercial</h4>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white p-4 rounded-xl border border-[#E5E5EA] shadow-sm">
+                          <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Segmento</span>
+                          <span className="text-sm font-bold text-[#1C1C1E] uppercase">{activeCustomerMetrics?.segment || "N/A"}</span>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-[#E5E5EA] shadow-sm">
+                          <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Valor Acumulado (LTV)</span>
+                          <span className="text-sm font-bold text-[#cca062] uppercase">R$ {(activeCustomerMetrics?.ltv || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-[#E5E5EA] shadow-sm">
+                          <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Ticket Médio</span>
+                          <span className="text-sm font-bold text-[#1C1C1E] uppercase">R$ {(activeCustomerMetrics?.avgTicket || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl border border-[#E5E5EA] shadow-sm">
+                          <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Frequência</span>
+                          <span className="text-sm font-bold text-[#1C1C1E] uppercase">{activeCustomerMetrics?.frequency ? `A cada ${activeCustomerMetrics.frequency} dias` : "N/A"}</span>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Latest Purchases & Preferences */}
-                    <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-3xs space-y-4">
-                      <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-[#cca062] border-b border-[#F2F2F7] pb-2 flex items-center gap-1.5">
-                        <ShoppingBag size={12} /> Últimos Produtos & Preferências
-                      </h5>
-                      
+                    {/* Comportamento */}
+                    <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-sm">
+                      <h4 className="text-[#1C1C1E] font-bold uppercase tracking-wider text-xs mb-4">Comportamento de Compra</h4>
                       <div className="space-y-4">
-                        {/* Latest Purchase */}
                         <div>
-                           <p className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] mb-2">Última Compra</p>
-                           {customerOrders.length > 0 ? (
-                             <div className="p-3 bg-[#F5F5F7] rounded-xl border border-[#E5E5EA]">
-                               <div className="flex items-center justify-between mb-2">
-                                 <span className="text-xs font-bold text-[#1C1C1E] uppercase">Pedido #{customerOrders[0].code || '---'}</span>
-                                 <span className="text-[10px] font-bold text-[#8E8E93]">
-                                   {customerOrders[0].createdAt?.toDate ? customerOrders[0].createdAt.toDate().toLocaleDateString('pt-BR') : 'N/A'}
-                                 </span>
-                               </div>
-                               <p className="text-xs text-[#8E8E93] truncate">
-                                 {customerOrders[0].items?.map(i => `${i.quantity}x ${i.product_name}`).join(', ') || 'Sem itens'}
-                               </p>
-                             </div>
-                           ) : (
-                             <p className="text-xs italic text-[#8E8E93]">Nenhuma compra registrada.</p>
-                           )}
-                        </div>
-
-                        {/* Top Preferences */}
-                        {customerProducts.length > 0 && (
-                          <div>
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-[#8E8E93] mb-2">Preferências (Mais Comprados)</p>
-                            <div className="flex flex-wrap gap-2">
-                              {customerProducts.slice(0, 3).map((p, idx) => (
-                                <span key={idx} className="px-2.5 py-1 text-[10px] font-bold text-[#cca062] bg-[#cca062]/10 rounded-lg border border-[#cca062]/20 uppercase">
-                                  {p.qty}x {p.name}
-                                </span>
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-2">Top 3 Produtos Favoritos</span>
+                          {customerProducts.slice(0, 3).length > 0 ? (
+                            <div className="space-y-2">
+                              {customerProducts.slice(0, 3).map((p, i) => (
+                                <div key={i} className="flex justify-between items-center text-xs p-2 bg-[#F5F5F7] rounded-lg">
+                                  <span className="font-bold text-[#1C1C1E] truncate">{p.name}</span>
+                                  <span className="text-[#8E8E93] font-bold ml-2 shrink-0">{p.qty} un.</span>
+                                </div>
                               ))}
                             </div>
+                          ) : (
+                            <span className="text-xs text-[#8E8E93]">Sem dados suficientes</span>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-2">Relacionamento</span>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="p-3 bg-[#F5F5F7] rounded-lg">
+                              <span className="block text-[#8E8E93] mb-1">Primeira Compra:</span>
+                              <span className="font-bold text-[#1C1C1E]">
+                                {customerOrders.length > 0 ? new Date(Math.min(...customerOrders.map(o => new Date(o.createdAt).getTime()))).toLocaleDateString("pt-BR") : "N/A"}
+                              </span>
+                            </div>
+                            <div className="p-3 bg-[#F5F5F7] rounded-lg">
+                              <span className="block text-[#8E8E93] mb-1">Última Compra:</span>
+                              <span className="font-bold text-[#1C1C1E]">
+                                {activeCustomerMetrics?.lastPurchaseDate ? activeCustomerMetrics.lastPurchaseDate.toLocaleDateString("pt-BR") : "N/A"}
+                              </span>
+                            </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
-
                   </div>
                 )}
 
@@ -1543,23 +1669,27 @@ Histórico de Compras:
                         Escreva notas de atendimento, preferências de brindes, observações sobre entregas especiais ou feedbacks. Estas informações são estritamente internas e seguras.
                       </p>
 
-                      <textarea
-                        rows={6}
-                        className="w-full bg-[#FAF9F6] border border-[#E5E5EA] rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-[#1C1C1E] resize-none"
-                        placeholder="Ex: Prefere embalagem minimalista em papel kraft. Entrar em contato via WhatsApp nas sextas-feiras."
-                        value={noteText}
-                        onChange={(e) => setNoteText(e.target.value)}
+                      <div className="space-y-6">
+                      <NotesSection 
+                        notes={activeCustomer.internalNotes || []}
+                        onChange={(internalNotes) => handleSaveNotes(internalNotes, activeCustomer.commercialNotes)}
+                        type="internal"
+                      />
+                      
+                      <NotesSection 
+                        notes={activeCustomer.commercialNotes || []}
+                        onChange={(commercialNotes) => handleSaveNotes(activeCustomer.internalNotes, commercialNotes)}
+                        type="commercial"
                       />
 
-                      <div className="flex justify-end pt-2">
-                        <button
-                          onClick={handleSaveNotes}
-                          disabled={savingNotes}
-                          className="px-5 py-2.5 bg-[#1C1C1E] text-white hover:bg-black font-bold uppercase tracking-wider text-[10px] rounded-xl transition-all shadow-sm active:scale-95 border-b-[3px] border-b-black"
-                        >
-                          {savingNotes ? "Salvando..." : "Salvar Notas Internas"}
-                        </button>
-                      </div>
+                      {activeCustomer.notes && (
+                        <div className="pt-4 border-t border-[#E5E5EA]">
+                          <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-[#8E8E93] mb-2">Anotação Legada</h5>
+                          <div className="bg-[#FAF9F6] p-3 rounded-xl border border-[#E5E5EA] text-xs text-[#8E8E93]">
+                            {activeCustomer.notes}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1707,6 +1837,33 @@ Histórico de Compras:
                   </div>
                 </div>
 
+                <ContactsSection 
+                  contacts={formData.contacts} 
+                  onChange={(contacts) => setFormData({...formData, contacts})} 
+                />
+
+                <AddressesSection 
+                  addresses={formData.addresses} 
+                  onChange={(addresses) => setFormData({...formData, addresses})} 
+                />
+
+                <TagsSection 
+                  tags={formData.tags}
+                  onChange={(tags) => setFormData({...formData, tags})}
+                />
+
+                <NotesSection 
+                  type="internal"
+                  notes={formData.internalNotes}
+                  onChange={(internalNotes) => setFormData({...formData, internalNotes})}
+                />
+                
+                <NotesSection 
+                  type="commercial"
+                  notes={formData.commercialNotes}
+                  onChange={(commercialNotes) => setFormData({...formData, commercialNotes})}
+                />
+
                 {/* Address block */}
                 <div className="space-y-4 pt-2">
                   <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-[#cca062] border-b border-[#E5E5EA] pb-1.5 flex items-center gap-1">
@@ -1772,20 +1929,39 @@ Histórico de Compras:
                       </select>
                     </div>
 
-                    <div className="space-y-1 col-span-3">
-                      <label className="text-[9px] uppercase font-bold text-[#8E8E93] tracking-wider">CEP</label>
-                      <input
-                        type="text"
-                        placeholder="00000-000"
-                        className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:border-[#1C1C1E]"
-                        value={formData.zipCode}
-                        onChange={(e) => {
-                          let v = e.target.value.replace(/\D/g, "");
-                          v = v.replace(/(\d{5})(\d{3})/, "$1-$2");
-                          setFormData({ ...formData, zipCode: v });
-                        }}
-                      />
-                    </div>
+                      <div className="space-y-1 col-span-3 relative">
+                        <label className="text-[9px] uppercase font-bold text-[#8E8E93] tracking-wider">CEP</label>
+                        <input
+                          type="text"
+                          placeholder="00000-000"
+                          className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-xl px-4 py-2.5 text-xs font-semibold outline-none focus:border-[#1C1C1E]"
+                          value={formData.zipCode}
+                          onChange={async (e) => {
+                            let v = e.target.value.replace(/\D/g, "");
+                            const formatted = v.replace(/(\d{5})(\d{3})/, "$1-$2");
+                            setFormData({ ...formData, zipCode: formatted });
+                            if (v.length === 8) {
+                              setIsFetchingAddress(true);
+                              const address = await fetchAddressByCep(formatted);
+                              if (address) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  address: address.address || prev.address,
+                                  neighborhood: address.neighborhood || prev.neighborhood,
+                                  city: address.city || prev.city,
+                                  state: address.state || prev.state,
+                                }));
+                              }
+                              setIsFetchingAddress(false);
+                            }
+                          }}
+                        />
+                        {isFetchingAddress && (
+                          <div className="absolute right-3 top-9">
+                            <RefreshCw size={14} className="animate-spin text-[#1C1C1E]" />
+                          </div>
+                        )}
+                      </div>
                   </div>
                 </div>
 

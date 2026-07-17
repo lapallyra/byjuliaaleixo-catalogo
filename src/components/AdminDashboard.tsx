@@ -58,6 +58,7 @@ import {
   Truck,
   Package,
   Zap,
+  Shield,
 } from "lucide-react";
 import { playSuccessSound } from "../utils/audio";
 import { useAuth } from "./AuthProvider";
@@ -100,6 +101,7 @@ import { useAdminOrchestrator } from "./AdminOrchestratorSystem";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
 import { UsersTab } from "./Admin/UsersTab";
 import { BackupTab } from "./Admin/BackupTab";
+import { MigrationTab } from "./Admin/MigrationTab";
 import { safeFormatISO } from "../lib/dateUtils";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { ImageWithFallback } from "./ImageWithFallback";
@@ -135,7 +137,8 @@ type TabType =
   | "control_center"
   | "coupons"
   | "users"
-  | "backup";
+  | "backup"
+  | "migration";
 
 interface AdminDashboardProps {
   onGoBack: () => void;
@@ -346,6 +349,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     { id: "settings", label: "Configurações", group: "Sistema", icon: Settings, allowedRoles: ["ADMINISTRADOR"] },
     { id: "users", label: "Usuários e Permissões", group: "Sistema", icon: User, allowedRoles: ["ADMINISTRADOR"] },
     { id: "backup", label: "Backup e Recuperação", group: "Sistema", icon: Database, allowedRoles: ["ADMINISTRADOR"] },
+    { id: "migration", label: "Saneamento de Dados", group: "Sistema", icon: Shield, allowedRoles: ["ADMINISTRADOR"] },
     { id: "notifications", label: "Notificações", group: "Sistema", icon: Bell, allowedRoles: ["ADMINISTRADOR"] },
     { id: "integrations", label: "Integrações", group: "Sistema", icon: Sparkles, allowedRoles: ["ADMINISTRADOR"] },
     { id: "addons", label: "Adicionais", group: "Sistema", icon: Star, allowedRoles: ["ADMINISTRADOR"] },
@@ -870,6 +874,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   )}
                   {activeTab === "backup" && (
                     <BackupTab />
+                  )}
+                  {activeTab === "migration" && (
+                    <MigrationTab />
                   )}
                   {activeTab === "addons" && (
                     <AddonsTab companyId={selectedCompanyId} />

@@ -1,19 +1,24 @@
 
 import React from 'react';
 import { Package, Heart, Gift, MapPin } from 'lucide-react';
-
-const stats = [
-  { title: 'Meu último pedido', value: '#166949', icon: Package, desc: 'Aguardando entrega' },
-  { title: 'Favoritos', value: '12', icon: Heart, desc: 'Produtos salvos' },
-  { title: 'Presentes criados', value: '5', icon: Gift, desc: 'Personalizações feitas' },
-  { title: 'Endereços', value: '2', icon: MapPin, desc: 'Cadastrados' },
-];
+import { useCustomer } from '../../hooks/useCustomer';
 
 export const DashboardCliente: React.FC = () => {
+  const { customer, loading } = useCustomer();
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Carregando seus dados...</div>;
+  if (!customer) return <div className="p-8 text-center text-gray-500">Perfil não encontrado.</div>;
+
+  const stats = [
+    { title: 'Meus pedidos', value: customer.ordersCount || 0, icon: Package, desc: 'Total de pedidos' },
+    { title: 'Total gasto', value: `R$ ${(customer.totalSpent || 0).toFixed(2)}`, icon: Heart, desc: 'Valor total' },
+    { title: 'Endereços', value: customer.addresses?.length || 0, icon: MapPin, desc: 'Cadastrados' },
+  ];
+
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-mea-culpa text-4xl text-[#3A312D]">Olá, Julia 🌸</h1>
+        <h1 className="font-mea-culpa text-4xl text-[#3A312D]">Olá, {customer.name.split(' ')[0]} 🌸</h1>
         <p className="text-gray-500 mt-2">Seus momentos especiais estão guardados aqui com carinho.</p>
       </div>
 

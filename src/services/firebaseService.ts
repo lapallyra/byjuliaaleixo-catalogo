@@ -14,13 +14,17 @@ import {
   deleteDoc,
   orderBy,
   limit,
-  runTransaction
+  runTransaction,
+  writeBatch,
+  or
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { sendTelegramNotification } from './telegramService';
 import { createAuditLog } from './auditService';
-import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig, Coupon, ProductionBatch, AuditActionType, AuditLog, Campaign, OrderTimelineEvent } from '../types';
+import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig, Coupon, ProductionBatch, AuditActionType, AuditLog, Campaign, OrderTimelineEvent, CrmSettings, Memory } from '../types';
 import { eventBus } from './eventBus';
+import { normalizeCustomerAddresses, syncAddressesToLegacy } from '../lib/addressUtils';
+import { normalizePhone, isOrderFromCustomer } from '../utils/customerUtils';
 
 // --- Smart Cache & Subscription Multiplexing Layer ---
 class FirestoreMultiplexer<T> {
@@ -248,11 +252,17 @@ export const customersMultiplexer = new FirestoreMultiplexer<Customer>(
   () => collection(db, 'customers')
 );
 
+export const memoriesMultiplexer = new FirestoreMultiplexer<Memory>(
+  'memories',
+  () => collection(db, 'memories')
+);
+
 export const preloadAdminData = () => {
   console.log('[Cache] Preloading administrative cache data...');
   productsMultiplexer.preload();
   salesMultiplexer.preload();
   customersMultiplexer.preload();
+  memoriesMultiplexer.preload();
 };
 // ---------------------------------------------------
 
@@ -527,6 +537,34 @@ export const deleteInsumo = async (id: string) => {
   const path = `insumos/${id}`;
   try {
     await deleteDoc(doc(db, 'insumos', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+};
+
+export const addMemory = async (data: Omit<Memory, 'id'>) => {
+  const path = 'memories';
+  try {
+    const docRef = await addDoc(collection(db, path), sanitize({ ...data, createdAt: serverTimestamp() }));
+    return docRef.id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+  }
+};
+
+export const updateMemory = async (id: string, data: Partial<Memory>) => {
+  const path = `memories/${id}`;
+  try {
+    await updateDoc(doc(db, path), sanitize(data));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+};
+
+export const deleteMemory = async (id: string) => {
+  const path = `memories/${id}`;
+  try {
+    await deleteDoc(doc(db, path));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -1633,40 +1671,46 @@ function generateOrderCode(companyId: CompanyId): string {
 export const findMatchingCustomer = async (orderData: Partial<Order>, companyId: string) => {
   const path = 'customers';
   
-  if (orderData.customerCpfCnpj) {
-    const qCpf = query(
-      collection(db, path),
-      where('cpfCnpj', '==', orderData.customerCpfCnpj),
-      where('companyId', '==', companyId)
-    );
-    const snap = await getDocs(qCpf);
-    if (!snap.empty) return snap.docs[0];
+  // 1. Direct match by ID
+  if (orderData.customerId) {
+    const custRef = doc(db, path, orderData.customerId);
+    const snap = await getDoc(custRef);
+    if (snap.exists()) return snap;
   }
 
-  const qAll = query(
-    collection(db, path),
-    where('companyId', '==', companyId)
-  );
-  const snapAll = await getDocs(qAll);
-  
-  const cleanPhone = (p?: string) => p ? p.replace(/\D/g, "") : "";
-  const orderPhone = cleanPhone(orderData.contact);
-  const orderCpf = cleanPhone(orderData.customerCpfCnpj);
-  const orderName = orderData.customerName ? orderData.customerName.toLowerCase().trim() : "";
+  // 2. Targeted search using identifiers
+  const orderEmail = orderData.customerEmail?.toLowerCase().trim();
+  const orderCpf = normalizePhone(orderData.customerCpfCnpj);
+  const orderPhone = normalizePhone(orderData.contact);
 
-  for (const docSnap of snapAll.docs) {
-    const custData = docSnap.data();
-    const custPhone = cleanPhone(custData.contact);
-    const custCpf = cleanPhone(custData.cpfCnpj);
-    const custName = custData.name ? custData.name.toLowerCase().trim() : "";
+  const conditions = [];
+  if (orderEmail) conditions.push(where('email', '==', orderEmail));
+  if (orderCpf) conditions.push(where('cpfCnpj', '==', orderCpf));
+  if (orderPhone) conditions.push(where('contact', '==', orderPhone));
 
-    const isMatch = (orderCpf && custCpf === orderCpf) ||
-                    (orderPhone && custPhone === orderPhone) ||
-                    (orderName && custName === orderName);
-    
-    if (isMatch) {
-      return docSnap;
+  if (conditions.length > 0) {
+    try {
+      const q = query(
+        collection(db, path),
+        where('companyId', '==', companyId),
+        or(...conditions) as any
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) return snap.docs[0];
+    } catch (err) {
+      console.warn("Failed targeted customer search, falling back to name match.", err);
     }
+  }
+
+  // 3. Last resort: Name match (avoid broad queries if possible)
+  if (orderData.customerName) {
+    const qName = query(
+      collection(db, path),
+      where('companyId', '==', companyId),
+      where('name', '==', orderData.customerName)
+    );
+    const snap = await getDocs(qName);
+    if (!snap.empty) return snap.docs[0];
   }
 
   return null;
@@ -1676,40 +1720,57 @@ export const recalculateCustomerIndicators = async (customerRef: any, companyId:
   try {
     const custSnap = await getDoc(customerRef);
     if (!custSnap.exists()) return;
-    const customer = custSnap.data() as any;
+    const customerId = customerRef.id;
+    const customer = custSnap.data() as Customer;
+
+    const custPhone = normalizePhone(customer.contact);
+    const custCpf = normalizePhone(customer.cpfCnpj);
+    const custEmail = customer.email?.toLowerCase().trim();
+
+    // 1. Optimized Query: Targeted search instead of loading all orders
+    const conditions = [
+      where('customerId', '==', customerId)
+    ];
+
+    if (custEmail) conditions.push(where('customerEmail', '==', custEmail));
+    if (custPhone) conditions.push(where('contact', '==', custPhone));
+    if (custCpf) conditions.push(where('customerCpfCnpj', '==', custCpf));
 
     const qOrders = query(
       collection(db, 'orders'),
-      where('companyId', '==', companyId)
+      where('companyId', '==', companyId),
+      or(...conditions) as any
     );
-    const ordersSnap = await getDocs(qOrders);
 
-    const cleanPhone = (p?: string) => p ? p.replace(/\D/g, "") : "";
-    const custPhone = cleanPhone(customer.contact);
-    const custCpf = cleanPhone(customer.cpfCnpj);
-    const custName = customer.name ? customer.name.toLowerCase().trim() : "";
+    const ordersSnap = await getDocs(qOrders);
 
     let totalSpent = 0;
     let ordersCount = 0;
+    let hasMigration = false;
+    const batch = writeBatch(db);
 
     for (const orderDoc of ordersSnap.docs) {
       const o = orderDoc.data() as Order;
       
-      const orderPhone = cleanPhone(o.contact);
-      const orderCpf = cleanPhone(o.customerCpfCnpj);
-      const orderName = o.customerName ? o.customerName.toLowerCase().trim() : "";
+      // Use centralized matching logic
+      if (isOrderFromCustomer(o, { ...customer, id: customerId })) {
+        // SILENT MIGRATION: Update order with customerId if missing
+        if (!o.customerId) {
+          batch.update(orderDoc.ref, { customerId });
+          hasMigration = true;
+        }
 
-      const isMatch = (custCpf && orderCpf === custCpf) ||
-                      (custPhone && orderPhone === custPhone) ||
-                      (orderName && custName === orderName);
-
-      if (isMatch) {
         const status = o.status ? normalizeStatus(o.status) : '';
         if (status !== 'cancelled' && status !== 'quote') {
           totalSpent += Number(o.total) || 0;
           ordersCount += 1;
         }
       }
+    }
+
+    if (hasMigration) {
+      await batch.commit();
+      console.log(`Silent migration completed for customer ${customer.name}: linked orders.`);
     }
 
     const ticketMedio = ordersCount > 0 ? totalSpent / ordersCount : 0;
@@ -1840,11 +1901,30 @@ export const syncCustomerFromCheckout = async (companyId: CompanyId, data: Parti
   }
 };
 export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdAt'>) => {
+  const settings = await getCrmSettings(data.companyId);
+  
+  if (settings.requireCpf && (!data.cpfCnpj || data.cpfCnpj.length < 11)) {
+     throw new Error("CPF/CNPJ é obrigatório.");
+  }
+  
+  if (settings.usePhoneId && data.contact) {
+     const q = query(collection(db, 'customers'), where('companyId', '==', data.companyId), where('contact', '==', data.contact));
+     const snap = await getDocs(q);
+     if (!snap.empty) {
+        throw new Error("Cliente com esse WhatsApp já cadastrado.");
+     }
+  }
+
   const path = 'customers';
   try {
     const customerCode = Array.from({ length: 7 }, () => Math.floor(Math.random() * 10)).join('');
+    const addresses = normalizeCustomerAddresses(data as Customer);
+    const legacy = syncAddressesToLegacy(addresses);
+    
     const docRef = await addDoc(collection(db, path), sanitize({
       ...data,
+      ...legacy,
+      addresses,
       code: customerCode,
       createdAt: serverTimestamp(),
       totalSpent: data.totalSpent || 0,
@@ -1869,7 +1949,15 @@ export const subscribeToCustomers = (callback: (customers: Customer[]) => void, 
 
 export const updateCustomer = async (id: string, data: Partial<Customer>) => {
   const path = `customers/${id}`;
-  const { id: _, ...dataWithoutId } = data as any;
+  
+  let dataToUpdate = { ...data };
+  if (dataToUpdate.addresses) {
+    const legacy = syncAddressesToLegacy(dataToUpdate.addresses);
+    dataToUpdate = { ...dataToUpdate, ...legacy };
+  }
+  
+  const { id: _, ...dataWithoutId } = dataToUpdate as any;
+  
   try {
     const custRef = doc(db, 'customers', id);
     const snap = await getDoc(custRef);
@@ -1896,6 +1984,18 @@ export const deleteCustomer = async (id: string) => {
     const custRef = doc(db, 'customers', id);
     const snap = await getDoc(custRef);
     const oldData = snap.exists() ? snap.data() : {};
+    
+    // Delete related memories to prevent orphans
+    const memoriesQuery = query(collection(db, 'memories'), where('customerId', '==', id));
+    const memoriesSnap = await getDocs(memoriesQuery);
+    
+    if (!memoriesSnap.empty) {
+      const batch = writeBatch(db);
+      memoriesSnap.docs.forEach((memoryDoc) => {
+        batch.delete(memoryDoc.ref);
+      });
+      await batch.commit();
+    }
     
     await deleteDoc(custRef);
     
@@ -2019,6 +2119,41 @@ export const saveGlobalSettings = async (data: any) => {
     await createAuditLog('Configurações', 'Alteração', 'global', 'Configurações Globais', { oldData: oldData, newData: data });
   } catch (error) {
     console.error('Error fetching global settings:', error);
+  }
+};
+
+export const getCrmSettings = async (companyId: CompanyId): Promise<CrmSettings> => {
+  try {
+    const docSnap = await getDoc(doc(db, 'crmSettings', companyId));
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as CrmSettings;
+    }
+    return {
+      companyId,
+      usePhoneId: true,
+      requireCpf: false,
+      alertIncomplete: true,
+      allowEditCheckout: false
+    };
+  } catch (error) {
+    console.error('Error fetching CRM settings:', error);
+    return {
+      companyId,
+      usePhoneId: true,
+      requireCpf: false,
+      alertIncomplete: true,
+      allowEditCheckout: false
+    };
+  }
+};
+
+export const saveCrmSettings = async (companyId: CompanyId, settings: CrmSettings): Promise<void> => {
+  try {
+    await setDoc(doc(db, 'crmSettings', companyId), settings, { merge: true });
+    await createAuditLog('Clientes', 'Atualização', companyId, 'Atualização de configurações de CRM', { details: settings });
+  } catch (error) {
+    console.error('Error saving CRM settings:', error);
+    throw error;
   }
 };
 

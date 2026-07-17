@@ -386,7 +386,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
 
       {/* Content Area */}
       <div className="w-full p-8 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-200/50 min-h-0">
-        {activeSubTab === "clients" && <ClientSettings />}
+        {activeSubTab === "clients" && <ClientSettings companyId={companyId} />}
         {activeSubTab === "products" && <ProductSettings />}
         {activeSubTab === "payments" && <PaymentSettings />}
         {activeSubTab === "approval" && <ApprovalSettings />}

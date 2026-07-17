@@ -37,6 +37,16 @@ service cloud.firestore {
       );
     }
 
+    function isCustomerOwner(customerId) {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/customers/$(customerId)) &&
+             get(/databases/$(database)/documents/customers/$(customerId)).data.email.lower() == request.auth.token.email.lower();
+    }
+
+    function isEmailOwner(email) {
+      return request.auth != null && email != null && email.lower() == request.auth.token.email.lower();
+    }
+
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
@@ -82,19 +92,26 @@ service cloud.firestore {
       // Criar pedido público (checkout)
       allow create: if true;
       
-      // Detalhes individuais: apenas admin (Proteção LGPD)
-      allow get: if isStaff();
+      // Detalhes individuais: apenas admin ou o próprio cliente
+      allow get: if isStaff() || 
+                    (existing().customerId != null && isCustomerOwner(existing().customerId)) ||
+                    (existing().customerEmail != null && isEmailOwner(existing().customerEmail));
 
-      // Consulta de rastreio: permitida apenas se filtrar por código
-      // Isso impede listagem total por usuários públicos
+      // Consulta de rastreio ou listagem do cliente
       allow list: if isStaff() || (
-        request.query.filters != null &&
-        "code" in request.query.filters
+        request.query.filters != null && (
+          "code" in request.query.filters ||
+          ("customerId" in request.query.filters && isCustomerOwner(request.query.filters.customerId)) ||
+          ("customerEmail" in request.query.filters && isEmailOwner(request.query.filters.customerEmail))
+        )
       );
 
       // Atualização pós-venda: apenas campos não sensíveis
-      // Removemos 'status' e 'batchId' da permissão pública
-      allow update: if isStaff() || 
+      allow update: if isStaff() || (
+        (
+          (existing().customerId != null && isCustomerOwner(existing().customerId)) ||
+          (existing().customerEmail != null && isEmailOwner(existing().customerEmail))
+        ) && 
         incoming().diff(existing()).affectedKeys().hasOnly([
           "roulettePrize",
           "roulettePlayed",
@@ -102,7 +119,8 @@ service cloud.firestore {
           "whatsappSent",
           "thankYouShown",
           "updatedAt"
-        ]);
+        ])
+      );
 
       // Somente admin pode deletar
       allow delete: if isStaff();
@@ -117,15 +135,37 @@ service cloud.firestore {
     // CUSTOMERS
     // ----------------------------------------------------
     match /customers/{customerId} {
-      allow get, list: if isStaff();
+      allow get: if isStaff() || (exists(/databases/$(database)/documents/customers/$(customerId)) && isEmailOwner(existing().email));
+      allow list: if isStaff(); 
       allow create: if true; 
       allow update: if isStaff() || (
+        isEmailOwner(existing().email) &&
         incoming().diff(existing()).affectedKeys().hasOnly([
-          'totalSpent', 'ordersCount', 'name', 'cpfCnpj', 'email', 
-          'address', 'city', 'state', 'zipCode', 'number', 'neighborhood'
+          'totalSpent', 'ordersCount', 'name', 'cpfCnpj', 'email', 'phone',
+          'address', 'city', 'state', 'zipCode', 'number', 'neighborhood', 'addresses'
         ])
       );
       allow delete: if isStaff();
+    }
+
+    // ----------------------------------------------------
+    // MEMORIES
+    // ----------------------------------------------------
+    match /memories/{memoryId} {
+      allow read: if isStaff() || 
+                    (existing().customerId != null && isCustomerOwner(existing().customerId)) ||
+                    (existing().customerEmail != null && isEmailOwner(existing().customerEmail));
+      
+      allow create: if isStaff() || (
+        request.auth != null && (
+          (incoming().customerId != null && isCustomerOwner(incoming().customerId)) ||
+          (incoming().customerEmail != null && isEmailOwner(incoming().customerEmail))
+        )
+      );
+
+      allow update, delete: if isStaff() || 
+                      (existing().customerId != null && isCustomerOwner(existing().customerId)) ||
+                      (existing().customerEmail != null && isEmailOwner(existing().customerEmail));
     }
 
     // ----------------------------------------------------
