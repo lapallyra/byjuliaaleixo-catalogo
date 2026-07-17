@@ -135,24 +135,41 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFF9F6]">
-        <Loader2 className="w-12 h-12 text-pink-600 animate-spin mb-4" />
-        <p className="text-pink-500 font-bold uppercase tracking-widest text-xs">Buscando lista...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FCFAF7] font-sans">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col items-center"
+        >
+          <div className="relative mb-6">
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="text-[#3D2E24]/10"
+            >
+              <Loader2 size={40} strokeWidth={1} />
+            </motion.div>
+          </div>
+          <span className="text-[#3D2E24]/40 font-sans text-[9px] uppercase tracking-[0.4em] font-medium">
+            Buscando Mimos
+          </span>
+        </motion.div>
       </div>
     );
   }
 
   if (!giftList) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFF9F6] p-6">
-        <Gift className="w-16 h-16 text-pink-200 mb-6 animate-bounce" />
-        <h2 className="text-2xl font-serif text-slate-900 mb-2">Lista não encontrada</h2>
-        <p className="text-slate-500 font-medium text-xs uppercase tracking-widest mb-8 text-center max-w-sm leading-relaxed">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FCFAF7] p-6">
+        <Gift className="w-16 h-16 text-[#3D2E24]/10 mb-6" />
+        <h2 className="text-2xl font-serif text-[#3D2E24] mb-2">Lista não encontrada</h2>
+        <p className="text-[#3D2E24]/40 font-medium text-[10px] uppercase tracking-widest mb-8 text-center max-w-sm leading-relaxed">
           O código da lista pode estar incorreto ou a lista foi removida.
         </p>
         <button 
           onClick={() => navigate('/listadepresentes')}
-          className="bg-white border border-pink-200 text-pink-600 hover:text-pink-700 px-8 py-4.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-pink-50/20 transition-all cursor-pointer shadow-sm"
+          className="bg-white border border-[#E8DCC8] text-[#3D2E24] hover:text-[#cca062] px-8 py-4.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white transition-all cursor-pointer shadow-sm"
         >
           Ir para Lista de Presentes
         </button>
@@ -166,7 +183,7 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
   const listProgressPercent = totalItemsCount > 0 ? Math.round((giftedItemsCount / totalItemsCount) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-[#FFF9F6] flex flex-col relative font-sans selection:bg-[#FFD2E5] selection:text-pink-900">
+    <div className="min-h-screen bg-[#FCFAF7] flex flex-col relative font-sans selection:bg-[#E8DCC8] selection:text-[#3A312D]">
       {/* Toast Notification */}
       <AnimatePresence>
         {copySuccess && (

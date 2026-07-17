@@ -1,8 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
+import { Loader2 } from 'lucide-react';
 import { EntryView } from '../EntryView';
 import { VitrinePage } from '../VitrinePage';
 import { AteliersPresentationView } from '../AteliersPresentationView';
+import { HowToBuildKitView } from '../HowToBuildKitView';
+import { GiftListHowItWorksView } from '../GiftListHowItWorksView';
+import { CustomerFeedbackView } from '../CustomerFeedbackView';
 import { ColecoesView } from '../ColecoesView';
 import { KitsView } from '../KitsView';
 import { KitConstructor } from '../KitConstructor';
@@ -20,6 +25,7 @@ import { TopAnnouncementBar } from '../TopAnnouncementBar';
 import { Footer } from '../Footer';
 import { CustomerSocialProofToast } from '../CustomerSocialProofToast';
 import { CompanyCatalogWrapper } from './CompanyCatalogWrapper';
+import { GlobalSearchView } from '../GlobalSearchView';
 import { CommemorativeCampaignPage } from '../CommemorativeCampaignPage';
 import { PromotionalCampaignPage } from '../PromotionalCampaignPage';
 import { INITIAL_CONFIG, PRODUCTS } from '../../constants';
@@ -31,6 +37,7 @@ export function SiteApp() {
   const [allProducts, setAllProducts] = useState<Product[]>(PRODUCTS);
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
   const [isProductsLoaded, setIsProductsLoaded] = useState(false);
+  const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const effectiveConfig = config || INITIAL_CONFIG;
   const location = useLocation();
 
@@ -139,23 +146,61 @@ export function SiteApp() {
 
   if (!isConfigLoaded || !isProductsLoaded) {
     return (
-      <div className="min-h-screen bg-[#FDFCF0] flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-rose-200 border-t-rose-500 rounded-full animate-spin mb-4"></div>
-        <p className="text-slate-500 font-medium text-xs tracking-widest uppercase">Carregando...</p>
+      <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center font-sans">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col items-center"
+        >
+          <div className="relative mb-8">
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="text-[#3D2E24]/10"
+            >
+              <Loader2 size={48} strokeWidth={1} />
+            </motion.div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-[#3D2E24]/40 rounded-full animate-pulse" />
+            </div>
+          </div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="flex flex-col items-center gap-2"
+          >
+            <span className="text-[#3D2E24] font-mea-culpa text-3xl mb-1 opacity-80">
+              by Julia Aleixo
+            </span>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-[1px] bg-[#3D2E24]/10" />
+              <span className="text-[#3D2E24]/40 font-sans text-[9px] uppercase tracking-[0.4em] font-medium">
+                Sincronizando Afeto
+              </span>
+              <div className="w-8 h-[1px] bg-[#3D2E24]/10" />
+            </div>
+          </motion.div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen neumo-bg">
+    <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen bg-[#FCFAF7]">
       <TopAnnouncementBar />
       <div className="flex-grow flex flex-col">
         <Routes>
-          <Route path="/" element={<EntryView config={effectiveConfig} allProducts={allProducts} />} />
+          <Route path="/" element={<EntryView config={effectiveConfig} allProducts={allProducts} onOpenSearch={() => setIsGlobalSearchOpen(true)} />} />
           <Route path="/comemorativas/:slug" element={<CommemorativeCampaignPage allProducts={allProducts} />} />
           <Route path="/promocao/:slug" element={<PromotionalCampaignPage allProducts={allProducts} />} />
           <Route path="/vitrine" element={<VitrinePage />} />
           <Route path="/atelies" element={<AteliersPresentationView />} />
+          <Route path="/comomontar" element={<HowToBuildKitView />} />
+          <Route path="/comofunciona-lp" element={<GiftListHowItWorksView />} />
+          <Route path="/feedclientes" element={<CustomerFeedbackView />} />
           <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />
           <Route path="/kits" element={<KitsView allProducts={allProducts} setCarts={setUnifiedCart} />} />
           <Route path="/kit-meukit" element={<KitConstructor allProducts={allProducts} setCarts={setUnifiedCart} />} />
@@ -163,10 +208,10 @@ export function SiteApp() {
           <Route path="/listadepresentes" element={<GiftListInfoView />} />
           <Route path="/consulta/:code" element={<GiftListView setCarts={setUnifiedCart} config={effectiveConfig} />} />
           
-          <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="pallyra" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} />} />
-          <Route path="/comamorguennita" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="guennita" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} />} />
-          <Route path="/mimadasim" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="mimada" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} />} />
-          <Route path="/tuttymimo" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="tuttymimo" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} />} />
+          <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="pallyra" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)} />} />
+          <Route path="/comamorguennita" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="guennita" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)} />} />
+          <Route path="/mimadasim" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="mimada" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)} />} />
+          <Route path="/tuttymimo" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="tuttymimo" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)} />} />
           
           <Route path="/mimada" element={<Navigate to="/mimadasim" replace />} />
           <Route path="/guennita" element={<Navigate to="/comamorguennita" replace />} />
@@ -186,6 +231,12 @@ export function SiteApp() {
       </div>
       <Footer config={effectiveConfig} />
       {isHomeOrCatalog && <CustomerSocialProofToast currentCompany={currentCompany} products={allProducts} />}
+      
+      <GlobalSearchView 
+        isOpen={isGlobalSearchOpen} 
+        onClose={() => setIsGlobalSearchOpen(false)} 
+        allProducts={allProducts}
+      />
     </div>
   );
 }

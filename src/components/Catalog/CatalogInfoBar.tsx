@@ -50,7 +50,7 @@ export const CatalogInfoBar: React.FC<CatalogInfoBarProps> = ({
         </div>
 
         {searchQuery && (
-          <div className="flex items-center gap-2 text-xs text-[#6d5443] mt-1 bg-[#FDFCF0]/60 px-3 py-1.5 rounded-lg border border-[#e8dcc8]/30 w-fit">
+          <div className="flex items-center gap-2 text-xs text-[#6d5443] mt-1 bg-white/60 px-3 py-1.5 rounded-lg border border-[#e8dcc8]/30 w-fit">
             <Search size={12} className="text-[#cca062]" />
             <span>
               Busca por: <strong className="font-serif italic text-[#3A312D]">"{searchQuery}"</strong> 

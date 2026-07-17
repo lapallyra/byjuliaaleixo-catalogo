@@ -36,7 +36,6 @@ import {
   Archive,
 } from "lucide-react";
 import { CSVHandler } from "./CSVHandler";
-import { NewClientForm } from "./NewClientForm";
 import { Customer, CompanyId, Order } from "../../types";
 import {
   deleteCustomer,
@@ -221,21 +220,35 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
     }
   };
 
+  // Pre-process customer fields for search to avoid repeating replace, trim, and toLowerCase inside loops
+  const preprocessedCustomers = useMemo(() => {
+    return customers.map((c) => {
+      return {
+        customer: c,
+        normName: (c.name || "").toLowerCase().trim(),
+        normEmail: (c.email || "").toLowerCase().trim(),
+        normCity: (c.city || "").toLowerCase().trim(),
+        normCode: (c.code || "").toLowerCase().trim(),
+        cleanContact: (c.contact || "").replace(/\D/g, ""),
+        cleanCpfCnpj: (c.cpfCnpj || "").replace(/\D/g, ""),
+      };
+    });
+  }, [customers]);
+
   // Advanced Filter & Sort Logic
   const filteredCustomers = useMemo(() => {
-    return customers
-      .filter((c) => {
-        // Search query (name, phone, email, cpf/cnpj, city, code)
-        const normSearch = searchTerm.toLowerCase();
-        const cleanSearch = searchTerm.replace(/\D/g, "");
-        
+    const normSearch = searchTerm.toLowerCase().trim();
+    const cleanSearch = searchTerm.replace(/\D/g, "");
+
+    return preprocessedCustomers
+      .filter(({ customer: c, normName, normEmail, normCity, normCode, cleanContact, cleanCpfCnpj }) => {
         const matchesSearch =
-          c.name.toLowerCase().includes(normSearch) ||
-          (c.email && c.email.toLowerCase().includes(normSearch)) ||
-          (c.city && c.city.toLowerCase().includes(normSearch)) ||
-          (c.code && c.code.toLowerCase().includes(normSearch)) ||
-          (cleanSearch && c.contact && c.contact.replace(/\D/g, "").includes(cleanSearch)) ||
-          (cleanSearch && c.cpfCnpj && c.cpfCnpj.replace(/\D/g, "").includes(cleanSearch));
+          normName.includes(normSearch) ||
+          normEmail.includes(normSearch) ||
+          normCity.includes(normSearch) ||
+          normCode.includes(normSearch) ||
+          (cleanSearch && cleanContact.includes(cleanSearch)) ||
+          (cleanSearch && cleanCpfCnpj.includes(cleanSearch));
 
         if (!matchesSearch) return false;
 
@@ -253,6 +266,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
 
         return true;
       })
+      .map(({ customer }) => customer)
       .sort((a, b) => {
         if (sortBy === "name_asc") return a.name.localeCompare(b.name);
         if (sortBy === "name_desc") return b.name.localeCompare(a.name);
@@ -265,12 +279,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
         if (sortBy === "oldest") return dateA - dateB;
         return dateB - dateA; // newest default
       });
-  }, [
-    customers,
-    searchTerm,
-    quickFilter,
-    sortBy,
-  ]);
+  }, [preprocessedCustomers, searchTerm, quickFilter, sortBy]);
 
   const paginatedCustomers = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -313,7 +322,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
     });
   }, [customers]);
 
-  // Global customer metrics map for quick summary
+  // Global customer metrics map for quick summary, optimized using O(N+M) mapping
   const customerMetricsMap = useMemo(() => {
     const map = new Map<string, {
       activeOrders: number;
@@ -322,25 +331,55 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
       topProducts: string[];
     }>();
 
-    customers.forEach(c => {
-      const cleanPhone = c.contact?.replace(/\D/g, "");
-      const cleanCpf = c.cpfCnpj?.replace(/\D/g, "");
-      
-      const cSales = sales.filter((o) => {
-        const orderPhone = o.contact?.replace(/\D/g, "");
-        const orderCpf = o.customerCpfCnpj?.replace(/\D/g, "");
-        return (
-          (cleanPhone && orderPhone === cleanPhone) ||
-          (cleanCpf && orderCpf === cleanCpf) ||
-          (o.customerName && o.customerName.toLowerCase() === c.name.toLowerCase())
-        );
-      });
+    // Map sales by normalized match identifiers (phone, CPF/CNPJ, and lowercase trimmed name)
+    const salesByPhone = new Map<string, any[]>();
+    const salesByCpf = new Map<string, any[]>();
+    const salesByName = new Map<string, any[]>();
+
+    sales.forEach((o) => {
+      const orderPhone = o.contact ? o.contact.replace(/\D/g, "") : "";
+      const orderCpf = o.customerCpfCnpj ? o.customerCpfCnpj.replace(/\D/g, "") : "";
+      const orderName = o.customerName ? o.customerName.toLowerCase().trim() : "";
+
+      if (orderPhone) {
+        if (!salesByPhone.has(orderPhone)) salesByPhone.set(orderPhone, []);
+        salesByPhone.get(orderPhone)!.push(o);
+      }
+      if (orderCpf) {
+        if (!salesByCpf.has(orderCpf)) salesByCpf.set(orderCpf, []);
+        salesByCpf.get(orderCpf)!.push(o);
+      }
+      if (orderName) {
+        if (!salesByName.has(orderName)) salesByName.set(orderName, []);
+        salesByName.get(orderName)!.push(o);
+      }
+    });
+
+    customers.forEach((c) => {
+      const cleanPhone = c.contact ? c.contact.replace(/\D/g, "") : "";
+      const cleanCpf = c.cpfCnpj ? c.cpfCnpj.replace(/\D/g, "") : "";
+      const lowerName = c.name ? c.name.toLowerCase().trim() : "";
+
+      // Deduplicate matching orders using a Set to prevent double counting
+      const matchedSalesSet = new Set<any>();
+
+      if (cleanPhone && salesByPhone.has(cleanPhone)) {
+        salesByPhone.get(cleanPhone)!.forEach((o) => matchedSalesSet.add(o));
+      }
+      if (cleanCpf && salesByCpf.has(cleanCpf)) {
+        salesByCpf.get(cleanCpf)!.forEach((o) => matchedSalesSet.add(o));
+      }
+      if (lowerName && salesByName.has(lowerName)) {
+        salesByName.get(lowerName)!.forEach((o) => matchedSalesSet.add(o));
+      }
+
+      const cSales = Array.from(matchedSalesSet);
 
       let activeCount = 0;
       let lastDate: Date | null = null;
       const productsMap: { [name: string]: number } = {};
 
-      cSales.forEach(o => {
+      cSales.forEach((o) => {
         if (["pending", "processing", "production", "shipped"].includes(o.status || "")) {
           activeCount++;
         }
@@ -349,22 +388,22 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
           lastDate = oDate;
         }
 
-        o.items?.forEach(item => {
-           const pName = item.product_name || "Produto";
-           productsMap[pName] = (productsMap[pName] || 0) + (item.quantity || 1);
+        o.items?.forEach((item) => {
+          const pName = item.product_name || "Produto";
+          productsMap[pName] = (productsMap[pName] || 0) + (item.quantity || 1);
         });
       });
 
       const topProducts = Object.entries(productsMap)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
-        .map(entry => entry[0]);
+        .map((entry) => entry[0]);
 
       map.set(c.id, {
         activeOrders: activeCount,
         lastPurchaseDate: lastDate,
         isRecurrent: cSales.length > 1,
-        topProducts
+        topProducts,
       });
     });
 
@@ -781,6 +820,7 @@ Histórico de Compras:
           <CSVHandler
             moduleName="Clientes"
             data={filteredCustomers}
+            companyId={companyId}
             fields={[
               "name",
               "code",
@@ -796,14 +836,16 @@ Histórico de Compras:
               "notes",
             ]}
             onImport={(newData) => {
-              for (const item of newData) {
-                addCustomer({
-                  ...item,
-                  companyId,
-                  totalSpent: parseFloat(item.totalSpent) || 0,
-                  ordersCount: parseInt(item.ordersCount) || 0,
-                  status: item.status || "Ativo",
-                });
+              if (!companyId) {
+                for (const item of newData) {
+                  addCustomer({
+                    ...item,
+                    companyId,
+                    totalSpent: parseFloat(item.totalSpent) || 0,
+                    ordersCount: parseInt(item.ordersCount) || 0,
+                    status: item.status || "Ativo",
+                  });
+                }
               }
             }}
           />

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Order, Product, Insumo } from "../../types";
+import { Order, Product, Insumo, OrderPayment, OrderTimelineEvent } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { calculateProductCost } from "../../lib/finance";
 import { safeFormatISO } from "../../lib/dateUtils";
@@ -12,6 +12,7 @@ import {
 import { OrderPrintA6Modal } from "./OrderPrintA6Modal";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+import { useAuth } from "../AuthProvider";
 
 interface OrderDetailsViewProps {
   order: Order;
@@ -24,18 +25,31 @@ interface OrderDetailsViewProps {
   onPrint?: (order: Order) => void;
   onDelete?: (id: string) => void;
   onDuplicate?: (order: Order) => void;
+  initialTab?: "geral" | "cliente" | "produtos" | "financeiro" | "producao" | "arquivos" | "historico";
+  openPaymentModalOnMount?: boolean;
 }
 
 export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({ 
-  order, products, insumos, onBack, onEdit, onSave, onUpdateStatus, onPrint, onDelete, onDuplicate 
+  order, products, insumos, onBack, onEdit, onSave, onUpdateStatus, onPrint, onDelete, onDuplicate,
+  initialTab, openPaymentModalOnMount
 }) => {
   const orchestrator = useAdminOrchestrator();
+  const { user } = useAuth();
   const [observations, setObservations] = useState(order.observations || "");
   const [isSaving, setIsSaving] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(openPaymentModalOnMount || false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"geral" | "cliente" | "produtos" | "financeiro" | "producao" | "arquivos" | "historico">("geral");
+  const [activeTab, setActiveTab] = useState<"geral" | "cliente" | "produtos" | "financeiro" | "producao" | "arquivos" | "historico">(initialTab || "geral");
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+    if (openPaymentModalOnMount !== undefined) {
+      setIsPaymentModalOpen(openPaymentModalOnMount);
+    }
+  }, [initialTab, openPaymentModalOnMount, order.id]);
 
   useEffect(() => {
     const handlePrintCoupon = () => { if(onPrint) onPrint(order); };
@@ -71,13 +85,55 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
   const discount = order.discount || 0;
   const shipping = order.shippingCost || 0;
   const total = order.total || (subtotal + shipping - discount);
-  const paid = order.hasSignal 
-    ? (typeof order.signalValue === 'number' ? order.signalValue : (subtotal * 0.5)) 
-    : (order.paymentStatus === "paid" || order.status === "fully_paid" ? total : 0);
+
+  const paymentsList = useMemo(() => {
+    if (order.payments && order.payments.length > 0) {
+      return order.payments;
+    }
+    const list: OrderPayment[] = [];
+    if (order.hasSignal && typeof order.signalValue === 'number' && order.signalValue > 0) {
+      list.push({
+        id: 'initial',
+        date: order.createdAt ? (new Date(order.createdAt?.toMillis?.() || (order.createdAt as any)?.seconds * 1000 || order.createdAt).toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
+        amount: order.signalValue,
+        method: order.paymentMethod || 'Não informado',
+        notes: 'Sinal Pago (Legado)'
+      });
+    } else if (order.paymentStatus === "paid" || order.status === "fully_paid") {
+      list.push({
+        id: 'initial',
+        date: order.createdAt ? (new Date(order.createdAt?.toMillis?.() || (order.createdAt as any)?.seconds * 1000 || order.createdAt).toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
+        amount: total,
+        method: order.paymentMethod || 'Não informado',
+        notes: 'Pagamento Integral (Legado)'
+      });
+    } else if (order.payAmount && order.payAmount > 0) {
+      list.push({
+        id: 'initial',
+        date: order.createdAt ? (new Date(order.createdAt?.toMillis?.() || (order.createdAt as any)?.seconds * 1000 || order.createdAt).toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
+        amount: order.payAmount,
+        method: order.paymentMethod || 'Não informado',
+        notes: 'Pagamento (Legado)'
+      });
+    }
+    return list;
+  }, [order, total]);
+
+  const paid = useMemo(() => {
+    if (order.payments && order.payments.length > 0) {
+      return order.payments.reduce((sum, p) => sum + p.amount, 0);
+    }
+    return order.hasSignal 
+      ? (typeof order.signalValue === 'number' ? order.signalValue : (subtotal * 0.5)) 
+      : (order.paymentStatus === "paid" || order.status === "fully_paid" ? total : 0);
+  }, [order, subtotal, total]);
+
   const remaining = Math.max(0, total - paid);
 
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [paymentValue, setPaymentValue] = useState("");
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [paymentNotes, setPaymentNotes] = useState("");
   const [selectedInstallments, setSelectedInstallments] = useState<number[]>([]);
 
   useEffect(() => {
@@ -85,6 +141,8 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
       setPaymentMethod("pix");
       setPaymentValue(remaining.toFixed(2).replace(".", ","));
       setSelectedInstallments([]);
+      setPaymentDate(new Date().toISOString().split('T')[0]);
+      setPaymentNotes("");
     }
   }, [isPaymentModalOpen, remaining]);
 
@@ -115,11 +173,42 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
   const profit = total - costTotal;
   const margin = total > 0 ? (profit / total) * 100 : 0;
 
+  const formatTimelineDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+  };
+
+  const timelineEvents = useMemo(() => {
+    let list = order.timeline || [];
+    if (!Array.isArray(list) || list.length === 0) {
+      const createdTime = order.createdAt ? (order.createdAt.seconds ? order.createdAt.seconds * 1000 : new Date(order.createdAt).getTime()) : Date.now();
+      list = [
+        {
+          id: 'imported_fallback',
+          date: order.createdAt ? safeFormatISO(order.createdAt, "yyyy-MM-dd") : new Date().toISOString().split('T')[0],
+          time: order.createdAt ? safeFormatISO(order.createdAt, "HH:mm") : new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          description: "Pedido importado para o novo sistema de Timeline",
+          user: "Sistema",
+          timestamp: createdTime
+        }
+      ];
+    }
+    return [...list].sort((a, b) => {
+      const timeA = a.timestamp ? (typeof a.timestamp === 'number' ? a.timestamp : a.timestamp.seconds * 1000) : 0;
+      const timeB = b.timestamp ? (typeof b.timestamp === 'number' ? b.timestamp : b.timestamp.seconds * 1000) : 0;
+      return timeB - timeA;
+    });
+  }, [order.timeline, order.createdAt]);
+
   const handleSave = async () => {
     if (onSave) {
       setIsSaving(true);
       try {
-        await onSave({ ...order, observations });
+        await onSave({ ...order, observations, updatedBy: user?.email || user?.displayName || "Membro da Equipe" });
         onBack();
       } catch (err) {
         console.error(err);
@@ -410,11 +499,11 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                     </div>
                     <div>
                       <span className="text-gray-400 font-medium block">Responsável</span>
-                      <span className="font-bold text-gray-700">{order.assignee || "Não designado"}</span>
+                      <span className="font-bold text-gray-700">{order.responsible || order.assignee || "Não designado"}</span>
                     </div>
                     <div>
                       <span className="text-gray-400 font-medium block">Prioridade</span>
-                      <span className="font-bold text-gray-700 capitalize">{order.productionPriority || "Normal"}</span>
+                      <span className="font-bold text-gray-700 capitalize">{order.priority || order.productionPriority || "Normal"}</span>
                     </div>
                   </div>
                 </div>
@@ -441,6 +530,81 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   </div>
                 </div>
 
+              </div>
+
+              {/* SEÇÃO: PERSONALIZAÇÃO */}
+              <div className="bg-white/75 backdrop-blur-md border border-white/80 rounded-[22px] p-6 shadow-sm space-y-4">
+                <h3 className="text-xs font-bold text-pink-600 uppercase tracking-widest block border-b border-white pb-2">
+                  Personalização
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <span className="text-gray-400 font-medium block mb-0.5">Nome para Personalização</span>
+                    <p className="font-bold text-gray-700">{order.customizationName || "--"}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-medium block mb-0.5">Tema</span>
+                    <p className="font-bold text-gray-700">{order.customizationTheme || "--"}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-medium block mb-0.5">Cores</span>
+                    <p className="font-bold text-gray-700">{order.customizationColors || "--"}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-medium block mb-0.5">Texto da Arte</span>
+                    <p className="font-bold text-gray-700">{order.customizationArtText || "--"}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-medium block mb-0.5">Data do Evento</span>
+                    <p className="font-bold text-gray-700">
+                      {order.customizationEventDate 
+                        ? (() => {
+                            try {
+                              const [year, month, day] = order.customizationEventDate.split('-');
+                              if (year && month && day) return `${day}/${month}/${year}`;
+                              return order.customizationEventDate;
+                            } catch (e) {
+                              return order.customizationEventDate;
+                            }
+                          })()
+                        : "--"
+                      }
+                    </p>
+                  </div>
+                  <div className="sm:col-span-2 md:col-span-3">
+                    <span className="text-gray-400 font-medium block mb-0.5">Observações da Personalização</span>
+                    <p className="font-medium text-gray-600 bg-white/50 border border-white/60 rounded-xl p-3 whitespace-pre-wrap">
+                      {order.customizationNotes || "Sem observações adicionais para personalização."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* SEÇÃO: TIMELINE DO PEDIDO */}
+              <div className="bg-white/75 backdrop-blur-md border border-white/80 rounded-[22px] p-6 shadow-sm space-y-4">
+                <div className="border-b border-white pb-2 flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-pink-600 uppercase tracking-widest flex items-center gap-1.5">
+                    <Activity size={14} /> Timeline do Pedido
+                  </h3>
+                </div>
+                
+                <div className="relative pl-3 space-y-4 before:absolute before:inset-y-0 before:left-[15px] before:w-0.5 before:bg-pink-100">
+                  {timelineEvents.map((event) => (
+                    <div key={event.id} className="relative flex gap-3 text-xs">
+                      <div className="w-2 h-2 rounded-full bg-pink-500 border-2 border-white shrink-0 mt-1 z-10 -ml-1" />
+                      <div>
+                        <p className="font-semibold text-gray-700">{event.description}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] font-medium text-gray-400">
+                          <span>{formatTimelineDate(event.date)}</span>
+                          <span className="w-1 h-1 rounded-full bg-pink-100" />
+                          <span>{event.time}</span>
+                          <span className="w-1 h-1 rounded-full bg-pink-100" />
+                          <span className="text-gray-500">{event.user}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
             </div>
@@ -678,6 +842,53 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
 
               </div>
 
+              {/* HISTÓRICO DE PAGAMENTOS */}
+              <div className="bg-white/75 backdrop-blur-md border border-white/80 rounded-[22px] p-6 shadow-sm space-y-4">
+                <div className="flex justify-between items-center border-b border-white pb-2 mb-4">
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Histórico de Pagamentos</h3>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-pink-100/50 text-[#8E8E93] font-bold uppercase tracking-wider text-[10px]">
+                        <th className="py-2.5">Data</th>
+                        <th className="py-2.5">Forma de Pagamento</th>
+                        <th className="py-2.5 text-right">Valor</th>
+                        <th className="py-2.5 pl-4">Observação</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-pink-50/30 text-gray-700">
+                      {paymentsList.map((pay) => (
+                        <tr key={pay.id} className="hover:bg-white/30 transition-colors">
+                          <td className="py-2.5 font-medium">
+                            {pay.date ? (() => {
+                              try {
+                                const [year, month, day] = pay.date.split('-');
+                                if (year && month && day) return `${day}/${month}/${year}`;
+                                return pay.date;
+                              } catch (e) {
+                                return pay.date;
+                              }
+                            })() : "--"}
+                          </td>
+                          <td className="py-2.5 font-semibold capitalize">{pay.method}</td>
+                          <td className="py-2.5 text-right font-bold text-emerald-600">{formatCurrency(pay.amount)}</td>
+                          <td className="py-2.5 pl-4 text-gray-500 max-w-xs truncate" title={pay.notes}>
+                            {pay.notes || "--"}
+                          </td>
+                        </tr>
+                      ))}
+                      {paymentsList.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="py-6 text-center text-gray-400 italic">Nenhum pagamento registrado.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -698,12 +909,17 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   </div>
                   <div>
                     <span className="text-gray-400 block mb-0.5">Responsável Designado</span>
-                    <p className="font-bold text-gray-700">{order.assignee || "Sem responsável atribuído"}</p>
+                    <p className="font-bold text-gray-700">{order.responsible || order.assignee || "Sem responsável atribuído"}</p>
                   </div>
                   <div>
                     <span className="text-gray-400 block mb-0.5">Prioridade Operacional</span>
-                    <span className={`inline-block font-bold capitalize ${order.productionPriority === 'urgente' ? 'text-rose-600' : order.productionPriority === 'alta' ? 'text-amber-500' : 'text-gray-700'}`}>
-                      {order.productionPriority || "Normal"}
+                    <span className={`inline-block font-bold capitalize ${
+                      (order.priority || order.productionPriority) === 'urgente' ? 'text-rose-600' : 
+                      (order.priority || order.productionPriority) === 'alta' ? 'text-amber-500' : 
+                      (order.priority || order.productionPriority) === 'baixa' ? 'text-slate-400 font-medium' :
+                      'text-gray-700'
+                    }`}>
+                      {order.priority || order.productionPriority || "Normal"}
                     </span>
                   </div>
                 </div>
@@ -824,17 +1040,17 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
               </div>
 
               <div className="relative pl-3 space-y-4 before:absolute before:inset-y-0 before:left-[15px] before:w-0.5 before:bg-pink-100">
-                {historyEntries.map((entry, idx) => (
-                  <div key={idx} className="relative flex gap-3 text-xs">
+                {timelineEvents.map((event) => (
+                  <div key={event.id} className="relative flex gap-3 text-xs">
                     <div className="w-2 h-2 rounded-full bg-pink-500 border-2 border-white shrink-0 mt-1 z-10 -ml-1" />
                     <div>
-                      <p className="font-semibold text-gray-700">{entry.text}</p>
+                      <p className="font-semibold text-gray-700">{event.description}</p>
                       <div className="flex items-center gap-1.5 mt-0.5 text-[10px] font-medium text-gray-400">
-                        <span>{entry.date}</span>
+                        <span>{formatTimelineDate(event.date)}</span>
                         <span className="w-1 h-1 rounded-full bg-pink-100" />
-                        <span>{entry.time}</span>
+                        <span>{event.time}</span>
                         <span className="w-1 h-1 rounded-full bg-pink-100" />
-                        <span>{entry.user}</span>
+                        <span>{event.user}</span>
                       </div>
                     </div>
                   </div>
@@ -907,6 +1123,27 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-gray-400 block">Data do pagamento</label>
+                <input 
+                  type="date" 
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-gray-400 block">Observação (opcional)</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Adiantamento do sinal..."
+                  value={paymentNotes}
+                  onChange={(e) => setPaymentNotes(e.target.value)}
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
+                />
+              </div>
+
               {order.paymentMode === 'planned' && order.remainingInstallments && (
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-gray-400 block">Parcelas</label>
@@ -949,11 +1186,29 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                        ? Math.max(0, order.remainingInstallments - selectedInstallments.length)
                        : undefined;
                      
+                     const preservedPayments = [...paymentsList];
+                     const basePayments = order.payments && order.payments.length > 0 
+                       ? [...order.payments]
+                       : (preservedPayments.length > 0 ? [...preservedPayments] : []);
+                     
+                     const newPayment: OrderPayment = {
+                       id: Date.now().toString(),
+                       date: paymentDate || new Date().toISOString().split('T')[0],
+                       amount: parsedValue,
+                       method: paymentMethod,
+                       notes: paymentNotes || ""
+                     };
+                     
+                     const updatedPayments = [...basePayments, newPayment];
+                     const totalPaid = updatedPayments.reduce((sum, p) => sum + p.amount, 0);
+                     const isFullyPaid = totalPaid >= total - 0.01;
+                     
                      onSave({
                        id: order.id,
-                       payAmount: parsedValue,
-                       paymentMethod: paymentMethod,
-                       remainingInstallments: newRemainingInstallments
+                       payments: updatedPayments,
+                       paymentStatus: isFullyPaid ? 'paid' : 'partial',
+                       remainingInstallments: newRemainingInstallments,
+                       updatedBy: user?.email || user?.displayName || "Membro da Equipe"
                      });
                    }
                    setIsPaymentModalOpen(false);

@@ -19,7 +19,7 @@ import {
 import { db, auth } from '../lib/firebase';
 import { sendTelegramNotification } from './telegramService';
 import { createAuditLog } from './auditService';
-import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig, Coupon, ProductionBatch, AuditActionType, AuditLog, Campaign } from '../types';
+import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, Insumo, Customer, FinanceEntry, SiteSettings, AppConfig, Coupon, ProductionBatch, AuditActionType, AuditLog, Campaign, OrderTimelineEvent } from '../types';
 import { eventBus } from './eventBus';
 
 // --- Smart Cache & Subscription Multiplexing Layer ---
@@ -1206,6 +1206,136 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
       }
     }
 
+    // AUTOMATIC TIMELINE INTEGRATION
+    if (orderSnap?.exists?.()) {
+      const dbOrderData = orderSnap.data() as Order;
+      
+      let existingTimeline: OrderTimelineEvent[] = dbOrderData.timeline || [];
+      if (!Array.isArray(existingTimeline)) {
+        existingTimeline = [];
+      }
+
+      // Handle legacy orders with no history: prepend standard initial event
+      if (existingTimeline.length === 0) {
+        existingTimeline.push({
+          id: 'imported_' + Date.now(),
+          date: new Date().toISOString().split('T')[0],
+          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          description: "Pedido importado para o novo sistema de Timeline",
+          user: "Sistema",
+          timestamp: Date.now()
+        });
+      }
+
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0];
+      const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const userStr = data.updatedBy || auth.currentUser?.email || auth.currentUser?.displayName || "Membro da Equipe";
+
+      let timelineAdded = false;
+
+      // 1. Status alteration
+      if (finalData.status && finalData.status !== dbOrderData.status) {
+        let desc = "Status alterado";
+        const s = finalData.status.toLowerCase();
+        if (s === 'production') {
+          desc = "Pedido enviado para produção";
+        } else if (s === 'delivered') {
+          desc = "Pedido entregue";
+        } else if (s === 'cancelled') {
+          desc = "Pedido cancelado";
+        } else if (s === 'fully_paid' || s === 'finalized') {
+          desc = "Pedido finalizado";
+        } else {
+          const statusMap: Record<string, string> = {
+            "novo pedido": "Novo Pedido",
+            "quote": "Orçamento",
+            "orçamento": "Orçamento",
+            "waiting_payment": "Sinal",
+            "waiting_deposit": "Sinal",
+            "approval": "Aprovação",
+            "assembly": "Montagem",
+            "conferencing": "Conferência",
+            "packaging": "Embalagem",
+            "ready": "Pronto para Entregar",
+            "delivery": "Enviado/Entrega",
+            "delivered": "Entregue/Recebido",
+            "fully_paid": "Entregue/Recebido",
+            "cancelled": "Cancelado"
+          };
+          const label = statusMap[s] || finalData.status;
+          desc = `Status alterado para: ${label}`;
+        }
+
+        existingTimeline.push({
+          id: 'status_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          date: dateStr,
+          time: timeStr,
+          description: desc,
+          user: userStr,
+          timestamp: Date.now()
+        });
+        timelineAdded = true;
+      }
+
+      // 2. Payment registered
+      const oldPaymentsCount = dbOrderData.payments?.length || 0;
+      const newPaymentsCount = finalData.payments?.length || 0;
+      if (newPaymentsCount > oldPaymentsCount) {
+        const newPay = finalData.payments[finalData.payments.length - 1];
+        const amountStr = newPay ? ` no valor de R$ ${newPay.amount.toFixed(2).replace('.', ',')}` : '';
+        const methodStr = newPay ? ` via ${newPay.method.toUpperCase()}` : '';
+        existingTimeline.push({
+          id: 'payment_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          date: dateStr,
+          time: timeStr,
+          description: `Pagamento registrado${amountStr}${methodStr}`,
+          user: userStr,
+          timestamp: Date.now()
+        });
+        timelineAdded = true;
+      } else if (typeof data.payAmount === 'number' && data.payAmount > 0) {
+        existingTimeline.push({
+          id: 'payment_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          date: dateStr,
+          time: timeStr,
+          description: `Pagamento registrado no valor de R$ ${data.payAmount.toFixed(2).replace('.', ',')} via ${(data.paymentMethod || 'PIX').toUpperCase()}`,
+          user: userStr,
+          timestamp: Date.now()
+        });
+        timelineAdded = true;
+      }
+
+      // 3. Other edits
+      const isEditEvent = !timelineAdded && (
+        (finalData.items && JSON.stringify(finalData.items) !== JSON.stringify(dbOrderData.items)) ||
+        (finalData.deliveryDate && finalData.deliveryDate !== dbOrderData.deliveryDate) ||
+        (finalData.customizationName && finalData.customizationName !== dbOrderData.customizationName) ||
+        (finalData.customizationTheme && finalData.customizationTheme !== dbOrderData.customizationTheme) ||
+        (finalData.customizationColors && finalData.customizationColors !== dbOrderData.customizationColors) ||
+        (finalData.customizationArtText && finalData.customizationArtText !== dbOrderData.customizationArtText) ||
+        (finalData.customizationNotes && finalData.customizationNotes !== dbOrderData.customizationNotes) ||
+        (finalData.observations && finalData.observations !== dbOrderData.observations) ||
+        (finalData.total !== undefined && finalData.total !== dbOrderData.total)
+      );
+
+      if (isEditEvent) {
+        existingTimeline.push({
+          id: 'edit_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          date: dateStr,
+          time: timeStr,
+          description: "Pedido editado",
+          user: userStr,
+          timestamp: Date.now()
+        });
+        timelineAdded = true;
+      }
+
+      if (timelineAdded) {
+        finalData.timeline = existingTimeline;
+      }
+    }
+
     await updateDoc(doc(db, 'orders', orderId), sanitize(finalData));
 
     if (orderSnap?.exists?.()) {
@@ -1335,6 +1465,14 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
         }
       }
     } catch(e) {}
+
+    // Dynamic recalculation of CRM Indicators
+    try {
+      const dbOrderData = orderSnap?.exists() ? (orderSnap.data() as Order) : undefined;
+      await syncCustomerIndicatorsForOrder(orderData, orderData.companyId, dbOrderData);
+    } catch (e) {
+      console.warn("Non-blocking customer CRM indicators sync error in updateOrder:", e);
+    }
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
@@ -1355,8 +1493,19 @@ export const saveSale = async (data: any) => {
     
     const normalizedStatus = normalizeStatus(data.status || 'novo pedido');
 
+    const now = new Date();
+    const createdEvent: OrderTimelineEvent = {
+      id: 'created_' + Date.now(),
+      date: now.toISOString().split('T')[0],
+      time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      description: "Pedido criado",
+      user: data.updatedBy || data.customerName || "Sistema",
+      timestamp: Date.now()
+    };
+
     const saleData = sanitize({
       ...data,
+      timeline: [createdEvent],
       createdAt: serverTimestamp(),
       dateFormatted: formatDate(today),
       code: code,
@@ -1481,51 +1630,157 @@ function generateOrderCode(companyId: CompanyId): string {
   return `${prefix}${random}`;
 }
 
-const handleCustomerOrder = async (orderData: Order) => {
+export const findMatchingCustomer = async (orderData: Partial<Order>, companyId: string) => {
   const path = 'customers';
-  try {
-    if (!orderData.customerCpfCnpj || !orderData.companyId) return;
-
-    const q = query(
-      collection(db, path), 
+  
+  if (orderData.customerCpfCnpj) {
+    const qCpf = query(
+      collection(db, path),
       where('cpfCnpj', '==', orderData.customerCpfCnpj),
-      where('companyId', '==', orderData.companyId)
+      where('companyId', '==', companyId)
     );
-    const snapshot = await getDocs(q);
+    const snap = await getDocs(qCpf);
+    if (!snap.empty) return snap.docs[0];
+  }
+
+  const qAll = query(
+    collection(db, path),
+    where('companyId', '==', companyId)
+  );
+  const snapAll = await getDocs(qAll);
+  
+  const cleanPhone = (p?: string) => p ? p.replace(/\D/g, "") : "";
+  const orderPhone = cleanPhone(orderData.contact);
+  const orderCpf = cleanPhone(orderData.customerCpfCnpj);
+  const orderName = orderData.customerName ? orderData.customerName.toLowerCase().trim() : "";
+
+  for (const docSnap of snapAll.docs) {
+    const custData = docSnap.data();
+    const custPhone = cleanPhone(custData.contact);
+    const custCpf = cleanPhone(custData.cpfCnpj);
+    const custName = custData.name ? custData.name.toLowerCase().trim() : "";
+
+    const isMatch = (orderCpf && custCpf === orderCpf) ||
+                    (orderPhone && custPhone === orderPhone) ||
+                    (orderName && custName === orderName);
     
-    if (snapshot.empty) {
-      const customerCode = crypto.randomUUID().slice(0, 8).toUpperCase();
-      await addDoc(collection(db, path), sanitize({
-        code: customerCode,
-        name: orderData.customerName || 'Cliente sem nome',
-        contact: orderData.contact || 'S/C',
-        cpfCnpj: orderData.customerCpfCnpj,
-        totalSpent: orderData.total || 0,
-        ordersCount: 1,
-        companyId: orderData.companyId,
-        createdAt: serverTimestamp(),
-        birthDate: '',
-        address: '',
-        city: '',
-        state: '',
-        zipCode: ''
-      }));
-
-      // Telegram notification for new client
-      try {
-        sendTelegramNotification('new_client', `👤 NOVO CLIENTE\n\nNome:\n${orderData.customerName || 'Cliente sem nome'}\n\nContato:\n${orderData.contact || 'S/C'}`);
-      } catch(e){}
-
-    } else {
-      const customerDoc = snapshot.docs[0];
-      const data = customerDoc.data();
-      await updateDoc(customerDoc.ref, {
-        totalSpent: (data.totalSpent || 0) + orderData.total,
-        ordersCount: (data.ordersCount || 0) + 1
-      });
+    if (isMatch) {
+      return docSnap;
     }
-  } catch (error) {
-    console.warn('Failed to register customer:', error);
+  }
+
+  return null;
+};
+
+export const recalculateCustomerIndicators = async (customerRef: any, companyId: string) => {
+  try {
+    const custSnap = await getDoc(customerRef);
+    if (!custSnap.exists()) return;
+    const customer = custSnap.data() as any;
+
+    const qOrders = query(
+      collection(db, 'orders'),
+      where('companyId', '==', companyId)
+    );
+    const ordersSnap = await getDocs(qOrders);
+
+    const cleanPhone = (p?: string) => p ? p.replace(/\D/g, "") : "";
+    const custPhone = cleanPhone(customer.contact);
+    const custCpf = cleanPhone(customer.cpfCnpj);
+    const custName = customer.name ? customer.name.toLowerCase().trim() : "";
+
+    let totalSpent = 0;
+    let ordersCount = 0;
+
+    for (const orderDoc of ordersSnap.docs) {
+      const o = orderDoc.data() as Order;
+      
+      const orderPhone = cleanPhone(o.contact);
+      const orderCpf = cleanPhone(o.customerCpfCnpj);
+      const orderName = o.customerName ? o.customerName.toLowerCase().trim() : "";
+
+      const isMatch = (custCpf && orderCpf === custCpf) ||
+                      (custPhone && orderPhone === custPhone) ||
+                      (orderName && custName === orderName);
+
+      if (isMatch) {
+        const status = o.status ? normalizeStatus(o.status) : '';
+        if (status !== 'cancelled' && status !== 'quote') {
+          totalSpent += Number(o.total) || 0;
+          ordersCount += 1;
+        }
+      }
+    }
+
+    const ticketMedio = ordersCount > 0 ? totalSpent / ordersCount : 0;
+
+    await updateDoc(customerRef, {
+      totalSpent,
+      ordersCount,
+      ticketMedio
+    });
+
+    console.log(`Updated customer ${customer.name} indicators: totalSpent=${totalSpent}, ordersCount=${ordersCount}, ticketMedio=${ticketMedio}`);
+  } catch (err) {
+    console.error("Error recalculating customer indicators:", err);
+  }
+};
+
+export const syncCustomerIndicatorsForOrder = async (
+  orderData: Partial<Order>,
+  companyId: string,
+  previousOrderData?: Partial<Order>
+) => {
+  try {
+    if (previousOrderData) {
+      const prevCustomerDoc = await findMatchingCustomer(previousOrderData, companyId);
+      if (prevCustomerDoc) {
+        await recalculateCustomerIndicators(prevCustomerDoc.ref, companyId);
+      }
+    }
+
+    let currentCustomerDoc = await findMatchingCustomer(orderData, companyId);
+
+    if (!currentCustomerDoc) {
+      if (orderData.customerName && companyId) {
+        const customerCode = crypto.randomUUID().slice(0, 8).toUpperCase();
+        const newCustomerData = sanitize({
+          code: customerCode,
+          name: orderData.customerName,
+          contact: orderData.contact || 'S/C',
+          cpfCnpj: orderData.customerCpfCnpj || '',
+          totalSpent: 0,
+          ordersCount: 0,
+          companyId: companyId,
+          createdAt: serverTimestamp(),
+          birthDate: '',
+          address: '',
+          city: '',
+          state: '',
+          zipCode: ''
+        });
+        const docRef = await addDoc(collection(db, 'customers'), newCustomerData);
+        currentCustomerDoc = { ref: docRef, data: () => newCustomerData } as any;
+
+        try {
+          sendTelegramNotification('new_client', `👤 NOVO CLIENTE\n\nNome:\n${orderData.customerName || 'Cliente sem nome'}\n\nContato:\n${orderData.contact || 'S/C'}`);
+        } catch(e){}
+      }
+    }
+
+    if (currentCustomerDoc) {
+      await recalculateCustomerIndicators(currentCustomerDoc.ref, companyId);
+    }
+  } catch (err) {
+    console.error("Error syncing customer indicators for order:", err);
+  }
+};
+
+const handleCustomerOrder = async (orderData: Order) => {
+  try {
+    await syncCustomerIndicatorsForOrder(orderData, orderData.companyId);
+  } catch (err) {
+    console.warn('Failed to register customer:', err);
   }
 };
 

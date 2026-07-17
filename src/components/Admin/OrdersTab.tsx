@@ -41,9 +41,13 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
   
   // View States
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(initialOrderId || null);
+  const [detailsTab, setDetailsTab] = useState<"geral" | "cliente" | "produtos" | "financeiro" | "producao" | "arquivos" | "historico">("geral");
+  const [autoOpenPayment, setAutoOpenPayment] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [sortOption, setSortOption] = useState("newest");
+  const [filterResponsible, setFilterResponsible] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
   
   // Modal States
   const [isWizardOpen, setIsWizardOpen] = useState(!!initialCustomerId);
@@ -128,13 +132,35 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
     const monthAgo = today - 30 * 24 * 60 * 60 * 1000;
 
     let result = orders.filter(o => {
-      const searchMatch = 
-        (o.customerName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (o.code || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (o.contact || "").includes(searchTerm) ||
-        (o.customerCity || "").toLowerCase().includes(searchTerm.toLowerCase());
+      const term = searchTerm.toLowerCase().trim();
+      
+      const codeMatch = (o.code || "").toLowerCase().includes(term);
+      const customerMatch = (o.customerName || "").toLowerCase().includes(term);
+      const contactMatch = (o.contact || "").toLowerCase().includes(term);
+      const cityMatch = (o.customerCity || "").toLowerCase().includes(term);
+      const observationsMatch = (o.observations || "").toLowerCase().includes(term);
+      
+      const productsMatch = (o.items || []).some(item => {
+        const nameMatch = (item.product_name || "").toLowerCase().includes(term);
+        const categoryMatch = (item.category || "").toLowerCase().includes(term);
+        return nameMatch || categoryMatch;
+      });
+
+      const searchMatch = codeMatch || customerMatch || contactMatch || cityMatch || observationsMatch || productsMatch;
       
       if (!searchMatch) return false;
+
+      // Filter by Responsible
+      if (filterResponsible !== "all") {
+        const resp = (o.responsible || o.assignee || "").toLowerCase().trim();
+        if (resp !== filterResponsible.toLowerCase().trim()) return false;
+      }
+
+      // Filter by Priority
+      if (filterPriority !== "all") {
+        const prio = (o.priority || o.productionPriority || "normal").toLowerCase().trim();
+        if (prio !== filterPriority.toLowerCase().trim()) return false;
+      }
 
       const time = o.createdAt?.toMillis?.() || (o.createdAt as any)?.seconds * 1000 || new Date(o.createdAt).getTime() || Date.now();
       const s = (o.status || "").toLowerCase();
@@ -183,11 +209,15 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
     const paginatedOrders = result.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
     return { filteredOrders: result, paginatedOrders, totalPages };
-  }, [orders, searchTerm, selectedFilter, sortOption, currentPage, rowsPerPage]);
+  }, [orders, searchTerm, selectedFilter, sortOption, currentPage, rowsPerPage, filterResponsible, filterPriority]);
+
+  const uniqueResponsibles = useMemo(() => {
+    return Array.from(new Set(orders.map(o => o.responsible || o.assignee).filter(Boolean))) as string[];
+  }, [orders]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedFilter, sortOption]);
+  }, [searchTerm, selectedFilter, sortOption, filterResponsible, filterPriority]);
 
   const getProductInfo = (order: Order) => {
     if (order.items && order.items.length > 0) {
@@ -268,7 +298,11 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
           order={selectedOrder}
           products={products}
           insumos={insumos}
-          onBack={() => setSelectedOrderId(null)} 
+          onBack={() => {
+            setSelectedOrderId(null);
+            setDetailsTab("geral");
+            setAutoOpenPayment(false);
+          }} 
           onEdit={(o) => {
             setEditingOrder(o);
             setIsFormModalOpen(true); // Re-using OrderFormModal for editing since status is inside it.
@@ -287,6 +321,8 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
             await handleDuplicate(o);
             setSelectedOrderId(null);
           }}
+          initialTab={detailsTab}
+          openPaymentModalOnMount={autoOpenPayment}
         />
         {isFormModalOpen && (
           <OrderFormModal
@@ -430,8 +466,8 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
         </div>
 
         {/* Search & Sort */}
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:w-72 group">
+        <div className="flex items-center gap-4 w-full md:w-auto flex-wrap">
+          <div className="relative flex-1 md:w-72 group min-w-[200px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8E93] group-focus-within:text-[#1C1C1E] transition-colors" size={14} />
             <input
               type="text"
@@ -451,6 +487,33 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
             <option value="highest_value">Maior valor</option>
             <option value="lowest_value">Menor valor</option>
             <option value="deadline">Prazo de entrega</option>
+          </select>
+
+          {/* Filtro de Responsável */}
+          <select
+            value={filterResponsible}
+            onChange={(e) => setFilterResponsible(e.target.value)}
+            className="px-4 py-2.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-xs font-bold text-[#1C1C1E] outline-none focus:bg-white transition-all shadow-inner cursor-pointer"
+          >
+            <option value="all">Responsável: Todos</option>
+            {uniqueResponsibles.map((resp) => (
+              <option key={resp} value={resp}>
+                {resp}
+              </option>
+            ))}
+          </select>
+
+          {/* Filtro de Prioridade */}
+          <select
+            value={filterPriority}
+            onChange={(e) => setFilterPriority(e.target.value)}
+            className="px-4 py-2.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-xs font-bold text-[#1C1C1E] outline-none focus:bg-white transition-all shadow-inner cursor-pointer"
+          >
+            <option value="all">Prioridade: Todas</option>
+            <option value="baixa">Baixa</option>
+            <option value="normal">Normal</option>
+            <option value="alta">Alta</option>
+            <option value="urgente">Urgente</option>
           </select>
         </div>
       </div>
@@ -493,6 +556,14 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
                   }}
                   isSelected={selectedOrderIds.includes(order.id!)}
                   onToggleSelect={() => toggleOrder(order.id!)}
+                  onDelete={(id) => {
+                    onDeleteOrder(id);
+                  }}
+                  onRegisterPayment={(id) => {
+                    setSelectedOrderId(id);
+                    setDetailsTab("financeiro");
+                    setAutoOpenPayment(true);
+                  }}
                 />
               ))}
             </div>

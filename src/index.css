@@ -3,6 +3,13 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: #FCFAF7;
+}
+
+body {
+  @apply bg-[#FCFAF7] text-[#161616] font-sans antialiased;
+  margin: 0;
+  padding: 0;
 }
 
 @theme {
@@ -29,13 +36,13 @@ html {
   --color-lilac-baby: #F5EBFF;
   --color-deep-black: #050505;
   --color-off-white: #FAF9F6;
-  --color-cream: #FDFCF0;
-  --color-white: #FAF9F6;
-  --color-neutral-50: #FDFCF0;
+  --color-cream: #FCFAF7;
+  --color-white: #FCFAF7;
+  --color-neutral-50: #FCFAF7;
   --color-neutral-100: #F9F7F2;
-  --color-gray-50: #FDFCF0;
+  --color-gray-50: #FCFAF7;
   --color-gray-100: #F9F7F2;
-  --color-slate-50: #FDFCF0;
+  --color-slate-50: #FCFAF7;
   --color-slate-100: #F9F7F2;
   --font-pinyon: "Pinyon Script", cursive;
   --font-gloock: "Gloock", serif;
@@ -765,10 +772,10 @@ html {
   }
 
   /* Vitrine (Standard UI) - Neumorphic */
-  .neumo-bg { @apply bg-[#FDFCF0]; }
-  .neumo-card { @apply bg-[#FAF9F6] rounded-3xl p-4 shadow-[6px_6px_12px_#E8E4D9,-6px_-6px_12px_#FFFFFF]; }
-  .neumo-button { @apply bg-[#FAF9F6] rounded-full flex items-center justify-center transition-all shadow-[4px_4px_8px_#E8E4D9,-4px_-4px_8px_#FFFFFF] active:shadow-[inset_4px_4px_8px_#E8E4D9,inset_-4px_-4px_8px_#FFFFFF]; }
-  .neumo-input { @apply bg-[#FAF9F6] rounded-full px-4 py-2 shadow-[inset_2px_2px_4px_#E8E4D9,inset_-2px_-2px_4px_#FFFFFF]; }
+  .neumo-bg { @apply bg-[#FCFAF7]; }
+  .neumo-card { @apply bg-[#FCFAF7] rounded-3xl p-4 shadow-[6px_6px_12px_#EAE7DF,-6px_-6px_12px_#FFFFFF]; }
+  .neumo-button { @apply bg-[#FCFAF7] rounded-full flex items-center justify-center transition-all shadow-[4px_4px_8px_#EAE7DF,-4px_-4px_8px_#FFFFFF] active:shadow-[inset_4px_4px_8px_#EAE7DF,inset_-4px_-4px_8px_#FFFFFF]; }
+  .neumo-input { @apply bg-[#FCFAF7] rounded-full px-4 py-2 shadow-[inset_2px_2px_4px_#EAE7DF,inset_-2px_-2px_4px_#FFFFFF]; }
 
   /* Scoped Admin Premium Design System (Clean Glassy 3D) */
   .admin-wrapper .clean-3d-card {

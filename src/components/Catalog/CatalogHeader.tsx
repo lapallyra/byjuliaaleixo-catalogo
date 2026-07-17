@@ -16,6 +16,7 @@ export const CatalogHeader: React.FC<{
   onViewContact: () => void;
   onProfileClick: () => void;
   onFilterClick: () => void;
+  onOpenGlobalSearch?: () => void;
   logoUrl?: string;
   companyId?: string;
   searchQuery?: string;
@@ -34,6 +35,7 @@ export const CatalogHeader: React.FC<{
   onViewContact,
   onProfileClick,
   onFilterClick,
+  onOpenGlobalSearch,
   logoUrl,
   companyId,
   searchQuery = ""
@@ -137,28 +139,36 @@ export const CatalogHeader: React.FC<{
         <div className="flex items-center gap-1 sm:gap-2">
           <button 
             onClick={onProfileClick} 
-            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-[#FDFCF0] rounded-full transition-all active:scale-95" 
+            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-neutral-50 rounded-full transition-all active:scale-95" 
             title="Perfil do Cliente"
           >
             <User size={20} strokeWidth={1.5} />
           </button>
           <button 
+            onClick={onOpenGlobalSearch} 
+            className="p-2.5 text-[#cca062] hover:bg-neutral-50 rounded-full transition-all active:scale-95 flex items-center gap-2 group/search" 
+            title="Busca Global"
+          >
+            <Search size={20} strokeWidth={1.5} />
+            <span className="hidden md:inline text-[9px] uppercase tracking-widest font-bold opacity-0 group-hover/search:opacity-100 transition-opacity">Busca Global</span>
+          </button>
+          <button 
             onClick={() => setIsSearchVisible(true)} 
-            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-[#FDFCF0] rounded-full transition-all active:scale-95" 
+            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-neutral-50 rounded-full transition-all active:scale-95" 
             title="Pesquisar Produtos"
           >
             <Search size={20} strokeWidth={1.5} />
           </button>
           <button 
             onClick={onFilterClick} 
-            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-[#FDFCF0] rounded-full transition-all active:scale-95" 
+            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-neutral-50 rounded-full transition-all active:scale-95" 
             title="Filtrar Resultados"
           >
             <Filter size={20} strokeWidth={1.5} />
           </button>
           <button 
             onClick={onCartClick} 
-            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-[#FDFCF0] rounded-full transition-all relative active:scale-95" 
+            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-neutral-50 rounded-full transition-all relative active:scale-95" 
             title="Meu Carrinho"
           >
             <ShoppingCart size={20} strokeWidth={1.5} />

@@ -10,13 +10,14 @@ import { ProductCard } from './ui/ProductCard';
 import { FeaturedProductCard } from './Catalog/FeaturedProductCard';
 import { LogoAndSignature } from './ui/LogoAndSignature';
 import { themes, getTheme } from '../lib/theme';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { CommemorativeBanner } from './Catalog/CommemorativeBanner';
 import { PromotionalBanner } from './PromotionalBanner';
 
 interface EntryViewProps {
   config: AppConfig;
   allProducts?: Product[];
+  onOpenSearch?: () => void;
 }
 
 const DelicateFlourish = () => (
@@ -30,6 +31,54 @@ const DelicateFlourish = () => (
     </svg>
   </div>
 );
+
+const Sparkle = ({ active = false }) => {
+  if (!active) return null;
+  const particles = Array.from({ length: 24 }); // More particles for a richer effect
+  return (
+    <div className="absolute inset-0 pointer-events-none z-50 overflow-visible">
+      <AnimatePresence>
+        {particles.map((_, i) => {
+          const size = Math.random() * 4 + 1;
+          const isStar = Math.random() > 0.7;
+          return (
+            <motion.div
+              key={i}
+              initial={{ scale: 0, opacity: 0, x: 0, y: 0 }}
+              animate={{
+                scale: [0, 1.5, 1, 0],
+                opacity: [0, 1, 0.8, 0],
+                x: (Math.random() - 0.5) * 280,
+                y: (Math.random() - 0.5) * 280,
+                rotate: Math.random() * 720
+              }}
+              transition={{
+                duration: 1.2 + Math.random() * 0.8,
+                ease: "easeOut",
+                delay: Math.random() * 0.2
+              }}
+              className="absolute left-1/2 top-1/2"
+              style={{ 
+                width: size, 
+                height: size, 
+                borderRadius: isStar ? "2px" : "50%",
+                backgroundColor: "#FFE17A",
+                boxShadow: "0 0 8px #D4AF37, 0 0 2px white",
+                zIndex: 60
+              }}
+            />
+          );
+        })}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+const playChime = () => {
+  const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3");
+  audio.volume = 0.08; // Very low volume
+  audio.play().catch(() => {}); 
+};
 
 // Wrapper for sections to enforce soft transition gradients
 const SectionWrapper = ({ children, className = "", id, noPadding = false }: { children: React.ReactNode, className?: string, id?: string, noPadding?: boolean }) => (
@@ -47,7 +96,10 @@ const SeamlessDivider = ({ from, to, className = "" }: { from: string, to: strin
   />
 );
 
-export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }) => {
+// Editorial Images
+const HERO_IMAGE_HOME = "/src/assets/images/home_hero_editorial_1784216761438.jpg";
+
+export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [], onOpenSearch }) => {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const orchestrator = useAdminOrchestrator();
@@ -269,15 +321,15 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
           
           {/* Centered navigation links */}
           <nav className="flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-4 gap-y-2 text-[#1F1F1F] tracking-[0.1em] font-medium text-[11px] sm:text-[12px] uppercase select-none font-poppins">
-            <a 
-              href="#ateliers" 
-              className="px-3 py-1.5 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out font-medium tracking-[0.12em]"
+            <button 
+              onClick={() => navigate('/atelies')} 
+              className="px-3 py-1.5 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out font-medium tracking-[0.12em] cursor-pointer"
             >
-              ateliês
-            </a>
+              ATELIÊS
+            </button>
             
             <button 
-              onClick={() => navigate('/kit-meukit')} 
+              onClick={() => navigate('/comomontar')} 
               className="px-3 py-1.5 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out cursor-pointer outline-none uppercase font-semibold tracking-[0.12em] text-[11px] sm:text-[12px]"
             >
               monte seu kit
@@ -315,7 +367,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                 navigate('/document');
               }
             }}
-            className="flex items-center gap-2.5 bg-[#FDFCF0] border border-[#EAE4DC] rounded-full px-5 py-2.5 text-xs text-[#555555] shadow-[0_2px_6px_rgba(0,0,0,0.02)] hover:border-[#C2B7A8] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 w-full sm:w-72 md:w-80"
+            className="flex items-center gap-2.5 bg-white border border-[#EAE4DC] rounded-full px-5 py-2.5 text-xs text-[#555555] shadow-[0_2px_6px_rgba(0,0,0,0.02)] hover:border-[#C2B7A8] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 w-full sm:w-72 md:w-80"
           >
             <Search size={14} strokeWidth={2} className="text-[#8C7864]/80 shrink-0" />
             <input 
@@ -341,17 +393,39 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
         </div>
       </div>
 
+      {/* GLOBAL PRODUCT DISCOVERY */}
+      <div className="w-full bg-[#FCFAF7] pb-12 flex justify-center px-4 animate-in slide-in-from-bottom-4 duration-1000 ease-out">
+        <div 
+          onClick={onOpenSearch}
+          className="flex items-center gap-4 bg-white border border-[#E8DCC8] rounded-full px-8 py-3.5 text-sm text-[#3D2E24] shadow-[0_4px_20px_rgba(58,49,45,0.04)] hover:border-[#cca062] hover:shadow-[0_8px_30px_rgba(58,49,45,0.08)] transition-all duration-500 w-full max-w-4xl cursor-pointer group relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FCFAF7]/0 via-[#FCFAF7]/50 to-[#FCFAF7]/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          <Search size={18} strokeWidth={1.5} className="text-[#cca062] group-hover:rotate-12 transition-transform duration-500" />
+          <span className="font-serif italic text-lg text-[#3D2E24]/30 group-hover:text-[#3D2E24]/60 transition-all duration-500">
+            O que você deseja encontrar hoje?
+          </span>
+          <div className="ml-auto flex items-center gap-3 text-[9px] uppercase tracking-[0.3em] font-black text-[#cca062] opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500">
+            Descobrir <ArrowRight size={12} strokeWidth={2.5} />
+          </div>
+        </div>
+      </div>
+
+      {/* ATELIÊS START ANCHOR */}
+      <div id="catalog-start" />
+
       {/* ROMANTIC TITLE */}
       <div className="text-center py-8 px-2 animate-fade-in duration-1000 ease-in-out bg-[#FCFAF7] select-none">
         <h2 className="font-mea-culpa text-2xl sm:text-3xl md:text-4xl text-[#3D2E24] font-normal leading-tight tracking-normal max-w-3xl mx-auto">
           Encontre o presente perfeito para deixar o seu momento inesquecível.
         </h2>
       </div>
-      
+
       {/* ATELIERS */}
       <SectionWrapper id="ateliers" className="bg-[#FCFAF7]">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-24 max-w-[1850px] mx-auto px-4">
           {ateliers.map((atelier) => {
+            const [isHovered, setIsHovered] = React.useState(false);
+
             const getAtelierThemeColor = (id: string) => {
               switch (id) {
                 case 'pallyra': return '#1A1A1A';
@@ -367,18 +441,35 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
             return (
               <div 
                 key={atelier.id}
-                className="flex flex-col items-center group cursor-pointer perspective-1000"
+                className="flex flex-col items-center cursor-pointer perspective-1000"
                 onClick={() => navigate(atelier.route)}
+                onMouseEnter={() => {
+                  setIsHovered(true);
+                  playChime();
+                }}
+                onMouseLeave={() => setIsHovered(false)}
               >
                 {/* 3D Flip Card Container */}
-                <motion.div 
-                  className="relative w-full max-w-[260px] aspect-[4/5] preserve-3d"
-                  whileHover={{ scale: 1.05, rotateY: 180 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  style={{ transformStyle: 'preserve-3d' }}
-                >
+                <div className="relative w-full max-w-[260px] aspect-[4/5] preserve-3d">
+                  {/* Particles Effect - Always Gold now */}
+                  <Sparkle active={isHovered} />
+                  
+                  <motion.div 
+                    className="relative w-full h-full preserve-3d"
+                    animate={{ 
+                      rotateY: isHovered ? 180 : 0,
+                      scale: isHovered ? 1.05 : 1
+                    }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 60, // Slower (was 100)
+                      damping: 15,    // More fluid (was 18)
+                      mass: 1.5      // Heavier feel
+                    }}
+                    style={{ transformStyle: 'preserve-3d' }}
+                  >
                   {/* FRONT: Logo/Isotipo */}
-                  <div className="absolute inset-0 backface-hidden bg-white rounded-2xl p-1.5 shadow-sm border border-[#D4AF37]/10 group-hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] transition-shadow duration-500 overflow-hidden">
+                  <div className="absolute inset-0 backface-hidden bg-white rounded-2xl p-1.5 shadow-sm border border-[#D4AF37]/10 overflow-hidden">
                     <div className="w-full h-full rounded-xl overflow-hidden bg-[#F9F6EF] relative flex items-center justify-center">
                       {customSettings[atelier.id]?.store_isotipo ? (
                         <ImageWithFallback 
@@ -403,7 +494,8 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                     style={{ 
                       backgroundColor: themeColor,
                       borderColor: 'rgba(255, 255, 255, 0.2)',
-                      transform: 'rotateY(180deg)'
+                      transform: 'rotateY(180deg)',
+                      backfaceVisibility: 'hidden'
                     }}
                   >
                     <div className="flex flex-col items-center justify-center h-full">
@@ -419,25 +511,31 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
                     </div>
                   </div>
                 </motion.div>
+              </div>
 
-                {/* Atelier Name - Outside and Prominent */}
+              {/* Atelier Name - Outside and Prominent */}
                 <div className="mt-10 text-center relative w-full">
                   <motion.h3 
-                    className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-[48px] tracking-tight leading-none transition-colors duration-500"
-                    style={{ '--hover-color': themeColor } as any}
+                    animate={{ color: isHovered ? themeColor : '#3D2E24' }}
+                    transition={{ duration: 0.5 }}
+                    className="font-mea-culpa text-4xl sm:text-5xl md:text-[48px] tracking-tight leading-none"
                   >
-                    <span className="group-hover:text-[var(--hover-color)] transition-colors duration-500">
-                      {customSettings[atelier.id]?.store_name || atelier.name}
-                    </span>
+                    {customSettings[atelier.id]?.store_name || atelier.name}
                   </motion.h3>
                   
                   {/* Delicate decorative dash */}
-                  <div 
-                    className="h-[1px] w-8 mx-auto mt-4 transition-all duration-700 group-hover:w-20"
-                    style={{ backgroundColor: themeColor, opacity: 0.3 }}
+                  <motion.div 
+                    animate={{ 
+                      width: isHovered ? 80 : 32,
+                      backgroundColor: themeColor,
+                      opacity: isHovered ? 0.6 : 0.3
+                    }}
+                    transition={{ duration: 0.7 }}
+                    className="h-[1px] mx-auto mt-4"
                   />
                 </div>
               </div>
+
             );
           })}
         </div>
@@ -577,7 +675,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
               Crie uma combinação personalizada única, adicionando os mimos artesanais preferidos de nossos ateliês e inserindo um cartão com mensagem gravada sob medida. Rápido, objetivo e acolhedor!
             </p>
             <button
-               onClick={() => navigate('/kit-meukit')}
+               onClick={() => navigate('/comomontar')}
                className="h-[48px] px-10 rounded-full bg-[#1F1F1F] hover:bg-[#cca062] text-white hover:text-[#1F1F1F] text-[11px] font-semibold uppercase tracking-[0.14em] shadow-sm transition-all duration-300 ease-in-out cursor-pointer inline-flex items-center gap-2 font-poppins"
             >
               CRIAR MEU KIT <ArrowRight size={12} strokeWidth={2.5} />
@@ -634,7 +732,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [] }
 
       {/* SEÇÃO EDITORIAL: CONEXÃO COM A MARCA - MINHA HISTÓRIA (Step 7) */}
       <SectionWrapper id="sobre-julia" className="bg-[#F9F6EF] relative overflow-hidden">
-        <div className="absolute -bottom-10 left-1/3 w-72 h-72 rounded-full bg-[#FDFCF0]/50 blur-[120px] pointer-events-none" />
+        <div className="absolute -bottom-10 left-1/3 w-72 h-72 rounded-full bg-white/30 blur-[120px] pointer-events-none" />
         
         <div className="max-w-[1500px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">

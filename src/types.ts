@@ -142,6 +142,23 @@ export interface OrderVersion {
   createdAt: any;
 }
 
+export interface OrderPayment {
+  id: string;
+  date: string;
+  amount: number;
+  method: string;
+  notes?: string;
+}
+
+export interface OrderTimelineEvent {
+  id: string;
+  date: string;
+  time: string;
+  description: string;
+  user?: string;
+  timestamp?: any;
+}
+
 export interface Order {
   id: string;
   code: string; // MS12345
@@ -153,6 +170,17 @@ export interface Order {
   customerCity?: string;
   address?: string;
   customerAddress?: string;
+  responsible?: string;
+  priority?: 'baixa' | 'normal' | 'alta' | 'urgente';
+  customizationName?: string;
+  customizationTheme?: string;
+  customizationColors?: string;
+  customizationArtText?: string;
+  customizationEventDate?: string;
+  customizationNotes?: string;
+  payments?: OrderPayment[];
+  timeline?: OrderTimelineEvent[];
+  updatedBy?: string;
   items: CartItem[];
   total: number;
   discount?: number;

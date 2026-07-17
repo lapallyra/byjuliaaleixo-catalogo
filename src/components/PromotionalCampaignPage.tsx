@@ -47,15 +47,18 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-[#1F1F1F] border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-[#FCFAF7] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-[#3D2E24]/10 border-t-[#cca062] rounded-full animate-spin" />
+          <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#3D2E24]/40">Carregando...</span>
+        </div>
       </div>
     );
   }
 
   if (!campaign) {
     return (
-      <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center p-6 text-center">
         <Megaphone size={48} className="text-[#8A8A8A] mb-6" />
         <h1 className="text-2xl font-serif text-[#1F1F1F] mb-4">Campanha não encontrada</h1>
         <p className="text-[#8A8A8A] mb-8 font-sans">
@@ -72,11 +75,11 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF9F6] selection:bg-[#EAE4DC] selection:text-[#1F1F1F] relative overflow-x-hidden select-none">
+    <div className="min-h-screen bg-[#FCFAF7] selection:bg-[#EAE4DC] selection:text-[#1F1F1F] relative overflow-x-hidden select-none">
       {/* BACKGROUND GRAPHICS */}
-      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#E8DCC8]/10 via-[#FCFAF7] to-transparent pointer-events-none -z-10" />
 
-      <header className="fixed top-0 inset-x-0 h-20 bg-[#FFF9F6]/80 backdrop-blur-xl z-50 border-b border-[#EAE4DC] flex items-center px-4 sm:px-6">
+      <header className="fixed top-0 inset-x-0 h-20 bg-[#FCFAF7]/80 backdrop-blur-xl z-50 border-b border-[#EAE4DC] flex items-center px-4 sm:px-6">
         <button
           onClick={() => navigate(-1)}
           className="w-10 h-10 rounded-full bg-white border border-[#EAE4DC] flex items-center justify-center text-[#1F1F1F] hover:bg-[#F4EFE8] transition-colors cursor-pointer"

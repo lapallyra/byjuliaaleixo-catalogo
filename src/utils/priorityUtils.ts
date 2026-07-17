@@ -60,12 +60,18 @@ export const calculateOrderPriority = (order: Order): PriorityResult => {
   }
 
   // 4. Manual override (if any)
-  if (order.productionPriority === 'urgente') {
+  const manualPriority = (order.priority || order.productionPriority)?.toLowerCase();
+  if (manualPriority === 'urgente') {
     priority = 'URGENTE';
     score += 1500;
-  } else if (order.productionPriority === 'alta') {
+  } else if (manualPriority === 'alta') {
     if (priority !== 'URGENTE') priority = 'ALTA';
     score += 700;
+  } else if (manualPriority === 'baixa') {
+    priority = 'BAIXA';
+    score -= 300;
+  } else if (manualPriority === 'normal') {
+    priority = 'NORMAL';
   }
 
   // 5. Queue age (Time since creation)

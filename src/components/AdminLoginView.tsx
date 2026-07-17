@@ -1,7 +1,8 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './AuthProvider';
-import { LogIn, ArrowLeft, X } from 'lucide-react';
+import { LogIn, ArrowLeft, X, Loader2 } from 'lucide-react';
 import { login, loginWithRedirect } from '../lib/firebase';
 
 export function AdminLoginView() {
@@ -31,9 +32,26 @@ export function AdminLoginView() {
     );
   }  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#FDF8F5]">
-        <div className="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin" />
-        <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-pink-600">Verificando Credenciais...</p>
+      <div className="flex flex-col items-center justify-center h-screen bg-[#FCFAF7] font-sans">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col items-center"
+        >
+          <div className="relative mb-6">
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="text-[#3D2E24]/10"
+            >
+              <Loader2 size={40} strokeWidth={1} />
+            </motion.div>
+          </div>
+          <span className="text-[#3D2E24]/40 font-sans text-[9px] uppercase tracking-[0.4em] font-medium">
+            Verificando Credenciais
+          </span>
+        </motion.div>
       </div>
     );
   }
@@ -77,7 +95,7 @@ export function AdminLoginView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDF8F5] flex flex-col items-center justify-center p-6 text-center relative">
+    <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center p-6 text-center relative font-sans">
       <div className="absolute top-6 left-6">
         <button 
           onClick={() => window.history.back()}

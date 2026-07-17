@@ -30,7 +30,7 @@ export const CategoryPillMenu: React.FC<CategoryPillMenuProps> = ({ categories, 
 
   return (
     <div className="flex justify-center my-10 px-4 max-w-full">
-      <HorizontalScroll className="flex flex-row flex-nowrap bg-[#FDFCF0]/40 backdrop-blur-xl p-1.5 rounded-full gap-2 w-fit shadow-[0_10px_30px_rgba(58,49,45,0.06)] border border-white/30 h-14 items-center">
+      <HorizontalScroll className="flex flex-row flex-nowrap bg-white/40 backdrop-blur-xl p-1.5 rounded-full gap-2 w-fit shadow-[0_10px_30px_rgba(58,49,45,0.06)] border border-white/30 h-14 items-center">
         {allCategories.map((cat) => {
           const IconComponent = iconMap[cat] || Sparkle;
           const isSelected = selectedCategory === (cat === 'Todos' ? null : cat);

@@ -18,6 +18,8 @@ interface OrderCardProps {
   onGenerateLabel: (order: Order) => void;
   isSelected: boolean;
   onToggleSelect: () => void;
+  onDelete?: (id: string) => void;
+  onRegisterPayment?: (id: string) => void;
 }
 
 export const OrderCard: React.FC<OrderCardProps> = ({
@@ -31,7 +33,9 @@ export const OrderCard: React.FC<OrderCardProps> = ({
   onPrint,
   onGenerateLabel,
   isSelected,
-  onToggleSelect
+  onToggleSelect,
+  onDelete,
+  onRegisterPayment
 }) => {
   const orchestrator = useAdminOrchestrator();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,7 +59,9 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
   const menuItems = [
     { label: "Abrir Resumo", icon: <Eye size={14} />, action: () => onViewDetails(order.id) },
-    { label: "Registrar Pagamento", icon: <CreditCard size={14} />, action: () => {/* Need to trigger payment modal, maybe pass handler down? */ console.log("Registrar Pagamento", order.id)} },
+    { label: "Registrar Pagamento", icon: <CreditCard size={14} />, action: () => {
+        if (onRegisterPayment) onRegisterPayment(order.id);
+    } },
     { label: "Alterar Status", icon: <RefreshCw size={14} />, action: () => onChangeStatusRequest(order) },
     { label: "Imprimir Etiqueta", icon: <Tag size={14} />, action: () => onGenerateLabel(order) },
     { label: "Imprimir Cupom", icon: <Printer size={14} />, action: () => onPrint(order) },
@@ -63,8 +69,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
     { label: "Editar", icon: <Edit size={14} />, action: () => onChangeStatusRequest(order) }, // Using edit modal
     { label: "Excluir", icon: <Trash2 size={14} className="text-rose-600" />, action: () => {
         if(window.confirm("Deseja realmente excluir este pedido?")) {
-           // Need to handle deletion properly
-           console.log("Excluir", order.id);
+           if (onDelete) onDelete(order.id);
         }
     }},
   ];
@@ -89,8 +94,17 @@ export const OrderCard: React.FC<OrderCardProps> = ({
         {/* Left Section: Order & Client Info */}
         <div className="flex items-center gap-4 flex-1 w-full min-w-0">
           <div className="flex-1 min-w-0 pr-2">
-            <div className="mb-0.5">
+            <div className="mb-0.5 flex items-center gap-2 flex-wrap">
               <span className="text-[10px] text-[#8E8E93] font-mono bg-[#F5F5F7] px-1.5 py-0.5 rounded inline-block">#{order.code}</span>
+              {order.priority && order.priority !== "normal" && (
+                <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 ${
+                  order.priority === "baixa" ? "bg-slate-100 text-slate-600 border border-slate-200" :
+                  order.priority === "alta" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                  "bg-rose-50 text-rose-700 border border-rose-200" // urgente
+                }`}>
+                  {order.priority}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2 mb-1">
               <span className="font-black text-[#1C1C1E] truncate uppercase text-sm tracking-tight">{order.customerName || "Cliente não informado"}</span>

@@ -17,7 +17,8 @@ export function CompanyCatalogWrapper({
   setGiftList, 
   favorites,
   setFavorites,
-  allProducts 
+  allProducts,
+  onOpenGlobalSearch
 }: { 
   companyId: CompanyId, 
   config: AppConfig, 
@@ -27,7 +28,8 @@ export function CompanyCatalogWrapper({
   setGiftList: any, 
   favorites: Product[],
   setFavorites: any,
-  allProducts: Product[] 
+  allProducts: Product[],
+  onOpenGlobalSearch?: () => void
 }) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showMPRoulette, setShowMPRoulette] = useState(false);
@@ -161,6 +163,7 @@ export function CompanyCatalogWrapper({
         onGoBack={() => navigate('/')}
         onCheckoutComplete={() => setShowSuccess(true)}
         onOpenAdmin={() => navigate('/admin')}
+        onOpenGlobalSearch={onOpenGlobalSearch}
       />
       {showSuccess && (
         <SuccessOverlay 

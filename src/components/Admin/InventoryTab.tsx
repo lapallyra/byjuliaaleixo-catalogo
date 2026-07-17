@@ -248,7 +248,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
 
       // Atelier & Assignee selects
       if (filterAtelier !== "all" && o.atelier !== filterAtelier) return false;
-      if (filterResponsavel !== "all" && o.assignee !== filterResponsavel) return false;
+      if (filterResponsavel !== "all" && (o.responsible || o.assignee) !== filterResponsavel) return false;
 
       // Quick Filters
       switch (activeFilter) {
@@ -513,7 +513,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
   }));
 
   const ateliers = Array.from(new Set(orders.map((o) => o.atelier).filter(Boolean)));
-  const assignees = Array.from(new Set(orders.map((o) => o.assignee).filter(Boolean)));
+  const assignees = Array.from(new Set(orders.map((o) => o.responsible || o.assignee).filter(Boolean)));
 
   // Custom priority mapping styles
   const getPriorityLabelAndDot = (priority: string) => {
@@ -1080,7 +1080,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-gray-400">Funcionário/Responsável:</span>
-                          <span className="text-gray-800">{selectedItem.assignee || "Livre"}</span>
+                          <span className="text-gray-800">{selectedItem.responsible || selectedItem.assignee || "Livre"}</span>
                         </div>
                       </div>
                     </div>

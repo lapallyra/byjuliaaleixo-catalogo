@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Search, Plus, X, Calendar, Loader2, Save, User } from "lucide-react";
-import { Product, Customer, Order, CompanyId } from "../../types";
+import { Search, Plus, X, Calendar, Loader2, Save, User, Minus, Trash2, ShoppingCart, Truck } from "lucide-react";
+import { Product, Customer, Order, CompanyId, CartItem } from "../../types";
 import { addCustomer } from "../../services/firebaseService";
 import { safeFormatISO } from "../../lib/dateUtils";
 
@@ -16,6 +16,7 @@ interface OrderWizardModalProps {
 }
 
 export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
+  products,
   customers,
   companyId,
   onClose,
@@ -39,6 +40,25 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   const [productionDate, setProductionDate] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("");
   const [description, setDescription] = useState("");
+  const [responsible, setResponsible] = useState("");
+  const [priority, setPriority] = useState<Order["priority"]>("normal");
+
+  const [customizationName, setCustomizationName] = useState("");
+  const [customizationTheme, setCustomizationTheme] = useState("");
+  const [customizationColors, setCustomizationColors] = useState("");
+  const [customizationArtText, setCustomizationArtText] = useState("");
+  const [customizationEventDate, setCustomizationEventDate] = useState("");
+  const [customizationNotes, setCustomizationNotes] = useState("");
+
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [shippingCost, setShippingCost] = useState(0);
+  const [discount, setDiscount] = useState(0);
+  const [signalValue, setSignalValue] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("");
+
+  const [productSearch, setProductSearch] = useState("");
+  const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
+  const productDropdownRef = useRef<HTMLDivElement>(null);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -72,6 +92,12 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
     ).slice(0, 10);
   }, [customers, customerSearch]);
 
+  const filteredProducts = useMemo(() => {
+    if (!productSearch) return products.slice(0, 5);
+    const q = productSearch.toLowerCase();
+    return products.filter((p) => p.product_name.toLowerCase().includes(q) || (p.code && p.code.toLowerCase().includes(q))).slice(0, 10);
+  }, [products, productSearch]);
+
   const selectedCustomer = useMemo(() => {
     return customers.find((c) => c.id === selectedCustomerId) || null;
   }, [customers, selectedCustomerId]);
@@ -81,10 +107,39 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
+      if (productDropdownRef.current && !productDropdownRef.current.contains(event.target as Node)) {
+        setIsProductDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleAddProduct = (product: Product) => {
+    setItems(prev => {
+      const existing = prev.find(i => i.id === product.id);
+      if (existing) {
+        return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+      }
+      return [...prev, { ...product, quantity: 1, productId: product.id }];
+    });
+    setProductSearch("");
+    setIsProductDropdownOpen(false);
+  };
+
+  const handleUpdateItemQuantity = (id: string, delta: number) => {
+    setItems(prev => prev.map(i => {
+      if (i.id === id) {
+        const newQ = Math.max(1, i.quantity + delta);
+        return { ...i, quantity: newQ };
+      }
+      return i;
+    }));
+  };
+
+  const handleRemoveItem = (id: string) => {
+    setItems(prev => prev.filter(i => i.id !== id));
+  };
 
   const handleCreateCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,6 +192,9 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
 
     setIsSaving(true);
     try {
+      const subtotal = items.reduce((acc, item) => acc + (item.quantity * (item.current_price || item.retail_price || 0)), 0);
+      const total = Math.max(0, subtotal - discount + shippingCost);
+
       const orderData: Partial<Order> = {
         companyId,
         customerName: selectedCustomer?.name || "",
@@ -146,11 +204,24 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
         marketplace: origin,
         deliveryDate: deliveryDate,
         observations: description + (productionDate ? `\n[Previsão Produção]: ${productionDate}` : ""),
-        items: [], // Empty for now, as requested in simplified flow
-        total: 0,
+        items: items,
+        shippingCost: shippingCost,
+        discount: discount,
+        hasSignal: signalValue > 0,
+        signalValue: signalValue,
+        paymentMethod: paymentMethod || "Não informado",
+        total: total,
         createdAt: new Date(orderDate).toISOString(),
         isWholesale: false,
         isEmergency: false,
+        responsible: responsible || "",
+        priority: priority || "normal",
+        customizationName: customizationName || "",
+        customizationTheme: customizationTheme || "",
+        customizationColors: customizationColors || "",
+        customizationArtText: customizationArtText || "",
+        customizationEventDate: customizationEventDate || "",
+        customizationNotes: customizationNotes || "",
       };
 
       await onSave(orderData);
@@ -368,6 +439,354 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Responsável */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Responsável
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Nome do responsável..."
+                    className="w-full bg-white/60 border border-pink-100/85 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
+                    value={responsible}
+                    onChange={(e) => setResponsible(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Prioridade */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Prioridade
+                </label>
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as Order["priority"])}
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
+                >
+                  <option value="baixa">Baixa</option>
+                  <option value="normal">Normal</option>
+                  <option value="alta">Alta</option>
+                  <option value="urgente">Urgente</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Personalização */}
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 rounded-[22px] p-6 shadow-sm">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest block border-b border-white pb-2 mb-6">
+              Personalização
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Nome para Personalização */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Nome para Personalização
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nome do aniversariante, casal, etc."
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 font-medium"
+                  value={customizationName}
+                  onChange={(e) => setCustomizationName(e.target.value)}
+                />
+              </div>
+
+              {/* Tema */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Tema
+                </label>
+                <input
+                  type="text"
+                  placeholder="Tema da festa ou evento..."
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 font-medium"
+                  value={customizationTheme}
+                  onChange={(e) => setCustomizationTheme(e.target.value)}
+                />
+              </div>
+
+              {/* Cores */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Cores
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Rosa e Dourado, Tons pastéis..."
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 font-medium"
+                  value={customizationColors}
+                  onChange={(e) => setCustomizationColors(e.target.value)}
+                />
+              </div>
+
+              {/* Texto da Arte */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Texto da Arte
+                </label>
+                <input
+                  type="text"
+                  placeholder="Frase ou texto que irá na arte..."
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 font-medium"
+                  value={customizationArtText}
+                  onChange={(e) => setCustomizationArtText(e.target.value)}
+                />
+              </div>
+
+              {/* Data do Evento */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Data do Evento
+                </label>
+                <input
+                  type="date"
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 font-medium"
+                  value={customizationEventDate}
+                  onChange={(e) => setCustomizationEventDate(e.target.value)}
+                />
+              </div>
+
+              {/* Observações da Personalização */}
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Observações da Personalização
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Detalhes adicionais sobre a personalização (fita, embalagem, etc.)"
+                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 font-medium resize-none"
+                  value={customizationNotes}
+                  onChange={(e) => setCustomizationNotes(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Itens e Frete */}
+          <div className="bg-white/75 backdrop-blur-md border border-white/80 rounded-[22px] p-6 shadow-sm">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest block border-b border-white pb-2 mb-6">
+              Itens e Frete
+            </h3>
+            
+            <div className="space-y-6">
+              {/* Product Search */}
+              <div className="space-y-1 relative" ref={productDropdownRef}>
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Buscar Produto
+                </label>
+                <div className="relative">
+                  <ShoppingCart className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Digite o nome ou código do produto..."
+                    className="w-full bg-white/60 border border-pink-100/85 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
+                    value={productSearch}
+                    onChange={(e) => {
+                      setProductSearch(e.target.value);
+                      setIsProductDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsProductDropdownOpen(true)}
+                  />
+                </div>
+                {/* Dropdown Product Search */}
+                {isProductDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white/95 backdrop-blur-md border border-pink-100/50 rounded-xl shadow-lg z-20 max-h-48 overflow-y-auto">
+                    {filteredProducts.length === 0 ? (
+                      <div className="p-4 text-sm text-gray-400 text-center">
+                        Nenhum produto encontrado.
+                      </div>
+                    ) : (
+                      filteredProducts.map(p => (
+                        <div
+                          key={p.id}
+                          onClick={() => handleAddProduct(p)}
+                          className="px-4 py-3 hover:bg-pink-50/50 cursor-pointer flex justify-between items-center border-b border-pink-50/30 last:border-0"
+                        >
+                          <div className="flex items-center gap-3">
+                            {p.image ? (
+                              <img src={p.image} alt={p.product_name} className="w-8 h-8 rounded object-cover" />
+                            ) : (
+                              <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
+                                <ShoppingCart size={14} className="text-gray-400" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-sm font-semibold text-gray-700">{p.product_name}</p>
+                              <p className="text-[10px] text-gray-400">{p.code}</p>
+                            </div>
+                          </div>
+                          <div className="text-sm font-bold text-gray-700">
+                            R$ {(p.current_price || p.retail_price || 0).toFixed(2).replace(".", ",")}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Items List */}
+              {items.length > 0 && (
+                <div className="space-y-3">
+                  {items.map(item => (
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-white/60 border border-pink-50 rounded-xl">
+                      <div className="flex items-center gap-3 flex-1">
+                        {item.image ? (
+                           <img src={item.image} alt={item.product_name} className="w-10 h-10 rounded object-cover" />
+                        ) : (
+                           <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center">
+                             <ShoppingCart size={16} className="text-gray-400" />
+                           </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">{item.product_name}</p>
+                          <p className="text-xs text-gray-500">R$ {(item.current_price || item.retail_price || 0).toFixed(2).replace(".", ",")}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                          <button type="button" onClick={() => handleUpdateItemQuantity(item.id, -1)} className="p-1 hover:bg-white rounded text-gray-600 shadow-sm"><Minus size={14} /></button>
+                          <span className="text-xs font-bold w-6 text-center">{item.quantity}</span>
+                          <button type="button" onClick={() => handleUpdateItemQuantity(item.id, 1)} className="p-1 hover:bg-white rounded text-gray-600 shadow-sm"><Plus size={14} /></button>
+                        </div>
+                        <div className="text-sm font-bold text-gray-800 min-w-[70px] text-right">
+                          R$ {((item.quantity * (item.current_price || item.retail_price || 0))).toFixed(2).replace(".", ",")}
+                        </div>
+                        <button type="button" onClick={() => handleRemoveItem(item.id)} className="p-2 text-rose-400 hover:bg-rose-50 rounded-lg transition-colors">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Frete, Desconto, Sinal e Forma de Pagamento */}
+              <div className="pt-6 border-t border-pink-50/50 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {/* Valor do Frete */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-gray-400 block">
+                      Valor do Frete
+                    </label>
+                    <div className="relative">
+                      <Truck className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={shippingCost || ""}
+                        onChange={(e) => setShippingCost(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-white/60 border border-pink-100/85 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Valor do Desconto */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-gray-400 block">
+                      Desconto (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={discount || ""}
+                      onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                      className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  {/* Sinal Recebido */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-gray-400 block">
+                      Sinal Recebido (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={signalValue || ""}
+                      onChange={(e) => setSignalValue(parseFloat(e.target.value) || 0)}
+                      className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  {/* Forma de Pagamento */}
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-gray-400 block">
+                      Forma de Pagamento
+                    </label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 font-semibold"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="Pix">Pix</option>
+                      <option value="Dinheiro">Dinheiro</option>
+                      <option value="Cartão de Débito">Cartão de Débito</option>
+                      <option value="Cartão de Crédito">Cartão de Crédito</option>
+                      <option value="Boleto">Boleto</option>
+                      <option value="Transferência">Transferência</option>
+                      <option value="Outro">Outro</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Resumo Financeiro Claro e Real-Time */}
+                <div className="bg-pink-50/30 border border-pink-100/40 rounded-2xl p-5 grid grid-cols-2 md:grid-cols-3 gap-6 text-xs text-gray-700">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Subtotal</p>
+                    <p className="text-sm font-bold mt-0.5">
+                      R$ {items.reduce((acc, item) => acc + (item.quantity * (item.current_price || item.retail_price || 0)), 0).toFixed(2).replace(".", ",")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Desconto (-)</p>
+                    <p className="text-sm font-bold text-rose-600 mt-0.5">
+                      - R$ {discount.toFixed(2).replace(".", ",")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Frete (+)</p>
+                    <p className="text-sm font-bold mt-0.5">
+                      R$ {shippingCost.toFixed(2).replace(".", ",")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Sinal Recebido (-)</p>
+                    <p className="text-sm font-bold text-emerald-600 mt-0.5">
+                      - R$ {signalValue.toFixed(2).replace(".", ",")}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Saldo Restante</p>
+                    <p className="text-sm font-bold mt-0.5">
+                      R$ {Math.max(0, items.reduce((acc, item) => acc + (item.quantity * (item.current_price || item.retail_price || 0)), 0) - discount + shippingCost - signalValue).toFixed(2).replace(".", ",")}
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-b from-pink-400 to-pink-500 text-white rounded-xl p-3 text-center flex flex-col justify-center items-center col-span-2 md:col-span-1 shadow-sm">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-white/90">Total Final</p>
+                    <p className="text-base font-black mt-0.5">
+                      R$ {Math.max(0, items.reduce((acc, item) => acc + (item.quantity * (item.current_price || item.retail_price || 0)), 0) - discount + shippingCost).toFixed(2).replace(".", ",")}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

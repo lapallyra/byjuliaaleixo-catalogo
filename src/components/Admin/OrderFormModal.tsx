@@ -27,9 +27,10 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
   const isSavingRef = useRef(false);
   const [items, setItems] = useState<any[]>(editingOrder?.items || []);
   const [shipping, setShipping] = useState(editingOrder?.shippingCost || 0);
-  const [isDepositPaid, setIsDepositPaid] = useState(
-    editingOrder?.hasSignal || false,
-  );
+  const [discount, setDiscount] = useState(editingOrder?.discount || 0);
+  const [signalValue, setSignalValue] = useState(editingOrder?.signalValue || 0);
+  const [paymentMethod, setPaymentMethod] = useState(editingOrder?.paymentMethod || "");
+
   const [observations, setObservations] = useState(
     editingOrder?.observations || "",
   );
@@ -44,13 +45,22 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
   const [isWholesale, setIsWholesale] = useState(
     editingOrder?.isWholesale || false,
   );
+  const [responsible, setResponsible] = useState(editingOrder?.responsible || "");
+  const [priority, setPriority] = useState<Order["priority"]>(editingOrder?.priority || "normal");
+
+  const [customizationName, setCustomizationName] = useState(editingOrder?.customizationName || "");
+  const [customizationTheme, setCustomizationTheme] = useState(editingOrder?.customizationTheme || "");
+  const [customizationColors, setCustomizationColors] = useState(editingOrder?.customizationColors || "");
+  const [customizationArtText, setCustomizationArtText] = useState(editingOrder?.customizationArtText || "");
+  const [customizationEventDate, setCustomizationEventDate] = useState(editingOrder?.customizationEventDate || "");
+  const [customizationNotes, setCustomizationNotes] = useState(editingOrder?.customizationNotes || "");
 
   const subtotal = items.reduce(
     (sum, it) => sum + (it.retail_price || it.current_price || 0) * it.quantity,
     0,
   );
-  const totalWithShipping = subtotal + shipping;
-  const depositValue = subtotal * 0.5;
+  const totalWithShipping = Math.max(0, subtotal - discount + shipping);
+  const remainingValue = Math.max(0, totalWithShipping - signalValue);
 
   const companiesList = [
     { id: "pallyra", name: "La Pallyra" },
@@ -105,15 +115,25 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
                 deliveryDate: formData.get("deliveryDate") as string,
                 deliveryType: deliveryType as any,
                 shippingCost: shipping,
+                discount: discount,
                 observations: observations,
-                hasSignal: isDepositPaid,
-                signalValue: depositValue,
+                hasSignal: signalValue > 0,
+                signalValue: signalValue,
+                paymentMethod: paymentMethod,
                 items,
                 isWholesale: isWholesale,
                 isEmergency: formData.get("isEmergency") === "on",
                 companyId: selectedAtelier,
                 marketplace: (formData.get("marketplace") as string) || "",
                 marketplaceTax: Number(formData.get("marketplaceTax")) || 0,
+                responsible: responsible,
+                priority: priority,
+                customizationName: customizationName,
+                customizationTheme: customizationTheme,
+                customizationColors: customizationColors,
+                customizationArtText: customizationArtText,
+                customizationEventDate: customizationEventDate,
+                customizationNotes: customizationNotes,
               });
               onClose();
             } catch (err) {
@@ -362,78 +382,239 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
             </div>
           </div>
 
-          {/* Checkcards for Payment/Delivery */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div
-              onClick={() => setIsWholesale(!isWholesale)}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3 ${isWholesale ? "bg-amber-50 border-amber-500" : "bg-white border-gray-100 text-[#8E8E93]"}`}
-            >
-              <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isWholesale ? "bg-amber-500 border-amber-500" : "border-slate-200"}`}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
+            <div className="space-y-1">
+              <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                Responsável
+              </label>
+              <input
+                type="text"
+                placeholder="Nome do responsável..."
+                value={responsible}
+                onChange={(e) => setResponsible(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900 font-sans"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                Prioridade
+              </label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as Order["priority"])}
+                className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-medium outline-none text-slate-900"
               >
-                {isWholesale && (
-                  <CheckCircle className="text-white" size={12} />
-                )}
+                <option value="baixa">Baixa</option>
+                <option value="normal">Normal</option>
+                <option value="alta">Alta</option>
+                <option value="urgente">Urgente</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Personalização Section */}
+          <div className="space-y-4">
+            <h3 className="text-[10px] uppercase font-black text-pink-600 tracking-widest pl-2">
+              Personalização do Pedido
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-pink-50/20 border border-pink-100/30 p-5 rounded-[22px]">
+              {/* Nome para Personalização */}
+              <div className="space-y-1">
+                <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                  Nome para Personalização
+                </label>
+                <input
+                  type="text"
+                  placeholder="Nome do aniversariante, casal, etc."
+                  value={customizationName}
+                  onChange={(e) => setCustomizationName(e.target.value)}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900 font-sans"
+                />
               </div>
-              <div>
-                <p
-                  className={`text-[10px] font-medium tracking-normal ${isWholesale ? "text-amber-700" : ""}`}
-                >
-                  Pedido de Atacado
-                </p>
-                <p
-                  className={`text-[8px] font-bold ${isWholesale ? "text-amber-600" : ""}`}
-                >
-                  Aplica aviso de atacado no comprovante
-                </p>
+
+              {/* Tema */}
+              <div className="space-y-1">
+                <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                  Tema
+                </label>
+                <input
+                  type="text"
+                  placeholder="Tema do evento..."
+                  value={customizationTheme}
+                  onChange={(e) => setCustomizationTheme(e.target.value)}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900 font-sans"
+                />
+              </div>
+
+              {/* Cores */}
+              <div className="space-y-1">
+                <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                  Cores
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: Rosa e Dourado..."
+                  value={customizationColors}
+                  onChange={(e) => setCustomizationColors(e.target.value)}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900 font-sans"
+                />
+              </div>
+
+              {/* Texto da Arte */}
+              <div className="space-y-1">
+                <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                  Texto da Arte
+                </label>
+                <input
+                  type="text"
+                  placeholder="Texto que irá na arte..."
+                  value={customizationArtText}
+                  onChange={(e) => setCustomizationArtText(e.target.value)}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900 font-sans"
+                />
+              </div>
+
+              {/* Data do Evento */}
+              <div className="space-y-1">
+                <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                  Data do Evento
+                </label>
+                <input
+                  type="date"
+                  value={customizationEventDate}
+                  onChange={(e) => setCustomizationEventDate(e.target.value)}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900 font-sans"
+                />
+              </div>
+
+              {/* Observações da Personalização */}
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                  Observações da Personalização
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Observações ou detalhes específicos da personalização..."
+                  value={customizationNotes}
+                  onChange={(e) => setCustomizationNotes(e.target.value)}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-medium outline-none text-slate-900 resize-none"
+                />
               </div>
             </div>
+          </div>
 
-            <div
-              onClick={() => setIsDepositPaid(!isDepositPaid)}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3 ${isDepositPaid ? "bg-emerald-50 border-emerald-500" : "bg-white border-gray-100 text-[#8E8E93]"}`}
-            >
+          {/* Checkcards and Financial Area */}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isDepositPaid ? "bg-emerald-500 border-emerald-500" : "border-slate-200"}`}
+                onClick={() => setIsWholesale(!isWholesale)}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3 ${isWholesale ? "bg-amber-50 border-amber-500" : "bg-white border-gray-100 text-[#8E8E93]"}`}
               >
-                {isDepositPaid && (
-                  <CheckCircle className="text-white" size={12} />
-                )}
-              </div>
-              <div>
-                <p
-                  className={`text-[10px] font-medium tracking-normal ${isDepositPaid ? "text-emerald-700" : ""}`}
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isWholesale ? "bg-amber-500 border-amber-500" : "border-slate-200"}`}
                 >
-                  Sinal Pago (50%)
-                </p>
-                <p
-                  className={`text-[9px] font-bold ${isDepositPaid ? "text-emerald-600" : ""}`}
-                >
-                  {formatCurrency(depositValue || 0)}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl border border-gray-100 bg-black text-white flex justify-between items-center col-span-1 md:col-span-2">
-              <div>
-                <p className="text-[9px] font-medium tracking-tight text-[#8E8E93]">
-                  Total a Pagar
-                </p>
-                <p className="text-lg font-mono font-medium">
-                  {formatCurrency(totalWithShipping || 0)}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-[8px] font-bold text-[#8E8E93]">
-                  {isDepositPaid ? "Restante" : "Subtotal"}
-                </p>
-                <p className="text-[11px] font-mono font-medium text-white">
-                  {formatCurrency(
-                    (isDepositPaid
-                      ? totalWithShipping - depositValue
-                      : totalWithShipping) || 0,
+                  {isWholesale && (
+                    <CheckCircle className="text-white" size={12} />
                   )}
-                </p>
+                </div>
+                <div>
+                  <p
+                    className={`text-[10px] font-medium tracking-normal ${isWholesale ? "text-amber-700" : ""}`}
+                  >
+                    Pedido de Atacado
+                  </p>
+                  <p
+                    className={`text-[8px] font-bold ${isWholesale ? "text-amber-600" : ""}`}
+                  >
+                    Aplica aviso de atacado no comprovante
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Finance Fields */}
+            <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+              <h4 className="text-[10px] font-medium uppercase text-slate-800 tracking-widest pl-1 font-mono">
+                Informações Financeiras do Pedido
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                    Desconto (R$)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={discount || ""}
+                    onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                    placeholder="0,00"
+                    className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                    Sinal Recebido (R$)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={signalValue || ""}
+                    onChange={(e) => setSignalValue(parseFloat(e.target.value) || 0)}
+                    placeholder="0,00"
+                    className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+                    Forma de Pagamento
+                  </label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900"
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="Pix">Pix</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Cartão de Débito">Cartão de Débito</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Boleto">Boleto</option>
+                    <option value="Transferência">Transferência</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Financial Summary Display */}
+              <div className="mt-4 p-4 rounded-xl border border-gray-200 bg-white grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                <div>
+                  <p className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-wider">Subtotal</p>
+                  <p className="text-sm font-mono font-bold text-slate-800">{formatCurrency(subtotal)}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase font-medium text-rose-500 tracking-wider">Desconto (-)</p>
+                  <p className="text-sm font-mono font-bold text-rose-600">-{formatCurrency(discount)}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase font-medium text-slate-500 tracking-wider">Frete (+)</p>
+                  <p className="text-sm font-mono font-bold text-slate-800">{formatCurrency(shipping)}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase font-medium text-emerald-600 tracking-wider">Sinal Recebido (-)</p>
+                  <p className="text-sm font-mono font-bold text-emerald-600">-{formatCurrency(signalValue)}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-wider">Saldo Restante</p>
+                  <p className="text-sm font-mono font-bold text-slate-800">{formatCurrency(remainingValue)}</p>
+                </div>
+                <div className="bg-black text-white p-2 rounded-lg text-center flex flex-col justify-center items-center col-span-2 md:col-span-1">
+                  <p className="text-[8px] uppercase font-medium text-slate-400 tracking-wider">Total Final</p>
+                  <p className="text-sm font-mono font-bold text-white">{formatCurrency(totalWithShipping)}</p>
+                </div>
               </div>
             </div>
           </div>

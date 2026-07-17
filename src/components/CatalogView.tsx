@@ -83,6 +83,7 @@ interface CatalogViewProps {
   onGoBack: () => void;
   onCheckoutComplete: () => void;
   onOpenAdmin: () => void;
+  onOpenGlobalSearch?: () => void;
 }
 
 export const CatalogView: React.FC<CatalogViewProps> = ({
@@ -100,7 +101,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   onRemoveFromGiftList,
   onGoBack,
   onCheckoutComplete,
-  onOpenAdmin
+  onOpenAdmin,
+  onOpenGlobalSearch
 }) => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -790,6 +792,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         logoUrl={isotipo}
         companyId={companyId}
         searchQuery={searchQuery}
+        onOpenGlobalSearch={onOpenGlobalSearch}
       />
       
       <div className="flex-1 flex overflow-hidden">
@@ -1016,10 +1019,18 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex flex-col items-center justify-center py-32"
+                    className="flex flex-col items-center justify-center py-40"
                   >
-                    <Loader2 size={36} className="animate-spin text-[#cca062]" />
-                    <span className="text-[10px] font-sans font-black uppercase tracking-[0.3em] mt-4 opacity-50 text-[#6d5443]">Sincronizando Ateliê...</span>
+                    <div className="relative mb-6">
+                      <motion.div 
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        className="text-[#3D2E24]/10"
+                      >
+                        <Loader2 size={40} strokeWidth={1} />
+                      </motion.div>
+                    </div>
+                    <span className="text-[9px] font-sans font-bold uppercase tracking-[0.4em] text-[#3D2E24]/40">Sincronizando Ateliê</span>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -1076,7 +1087,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       </>
                     ) : (
                       <div className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-3xl mx-auto">
-                        <div className="w-16 h-16 bg-[#FDFCF0] border border-[#e8dcc8]/40 rounded-full flex items-center justify-center mb-6 text-[#cca062] shadow-sm animate-pulse">
+                        <div className="w-16 h-16 bg-white border border-[#e8dcc8]/40 rounded-full flex items-center justify-center mb-6 text-[#cca062] shadow-sm animate-pulse">
                           <Search size={28} strokeWidth={1.5} />
                         </div>
                         <h3 className="text-2xl font-serif text-[#3A312D] mb-2 italic">Nenhum tesouro encontrado</h3>
@@ -1100,7 +1111,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                         </div>
 
                         {/* Smart Category Discovery */}
-                        <div className="w-full bg-[#FDFCF0]/40 backdrop-blur-sm border border-[#e8dcc8]/20 rounded-2xl p-6 text-left">
+                        <div className="w-full bg-white/40 backdrop-blur-sm border border-[#e8dcc8]/20 rounded-2xl p-6 text-left">
                           <h4 className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#cca062] mb-4 font-poppins text-center">Explorar Outras Coleções</h4>
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             {categories.map((cat) => {
@@ -1208,7 +1219,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 value={listSearchCode}
                 onChange={(e) => setListSearchCode(e.target.value.toUpperCase())}
                 placeholder="Ex: LUISA"
-                className="w-full text-center tracking-[0.15em] font-semibold text-sm uppercase px-4 py-2.5 bg-[#FDFCF0] border border-[#e8dcc8]/40 rounded-xl focus:outline-none focus:border-[#cca062] mb-4 text-[#3A312D] font-poppins"
+                className="w-full text-center tracking-[0.15em] font-semibold text-sm uppercase px-4 py-2.5 bg-white border border-[#e8dcc8]/40 rounded-xl focus:outline-none focus:border-[#cca062] mb-4 text-[#3A312D] font-poppins"
               />
 
               <div className="flex gap-3">

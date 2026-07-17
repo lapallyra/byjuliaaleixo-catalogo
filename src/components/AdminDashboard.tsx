@@ -143,8 +143,8 @@ interface AdminDashboardProps {
 
 const TabLoader = () => (
   <div className="h-64 flex flex-col items-center justify-center gap-4 animate-in fade-in">
-    <div className="w-12 h-12 border-4 border-lilac border-t-transparent rounded-full animate-spin" />
-    <span className="text-[10px] font-black uppercase text-lilac tracking-widest">
+    <div className="w-10 h-10 border-2 border-[#3D2E24]/10 border-t-[#cca062] rounded-full animate-spin" />
+    <span className="text-[10px] font-black uppercase text-[#3D2E24]/40 tracking-[0.3em]">
       Carregando...
     </span>
   </div>

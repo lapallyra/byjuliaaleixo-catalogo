@@ -64,9 +64,9 @@ export const GiftListInfoView: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#FFF9F6] min-h-screen text-slate-800 font-sans selection:bg-[#FFD2E5] selection:text-pink-900 overflow-x-hidden">
+    <div className="bg-[#FCFAF7] min-h-screen text-slate-800 font-sans selection:bg-[#FFD2E5] selection:text-pink-900 overflow-x-hidden">
       {/* BACKGROUND GRAPHICS */}
-      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFEDF4] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#E8DCC8]/15 via-[#FCFAF7] to-transparent pointer-events-none -z-10" />
       
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* BACK BUTTON */}
