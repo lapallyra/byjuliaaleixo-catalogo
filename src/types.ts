@@ -310,6 +310,19 @@ export interface CustomerTag {
   active: boolean;
 }
 
+
+
+
+
+export interface CustomerInteraction {
+  id: string;
+  date: string;
+  userId: string;
+  userName: string;
+  actionType: 'contato' | 'mensagem' | 'observacao' | 'campanha';
+  description: string;
+}
+
 export interface CustomerNote {
   id: string;
   date: string;
@@ -339,6 +352,7 @@ export interface Customer {
   tags?: CustomerTag[];
   internalNotes?: CustomerNote[];
   commercialNotes?: CustomerNote[];
+  interactions?: CustomerInteraction[];
   totalSpent: number;
   ordersCount: number;
   pendingBalance?: number;

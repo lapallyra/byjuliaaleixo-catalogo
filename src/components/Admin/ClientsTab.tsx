@@ -34,6 +34,9 @@ import {
   Sparkles,
   History,
   Archive,
+  Zap,
+  Star,
+  Clock,
 } from "lucide-react";
 import { CSVHandler } from "./CSVHandler";
 import { Customer, CompanyId, Order, CustomerContact, CustomerAddress, CustomerTag, CustomerNote } from "../../types";
@@ -52,6 +55,8 @@ import { fetchAddressByCep } from "../../utils/address";
 import { ContactsSection, AddressesSection } from "./CustomerFormSections";
 import { TagsSection } from "./TagsSection";
 import { NotesSection } from "./NotesSection";
+import { InteractionsSection } from "./InteractionsSection";
+import { CustomerInteraction } from "../../types";
 
 const translateStatus = (status: string): string => {
   const s = (status || "").toLowerCase();
@@ -99,7 +104,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState("");
   const [isFetchingAddress, setIsFetchingAddress] = useState(false);
-  const [quickFilter, setQuickFilter] = useState<"Todos" | "PF" | "PJ" | "ComPedidos" | "SemPedidos" | "Recorrentes" | "Aniversariantes" | "VIP" | "Inativos" | "Novos" | "MaiorLTV" | "MaiorFreq">("Todos");
+  const [quickFilter, setQuickFilter] = useState<"Todos" | "PF" | "PJ" | "ComPedidos" | "SemPedidos" | "Recorrentes" | "Aniversariantes" | "VIP" | "Inativos" | "Novos" | "MaiorLTV" | "MaiorFreq" | "Oportunidade" | "AltoValor" | "SemCompra" | "Prioritarios">("Todos");
   const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "newest" | "oldest" | "revenue" | "orders">("newest");
 
@@ -411,6 +416,10 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
           const [, month] = c.birthDate.split("/");
           if (parseInt(month) !== new Date().getMonth() + 1) return false;
         }
+        if (quickFilter === "Oportunidade" && metricsData?.segment !== "Inativo") return false; 
+        if (quickFilter === "AltoValor" && (!metricsData || metricsData.ltv < 5000)) return false; 
+        if (quickFilter === "SemCompra" && (!c.lastPurchaseDate || (new Date().getTime() - new Date(c.lastPurchaseDate.split('/').reverse().join('-')).getTime()) / (1000 * 3600 * 24) < 90)) return false; 
+        if (quickFilter === "Prioritarios" && metricsData?.segment !== "VIP" && metricsData?.segment !== "Recorrente") return false;
 
         return true;
       })
@@ -558,6 +567,23 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
   }, [activeCustomer, customerOrders]);
 
   const activeCustomerMetrics = useMemo(() => activeCustomer ? calculateCustomerMetrics(activeCustomer, customerOrders) : null, [activeCustomer, customerOrders]);
+
+  const handleSaveInteractions = async (interactions: CustomerInteraction[]) => {
+    if (!activeCustomer) return;
+    try {
+      const updates = { interactions };
+      await updateCustomer(activeCustomer.id, updates);
+      
+      setSelectedCustomer({
+        ...activeCustomer,
+        ...updates
+      });
+
+
+    } catch (err) {
+      console.error("Error updating interactions:", err);
+    }
+  };
 
   // CRM notes updates
   const handleSaveNotes = async (internalNotes?: CustomerNote[], commercialNotes?: CustomerNote[]) => {
@@ -1067,7 +1093,11 @@ Histórico de Compras:
             { id: "Inativos", label: "Inativos" },
             { id: "MaiorLTV", label: "Maior LTV" },
             { id: "MaiorFreq", label: "Maior Freq." },
-            { id: "Aniversariantes", label: "Aniversariantes" }
+            { id: "Aniversariantes", label: "Aniversariantes" },
+            { id: "Oportunidade", label: "Oportunidade Retorno" },
+            { id: "AltoValor", label: "Alto Valor" },
+            { id: "SemCompra", label: "Sem Compra Recente" },
+            { id: "Prioritarios", label: "Prioritários" }
           ].map(f => (
             <button
               key={f.id}
@@ -1385,7 +1415,7 @@ Histórico de Compras:
                     <div className="bg-white p-5 rounded-2xl border border-[#E5E5EA] shadow-3xs">
                       <div className="flex justify-between items-start mb-4">
                         <h4 className="text-[#1C1C1E] font-bold uppercase tracking-wider text-xs flex items-center gap-2">
-                          <User size={14} className="text-[#cca062]" /> Dados Principais
+                          <Users size={14} className="text-[#cca062]" /> Dados Principais
                         </h4>
                       </div>
                       <div className="grid grid-cols-2 gap-y-4 gap-x-6">
@@ -1394,8 +1424,8 @@ Histórico de Compras:
                           <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.name}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Contato</span>
-                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.contact || "-"}</span>
+                          <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Contato/Telefone</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.contact || activeCustomer.phone || "-"}</span>
                         </div>
                         <div className="col-span-2 md:col-span-1">
                           <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Email</span>
@@ -1422,20 +1452,19 @@ Histórico de Compras:
                           className="text-[#cca062] hover:text-[#b08750] transition-colors"
                           onClick={() => {
                             if (activeCustomer.address) {
-                              const search = `${activeCustomer.address}, ${activeCustomer.addressNumber || ""} - ${activeCustomer.city || ""}`;
+                              const search = `${activeCustomer.address}, ${activeCustomer.number || ""} - ${activeCustomer.city || ""}`;
                               window.open(`https://maps.google.com/?q=${encodeURIComponent(search)}`, '_blank');
                             }
                           }}
                         >
-                          <ExternalLink size={14} />
+                          <MapPin size={14} />
                         </button>
                       </div>
                       <div className="grid grid-cols-2 gap-y-4 gap-x-6">
                         <div className="col-span-2">
                           <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Endereço Completo</span>
                           <span className="text-sm font-semibold text-[#1C1C1E]">
-                            {activeCustomer.address ? `${activeCustomer.address}, ${activeCustomer.addressNumber || "S/N"}` : "-"}
-                            {activeCustomer.addressComplement && ` (${activeCustomer.addressComplement})`}
+                            {activeCustomer.address ? `${activeCustomer.address}, ${activeCustomer.number || "S/N"}` : "-"}
                           </span>
                         </div>
                         <div>
@@ -1448,7 +1477,7 @@ Histórico de Compras:
                         </div>
                         <div>
                           <span className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">CEP</span>
-                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.cep || "-"}</span>
+                          <span className="text-sm font-semibold text-[#1C1C1E]">{activeCustomer.zipCode || "-"}</span>
                         </div>
                       </div>
                     </div>
@@ -1483,6 +1512,55 @@ Histórico de Compras:
                           <span className="text-[9px] font-bold text-[#8E8E93] uppercase tracking-widest block mb-1">Frequência</span>
                           <span className="text-sm font-bold text-[#1C1C1E] uppercase">{activeCustomerMetrics?.frequency ? `A cada ${activeCustomerMetrics.frequency} dias` : "N/A"}</span>
                         </div>
+                      </div>
+                    </div>
+                    {/* Ações Recomendadas */}
+                    <div className="bg-white p-5 rounded-2xl border border-[#cca062]/50 shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-[#cca062]"></div>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Zap size={16} className="text-[#cca062]" />
+                        <h4 className="text-[#1C1C1E] font-bold uppercase tracking-wider text-xs">Ações Recomendadas</h4>
+                      </div>
+                      <div className="space-y-3">
+                        {activeCustomerMetrics?.segment === 'VIP' && (
+                          <div className="p-3 bg-yellow-50 rounded-xl border border-yellow-100 flex gap-3 items-start">
+                            <Star size={16} className="text-yellow-600 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs font-bold text-yellow-800">Cliente VIP: Manter Relacionamento Premium</p>
+                              <p className="text-[10px] text-yellow-700 mt-1">Sugerido contato especial para apresentar lançamentos ou oferecer atendimento exclusivo.</p>
+                            </div>
+                          </div>
+                        )}
+                        {activeCustomerMetrics?.segment === 'Inativo' && (
+                          <div className="p-3 bg-red-50 rounded-xl border border-red-100 flex gap-3 items-start">
+                            <Clock size={16} className="text-red-600 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs font-bold text-red-800">Cliente Inativo: Campanha de Retorno</p>
+                              <p className="text-[10px] text-red-700 mt-1">Este cliente não compra há algum tempo. Sugerido enviar uma campanha de retorno com incentivo.</p>
+                            </div>
+                          </div>
+                        )}
+                        {activeCustomerMetrics?.segment === 'Recorrente' && (
+                          <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 flex gap-3 items-start">
+                            <RefreshCw size={16} className="text-blue-600 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs font-bold text-blue-800">Cliente Recorrente: Sugerir Recompra</p>
+                              <p className="text-[10px] text-blue-700 mt-1">Cliente ativo e recorrente. Apresente novidades alinhadas aos produtos favoritos.</p>
+                            </div>
+                          </div>
+                        )}
+                        {activeCustomerMetrics?.segment === 'Novo' && (
+                          <div className="p-3 bg-green-50 rounded-xl border border-green-100 flex gap-3 items-start">
+                            <UserCheck size={16} className="text-green-600 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-xs font-bold text-green-800">Cliente Novo: Acompanhamento Pós-venda</p>
+                              <p className="text-[10px] text-green-700 mt-1">Realizar contato para avaliar a experiência da primeira compra e fortalecer o relacionamento.</p>
+                            </div>
+                          </div>
+                        )}
+                        {(!activeCustomerMetrics || !['VIP', 'Inativo', 'Recorrente', 'Novo'].includes(activeCustomerMetrics.segment)) && (
+                          <p className="text-[11px] text-[#8E8E93]">Nenhuma ação recomendada no momento baseada no comportamento atual.</p>
+                        )}
                       </div>
                     </div>
 
@@ -1682,6 +1760,13 @@ Histórico de Compras:
                         type="commercial"
                       />
 
+                      <div className="pt-4 mt-6 border-t border-[#E5E5EA]">
+                        <InteractionsSection 
+                          interactions={activeCustomer.interactions || []}
+                          onChange={handleSaveInteractions}
+                        />
+                      </div>
+
                       {activeCustomer.notes && (
                         <div className="pt-4 border-t border-[#E5E5EA]">
                           <h5 className="text-[10px] font-extrabold uppercase tracking-widest text-[#8E8E93] mb-2">Anotação Legada</h5>
@@ -1692,7 +1777,9 @@ Histórico de Compras:
                       )}
                     </div>
                   </div>
+                </div>
                 )}
+
               </div>
 
               {/* Drawer footer */}
