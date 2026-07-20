@@ -171,7 +171,7 @@ async function startServer() {
     app.use(vite.middlewares);
 
     // Fallback for SPA routing in development
-    app.get(/.*/, async (req, res, next) => {
+    app.get('*all', async (req, res, next) => {
       // Don't intercept API calls or static assets/file requests with extensions
       if (req.originalUrl.startsWith("/api") || req.originalUrl.includes(".")) {
         return next();
@@ -201,7 +201,7 @@ async function startServer() {
 
     app.use(express.static(distPath));
     // Use standard catch-all to guarantee direct navigation to SPA paths (e.g. /admin) never 404
-    app.get(/.*/, (req, res) => {
+    app.get('*all', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'), (err) => {
         if (err) {
           console.error(`Error sending index.html from "${distPath}":`, err);

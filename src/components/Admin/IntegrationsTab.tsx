@@ -74,7 +74,9 @@ const IntegrationCard: React.FC<IntegrationCardProps> = ({ name, description, st
           {description}
         </p>
 
-        <button className="w-full py-4 bg-white border border-[#E5E5EA] rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#1C1C1E] transition-all hover:bg-[#F5F5F7] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] active:scale-95 flex items-center justify-center gap-2">
+        <button 
+          onClick={() => alert(`Abrindo configurações de ${name}...`)}
+          className="w-full py-4 bg-white border border-[#E5E5EA] rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#1C1C1E] transition-all hover:bg-[#F5F5F7] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] active:scale-95 flex items-center justify-center gap-2">
           Abrir Configurações <ChevronRight size={14} />
         </button>
       </div>

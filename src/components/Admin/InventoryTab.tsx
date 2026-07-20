@@ -39,11 +39,13 @@ import { Order, Product, Insumo, ProductionBatch, Componente, CompanyId } from "
 import { calculateOrderPriority, getPriorityStyles, PriorityResult } from "../../utils/priorityUtils";
 import { createProductionBatch, updateProductionBatch, subscribeToProductionBatches } from "../../services/firebaseService";
 import { suggestBatches, consolidateBatchInsumos } from "../../utils/batchUtils";
+import { startProductionAPI, cancelProductionAPI } from "../../services/productionService";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { db } from "../../lib/firebase";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+import { useAuth } from "../AuthProvider";
 
 interface InventoryTabProps {
   companyId: CompanyId;
@@ -102,6 +104,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
   onUpdateOrder,
 }) => {
   const orchestrator = useAdminOrchestrator();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "hoje" | "amanha" | "atrasados" | "alta_prioridade" | "meu_setor">("all");
   const [filterAtelier, setFilterAtelier] = useState<string>("all");
@@ -122,6 +125,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
   // Drag and drop states
   const [draggedOverColumn, setDraggedOverColumn] = useState<string | null>(null);
   const [qcAlertOrder, setQcAlertOrder] = useState<Order | null>(null);
+  const [errorAlert, setErrorAlert] = useState<{ title: string; message: string; warnings?: string[] } | null>(null);
 
   // Subscribe to production batches
   useEffect(() => {
@@ -348,6 +352,62 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
   };
 
   const updateOrderStatus = async (order: Order, newStatus: string) => {
+    // If transitioning to production, call startProductionAPI to do validations & deduct stock!
+    if (newStatus === 'production' && !order.insumosDeducted) {
+      try {
+        await startProductionAPI({
+          orderId: order.id,
+          userId: user?.uid || 'system'
+        });
+        
+        // After successful API call, the backend transaction will have updated the order in Firestore.
+        if (selectedItem?.id === order.id) {
+          setSelectedItem({
+            ...order,
+            status: 'production',
+            insumosDeducted: true,
+            updatedAt: new Date()
+          });
+        }
+        return;
+      } catch (error: any) {
+        console.error("Error starting production for order:", error);
+        setErrorAlert({
+          title: "Erro de Estoque",
+          message: error.message || "Não foi possível iniciar a produção devido a estoque insuficiente de insumos.",
+          warnings: error.warnings || (error.message ? [error.message] : [])
+        });
+        return; // Stop the state transition!
+      }
+    }
+
+    // If transitioning FROM production back to waiting_production, call cancelProductionAPI to restore stock!
+    if (order.status === 'production' && newStatus === 'waiting_production' && order.insumosDeducted) {
+      try {
+        await cancelProductionAPI({
+          orderId: order.id,
+          userId: user?.uid || 'system'
+        });
+        
+        if (selectedItem?.id === order.id) {
+          setSelectedItem({
+            ...order,
+            status: 'waiting_production',
+            insumosDeducted: false,
+            updatedAt: new Date()
+          });
+        }
+        return;
+      } catch (error: any) {
+        console.error("Error cancelling production for order:", error);
+        setErrorAlert({
+          title: "Erro ao Cancelar Produção",
+          message: error.message || "Não foi possível cancelar a produção e estornar o estoque.",
+        });
+        return;
+      }
+    }
+
     const newHistory = [
       ...(order.history || []),
       {
@@ -471,6 +531,61 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
     const batch = batches.find(b => b.id === batchId);
     if (!batch) return;
 
+    // Transitioning to 'em_producao' (Start Production) -> call startProductionAPI!
+    if (newStatus === 'em_producao') {
+      try {
+        await startProductionAPI({
+          batchId: batchId,
+          userId: user?.uid || 'system'
+        });
+
+        if (selectedBatch?.id === batchId) {
+          setSelectedBatch({
+            ...batch,
+            status: 'em_producao',
+            startedAt: new Date(),
+            updatedAt: new Date()
+          });
+        }
+        return;
+      } catch (error: any) {
+        console.error("Error starting batch production:", error);
+        setErrorAlert({
+          title: "Estoque do Lote Insuficiente",
+          message: error.message || "Não foi possível iniciar a produção do lote porque um ou mais insumos não possuem estoque suficiente.",
+          warnings: error.warnings || (error.message ? [error.message] : [])
+        });
+        return;
+      }
+    }
+
+    // Transitioning back to 'aberto' -> call cancelProductionAPI!
+    if (batch.status === 'em_producao' && newStatus === 'aberto') {
+      try {
+        await cancelProductionAPI({
+          batchId: batchId,
+          userId: user?.uid || 'system'
+        });
+
+        if (selectedBatch?.id === batchId) {
+          setSelectedBatch({
+            ...batch,
+            status: 'aberto',
+            updatedAt: new Date()
+          });
+        }
+        return;
+      } catch (error: any) {
+        console.error("Error cancelling batch production:", error);
+        setErrorAlert({
+          title: "Erro ao Cancelar Produção do Lote",
+          message: error.message || "Ocorreu um erro ao cancelar a produção do lote e estornar o estoque.",
+        });
+        return;
+      }
+    }
+
+    // Default manual update for other status changes (e.g., concluido, em_separacao)
     const updatedData: Partial<ProductionBatch> = {
       status: newStatus,
       updatedAt: new Date(),
@@ -481,7 +596,6 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
       }]
     };
 
-    if (newStatus === 'em_producao') updatedData.startedAt = new Date();
     if (newStatus === 'concluido') updatedData.finishedAt = new Date();
 
     await updateProductionBatch(batchId, updatedData);
@@ -1491,6 +1605,56 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
                    >
                      Confirmar e Criar Lote
                    </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* TRANSACTION STOCK ERROR WARNING MODAL */}
+      <AnimatePresence>
+        {errorAlert && (
+          <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white/90 backdrop-blur-md rounded-[22px] w-full max-w-md shadow-2xl border border-white/80 overflow-hidden"
+            >
+              <div className="p-6 bg-gradient-to-r from-amber-500 to-rose-500 text-white flex items-center gap-3">
+                <AlertTriangle size={24} className="animate-pulse" />
+                <div>
+                  <h3 className="text-base font-bold uppercase tracking-wider">{errorAlert.title}</h3>
+                  <span className="text-[10px] text-white/80 font-semibold block">Ação bloqueada pelo controle de estoque</span>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <p className="text-xs font-semibold text-gray-600 leading-relaxed">
+                  {errorAlert.message}
+                </p>
+
+                {errorAlert.warnings && errorAlert.warnings.length > 0 && (
+                  <div className="space-y-2 p-4 bg-amber-50/20 border border-amber-100/30 rounded-2xl max-h-48 overflow-y-auto">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-amber-600 block mb-1">Itens com Estoque Insuficiente:</span>
+                    {errorAlert.warnings.map((warning, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-xs font-bold text-gray-700">
+                        <span className="text-rose-500 mt-0.5">•</span>
+                        <span>{warning}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-2 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setErrorAlert(null)}
+                    className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold uppercase tracking-wider transition-all text-center"
+                  >
+                    Entendido, Voltar
+                  </button>
                 </div>
               </div>
             </motion.div>

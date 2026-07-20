@@ -6,6 +6,7 @@ import { ImageWithFallback } from '../ImageWithFallback';
 import { Card } from './Card';
 import { Badge } from './Badge';
 import { ProductDetailModal } from '../ProductDetailModal';
+import { formatCurrency } from '../../lib/currencyUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -36,13 +37,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [addedFavorite, setAddedFavorite] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
 
   const handleAction = (e: React.MouseEvent, action: () => void, setStatus: (val: boolean) => void) => {
     e.stopPropagation();

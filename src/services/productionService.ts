@@ -1,61 +1,67 @@
-import { doc, runTransaction, collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../lib/firebase";
-import { Product, Componente, ComponenteMovement } from "../types";
+import { Product } from "../types";
 
 export const startProductProduction = async (
   orderId: string,
   product: Product,
   userId: string
 ) => {
-  const recipe = product.insumos || [];
-  if (recipe.length === 0) return { success: true, warnings: [] };
-
-  const warnings: string[] = [];
-
-  await runTransaction(db, async (transaction) => {
-    // 1. Check availability
-    const componentRefs = recipe.map((r) => doc(db, "componentes", r.insumoId));
-    const componentDocs = await Promise.all(componentRefs.map((ref) => transaction.get(ref)));
-
-    const components = componentDocs.map((doc) => ({
-      ...doc.data() as Componente,
-      id: doc.id
-    }));
-
-    recipe.forEach((item) => {
-      const comp = components.find((c) => c.id === item.insumoId);
-      if (comp && comp.quantity < item.quantity) {
-        warnings.push(`⚠ Estoque insuficiente para: ${comp.name}. Disponível: ${comp.quantity}, Necessário: ${item.quantity}`);
-      }
+  try {
+    const res = await fetch('/api/production/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, userId })
     });
-
-    // 2. Deduct stock and log movement
-    for (const item of recipe) {
-      const comp = components.find((c) => c.id === item.insumoId);
-      if (comp) {
-        const newQty = comp.quantity - item.quantity;
-        
-        // Update Component
-        transaction.update(doc(db, "componentes", comp.id), {
-          quantity: newQty,
-          updatedAt: serverTimestamp()
-        });
-
-        // Log Movement
-        const movementRef = doc(collection(db, "componente_movements"));
-        transaction.set(movementRef, {
-          componenteId: comp.id,
-          date: serverTimestamp(),
-          type: 'saida',
-          quantity: item.quantity,
-          previousQuantity: comp.quantity,
-          newQuantity: newQty,
-          origin: `Pedido ${orderId} - Produto ${product.product_name}`,
-          userId: userId
-        } as ComponenteMovement);
-      }
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      return { 
+        success: false, 
+        error: result.error || "Erro ao iniciar produção no servidor.", 
+        warnings: result.warnings || [] 
+      };
     }
-  });
+    return { success: true, warnings: [] };
+  } catch (error: any) {
+    console.error("Error starting production via API:", error);
+    return { success: false, error: error.message || "Erro de conexão ao iniciar produção." };
+  }
+};
 
-  return { success: true, warnings };
+export const startProductionAPI = async (payload: { orderId?: string; batchId?: string; userId: string }) => {
+  try {
+    const res = await fetch('/api/production/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      const err = new Error(result.error || "Erro ao iniciar produção via API.") as any;
+      err.warnings = result.warnings || [];
+      throw err;
+    }
+    return result;
+  } catch (error) {
+    console.error("Error in startProductionAPI:", error);
+    throw error;
+  }
+};
+
+export const cancelProductionAPI = async (payload: { orderId?: string; batchId?: string; userId: string }) => {
+  try {
+    const res = await fetch('/api/production/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      const err = new Error(result.error || "Erro ao cancelar produção via API.") as any;
+      err.warnings = result.warnings || [];
+      throw err;
+    }
+    return result;
+  } catch (error) {
+    console.error("Error in cancelProductionAPI:", error);
+    throw error;
+  }
 };

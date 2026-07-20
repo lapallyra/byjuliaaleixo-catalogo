@@ -152,4 +152,26 @@ export const checkoutController = {
       });
     }
   },
+
+  /**
+   * POST /api/checkout/update-order
+   * Updates an existing order in Firestore.
+   */
+  updateOrder: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { orderId, updateData } = req.body;
+      if (!orderId || !updateData) {
+        res.status(400).json({ success: false, error: "ID do pedido ou dados de atualização ausentes." });
+        return;
+      }
+      
+      const orderRef = dbAdmin.collection("orders").doc(orderId);
+      await orderRef.update({ ...updateData, updatedAt: new Date() });
+      
+      res.status(200).json({ success: true, message: "Pedido atualizado." });
+    } catch (error: any) {
+      console.error("[checkoutController.updateOrder] Error:", error);
+      res.status(500).json({ success: false, error: "Erro ao atualizar pedido." });
+    }
+  },
 };

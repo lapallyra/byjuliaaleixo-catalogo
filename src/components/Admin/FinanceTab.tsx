@@ -233,10 +233,9 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
       if (o.status === "cancelled") return false;
-      const dateStr = o.createdAt
-        ? o.createdAt.toDate
-          ? o.createdAt.toDate().toISOString().split("T")[0]
-          : new Date(o.createdAt).toISOString().split("T")[0]
+      const dateObj = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
+      const dateStr = dateObj instanceof Date && !isNaN(dateObj.getTime())
+        ? dateObj.toISOString().split("T")[0]
         : "";
       if (dateFilter !== "all" && !isDateInFilter(dateStr, dateFilter, customStartDate, customEndDate)) {
         return false;
@@ -475,7 +474,8 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     // Also include production costs into monthly maps
     orders.forEach((o) => {
       if (o.status === "cancelled") return;
-      const d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
+      const dateObj = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
+      const d = dateObj instanceof Date && !isNaN(dateObj.getTime()) ? dateObj : new Date();
       const label = `${monthLabels[d.getMonth()]} ${d.getFullYear().toString().substring(2)}`;
       if (monthlyMap[label]) {
         let orderCost = 0;

@@ -220,6 +220,7 @@ export function SiteApp() {
           
           <Route path="/checkout/:id" element={<CheckoutPage config={effectiveConfig} />} />
           <Route path="/ped-:code" element={<CheckoutPage config={effectiveConfig} />} />
+          <Route path="/checkoutdois/:code" element={<ClientCheckout />} />
           <Route path="/approval/:code" element={<OrderApprovalPage />} />
           <Route path="/client-checkout/:code" element={<ClientCheckout />} />
           <Route path="/rastreamento" element={<TrackingView onBack={() => window.history.back()} />} />

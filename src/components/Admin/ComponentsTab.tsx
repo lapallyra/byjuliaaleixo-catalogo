@@ -37,17 +37,10 @@ import { formatCurrency } from "../../lib/currencyUtils";
 import { InsumoFormModal } from "./InsumoFormModal";
 import { db } from "../../lib/firebase";
 import { 
-
   collection, 
   query, 
   where, 
-  onSnapshot, 
-  addDoc, 
-  updateDoc, 
-  doc, 
-  serverTimestamp, 
-  setDoc,
-  deleteDoc
+  onSnapshot
 } from "firebase/firestore";
 
 interface ComponentsTabProps {
@@ -100,11 +93,30 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
     }
     setLoadingMovements(true);
     const q = query(
-      collection(db, "componente_movements"),
-      where("componenteId", "==", selectedItem.id)
+      collection(db, "insumo_movements"),
+      where("insumoId", "==", selectedItem.id)
     );
     const unsub = onSnapshot(q, (snap) => {
-      const moves = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+      const moves = snap.docs.map(d => {
+        const data = d.data() as any;
+        const typeMapped = (data.type === 'out') ? 'saida' : (data.type === 'in' ? 'entrada' : data.type);
+        const quantityMapped = data.quantity !== undefined ? data.quantity : (data.quantityDeducted || 0);
+        const reasonMapped = data.reason || (typeMapped === 'saida' ? `Consumo: ${data.productName || 'Produto'} (Ped. ${data.orderCode || '?'})` : 'Entrada de Estoque');
+        
+        let dateVal = data.date;
+        if (!dateVal && data.timestamp) {
+          dateVal = { seconds: Math.floor(new Date(data.timestamp).getTime() / 1000) };
+        }
+
+        return {
+          id: d.id,
+          ...data,
+          type: typeMapped,
+          quantity: quantityMapped,
+          reason: reasonMapped,
+          date: dateVal
+        };
+      });
       // Sort desc by date
       moves.sort((a, b) => {
         const timeA = a.date?.seconds || 0;
@@ -204,33 +216,30 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
         }
       }
 
-      // 1. Log the movement
-      const movementPayload = {
-        componenteId: item.id,
-        componenteName: item.name,
-        date: serverTimestamp(),
-        type,
-        quantity: qty,
-        reason: quickReason || (type === "entrada" ? "Entrada Manual" : "Saída Manual"),
-        origin: quickOrigin || "Ateliê Principal",
-        cost: parseFloat(quickCost) || item.unitCost || 0,
-        user: "Ateliê Admin",
-      };
+      const res = await fetch('/api/inventory/movement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          componenteId: item.id,
+          type,
+          quantity: qty,
+          reason: quickReason || (type === "entrada" ? "Entrada Manual" : "Saída Manual"),
+          origin: quickOrigin || "Ateliê Principal",
+          cost: parseFloat(quickCost) || item.unitCost || 0,
+          user: "Ateliê Admin",
+          componenteName: item.name
+        })
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error);
 
-      await addDoc(collection(db, "componente_movements"), movementPayload);
-
-      // 2. Update stock item
       const updatePayload: Partial<Componente> = {
-        quantity: newQty,
-        updatedAt: serverTimestamp(),
+        quantity: result.newQuantity,
       };
 
       if (type === "entrada" && parseFloat(quickCost) > 0) {
         updatePayload.unitCost = parseFloat(quickCost);
       }
-
-      await updateDoc(doc(db, "componentes", item.id), updatePayload);
-      await updateDoc(doc(db, "insumos", item.id), updatePayload);
 
       // Reset
       setQuickAction({ type: null, item: null });
@@ -267,12 +276,10 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
         : `Deseja inativar o item "${item.name}"? Ele continuará no histórico de forma segura.`;
 
       if (confirm(confirmMsg)) {
-        const payload = { isActive: nextActive, updatedAt: serverTimestamp() };
-        await updateDoc(doc(db, "componentes", item.id), payload);
-        await updateDoc(doc(db, "insumos", item.id), payload);
+        await onSaveComponente({ id: item.id, isActive: nextActive });
         
         if (selectedItem?.id === item.id) {
-          setSelectedItem({ ...selectedItem, ...payload });
+          setSelectedItem({ ...selectedItem, isActive: nextActive });
         }
       }
     } catch (err) {

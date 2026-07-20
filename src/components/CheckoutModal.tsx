@@ -291,18 +291,11 @@ export function CheckoutModal({
     if (!isOpen) return;
     const fetchBookings = async () => {
       try {
-        const { collection, getDocs } = await import('firebase/firestore');
-        const { db } = await import('../lib/firebase');
-        const salesRef = collection(db, 'orders');
-        const querySnapshot = await getDocs(salesRef);
-        const slots: string[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data && data.deliveryType === 'retirada' && data.retiradaDate && data.retiradaTime) {
-            slots.push(`${data.retiradaDate}_${data.retiradaTime}`);
-          }
-        });
-        setBookedSlots(slots);
+        const res = await fetch('/api/data/pickup-slots');
+        const data = await res.json();
+        if (data.success) {
+          setBookedSlots(data.slots);
+        }
       } catch (error) {
         console.error("Erro ao buscar agendamentos de retirada:", error);
       }

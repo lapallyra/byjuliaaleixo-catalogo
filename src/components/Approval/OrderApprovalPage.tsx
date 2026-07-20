@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { Order, OrderVersion, OrderApprovalStatus } from '../../types';
 import { Loader2 } from 'lucide-react';
@@ -58,13 +58,18 @@ export const OrderApprovalPage: React.FC = () => {
     if (!order) return;
     try {
       const nextVersion = (order.currentVersion || 1) + 1;
-      await addDoc(collection(db, 'orders', order.id, 'versions'), {
-        orderId: order.id,
-        version: nextVersion,
-        data: order,
-        comment: adjustmentComment,
-        author: 'customer',
-        createdAt: serverTimestamp()
+      await fetch(`/api/orders/${order.id}/version`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          versionData: {
+            orderId: order.id,
+            version: nextVersion,
+            data: order,
+            comment: adjustmentComment,
+            author: 'customer'
+          }
+        })
       });
       await updateOrder(order.id, { 
         approvalStatus: 'adjustments_requested',

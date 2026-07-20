@@ -22,15 +22,13 @@ import {
 } from "../../types";
 import { HorizontalScroll } from "../shared/HorizontalScroll";
 import { db } from "../../lib/firebase";
-import { updateOrder } from "../../services/firebaseService";
 import { 
   collection, 
   query, 
   where, 
   onSnapshot, 
   doc, 
-  serverTimestamp,
-  arrayUnion
+  serverTimestamp
 } from "firebase/firestore";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -95,14 +93,20 @@ export const OrderControlCenterTab: React.FC<OrderControlCenterTabProps> = React
     if (!nextStatus) return;
 
     try {
-      await updateOrder(order.id, {
-        status: nextStatus as any,
-        updatedAt: serverTimestamp() as any,
-        history: arrayUnion({
-          status: nextStatus,
-          timestamp: new Date(),
-          description: `Movimentação rápida via Centro de Controle`
-        }) as any
+      await fetch(`/api/orders/${order.id}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          updateData: {
+            status: nextStatus as any,
+            updatedAt: new Date(),
+            history: {
+              status: nextStatus,
+              timestamp: new Date(),
+              description: `Movimentação rápida via Centro de Controle`
+            }
+          }
+        })
       });
     } catch (error) {
       console.error("Error moving order:", error);

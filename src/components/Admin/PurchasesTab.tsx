@@ -48,6 +48,7 @@ import {
 } from "firebase/firestore";
 import { SupplierForm } from "./SupplierForm";
 import { PurchaseOrderForm } from "./PurchaseOrderForm";
+import { addInsumo, updateInsumo, deleteInsumo } from "../../services/firebaseService";
 import { InsumoFormModal } from "./InsumoFormModal";
 import { ComponentsTab } from "./ComponentsTab";
 
@@ -141,21 +142,18 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
       if (newStatus === 'recebido' && purchase.status !== 'recebido') {
         // Update physical stock for each item
         for (const item of purchase.items) {
-          const insumoRef = doc(db, "componentes", item.insumoId);
-          await updateDoc(insumoRef, {
-            quantity: increment(item.quantity),
-            updatedAt: serverTimestamp()
-          });
-
-          // Log movement
-          await addDoc(collection(db, "componente_movements"), {
-            componenteId: item.insumoId,
-            date: serverTimestamp(),
-            type: 'entrada',
-            quantity: item.quantity,
-            origin: `Compra ${purchase.code}`,
-            description: `Recebimento de mercadoria do fornecedor ${purchase.supplierName}`,
-            userId: "system" 
+          await fetch('/api/inventory/movement', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              componenteId: item.insumoId,
+              type: 'entrada',
+              quantity: item.quantity,
+              reason: `Recebimento de mercadoria do fornecedor ${purchase.supplierName}`,
+              origin: `Compra ${purchase.code}`,
+              cost: item.unitPrice || 0,
+              user: "Sistema"
+            })
           });
         }
       }
@@ -272,23 +270,11 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
             componentes={insumos}
             onSaveComponente={async (data) => {
               try {
-                let docId = data.id;
-                const payload = {
-                  ...data,
-                  isActive: data.isActive !== undefined ? data.isActive : true,
-                  updatedAt: serverTimestamp()
-                };
-                
-                if (!docId) {
-                  const newDocRef = doc(collection(db, "insumos"));
-                  docId = newDocRef.id;
-                  payload.id = docId;
-                  payload.createdAt = serverTimestamp();
+                if (data.id) {
+                  await updateInsumo(data.id, data);
+                } else {
+                  await addInsumo(data as any);
                 }
-                
-                // Save to both collections with exact same ID for bulletproof system sync
-                await setDoc(doc(db, "insumos", docId), payload);
-                await setDoc(doc(db, "componentes", docId), payload);
               } catch (err) {
                 console.error("Error saving insumo: ", err);
                 orchestrator.dispatchEvent({
@@ -305,8 +291,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
             onDeleteComponente={async (id) => {
               try {
                 if (confirm("Tem certeza que deseja excluir este insumo?")) {
-                  await deleteDoc(doc(db, "insumos", id));
-                  await deleteDoc(doc(db, "componentes", id));
+                  await deleteInsumo(id);
                 }
               } catch (err) {
                 console.error("Error deleting insumo: ", err);
@@ -597,21 +582,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
           onClose={() => setIsInsumoModalOpen(false)}
           onSave={async (data) => {
             try {
-              const newDocRef = doc(collection(db, "insumos"));
-              const docId = newDocRef.id;
-              
-              const payload = {
-                ...data,
-                id: docId,
-                isActive: true,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-              };
-              
-              // Save to both collections with exact same ID for bulletproof system sync
-              await setDoc(doc(db, "insumos", docId), payload);
-              await setDoc(doc(db, "componentes", docId), payload);
-              
+              await addInsumo(data);
               setIsInsumoModalOpen(false);
             } catch (err) {
               console.error("Error adding insumo: ", err);

@@ -31,6 +31,7 @@ import { db } from '../../lib/firebase';
 import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, serverTimestamp } from 'firebase/firestore';
 import { jsPDF } from 'jspdf';
 import { safeFormat } from '../../lib/dateUtils';
+import { addInsumo, updateInsumo } from '../../services/firebaseService';
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
@@ -493,9 +494,9 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
       };
 
       if (editingMaterial.id) {
-        await updateDoc(doc(db, 'insumos', editingMaterial.id), dataToSave);
+        await updateInsumo(editingMaterial.id, dataToSave);
       } else {
-        await addDoc(collection(db, 'insumos'), dataToSave);
+        await addInsumo(dataToSave as any);
       }
       
       setIsMaterialModalOpen(false);

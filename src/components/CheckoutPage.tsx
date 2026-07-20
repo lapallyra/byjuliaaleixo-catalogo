@@ -28,9 +28,7 @@ import {
   getSiteSettings, 
   getGlobalSettings,
   subscribeToCustomers, 
-  getProducts, 
-  saveSale,
-  updateOrder,
+  getProducts,
   addCustomer,
   syncCustomerFromCheckout
 } from "../services/firebaseService";
@@ -45,8 +43,8 @@ import {
 } from "../types";
 import { useAuth } from "./AuthProvider";
 import { getPublicAtelierImage } from "../utils/atelierImage";
-import { db } from "../lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { validateCPF, validateCNPJ } from "../utils/validation";
+
 
 interface CheckoutPageProps {
   config: AppConfig;
@@ -63,6 +61,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
   const [order, setOrder] = useState<Partial<Order> | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -108,12 +107,6 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
   const [payingError, setPayingError] = useState<string | null>(null);
   const [siteSettings, setSiteSettings] = useState<any>(null);
   const [globalSettings, setGlobalSettings] = useState<any>(null);
-  const [cardData, setCardData] = useState({
-    num: "",
-    name: "",
-    val: "",
-    cvv: ""
-  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,9 +115,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
         const products = await getProducts();
         setAllProducts(products);
 
-        const unsubCustomers = subscribeToCustomers((customers) => {
-          setAllCustomers(customers);
-        });
+        let unsubCustomers;
+        if (isAdmin) {
+          unsubCustomers = subscribeToCustomers((customers) => {
+            setAllCustomers(customers);
+          });
+        }
 
         let currentOrder: Partial<Order> | null = null;
 
@@ -182,7 +178,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                 } catch (e) {
                   console.error(e);
                 }
-                await updateOrder(fetched.id, { status: 'paid' });
+                await fetch('/api/checkout/update-order', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ orderId: fetched.id, updateData: { status: 'paid' } })
+                });
                 // Strip the redirection search parameters
                 navigate(window.location.pathname, { replace: true });
               } else if (paymentStatusFromUrl === 'pending' || paymentStatusFromUrl === 'in_process') {
@@ -229,7 +229,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           }
         }
         
-        return () => unsubCustomers();
+        return () => unsubCustomers && unsubCustomers();
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -262,13 +262,13 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
   };
 
   const handleProcessedPayment = async (type: 'PIX' | 'CREDIT_CARD') => {
-    if (!order?.id) return;
+    if (!order?.id || isPaying) return;
     setIsPaying(true);
     setPayingError(null);
     try {
       const token = globalSettings?.mercadopago_token || siteSettings?.mercadopago_token;
       
-      if (type === 'CREDIT_CARD' && token) {
+      if (token) {
         // Real Mercado Pago preference creation
         const finalMpItems = items.map(item => ({
           title: item.product_name,
@@ -294,10 +294,10 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           auto_return: "approved"
         };
 
-        const response = await fetch('/api/createPreference', {
+        const response = await fetch('/api/payment/create-preference', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(preferencePayload)
+          body: JSON.stringify({ orderId: order?.id })
         });
 
         if (!response.ok) {
@@ -311,34 +311,8 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           return;
         }
       }
-
-      // Simulation fallback for card or manual Pix click
-      setTimeout(async () => {
-        try {
-          await updateOrder(order.id!, { status: 'paid' });
-          setOrder(prev => prev ? { ...prev, status: 'paid' } : null);
-          try {
-            const purchaseInfo = {
-              id: order?.id || crypto.randomUUID(),
-              customerName: customerForm.nome || order?.customerName || 'Cliente',
-              productName: items?.[0]?.product_name || order?.items?.[0]?.product_name || 'um produto especial',
-              timeAgo: 'agora mesmo em São Paulo - SP',
-              companyId: order?.companyId || 'pallyra'
-            };
-            localStorage.setItem('pending_own_purchase_notification', JSON.stringify(purchaseInfo));
-          } catch (e) {
-            console.error(e);
-          }
-          setIsPaid(true);
-          playSuccessSound();
-          setIsPaying(false);
-        } catch (err: any) {
-          console.error(err);
-          setPayingError("Erro ao registrar pagamento.");
-          setIsPaying(false);
-        }
-      }, 1500);
-
+      
+      throw new Error("Configuração de pagamento indisponível.");
     } catch (err: any) {
       console.error(err);
       setPayingError(err.message || "Erro desconhecido no processamento.");
@@ -413,16 +387,31 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
         source: "admin",
       };
 
+      let orderId = order?.id;
       if (order?.id) {
-        await updateOrder(order.id, orderData);
-        setOrder({ ...order, ...orderData });
+        const response = await fetch('/api/checkout/update-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: order.id, updateData: orderData })
+        });
+        const result = await response.json();
+        if (result.success) {
+          setOrder({ ...order, ...orderData });
+        }
       } else {
-        const orderId = await saveSale(orderData);
-        if (orderId) {
+        const response = await fetch('/api/checkout/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+        const result = await response.json();
+        if (result.success) {
+          orderId = result.orderId;
+          setOrder({ ...orderData, id: orderId });
           navigate(`/checkout/${orderId}`);
         }
       }
-
+      
       if (generateLink) {
         setStep(2);
       }
@@ -434,6 +423,25 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
   };
 
   const handleSaveStep2 = async () => {
+    const doc = customerForm.cpfCnpj.replace(/[^\d]/g, '');
+    if (doc.length > 0) {
+      if (doc.length === 11 && !validateCPF(doc)) {
+          alert("CPF inválido!");
+          return;
+      }
+      if (doc.length === 14 && !validateCNPJ(doc)) {
+          alert("CNPJ inválido!");
+          return;
+      }
+      if (doc.length !== 11 && doc.length !== 14) {
+          alert("CPF ou CNPJ com tamanho inválido!");
+          return;
+      }
+    } else {
+        alert("CPF ou CNPJ é obrigatório!");
+        return;
+    }
+
     setSaving(true);
     try {
       if (order?.id) {
@@ -445,7 +453,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           observations: `${observations}\nOBS CLIENTE: ${customerForm.observacoes}`,
           status: "waiting_payment"
         };
-        await updateOrder(order.id, updatedData);
+        await fetch('/api/checkout/update-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: order.id, updateData: updatedData })
+        });
         
         // Auto-update or create customer record
         await syncCustomerFromCheckout(order.companyId || "pallyra", {
@@ -940,7 +952,11 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                             <button
                               onClick={async () => {
                                 if (order?.id) {
-                                  await updateOrder(order.id, { approvalStatus: 'approved' });
+                                  await fetch('/api/checkout/update-order', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ orderId: order.id, updateData: { approvalStatus: 'approved' } })
+                                  });
                                   setOrder(prev => prev ? { ...prev, approvalStatus: 'approved' } : null);
                                 }
                               }}
@@ -972,17 +988,26 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                                     if (!order?.id || !adjustmentComment.trim()) return;
                                     try {
                                       const nextVersion = (order.currentVersion || 1) + 1;
-                                      await addDoc(collection(db, 'orders', order.id, 'versions'), {
-                                        orderId: order.id,
-                                        version: nextVersion,
-                                        data: order,
-                                        comment: adjustmentComment,
-                                        author: 'customer',
-                                        createdAt: serverTimestamp()
+                                      await fetch(`/api/orders/${order.id}/version`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                          versionData: {
+                                            orderId: order.id,
+                                            version: nextVersion,
+                                            data: order,
+                                            comment: adjustmentComment,
+                                            author: 'customer'
+                                          }
+                                        })
                                       });
-                                      await updateOrder(order.id, { 
-                                        approvalStatus: 'adjustments_requested',
-                                        currentVersion: nextVersion 
+                                      await fetch('/api/checkout/update-order', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ orderId: order.id, updateData: { 
+                                          approvalStatus: 'adjustments_requested',
+                                          currentVersion: nextVersion 
+                                        } })
                                       });
                                       setOrder(prev => prev ? { ...prev, approvalStatus: 'adjustments_requested', currentVersion: nextVersion } : null);
                                       setIsAdjusting(false);
@@ -1763,7 +1788,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                          disabled={isPaying}
                          className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                        >
-                         {isPaying ? "Processando aprovação..." : "Confirmar Pagamento Simulado"}
+                         {isPaying ? "Processando..." : "Confirmar Pagamento via Pix"}
                        </button>
                     </div>
                  </div>
@@ -1780,63 +1805,12 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 text-left pt-2">
-                       <div>
-                         <label className="text-[9px] font-bold uppercase text-[#6D5443] block mb-1">Número do Cartão de Teste</label>
-                         <input 
-                           type="text"
-                           value={cardData.num}
-                           onChange={e => setCardData({...cardData, num: e.target.value})}
-                           placeholder="4444 4444 4444 4444"
-                           className="w-full bg-white border border-neutral-200 text-xs px-3 py-2 rounded-lg outline-none focus:border-lilac"
-                         />
-                       </div>
-
-                       <div>
-                         <label className="text-[9px] font-bold uppercase text-[#6D5443] block mb-1">Nome Impresso Titular</label>
-                         <input 
-                           type="text"
-                           value={cardData.name}
-                           onChange={e => setCardData({...cardData, name: e.target.value.toUpperCase()})}
-                           placeholder="JULIA M ALEIXO"
-                           className="w-full bg-white border border-neutral-200 text-xs px-3 py-2 rounded-lg outline-none uppercase focus:border-lilac"
-                         />
-                       </div>
-
-                       <div className="grid grid-cols-2 gap-3">
-                         <div>
-                           <label className="text-[9px] font-bold uppercase text-[#6D5443] block mb-1">Validade (MM/AA)</label>
-                           <input 
-                             type="text"
-                             maxLength={5}
-                             value={cardData.val}
-                             onChange={e => setCardData({...cardData, val: e.target.value})}
-                             placeholder="12/29"
-                             className="w-full bg-white border border-neutral-200 text-xs px-3 py-2 rounded-lg outline-none focus:border-lilac"
-                           />
-                         </div>
-                         <div>
-                           <label className="text-[9px] font-bold uppercase text-[#6D5443] block mb-1">CVV</label>
-                           <input 
-                             type="text"
-                             maxLength={3}
-                             value={cardData.cvv}
-                             onChange={e => setCardData({...cardData, cvv: e.target.value})}
-                             placeholder="123"
-                             className="w-full bg-white border border-neutral-200 text-xs px-3 py-2 rounded-lg outline-none focus:border-lilac"
-                           />
-                         </div>
-                       </div>
-
                        <button
                          onClick={() => handleProcessedPayment('CREDIT_CARD')}
-                         disabled={isPaying || !cardData.num || !cardData.name}
+                         disabled={isPaying}
                          className="w-full h-12 mt-2 bg-slate-900 hover:bg-[#D4AF37] disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                        >
-                         {isPaying ? "Processando..." : (
-                           siteSettings?.mercadopago_token || globalSettings?.mercadopago_token 
-                             ? "Ir para Pagamento Seguro MP" 
-                             : "Concluir Pagamento Simulado"
-                         )}
+                         {isPaying ? "Processando..." : "Ir para Pagamento Seguro MP"}
                        </button>
                     </div>
                  </div>

@@ -403,80 +403,85 @@ export const getProducts = async (companyId?: CompanyId): Promise<Product[]> => 
 };
 
 export const addProduct = async (productData: Product) => {
-  const path = 'products';
   try {
-    const { id, ...data } = productData;
-    const sanitizedData = sanitize({
-      ...data,
-      createdAt: serverTimestamp(),
-      salesCount: 0,
-      clicksCount: 0
+    const res = await fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productData)
     });
-
-    if (id) {
-      await setDoc(doc(db, path, id), sanitizedData);
-      await createAuditLog('Produtos', 'Criação', id, productData.product_name, { newData: sanitizedData }, productData.company);
-      return id;
-    } else {
-      const docRef = await addDoc(collection(db, path), sanitizedData);
-      await createAuditLog('Produtos', 'Criação', docRef.id, productData.product_name, { newData: sanitizedData }, productData.company);
-      return docRef.id;
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error(result.error || "Erro ao adicionar produto via API.");
     }
+    return result.id;
   } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, path);
+    console.error("Error in addProduct:", error);
+    throw error;
   }
 };
 
 export const updateProduct = async (id: string, productData: Partial<Product>) => {
-  const path = `products/${id}`;
-  const { id: _, ...dataWithoutId } = productData as any;
   try {
-    const prodRef = doc(db, 'products', id);
-    const snap = await getDoc(prodRef);
-    const oldData = snap.exists() ? snap.data() : {};
-    
-    await updateDoc(prodRef, sanitize(dataWithoutId));
-    
-    await createAuditLog(
-      'Produtos', 
-      'Alteração', 
-      id, 
-      (productData.product_name || oldData.product_name || id), 
-      { 
-        oldData: oldData, 
-        newData: { ...oldData, ...dataWithoutId },
-        details: {
-          observations: productData.current_price !== undefined && oldData.current_price !== productData.current_price 
-            ? `Alteração de preço: R$ ${oldData.current_price} -> R$ ${productData.current_price}` 
-            : undefined
-        }
-      }, 
-      (productData.company || oldData.company)
-    );
+    const res = await fetch(`/api/products/${id}/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productData)
+    });
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error(result.error || "Erro ao atualizar produto via API.");
+    }
   } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, path);
+    console.error("Error in updateProduct:", error);
+    throw error;
+  }
+};
+
+export const getProductBOM = async (id: string): Promise<any> => {
+  try {
+    const res = await fetch(`/api/products/${id}/bom`);
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error(result.error || "Erro ao buscar ficha técnica via API.");
+    }
+    return result;
+  } catch (error) {
+    console.error("Error in getProductBOM:", error);
+    throw error;
+  }
+};
+
+export const updateProductBOM = async (id: string, data: any): Promise<any> => {
+  try {
+    const res = await fetch(`/api/products/${id}/bom`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error(result.error || "Erro ao atualizar ficha técnica via API.");
+    }
+    return result;
+  } catch (error) {
+    console.error("Error in updateProductBOM:", error);
+    throw error;
   }
 };
 
 export const deleteProduct = async (id: string) => {
-  const path = `products/${id}`;
   try {
-    const prodRef = doc(db, 'products', id);
-    const snap = await getDoc(prodRef);
-    const oldData = snap.exists() ? snap.data() : {};
-    
-    await deleteDoc(prodRef);
-    
-    await createAuditLog(
-      'Produtos', 
-      'Exclusão Lógica', 
-      id, 
-      (oldData.product_name || id), 
-      { oldData: oldData }, 
-      oldData.company
-    );
+    const res = await fetch(`/api/products/${id}/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const result = await res.json();
+    if (!res.ok || !result.success) {
+      throw new Error(result.error || "Erro ao excluir produto via API.");
+    }
   } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, path);
+    console.error("Error in deleteProduct:", error);
+    throw error;
   }
 };
 
@@ -491,54 +496,48 @@ export const getInsumos = async (): Promise<Insumo[]> => {
   }
 };
 
-export const addInsumo = async (data: Omit<Insumo, 'id'>) => {
-  const path = 'insumos';
+export const addInsumo = async (data: Partial<Insumo>) => {
   try {
-    const docRef = await addDoc(collection(db, path), sanitize({
-      ...data,
-      createdAt: serverTimestamp()
-    }));
-    await createAuditLog('Estoque', 'Criação', docRef.id, data.name, { newData: data });
-    return docRef.id;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, path);
+    const res = await fetch('/api/inventory/insumos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+    return result.id;
+  } catch (error: any) {
+    console.error("Error in addInsumo:", error);
+    throw error;
   }
 };
 
 export const updateInsumo = async (id: string, data: Partial<Insumo>) => {
-  const path = `insumos/${id}`;
-  const { id: _, ...dataWithoutId } = data as any;
   try {
-    const insumoRef = doc(db, 'insumos', id);
-    const snap = await getDoc(insumoRef);
-    const oldData = snap.exists() ? snap.data() : {};
-
-    await updateDoc(insumoRef, sanitize(dataWithoutId));
-    
-    const action: AuditActionType = data.quantity !== undefined ? 'Entrada de Estoque' : 'Alteração';
-
-    await createAuditLog(
-      'Estoque', 
-      action, 
-      id, 
-      (data.name || oldData.name || id), 
-      { 
-        oldData: oldData, 
-        newData: { ...oldData, ...dataWithoutId },
-        details: { observations: data.quantity !== undefined ? `Alteração de estoque: ${oldData.quantity || 0} -> ${data.quantity}` : undefined }
-      }
-    );
-  } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, path);
+    const res = await fetch(`/api/inventory/insumos/${id}/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+  } catch (error: any) {
+    console.error("Error in updateInsumo:", error);
+    throw error;
   }
 };
 
 export const deleteInsumo = async (id: string) => {
-  const path = `insumos/${id}`;
   try {
-    await deleteDoc(doc(db, 'insumos', id));
-  } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, path);
+    const res = await fetch(`/api/inventory/insumos/${id}/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+  } catch (error: any) {
+    console.error("Error in deleteInsumo:", error);
+    throw error;
   }
 };
 
@@ -854,271 +853,33 @@ export const adjustStockForOrderItems = async (orderId: string, orderCode: strin
 };
 
 export const deductStockForOrder = async (orderId: string, orderData: Order) => {
-  return runWithMutex(orderId, async () => {
-    let alreadyDeducted = false;
-    try {
-      await runTransaction(db, async (transaction) => {
-        const orderRef = doc(db, 'orders', orderId);
-        const orderSnap = await transaction.get(orderRef);
-        if (orderSnap.exists() && orderSnap.data().insumosDeducted === true) {
-          alreadyDeducted = true;
-          return;
-        }
-        transaction.update(orderRef, { insumosDeducted: true });
-      });
-    } catch (txErr) {
-      console.warn("Transaction failed in deductStockForOrder, assuming lock/concurrency conflict:", txErr);
-      alreadyDeducted = true;
-    }
-
-    if (alreadyDeducted) {
-      console.log(`[deductStockForOrder] Stock already deducted for order ${orderId}. Skipping.`);
-      return;
-    }
-
-    const items = orderData.items || [];
-    for (const item of items) {
-      if (item.productId && !item.isKit) {
-        try {
-          const prodRef = doc(db, 'products', item.productId);
-          const prodSnap = await getDoc(prodRef);
-          if (prodSnap.exists()) {
-            const pData = prodSnap.data();
-            if (typeof pData.stock === 'number') {
-              const newStock = Math.max(0, pData.stock - (item.quantity || 1));
-              await updateDoc(prodRef, { stock: newStock });
-            }
-          }
-        } catch (err) {
-          console.warn('Could not deduct stock for product', item.productId, err);
-        }
-      }
-
-      if (item.insumos && item.insumos.length > 0) {
-        for (const requiredInsumo of item.insumos) {
-          try {
-            const insumoRef = doc(db, 'insumos', requiredInsumo.insumoId);
-            const insumoSnap = await getDoc(insumoRef);
-            if (insumoSnap.exists()) {
-              const currentQty = insumoSnap.data().quantity || 0;
-              const reduction = requiredInsumo.quantity * item.quantity;
-              const newQty = Math.max(0, currentQty - reduction);
-              await updateDoc(insumoRef, { quantity: newQty });
-
-              try {
-                await addDoc(collection(db, 'insumo_movements'), sanitize({
-                  insumoId: requiredInsumo.insumoId,
-                  insumoName: insumoSnap.data()?.name || 'Material',
-                  orderId: orderId,
-                  orderCode: orderData.code || orderId,
-                  productName: item.product_name || 'Produto',
-                  quantityDeducted: reduction,
-                  timestamp: new Date().toISOString(),
-                  type: 'out'
-                }));
-              } catch (logErr) {
-                console.warn('Logging movement error:', logErr);
-              }
-
-              if (newQty <= 10) {
-                try {
-                  sendTelegramNotification('low_stock', `⚠️ ESTOQUE BAIXO\n\nProduto:\n${insumoSnap.data().name || 'Material'}\n\nQuantidade Atual:\n${newQty}`);
-                } catch (e) {}
-              }
-            }
-          } catch (err) {
-            console.warn(`Could not deduct stock for insumo ${requiredInsumo.insumoId}:`, err);
-          }
-        }
-      }
-
-      if (item.isKit && item.kitItems && item.kitItems.length > 0) {
-        for (const ki of item.kitItems) {
-          const qtyToDeduct = ki.quantity * item.quantity;
-          try {
-            if (ki.type === 'product') {
-              const prodRef = doc(db, 'products', ki.id);
-              const prodSnap = await getDoc(prodRef);
-              if (prodSnap.exists()) {
-                const pData = prodSnap.data();
-                if (typeof pData.stock === 'number') {
-                  const newStock = Math.max(0, pData.stock - qtyToDeduct);
-                  await updateDoc(prodRef, { stock: newStock });
-                }
-              }
-            } else if (ki.type === 'insumo') {
-              const insumoRef = doc(db, 'insumos', ki.id);
-              const insumoSnap = await getDoc(insumoRef);
-              if (insumoSnap.exists()) {
-                const currentQty = insumoSnap.data().quantity || 0;
-                const newQty = Math.max(0, currentQty - qtyToDeduct);
-                await updateDoc(insumoRef, { quantity: newQty });
-
-                try {
-                  await addDoc(collection(db, 'insumo_movements'), sanitize({
-                    insumoId: ki.id,
-                    insumoName: insumoSnap.data()?.name || 'Material Kit',
-                    orderId: orderId,
-                    orderCode: orderData.code || orderId,
-                    productName: `[Kit] ${item.product_name}`,
-                    quantityDeducted: qtyToDeduct,
-                    timestamp: new Date().toISOString(),
-                    type: 'out'
-                  }));
-                } catch (logErr) {}
-
-                if (newQty <= 10) {
-                  try {
-                    sendTelegramNotification('low_stock', `⚠️ ESTOQUE BAIXO\n\nInsumo do Kit:\n${insumoSnap.data().name || 'Material'}\n\nQuantidade Atual:\n${newQty}`);
-                  } catch (e) {}
-                }
-              }
-            } else if (ki.type === 'addon') {
-              const addonRef = doc(db, 'addons', ki.id);
-              const addonSnap = await getDoc(addonRef);
-              if (addonSnap.exists()) {
-                const aData = addonSnap.data();
-                if (typeof aData.stock === 'number') {
-                  const newStock = Math.max(0, aData.stock - qtyToDeduct);
-                  await updateDoc(addonRef, { stock: newStock });
-                }
-              }
-            }
-          } catch (err) {
-            console.warn(`Could not deduct stock for kit item ${ki.id}:`, err);
-          }
-        }
-      }
-    }
-  });
+  try {
+    const res = await fetch('/api/inventory/deduct-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, orderData })
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+  } catch (error: any) {
+    console.error("Error in deductStockForOrder:", error);
+    throw error;
+  }
 };
 
 export const restoreStockForOrder = async (orderId: string, orderData: Order) => {
-  return runWithMutex(orderId, async () => {
-    let alreadyRestored = false;
-    try {
-      await runTransaction(db, async (transaction) => {
-        const orderRef = doc(db, 'orders', orderId);
-        const orderSnap = await transaction.get(orderRef);
-        if (!orderSnap.exists() || orderSnap.data().insumosDeducted !== true) {
-          alreadyRestored = true;
-          return;
-        }
-        transaction.update(orderRef, { insumosDeducted: false });
-      });
-    } catch (txErr) {
-      console.warn("Transaction failed in restoreStockForOrder, assuming lock/concurrency conflict:", txErr);
-      alreadyRestored = true;
-    }
-
-    if (alreadyRestored) {
-      console.log(`[restoreStockForOrder] Stock already restored/not deducted for order ${orderId}. Skipping.`);
-      return;
-    }
-
-    const items = orderData.items || [];
-    for (const item of items) {
-      if (item.productId && !item.isKit) {
-        try {
-          const prodRef = doc(db, 'products', item.productId);
-          const prodSnap = await getDoc(prodRef);
-          if (prodSnap.exists()) {
-            const pData = prodSnap.data();
-            if (typeof pData.stock === 'number') {
-              const newStock = pData.stock + (item.quantity || 1);
-              await updateDoc(prodRef, { stock: newStock });
-            }
-          }
-        } catch (err) {
-          console.warn('Could not restore stock for product', item.productId, err);
-        }
-      }
-
-      if (item.insumos && item.insumos.length > 0) {
-        for (const requiredInsumo of item.insumos) {
-          try {
-            const insumoRef = doc(db, 'insumos', requiredInsumo.insumoId);
-            const insumoSnap = await getDoc(insumoRef);
-            if (insumoSnap.exists()) {
-              const currentQty = insumoSnap.data().quantity || 0;
-              const addition = requiredInsumo.quantity * item.quantity;
-              const newQty = currentQty + addition;
-              await updateDoc(insumoRef, { quantity: newQty });
-
-              try {
-                await addDoc(collection(db, 'insumo_movements'), sanitize({
-                  insumoId: requiredInsumo.insumoId,
-                  insumoName: insumoSnap.data()?.name || 'Material',
-                  orderId: orderId,
-                  orderCode: orderData.code || orderId,
-                  productName: item.product_name || 'Produto',
-                  quantityDeducted: addition,
-                  timestamp: new Date().toISOString(),
-                  type: 'in'
-                }));
-              } catch (logErr) {
-                console.warn('Logging movement error:', logErr);
-              }
-            }
-          } catch (err) {
-            console.warn(`Could not restore stock for insumo ${requiredInsumo.insumoId}:`, err);
-          }
-        }
-      }
-
-      if (item.isKit && item.kitItems && item.kitItems.length > 0) {
-        for (const ki of item.kitItems) {
-          const qtyToRestore = ki.quantity * item.quantity;
-          try {
-            if (ki.type === 'product') {
-              const prodRef = doc(db, 'products', ki.id);
-              const prodSnap = await getDoc(prodRef);
-              if (prodSnap.exists()) {
-                const pData = prodSnap.data();
-                if (typeof pData.stock === 'number') {
-                  const newStock = pData.stock + qtyToRestore;
-                  await updateDoc(prodRef, { stock: newStock });
-                }
-              }
-            } else if (ki.type === 'insumo') {
-              const insumoRef = doc(db, 'insumos', ki.id);
-              const insumoSnap = await getDoc(insumoRef);
-              if (insumoSnap.exists()) {
-                const currentQty = insumoSnap.data().quantity || 0;
-                const newQty = currentQty + qtyToRestore;
-                await updateDoc(insumoRef, { quantity: newQty });
-
-                try {
-                  await addDoc(collection(db, 'insumo_movements'), sanitize({
-                    insumoId: ki.id,
-                    insumoName: insumoSnap.data()?.name || 'Material Kit',
-                    orderId: orderId,
-                    orderCode: orderData.code || orderId,
-                    productName: `[Kit] ${item.product_name}`,
-                    quantityDeducted: qtyToRestore,
-                    timestamp: new Date().toISOString(),
-                    type: 'in'
-                  }));
-                } catch (logErr) {}
-              }
-            } else if (ki.type === 'addon') {
-              const addonRef = doc(db, 'addons', ki.id);
-              const addonSnap = await getDoc(addonRef);
-              if (addonSnap.exists()) {
-                const aData = addonSnap.data();
-                if (typeof aData.stock === 'number') {
-                  const newStock = aData.stock + qtyToRestore;
-                  await updateDoc(addonRef, { stock: newStock });
-                }
-              }
-            }
-          } catch (err) {
-            console.warn(`Could not restore stock for kit item ${ki.id}:`, err);
-          }
-        }
-      }
-    }
-  });
+  try {
+    const res = await fetch('/api/inventory/restore-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, orderData })
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+  } catch (error: any) {
+    console.error("Error in restoreStockForOrder:", error);
+    throw error;
+  }
 };
 
 export const updateOrder = async (orderId: string, data: Partial<Order>) => {
@@ -2334,6 +2095,17 @@ export const getGiftList = async (code: string) => {
 };
 
 export const getCustomerByCpf = async (cpf: string, companyId: string): Promise<Customer | null> => {
+  try {
+    const res = await fetch(`/api/data/customer-by-cpf?cpf=${cpf}`);
+    const data = await res.json();
+    if (data.success && data.customer) {
+      return data.customer;
+    }
+  } catch (error) {
+    console.error('API fetch failed, trying local fallback...', error);
+  }
+
+  // Fallback to local logic if API fails or not found (for admins)
   if (customersMultiplexer.hasCache()) {
     const cached = customersMultiplexer.getCache();
     const found = cached.find(c => c.cpfCnpj === cpf && c.companyId === companyId);
