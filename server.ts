@@ -13,10 +13,8 @@ if (getApps().length === 0) {
 }
 const dbAdmin = getFirestore("ai-studio-c4cc2b71-da7b-4f2b-a88e-7badffe10d83");
 
-async function startServer() {
+export function createApp() {
   const app = express();
-  const PORT = 3000;
-  console.log("Starting server process...");
 
   // Add JSON body parsing middleware
   app.use(express.json());
@@ -160,6 +158,15 @@ async function startServer() {
     }
   });
 
+  return app;
+}
+
+export const app = createApp();
+
+async function startServer() {
+  const PORT = Number(process.env.PORT) || 3000;
+  console.log("Starting server process...");
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const { createServer } = await import("vite");
@@ -216,4 +223,8 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
