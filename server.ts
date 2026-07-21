@@ -13,7 +13,7 @@ if (getApps().length === 0) {
 }
 const dbAdmin = getFirestore("ai-studio-c4cc2b71-da7b-4f2b-a88e-7badffe10d83");
 
-export function createApp() {
+export async function createApp() {
   const app = express();
 
   // Add JSON body parsing middleware
@@ -161,70 +161,64 @@ export function createApp() {
   return app;
 }
 
-export const app = createApp();
-
-async function startServer() {
+if (!process.env.VERCEL) {
   const PORT = Number(process.env.PORT) || 3000;
   console.log("Starting server process...");
+  createApp().then(async (app) => {
+    // Vite middleware for development
+    if (process.env.NODE_ENV !== "production") {
+      const { createServer } = await import("vite");
+      const vite = await createServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      console.log("Vite dev server created.");
+      app.use(vite.middlewares);
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const { createServer } = await import("vite");
-    const vite = await createServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    console.log("Vite dev server created.");
-    app.use(vite.middlewares);
-
-    // Fallback for SPA routing in development
-    app.get('*all', async (req, res, next) => {
-      // Don't intercept API calls or static assets/file requests with extensions
-      if (req.originalUrl.startsWith("/api") || req.originalUrl.includes(".")) {
-        return next();
-      }
-      try {
-        const fs = await import("node:fs");
-        let template = fs.readFileSync(path.join(process.cwd(), "index.html"), "utf-8");
-        // Apply Vite HTML transforms (e.g. injecting react-refresh, etc.)
-        template = await vite.transformIndexHtml(req.originalUrl, template);
-        res.status(200).set({ "Content-Type": "text/html" }).end(template);
-      } catch (e) {
-        next(e);
-      }
-    });
-  } else {
-    // Production static serving with robust path resolution
-    let distPath = path.join(process.cwd(), 'dist');
-    
-    // Support running from inside 'dist' directly or via custom bundlers
-    if (process.cwd().endsWith('dist') || process.cwd().endsWith('dist/')) {
-      distPath = process.cwd();
-    } else if (typeof __dirname !== 'undefined') {
-      distPath = __dirname.endsWith('dist') ? __dirname : path.join(__dirname, 'dist');
-    }
-
-    console.log(`Production mode: serving static files from resolved path: "${distPath}"`);
-
-    app.use(express.static(distPath));
-    // Use standard catch-all to guarantee direct navigation to SPA paths (e.g. /admin) never 404
-    app.get('*all', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'), (err) => {
-        if (err) {
-          console.error(`Error sending index.html from "${distPath}":`, err);
-          res.status(404).send("Error: index.html not found. Please ensure the app is fully built.");
+      // Fallback for SPA routing in development
+      app.get('*all', async (req, res, next) => {
+        // Don't intercept API calls or static assets/file requests with extensions
+        if (req.originalUrl.startsWith("/api") || req.originalUrl.includes(".")) {
+          return next();
+        }
+        try {
+          const fs = await import("node:fs");
+          let template = fs.readFileSync(path.join(process.cwd(), "index.html"), "utf-8");
+          // Apply Vite HTML transforms (e.g. injecting react-refresh, etc.)
+          template = await vite.transformIndexHtml(req.originalUrl, template);
+          res.status(200).set({ "Content-Type": "text/html" }).end(template);
+        } catch (e) {
+          next(e);
         }
       });
-    });
-  }
+    } else {
+      // Production static serving with robust path resolution
+      let distPath = path.join(process.cwd(), 'dist');
+      
+      // Support running from inside 'dist' directly or via custom bundlers
+      if (process.cwd().endsWith('dist') || process.cwd().endsWith('dist/')) {
+        distPath = process.cwd();
+      } else if (typeof __dirname !== 'undefined') {
+        distPath = __dirname.endsWith('dist') ? __dirname : path.join(__dirname, 'dist');
+      }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`);
+      console.log(`Production mode: serving static files from resolved path: "${distPath}"`);
+
+      app.use(express.static(distPath));
+      // Use standard catch-all to guarantee direct navigation to SPA paths (e.g. /admin) never 404
+      app.get('*all', (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'), (err) => {
+          if (err) {
+            console.error(`Error sending index.html from "${distPath}":`, err);
+            res.status(404).send("Error: index.html not found. Please ensure the app is fully built.");
+          }
+        });
+      });
+    }
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   });
 }
 
-if (!process.env.VERCEL) {
-  startServer();
-}
-
-export default app;

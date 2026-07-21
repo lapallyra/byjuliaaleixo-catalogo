@@ -1,3 +1,4 @@
-import app from "../server";
+import { createApp } from "../server";
 
-export default app;
+export default await createApp();
+
