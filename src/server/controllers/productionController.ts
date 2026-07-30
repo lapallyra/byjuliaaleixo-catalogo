@@ -150,8 +150,8 @@ export const productionController = {
             requiredProducts.set(path, (requiredProducts.get(path) || 0) + qtyMultiplier);
           }
 
-          // Direct recipe / Insumos
-          if (item.insumos && item.insumos.length > 0) {
+          // Direct recipe / Insumos (PED-02: Prevent double deduction for kits)
+          if (item.insumos && item.insumos.length > 0 && !item.isKit) {
             for (const requiredInsumo of item.insumos) {
               const insumoId = requiredInsumo.insumoId;
               addRef("insumos", insumoId);
@@ -437,7 +437,7 @@ export const productionController = {
             restoreProducts.set(path, (restoreProducts.get(path) || 0) + qtyMultiplier);
           }
 
-          if (item.insumos && item.insumos.length > 0) {
+          if (item.insumos && item.insumos.length > 0 && !item.isKit) {
             for (const requiredInsumo of item.insumos) {
               const insumoId = requiredInsumo.insumoId;
               addRef("insumos", insumoId);

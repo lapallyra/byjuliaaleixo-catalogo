@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Product, CompanyId, Order, Componente, Insumo, Customer, AuditLog } from "../types";
 import {
@@ -155,6 +156,7 @@ const TabLoader = () => (
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   const { user, isAdmin, role, loading, logout } = useAuth();
+  const navigate = useNavigate();
   const orchestrator = useAdminOrchestrator();
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [selectedCompanyId, setSelectedCompanyId] =
@@ -391,7 +393,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         groupedMenu={groupedMenu}
         logout={() => {
           logout();
-          window.location.href = "/";
+          navigate("/");
         }}
       />
 
@@ -516,7 +518,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     onClick={() => {
                       setIsMobileMenuOpen(false);
                       logout();
-                      window.location.href = "/";
+                      navigate("/");
                     }}
                     className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl text-[#8E8E93] bg-white hover:text-[#1C1C1E] hover:shadow-sm transition-all text-xs font-medium"
                   >

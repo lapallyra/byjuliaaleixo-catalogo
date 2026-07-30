@@ -24,6 +24,7 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
 }) => {
   const orchestrator = useAdminOrchestrator();
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const isSavingRef = useRef(false);
   const [items, setItems] = useState<any[]>(editingOrder?.items || []);
   const [shipping, setShipping] = useState(editingOrder?.shippingCost || 0);
@@ -97,14 +98,39 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
           {editingOrder?.id ? "Editar Pedido" : "Novo Pedido"}
         </h2>
 
+        {formError && (
+          <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 text-xs font-semibold animate-in fade-in slide-in-from-top-2">
+            {formError}
+          </div>
+        )}
+
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             if (loading || isSavingRef.current) return;
+            setFormError(null);
             isSavingRef.current = true;
             setLoading(true);
             try {
               const formData = new FormData(e.currentTarget);
+              
+              if (deliveryType !== "retirada") {
+                const addressVal = (formData.get("address") as string || "").trim();
+                if (!addressVal) {
+                  setFormError("O endereço é obrigatório para pedidos que exigem entrega.");
+                  isSavingRef.current = false;
+                  setLoading(false);
+                  return;
+                }
+                const segments = addressVal.split(",").map(s => s.trim()).filter(Boolean);
+                if (segments.length < 3 || addressVal.length < 15) {
+                  setFormError("O endereço fornecido está incompleto. Por favor, preencha o endereço completo contendo pelo menos: Rua, Número, Bairro e Cidade.");
+                  isSavingRef.current = false;
+                  setLoading(false);
+                  return;
+                }
+              }
+
               await onSave({
                 customerName: formData.get("customerName") as string,
                 contact: contact,
@@ -224,7 +250,7 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
               <input
                 name="address"
                 defaultValue={editingOrder?.address}
-                required
+                required={deliveryType !== "retirada"}
                 type="text"
                 placeholder="Rua, Número, Bairro, Cidade"
                 className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900"

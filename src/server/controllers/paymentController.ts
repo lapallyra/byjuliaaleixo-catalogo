@@ -145,11 +145,38 @@ export const paymentController = {
         message: "Preferência de pagamento criada com sucesso.",
       });
     } catch (error: any) {
-      console.error("[paymentController.createPreference] Error:", error);
+      console.error("========================");
+      console.error("[paymentController.createPreference] Error Caught!");
+      console.error("Message:", error.message);
+      if (error.response) {
+         console.error("Response Data:", error.response.data);
+         console.error("Response Status:", error.response.status);
+      }
+      console.error("Stack:", error.stack);
+      console.error("========================");
+
+      const status = error.status || error.response?.status || 500;
+      const errMessage = (error.message || "").toLowerCase();
+
+      if (status === 401 || status === 403 || errMessage.includes("token") || errMessage.includes("unauthorized") || errMessage.includes("credentials")) {
+        res.status(401).json({
+          success: false,
+          error: "Erro de autenticação com o provedor de pagamento. Verifique o token de acesso nas configurações do Ateliê.",
+        });
+        return;
+      }
+
+      if (status >= 500 || errMessage.includes("gateway") || errMessage.includes("timeout") || errMessage.includes("connection")) {
+        res.status(502).json({
+          success: false,
+          error: "Falha na comunicação com o gateway de pagamento externo. Tente novamente mais tarde.",
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
-        error: "Ocorreu um erro interno ao gerar a preferência de pagamento.",
-        details: error.message,
+        error: "Ocorreu um erro interno ao processar a preferência de pagamento.",
       });
     }
   },

@@ -141,8 +141,28 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
   const unifiedTransactions = useMemo(() => {
     const list: (FinanceEntry & { customerName?: string; code?: string; user?: string })[] = [];
 
+    // Find all orders that have ANY "Quitação de Parcela" (FIN-01)
+    const ordersWithInstallments = new Set<string>();
+    financeEntries.forEach((entry) => {
+      if (entry.orderId && entry.category === "Quitação de Parcela") {
+        ordersWithInstallments.add(entry.orderId);
+      }
+    });
+
     // Add real database entries
     financeEntries.forEach((entry) => {
+      // Exclude "Venda de Produto" if the order has any "Quitação de Parcela" to prevent duplicates
+      if (entry.orderId && entry.category === "Venda de Produto" && ordersWithInstallments.has(entry.orderId)) {
+        return;
+      }
+
+      // Exclude ALL auto-generated "pending" entries linked to orders,
+      // because pending amounts for orders are calculated directly via `pendingOrdersAmount`.
+      // This prevents double counting in "Contas a Receber".
+      if (entry.orderId && entry.status === "pending") {
+        return;
+      }
+
       const order = orders.find((o) => o.id === entry.orderId || o.code === entry.orderId);
       list.push({
         ...entry,
@@ -155,25 +175,6 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     // Sort chronologically desc
     return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [financeEntries, orders]);
-
-  // Local helper function to deduplicate revenues between "Venda de Produto" and "Quitação de Parcela" for the same order (ERP-093)
-  const deduplicateRevenues = useCallback(<T extends { orderId?: string; category?: string }>(transactions: T[]): T[] => {
-    const orderIdsWithInstallments = new Set<string>();
-    transactions.forEach((t) => {
-      if (t.orderId && t.category === "Quitação de Parcela") {
-        orderIdsWithInstallments.add(t.orderId);
-      }
-    });
-
-    return transactions.filter((t) => {
-      if (t.orderId && orderIdsWithInstallments.has(t.orderId)) {
-        if (t.category === "Venda de Produto") {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, []);
 
   // Helper: check if a date is within selected filter range
   const isDateInFilter = (dateStr: string, filterType: string, customStart?: string, customEnd?: string) => {
@@ -253,7 +254,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       return true;
     });
 
-    const filteredRevenues = deduplicateRevenues(activeRevenues);
+    const filteredRevenues = activeRevenues;
     const totalGrossRevenue = filteredRevenues.reduce((sum, t) => sum + t.value, 0);
 
     // 2. Production Costs from Orders + Manual Expenses
@@ -309,7 +310,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
 
     // Accumulated over all history for indicators
     const allPaidRevenues = unifiedTransactions.filter((t) => t.type === "revenue" && t.status === "paid");
-    const deduplicatedHistoryRevenue = deduplicateRevenues(allPaidRevenues);
+    const deduplicatedHistoryRevenue = allPaidRevenues;
     const historyRevenue = deduplicatedHistoryRevenue.reduce((sum, t) => sum + t.value, 0);
 
     const historyExpenses = unifiedTransactions
@@ -328,7 +329,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       accumulatedRevenue: historyRevenue,
       accumulatedProfit: historyProfit,
     };
-  }, [unifiedTransactions, filteredOrders, products, componentes, dateFilter, customStartDate, customEndDate, deduplicateRevenues]);
+  }, [unifiedTransactions, filteredOrders, products, componentes, dateFilter, customStartDate, customEndDate]);
 
   // Executive Metrics (Ticket, lucrativos etc.)
   const executiveMetrics = useMemo(() => {
@@ -391,9 +392,9 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     const now = new Date();
     const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const monthlyRevenues = unifiedTransactions.filter((t) => t.type === "revenue" && t.status === "paid" && t.date.startsWith(prefix));
-    const deduplicatedMonthly = deduplicateRevenues(monthlyRevenues);
+    const deduplicatedMonthly = monthlyRevenues;
     return deduplicatedMonthly.reduce((sum, t) => sum + t.value, 0);
-  }, [unifiedTransactions, deduplicateRevenues]);
+  }, [unifiedTransactions]);
 
   // Save customized monthly goal
   const handleSaveGoal = () => {
@@ -411,7 +412,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     const entriesToday = unifiedTransactions.filter((t) => t.date === todayStr && t.status === "paid");
 
     const revenuesToday = entriesToday.filter((t) => t.type === "revenue");
-    const deduplicatedToday = deduplicateRevenues(revenuesToday);
+    const deduplicatedToday = revenuesToday;
     const totalEntradas = deduplicatedToday.reduce((sum, t) => sum + t.value, 0);
 
     const totalSaidas = entriesToday
@@ -424,7 +425,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       lucro: totalEntradas - totalSaidas,
       saldo: calculations.accumulatedProfit,
     };
-  }, [unifiedTransactions, calculations.accumulatedProfit, deduplicateRevenues]);
+  }, [unifiedTransactions, calculations.accumulatedProfit]);
 
   // Executive Charts Data (Real historical progression)
   const chartData = useMemo(() => {
@@ -441,7 +442,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
 
     // Deduplicate all paid revenues before charting
     const allPaidRevenues = unifiedTransactions.filter((t) => t.type === "revenue" && t.status === "paid");
-    const deduplicatedRevenues = deduplicateRevenues(allPaidRevenues);
+    const deduplicatedRevenues = allPaidRevenues;
 
     // Process deduplicated revenues
     deduplicatedRevenues.forEach((t) => {
@@ -493,7 +494,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       ...m,
       Lucro: m.Receita - m.Custos,
     }));
-  }, [unifiedTransactions, orders, products, componentes, deduplicateRevenues]);
+  }, [unifiedTransactions, orders, products, componentes]);
 
   // Alerts Generator
   const alerts = useMemo(() => {

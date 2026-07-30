@@ -191,6 +191,7 @@ export interface Order {
   timeline?: OrderTimelineEvent[];
   updatedBy?: string;
   items: CartItem[];
+  subtotal?: number;
   total: number;
   discount?: number;
   paymentMethod?: string;

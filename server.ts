@@ -97,7 +97,20 @@ export async function createApp() {
       }
       console.error("Stack:", e.stack);
       console.error("========================");
-      res.status(500).json({ error: e.message || "Internal server error" });
+      const status = e.status || e.response?.status || 500;
+      const errMessage = (e.message || "").toLowerCase();
+
+      if (status === 401 || status === 403 || errMessage.includes("token") || errMessage.includes("unauthorized") || errMessage.includes("credentials")) {
+        res.status(401).json({ error: "Erro de autenticação com o provedor de pagamento. Verifique o token configurado." });
+        return;
+      }
+
+      if (status >= 500 || errMessage.includes("gateway") || errMessage.includes("timeout") || errMessage.includes("connection")) {
+        res.status(502).json({ error: "Falha na comunicação com o gateway de pagamento externo. Tente novamente." });
+        return;
+      }
+
+      res.status(500).json({ error: "Ocorreu um erro interno ao processar a preferência de pagamento." });
     }
   });
 

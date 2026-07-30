@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './AuthProvider';
 import { LogIn, ArrowLeft, X, Loader2 } from 'lucide-react';
@@ -8,6 +8,7 @@ import { login, loginWithRedirect } from '../lib/firebase';
 export function AdminLoginView() {
   const { user, isAdmin, loading, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -123,7 +124,7 @@ export function AdminLoginView() {
                 Sair e tentar com outra conta
               </button>
               <button 
-                onClick={() => window.location.href = '/'}
+                onClick={() => navigate('/')}
                 className="text-gray-700 bg-white border border-gray-200 font-bold py-4 px-10 rounded-[14px] hover:bg-gray-50 transition-all uppercase tracking-widest text-[10px]"
               >
                 Voltar para Loja
@@ -163,7 +164,7 @@ export function AdminLoginView() {
                 </button>
               )}
               <button 
-                onClick={() => window.location.href = '/'} 
+                onClick={() => navigate('/')} 
                 className="text-gray-400 hover:text-gray-600 transition-all text-[9px] uppercase font-bold tracking-wider mt-4 flex items-center justify-center gap-2"
               >
                 <ArrowLeft size={12} strokeWidth={1.5} /> Sair da Área Restrita

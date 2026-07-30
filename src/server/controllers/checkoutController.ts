@@ -10,7 +10,7 @@ function validateOrderPayload(body: any): string | null {
     return "O corpo da requisição não pode estar vazio.";
   }
 
-  const { companyId, customerName, customerCpfCnpj, contact, items, total } = body;
+  const { companyId, customerName, customerCpfCnpj, contact, items } = body;
 
   const validCompanies: CompanyId[] = ["pallyra", "guennita", "mimada", "tuttymimo"];
   if (!companyId || !validCompanies.includes(companyId)) {
@@ -34,13 +34,12 @@ function validateOrderPayload(body: any): string | null {
   }
 
   for (const item of items) {
-    if (!item.id || !item.product_name || typeof item.quantity !== "number" || item.quantity <= 0) {
-      return "Itens do carrinho inválidos ou incompletos.";
+    if (!item.id && !item.productId) {
+      return "Itens do carrinho devem possuir ID de produto válido.";
     }
-  }
-
-  if (typeof total !== "number" || total <= 0) {
-    return "Valor total do pedido inválido.";
+    if (typeof item.quantity !== "number" || item.quantity <= 0) {
+      return "Quantidade do item inválida.";
+    }
   }
 
   return null;
@@ -61,10 +60,68 @@ function generateOrderCode(companyId: CompanyId): string {
   return `${prefix}${random}`;
 }
 
+/**
+ * Secure Backend Price Validation & Recalculation (Never trust client prices)
+ */
+async function validateAndRecalculateOrder(items: any[], isWholesale: boolean, shippingCost: number) {
+  let subtotal = 0;
+  const validatedItems = [];
+
+  for (const item of items) {
+    const productId = item.productId || item.id;
+    let officialPrice = Number(item.current_price || item.retail_price || item.unit_price || 0);
+    let productName = item.product_name || item.title || "Produto";
+    let officialInsumos = item.insumos || [];
+
+    if (productId) {
+      const prodSnap = await dbAdmin.collection("products").doc(productId).get();
+      if (prodSnap.exists) {
+        const prodData = prodSnap.data() as any;
+        productName = prodData.product_name || productName;
+        officialInsumos = prodData.insumos || officialInsumos;
+        const retail = Number(prodData.retail_price || prodData.current_price || officialPrice);
+        const wholesale = Number(prodData.wholesale_price || retail);
+        const minQty = Number(prodData.wholesale_min_qty || 5);
+        const qty = Number(item.quantity || 1);
+
+        if (isWholesale && qty >= minQty) {
+          officialPrice = wholesale;
+        } else {
+          officialPrice = retail;
+        }
+      }
+    }
+
+    const itemTotal = officialPrice * (Number(item.quantity) || 1);
+    subtotal += itemTotal;
+
+    validatedItems.push({
+      ...item,
+      id: productId,
+      product_name: productName,
+      retail_price: officialPrice,
+      current_price: officialPrice,
+      unit_price: officialPrice,
+      insumos: officialInsumos,
+      totalItem: itemTotal,
+    });
+  }
+
+  const shipping = Number(shippingCost) || 0;
+  const finalTotal = subtotal + shipping;
+
+  return {
+    items: validatedItems,
+    subtotal,
+    shippingCost: shipping,
+    total: finalTotal,
+  };
+}
+
 export const checkoutController = {
   /**
    * POST /api/checkout/create-order
-   * Creates a new order in Firestore using the Firebase Admin SDK.
+   * Creates a new order in Firestore using the Firebase Admin SDK with strict backend price validation.
    */
   createOrder: async (req: Request, res: Response): Promise<void> => {
     try {
@@ -84,7 +141,6 @@ export const checkoutController = {
         contact,
         customerEmail,
         items,
-        total,
         deliveryType = "delivery",
         shippingCost = 0,
         address = "",
@@ -93,7 +149,10 @@ export const checkoutController = {
         observations = "",
       } = req.body;
 
-      // 1. Generate unique order code
+      // 1. Never trust client prices: Recalculate subtotal, discounts, final values and commercial rules from official Firebase products
+      const recalculated = await validateAndRecalculateOrder(items, Boolean(isWholesale), Number(shippingCost));
+
+      // 2. Generate unique order code
       const orderCode = generateOrderCode(companyId);
 
       // Calculate estimated delivery date (7 business days default)
@@ -110,11 +169,12 @@ export const checkoutController = {
         customerCpfCnpj,
         contact,
         customerEmail: customerEmail || "",
-        items,
-        total,
+        items: recalculated.items,
+        subtotal: recalculated.subtotal,
+        total: recalculated.total,
         status: "novo pedido", // default initial status
         deliveryType,
-        shippingCost,
+        shippingCost: recalculated.shippingCost,
         address,
         customerAddress: address,
         isEmergency: isEmergency || false,
@@ -123,31 +183,31 @@ export const checkoutController = {
         paymentStatus: "pending",
         source: "catalog",
         observations: observations || "",
-        createdAt: new Date(), // Stored as ISO Date / Timestamp by Admin SDK
+        createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      // 2. Persist to Firestore via Firebase Admin SDK
-      // Use the generated code as the document ID for absolute consistency
+      // 3. Persist to Firestore via Firebase Admin SDK
       const orderRef = dbAdmin.collection("orders").doc(orderCode);
       await orderRef.set({
         ...orderData,
-        id: orderCode, // Ensure document ID is self-referenced
+        id: orderCode,
       });
 
-      console.log(`[checkoutController.createOrder] Created order successfully. ID: ${orderCode}`);
+      console.log(`[checkoutController.createOrder] Created validated order successfully. ID: ${orderCode}, Total: R$ ${recalculated.total}`);
 
       res.status(201).json({
         success: true,
         orderId: orderCode,
         code: orderCode,
-        message: "Pedido criado com sucesso.",
+        total: recalculated.total,
+        message: "Pedido criado e validado com sucesso.",
       });
     } catch (error: any) {
       console.error("[checkoutController.createOrder] Error creating order:", error);
       res.status(500).json({
         success: false,
-        error: "Ocorreu um erro interno ao criar o pedido.",
+        error: "Ocorreu um erro interno ao criar e validar o pedido.",
         details: error.message,
       });
     }

@@ -27,6 +27,19 @@ import { normalizeCustomerAddresses, syncAddressesToLegacy } from '../lib/addres
 import { normalizePhone, isOrderFromCustomer } from '../utils/customerUtils';
 
 // --- Smart Cache & Subscription Multiplexing Layer ---
+const getTimestampMillis = (ts: any): number => {
+  if (!ts) return 0;
+  if (typeof ts.toMillis === 'function') return ts.toMillis();
+  if (typeof ts.toDate === 'function') return ts.toDate().getTime();
+  if (ts.seconds !== undefined) return ts.seconds * 1000 + (ts.nanoseconds || 0) / 1000000;
+  if (ts instanceof Date) return ts.getTime();
+  if (typeof ts === 'string' || typeof ts === 'number') {
+    const d = new Date(ts);
+    return isNaN(d.getTime()) ? 0 : d.getTime();
+  }
+  return 0;
+};
+
 class FirestoreMultiplexer<T> {
   private collectionName: string;
   private queryFn: () => any;
@@ -161,9 +174,11 @@ class FirestoreMultiplexer<T> {
       q = this.fallbackQueryFn ? this.fallbackQueryFn() : collection(db, this.collectionName);
     }
 
-    this.unsubscribeFromFirestore = onSnapshot(q, (snapshot) => {
+    let tempUnsubscribe: (() => void) | null = null;
+
+    const successCallback = (snapshot: any) => {
       this.isPreloading = false;
-      const data = snapshot.docs.map(doc => {
+      const data = snapshot.docs.map((doc: any) => {
         const docData = doc.data() as any;
         if (this.collectionName === 'orders' && docData.status) {
           docData.status = normalizeStatus(docData.status);
@@ -173,8 +188,8 @@ class FirestoreMultiplexer<T> {
       
       if (this.collectionName === 'orders') {
         data.sort((a: any, b: any) => {
-          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
-          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+          const timeA = getTimestampMillis(a.createdAt);
+          const timeB = getTimestampMillis(b.createdAt);
           return timeB - timeA;
         });
       }
@@ -186,11 +201,15 @@ class FirestoreMultiplexer<T> {
       if (oldCache !== null) {
         this.detectAndTriggerEvents(oldCache, data);
       }
-    }, (error) => {
+    };
+
+    const errorCallback = (error: any) => {
       console.warn(`[Cache] Listener failed on ${this.collectionName}`, error);
-      if (this.fallbackQueryFn && this.unsubscribeFromFirestore) {
-        if (typeof this.unsubscribeFromFirestore === 'function') {
-          this.unsubscribeFromFirestore();
+      
+      const activeUnsubscribe = tempUnsubscribe || this.unsubscribeFromFirestore;
+      if (this.fallbackQueryFn) {
+        if (activeUnsubscribe && typeof activeUnsubscribe === 'function') {
+          activeUnsubscribe();
         }
         
         try {
@@ -207,8 +226,8 @@ class FirestoreMultiplexer<T> {
             
             if (this.collectionName === 'orders') {
               data.sort((a: any, b: any) => {
-                const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
-                const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+                const timeA = getTimestampMillis(a.createdAt);
+                const timeB = getTimestampMillis(b.createdAt);
                 return timeB - timeA;
               });
             }
@@ -232,7 +251,10 @@ class FirestoreMultiplexer<T> {
         this.isPreloading = false;
         handleFirestoreError(error, OperationType.LIST, this.collectionName, false);
       }
-    });
+    };
+
+    tempUnsubscribe = onSnapshot(q, successCallback, errorCallback);
+    this.unsubscribeFromFirestore = tempUnsubscribe;
   }
 }
 
@@ -765,48 +787,72 @@ export const adjustStockForOrderItems = async (orderId: string, orderCode: strin
   const oldReqs = getStockRequirements(oldItems);
   const newReqs = getStockRequirements(newItems);
 
-  // 1. Adjust Products Stock
   const allProductIds = new Set([...Object.keys(oldReqs.products), ...Object.keys(newReqs.products)]);
-  for (const prodId of allProductIds) {
-    const oldQty = oldReqs.products[prodId] || 0;
-    const newQty = newReqs.products[prodId] || 0;
-    const delta = newQty - oldQty;
-    if (delta !== 0) {
-      try {
-        const prodRef = doc(db, 'products', prodId);
-        const prodSnap = await getDoc(prodRef);
-        if (prodSnap.exists()) {
-          const pData = prodSnap.data();
-          if (typeof pData.stock === 'number') {
-            const newStock = Math.max(0, pData.stock - delta);
-            await updateDoc(prodRef, { stock: newStock });
+  const allInsumoIds = new Set([...Object.keys(oldReqs.insumos), ...Object.keys(newReqs.insumos)]);
+  const allAddonIds = new Set([...Object.keys(oldReqs.addons), ...Object.keys(newReqs.addons)]);
+
+  if (allProductIds.size === 0 && allInsumoIds.size === 0 && allAddonIds.size === 0) return;
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const refsToRead = [];
+      const refMap = new Map();
+
+      const addRef = (colName, id) => {
+        const path = `${colName}/${id}`;
+        if (!refMap.has(path)) {
+          const r = doc(db, colName, id);
+          refMap.set(path, r);
+          refsToRead.push(r);
+        }
+      };
+
+      allProductIds.forEach(id => addRef('products', id));
+      allInsumoIds.forEach(id => { addRef('insumos', id); addRef('componentes', id); });
+      allAddonIds.forEach(id => addRef('addons', id));
+
+      const snapsMap = new Map();
+      for (const r of refsToRead) {
+         const snap = await transaction.get(r);
+         snapsMap.set(`${r.parent.id}/${r.id}`, snap);
+      }
+
+      // 1. Adjust Products
+      for (const prodId of allProductIds) {
+        const oldQty = oldReqs.products[prodId] || 0;
+        const newQty = newReqs.products[prodId] || 0;
+        const delta = newQty - oldQty;
+        if (delta !== 0) {
+          const snap = snapsMap.get(`products/${prodId}`);
+          if (snap && snap.exists()) {
+            const stock = snap.data().stock || 0;
+            transaction.update(refMap.get(`products/${prodId}`), { stock: Math.max(0, stock - delta) });
           }
         }
-      } catch (err) {
-        console.warn(`Could not adjust stock for product ${prodId}:`, err);
       }
-    }
-  }
 
-  // 2. Adjust Insumos Stock & Log movements
-  const allInsumoIds = new Set([...Object.keys(oldReqs.insumos), ...Object.keys(newReqs.insumos)]);
-  for (const insumoId of allInsumoIds) {
-    const oldQty = oldReqs.insumos[insumoId] || 0;
-    const newQty = newReqs.insumos[insumoId] || 0;
-    const delta = newQty - oldQty;
-    if (delta !== 0) {
-      try {
-        const insumoRef = doc(db, 'insumos', insumoId);
-        const insumoSnap = await getDoc(insumoRef);
-        if (insumoSnap.exists()) {
-          const currentQty = insumoSnap.data().quantity || 0;
-          const newQuantity = Math.max(0, currentQty - delta);
-          await updateDoc(insumoRef, { quantity: newQuantity });
+      // 2. Adjust Insumos
+      for (const insumoId of allInsumoIds) {
+        const oldQty = oldReqs.insumos[insumoId] || 0;
+        const newQty = newReqs.insumos[insumoId] || 0;
+        const delta = newQty - oldQty;
+        if (delta !== 0) {
+          const snap = snapsMap.get(`insumos/${insumoId}`);
+          if (snap && snap.exists()) {
+            const qty = snap.data().quantity || 0;
+            const newQuantity = Math.max(0, qty - delta);
+            transaction.update(refMap.get(`insumos/${insumoId}`), { quantity: newQuantity });
+            
+            const compSnap = snapsMap.get(`componentes/${insumoId}`);
+            if (compSnap && compSnap.exists()) {
+               transaction.update(refMap.get(`componentes/${insumoId}`), { quantity: newQuantity });
+            }
 
-          try {
-            await addDoc(collection(db, 'insumo_movements'), sanitize({
+            // Log movement
+            const moveRef = doc(collection(db, 'insumo_movements'));
+            transaction.set(moveRef, sanitize({
               insumoId: insumoId,
-              insumoName: insumoSnap.data()?.name || 'Material',
+              insumoName: snap.data()?.name || 'Material',
               orderId: orderId,
               orderCode: orderCode || orderId,
               productName: 'Ajuste de Pedido',
@@ -814,41 +860,26 @@ export const adjustStockForOrderItems = async (orderId: string, orderCode: strin
               timestamp: new Date().toISOString(),
               type: delta > 0 ? 'out' : 'in'
             }));
-          } catch (logErr) {}
-
-          if (newQuantity <= 10 && delta > 0) {
-            try {
-              sendTelegramNotification('low_stock', `⚠️ ESTOQUE BAIXO\n\nInsumo (Ajuste):\n${insumoSnap.data().name || 'Material'}\n\nQuantidade Atual:\n${newQuantity}`);
-            } catch (e) {}
           }
         }
-      } catch (err) {
-        console.warn(`Could not adjust stock for insumo ${insumoId}:`, err);
       }
-    }
-  }
 
-  // 3. Adjust Addons Stock
-  const allAddonIds = new Set([...Object.keys(oldReqs.addons), ...Object.keys(newReqs.addons)]);
-  for (const addonId of allAddonIds) {
-    const oldQty = oldReqs.addons[addonId] || 0;
-    const newQty = newReqs.addons[addonId] || 0;
-    const delta = newQty - oldQty;
-    if (delta !== 0) {
-      try {
-        const addonRef = doc(db, 'addons', addonId);
-        const addonSnap = await getDoc(addonRef);
-        if (addonSnap.exists()) {
-          const aData = addonSnap.data();
-          if (typeof aData.stock === 'number') {
-            const newStock = Math.max(0, aData.stock - delta);
-            await updateDoc(addonRef, { stock: newStock });
+      // 3. Adjust Addons
+      for (const addonId of allAddonIds) {
+        const oldQty = oldReqs.addons[addonId] || 0;
+        const newQty = newReqs.addons[addonId] || 0;
+        const delta = newQty - oldQty;
+        if (delta !== 0) {
+          const snap = snapsMap.get(`addons/${addonId}`);
+          if (snap && snap.exists()) {
+            const stock = snap.data().stock || 0;
+            transaction.update(refMap.get(`addons/${addonId}`), { stock: Math.max(0, stock - delta) });
           }
         }
-      } catch (err) {
-        console.warn(`Could not adjust stock for addon ${addonId}:`, err);
       }
-    }
+    });
+  } catch (err) {
+    console.error("Error in adjustStockForOrderItems transaction:", err);
   }
 };
 
@@ -1284,6 +1315,17 @@ export const updateOrderStatus = async (orderId: string, newStatus: Order['statu
 export const saveSale = async (data: any) => {
   const path = 'orders';
   try {
+    if (data.deliveryType && data.deliveryType !== 'retirada') {
+      const addressVal = (data.address || '').trim();
+      if (!addressVal) {
+        throw new Error("Endereço é obrigatório para pedidos que exigem entrega.");
+      }
+      const segments = addressVal.split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (segments.length < 3 || addressVal.length < 15) {
+        throw new Error("O endereço fornecido está incompleto. Por favor, forneça o endereço completo (Rua, Número, Bairro, Cidade).");
+      }
+    }
+
     const today = new Date();
     const deliveryDate = calculateDeliveryDate(today, 7);
     

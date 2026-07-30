@@ -359,7 +359,7 @@ export const inventoryController = {
           if (item.productId && !item.isKit) {
             addRef("products", item.productId);
           }
-          if (item.insumos && item.insumos.length > 0) {
+          if (item.insumos && item.insumos.length > 0 && !item.isKit) {
             for (const requiredInsumo of item.insumos) {
               addRef("insumos", requiredInsumo.insumoId);
               addRef("componentes", requiredInsumo.insumoId);
@@ -386,6 +386,73 @@ export const inventoryController = {
           snapMap.set(refsToRead[idx].path, snap);
         });
 
+        // Calculate needed quantities and pre-validate to prevent negative stock (EST-02)
+        const requiredProducts = new Map<string, number>();
+        const requiredInsumos = new Map<string, number>();
+        const requiredAddons = new Map<string, number>();
+
+        for (const item of items) {
+          const qtyMultiplier = item.quantity || 1;
+          if (item.productId && !item.isKit) {
+            const path = `products/${item.productId}`;
+            requiredProducts.set(path, (requiredProducts.get(path) || 0) + qtyMultiplier);
+          }
+          if (item.insumos && item.insumos.length > 0 && !item.isKit) {
+            for (const requiredInsumo of item.insumos) {
+              const path = `insumos/${requiredInsumo.insumoId}`;
+              requiredInsumos.set(path, (requiredInsumos.get(path) || 0) + (requiredInsumo.quantity * qtyMultiplier));
+            }
+          }
+          if (item.isKit && item.kitItems && item.kitItems.length > 0) {
+            for (const ki of item.kitItems) {
+              const qtyToDeduct = ki.quantity * qtyMultiplier;
+              if (ki.type === "product") {
+                const path = `products/${ki.id}`;
+                requiredProducts.set(path, (requiredProducts.get(path) || 0) + qtyToDeduct);
+              } else if (ki.type === "insumo") {
+                const path = `insumos/${ki.id}`;
+                requiredInsumos.set(path, (requiredInsumos.get(path) || 0) + qtyToDeduct);
+              } else if (ki.type === "addon") {
+                const path = `addons/${ki.id}`;
+                requiredAddons.set(path, (requiredAddons.get(path) || 0) + qtyToDeduct);
+              }
+            }
+          }
+        }
+
+        const warnings: string[] = [];
+
+        requiredProducts.forEach((qtyNeeded, path) => {
+          const snap = snapMap.get(path);
+          const currentStock = snap?.exists ? (snap.data()?.stock || 0) : 0;
+          if (currentStock < qtyNeeded) {
+            warnings.push(`Estoque de produto insuficiente: ${snap?.data()?.product_name || path.split('/')[1]}. Disponível: ${currentStock}, Necessário: ${qtyNeeded}`);
+          }
+        });
+
+        requiredInsumos.forEach((qtyNeeded, path) => {
+          const snap = snapMap.get(path);
+          const currentQty = snap?.exists ? (snap.data()?.quantity || 0) : 0;
+          if (currentQty < qtyNeeded) {
+            warnings.push(`Estoque de insumo insuficiente: ${snap?.data()?.name || path.split('/')[1]}. Disponível: ${currentQty}, Necessário: ${qtyNeeded}`);
+          }
+        });
+
+        requiredAddons.forEach((qtyNeeded, path) => {
+          const snap = snapMap.get(path);
+          const currentStock = snap?.exists ? (snap.data()?.stock || 0) : 0;
+          if (currentStock < qtyNeeded) {
+            warnings.push(`Estoque de opcional/addon insuficiente: ${snap?.data()?.name || path.split('/')[1]}. Disponível: ${currentStock}, Necessário: ${qtyNeeded}`);
+          }
+        });
+
+        if (warnings.length > 0) {
+          const errorObj = new Error("Estoque insuficiente para faturamento/dedução do pedido.");
+          (errorObj as any).warnings = warnings;
+          (errorObj as any).isValidationError = true;
+          throw errorObj;
+        }
+
         // Update order deduction state
         transaction.update(orderRef, { insumosDeducted: true });
 
@@ -405,7 +472,7 @@ export const inventoryController = {
           }
 
           // 2. Regular Product Insumos
-          if (item.insumos && item.insumos.length > 0) {
+          if (item.insumos && item.insumos.length > 0 && !item.isKit) {
             for (const requiredInsumo of item.insumos) {
               const pathInsumo = `insumos/${requiredInsumo.insumoId}`;
               const pathComp = `componentes/${requiredInsumo.insumoId}`;
@@ -519,6 +586,14 @@ export const inventoryController = {
       res.status(200).json({ success: true, message: "Estoque deduzido com sucesso." });
     } catch (error: any) {
       console.error("[inventoryController.deductOrderStock] Error:", error);
+      if (error.isValidationError) {
+        res.status(400).json({
+          success: false,
+          error: error.message,
+          warnings: error.warnings
+        });
+        return;
+      }
       res.status(500).json({ success: false, error: "Erro ao deduzir estoque." });
     }
   },
@@ -563,7 +638,7 @@ export const inventoryController = {
           if (item.productId && !item.isKit) {
             addRef("products", item.productId);
           }
-          if (item.insumos && item.insumos.length > 0) {
+          if (item.insumos && item.insumos.length > 0 && !item.isKit) {
             for (const requiredInsumo of item.insumos) {
               addRef("insumos", requiredInsumo.insumoId);
               addRef("componentes", requiredInsumo.insumoId);
@@ -609,7 +684,7 @@ export const inventoryController = {
           }
 
           // 2. Regular Product Insumos
-          if (item.insumos && item.insumos.length > 0) {
+          if (item.insumos && item.insumos.length > 0 && !item.isKit) {
             for (const requiredInsumo of item.insumos) {
               const pathInsumo = `insumos/${requiredInsumo.insumoId}`;
               const pathComp = `componentes/${requiredInsumo.insumoId}`;

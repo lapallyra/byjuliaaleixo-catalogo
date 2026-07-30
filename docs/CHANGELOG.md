@@ -20,7 +20,7 @@ Este documento registra o histórico oficial de evolução da plataforma, destac
 
 ## Documentação Oficial
 **Resumo**: Consolidação das diretrizes e conhecimento técnico do projeto.
-- **Principais funcionalidades**: Implementação do AGENTS.md (Filosofia), PROJECT_STRUCTURE.md (Arquitetura) e ROADMAP.md (Planejamento).
+- **Principais funcionalidades**: Implementação do AGENTS.md (Filosofia), PROJECT_STRUCTURE.md (Arquitetura), ROADMAP.md (Planejamento), 01-INVENTARIO-SITE-ATELIE.md (Inventário inicial do legado) e 10-ARQUITETURA-TECNICA.md (Arquitetura Técnica Oficial).
 
 ---
 

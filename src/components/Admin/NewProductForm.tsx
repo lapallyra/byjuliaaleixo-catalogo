@@ -101,6 +101,19 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
       return;
     }
 
+    if (formData.original_price && formData.original_price < formData.price) {
+      orchestrator.dispatchEvent({
+        type: 'FEEDBACK',
+        message: "Preço original deve ser maior ou igual ao preço promocional/venda.",
+        priority: 'HIGH',
+        customerName: '',
+        productName: '',
+        companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+        data: { success: false, title: 'Aviso' }
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const code = generateCode(formData.category);

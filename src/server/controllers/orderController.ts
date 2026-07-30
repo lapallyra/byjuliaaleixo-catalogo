@@ -58,18 +58,95 @@ export const orderController = {
       const id = req.params.id as string;
       const { updateData } = req.body;
       
-      const payload: any = { ...updateData, updatedAt: new Date() };
-      
-      if (payload.history) {
-        payload.history = FieldValue.arrayUnion(payload.history);
-      }
-      
-      await dbAdmin.collection("orders").doc(id).update(payload);
-      
-      res.status(200).json({ success: true, message: "Pedido atualizado." });
+      const orderRef = dbAdmin.collection("orders").doc(id);
+
+      await dbAdmin.runTransaction(async (transaction) => {
+        const orderSnap = await transaction.get(orderRef);
+        if (!orderSnap.exists) {
+          throw new Error("Pedido não encontrado.");
+        }
+
+        const currentOrder = orderSnap.data() as any;
+        const oldStatus = currentOrder.status;
+        const newStatus = updateData.status || oldStatus;
+
+        const payload: any = { ...updateData, updatedAt: new Date() };
+        if (payload.history) {
+          payload.history = FieldValue.arrayUnion(payload.history);
+        }
+
+        // Check if we need to deduct stock atomically
+        const activeDeducedStatuses = ['approved', 'paid', 'fully_paid', 'waiting_production', 'production', 'ready', 'delivered'];
+        const shouldDeduct = activeDeducedStatuses.includes(newStatus);
+        const wasDeducted = currentOrder.insumosDeducted === true;
+
+        if (shouldDeduct && !wasDeducted) {
+          const items = currentOrder.items || updateData.items || [];
+          for (const item of items) {
+            if (item.productId && !item.isKit) {
+              const pRef = dbAdmin.collection("products").doc(item.productId);
+              const pSnap = await transaction.get(pRef);
+              if (pSnap.exists) {
+                const pData = pSnap.data() as any;
+                const newStock = Math.max(0, (pData.stock || 0) - (item.quantity || 1));
+                transaction.update(pRef, { stock: newStock, updatedAt: FieldValue.serverTimestamp() });
+              }
+            }
+            if (item.insumos && item.insumos.length > 0) {
+              for (const reqInsumo of item.insumos) {
+                const iRef = dbAdmin.collection("insumos").doc(reqInsumo.insumoId);
+                const iSnap = await transaction.get(iRef);
+                if (iSnap.exists) {
+                  const iData = iSnap.data() as any;
+                  const reduction = reqInsumo.quantity * (item.quantity || 1);
+                  const newQty = Math.max(0, (iData.quantity || 0) - reduction);
+                  transaction.update(iRef, { quantity: newQty, updatedAt: FieldValue.serverTimestamp() });
+                  
+                  const cRef = dbAdmin.collection("componentes").doc(reqInsumo.insumoId);
+                  transaction.set(cRef, { quantity: newQty, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+                }
+              }
+            }
+          }
+          payload.insumosDeducted = true;
+        } else if (!shouldDeduct && wasDeducted && (newStatus === 'cancelled' || newStatus === 'novo pedido')) {
+          const items = currentOrder.items || [];
+          for (const item of items) {
+            if (item.productId && !item.isKit) {
+              const pRef = dbAdmin.collection("products").doc(item.productId);
+              const pSnap = await transaction.get(pRef);
+              if (pSnap.exists) {
+                const pData = pSnap.data() as any;
+                const restoredStock = (pData.stock || 0) + (item.quantity || 1);
+                transaction.update(pRef, { stock: restoredStock, updatedAt: FieldValue.serverTimestamp() });
+              }
+            }
+            if (item.insumos && item.insumos.length > 0) {
+              for (const reqInsumo of item.insumos) {
+                const iRef = dbAdmin.collection("insumos").doc(reqInsumo.insumoId);
+                const iSnap = await transaction.get(iRef);
+                if (iSnap.exists) {
+                  const iData = iSnap.data() as any;
+                  const restoration = reqInsumo.quantity * (item.quantity || 1);
+                  const restoredQty = (iData.quantity || 0) + restoration;
+                  transaction.update(iRef, { quantity: restoredQty, updatedAt: FieldValue.serverTimestamp() });
+
+                  const cRef = dbAdmin.collection("componentes").doc(reqInsumo.insumoId);
+                  transaction.set(cRef, { quantity: restoredQty, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+                }
+              }
+            }
+          }
+          payload.insumosDeducted = false;
+        }
+
+        transaction.update(orderRef, payload);
+      });
+
+      res.status(200).json({ success: true, message: "Pedido atualizado e transação de estoque executada com sucesso." });
     } catch (error: any) {
-      console.error("[orderController.updateOrder] Error:", error);
-      res.status(500).json({ success: false, error: "Erro ao atualizar pedido." });
+      console.error("[orderController.updateOrder] Transaction Error:", error);
+      res.status(500).json({ success: false, error: error.message || "Erro ao atualizar pedido com transação atômica." });
     }
   },
 

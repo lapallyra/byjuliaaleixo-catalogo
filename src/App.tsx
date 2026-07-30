@@ -1,21 +1,24 @@
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './components/AuthProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AdminOrchestratorProvider } from './components/AdminOrchestratorSystem';
 import { SiteApp } from './components/Site/SiteApp';
-import { AdminApp } from './components/Admin/AdminApp';
+
+const AdminApp = lazy(() => import('./components/Admin/AdminApp').then(m => ({ default: m.AdminApp })));
 
 function MainApp() {
   return (
-    <Routes>
-      {/* 
-          Isolation Pattern:
-          Admin and Catalog (SiteApp) are now fully encapsulated.
-          This allows focused development on individual modules.
-      */}
-      <Route path="/admin/*" element={<AdminApp />} />
-      <Route path="/*" element={<SiteApp />} />
-    </Routes>
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-stone-300 border-t-stone-900 rounded-full animate-spin" />
+      </div>
+    }>
+      <Routes>
+        <Route path="/admin/*" element={<AdminApp />} />
+        <Route path="/*" element={<SiteApp />} />
+      </Routes>
+    </Suspense>
   );
 }
 
