@@ -1,0 +1,2788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>by Julia Aleixo - Precificação, Catálogo & Linha de Produção 3D Glass</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+    <!-- Vue.js 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- SheetJS (XLSX) CDN para Importação e Exportação Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#ff1493">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="by Julia Aleixo">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FAF5F7;
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(255, 20, 147, 0.12) 0px, transparent 50%),
+                radial-gradient(at 90% 10%, rgba(252, 204, 224, 0.4) 0px, transparent 50%),
+                radial-gradient(at 50% 80%, rgba(255, 105, 180, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #2D3748;
+        }
+
+        /* Glassmorphism 3D Surface Classes */
+        .glass-3d {
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 
+                0 10px 30px -5px rgba(255, 20, 147, 0.08),
+                0 4px 12px 0 rgba(0, 0, 0, 0.03),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+        }
+
+        .glass-3d-dark {
+            background: linear-gradient(135deg, rgba(230, 0, 122, 0.94) 0%, rgba(180, 0, 90, 0.96) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 
+                0 15px 35px -5px rgba(230, 0, 122, 0.35),
+                inset 0 1px 2px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .glass-3d-soft {
+            background: rgba(255, 228, 238, 0.65);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 15px rgba(255, 20, 147, 0.05);
+        }
+
+        /* Interactive 3D Buttons */
+        .btn-3d-hotpink {
+            background: linear-gradient(180deg, #ff33a1 0%, #ff1493 100%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 4px 12px rgba(255, 20, 147, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-3d-hotpink:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 6px 18px rgba(255, 20, 147, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-3d-hotpink:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(255, 20, 147, 0.3);
+        }
+
+        .btn-3d-glass {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow: 
+                0 4px 10px rgba(0, 0, 0, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+            transition: all 0.2s ease;
+        }
+
+        .btn-3d-glass:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-1.5px);
+            box-shadow: 0 6px 15px rgba(255, 20, 147, 0.12);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(250, 245, 247, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fccce0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff1493;
+        }
+
+        [v-cloak] { display: none !important; }
+
+        /* Print Specific Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-receipt, #printable-receipt * {
+                visibility: visible;
+            }
+            #printable-receipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                color: black !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+
+    <script>
+        const manifestData = {
+            "name": "by Julia Aleixo - Precificação & Gestão 3D Glass",
+            "short_name": "by Julia Aleixo",
+            "start_url": "./",
+            "display": "standalone",
+            "background_color": "#FAF5F7",
+            "theme_color": "#ff1493",
+            "description": "Calculadora, Catálogo, Linha de Produção, Estoque e Orçamentos com PIX por Julia Aleixo.",
+            "icons": [
+                {
+                    "src": "https://img.icons8.com/isometric/192/calculator.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestURL;
+        document.head.appendChild(manifestLink);
+    </script>
+</head>
+<body class="min-h-screen text-slate-800 antialiased pb-20">
+
+    <div id="app" v-cloak class="min-h-screen flex flex-col">
+        
+        <div v-if="!isAuthenticated" class="min-h-screen flex items-center justify-center p-4">
+            <div class="glass-3d rounded-3xl p-8 max-w-md w-full space-y-6 border border-white/90 shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-12 -right-12 w-32 h-32 bg-pink-400/20 rounded-full blur-2xl"></div>
+                <div class="absolute -bottom-12 -left-12 w-32 h-32 bg-rose-400/20 rounded-full blur-2xl"></div>
+
+                <!-- Brand Header -->
+                <div class="text-center space-y-2">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-pink-600 via-pink-500 to-rose-300 mx-auto flex items-center justify-center text-3xl text-white shadow-xl shadow-pink-500/30 border border-white/80">
+                        <i class="fa-solid fa-gem animate-pulse"></i>
+                    </div>
+                    <h1 class="text-xl font-extrabold text-slate-800 tracking-tight">by Julia Aleixo</h1>
+                    <p class="text-xs font-semibold text-pink-700">Sistema Restrito de Precificação, Estoque & Produção 3D</p>
+                    <span class="inline-block bg-pink-100 text-pink-700 text-[10px] font-extrabold px-3 py-1 rounded-full border border-pink-200">
+                        <i class="fa-solid fa-lock text-[9px] mr-1"></i> Acesso Restrito por CNPJ
+                    </span>
+                </div>
+
+                <!-- Login Form -->
+                <form @submit.prevent="handleLogin" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                            <span>Informe seu CNPJ para Entrar</span>
+                            <span class="text-[10px] text-pink-600 font-semibold">Somente números ou formatado</span>
+                        </label>
+                        <div class="relative">
+                            <i class="fa-solid fa-id-card absolute left-3.5 top-3.5 text-pink-400 text-sm"></i>
+                            <input 
+                                type="text" 
+                                v-model="inputCnpj" 
+                                @input="formatInputCnpj"
+                                placeholder="00.000.000/0000-00" 
+                                maxlength="18"
+                                class="w-full pl-10 pr-4 py-3 rounded-2xl glass-3d text-sm font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-500 tracking-wide"
+                                autofocus
+                            >
+                        </div>
+                    </div>
+
+                    <div v-if="loginError" class="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-circle-exclamation text-sm"></i>
+                        <span>{{ loginError }}</span>
+                    </div>
+
+                    <button type="submit" class="w-full btn-3d-hotpink text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl">
+                        <i class="fa-solid fa-key"></i> Autenticar & Entrar
+                    </button>
+                </form>
+
+                <div class="pt-2 border-t border-white/60 text-center">
+                    <p class="text-[10px] font-semibold text-slate-400">
+                        Acesso exclusivo para CNPJs autorizados no sistema.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <template v-else>
+            <header class="bg-white/70 backdrop-blur-2xl border-b border-white/90 sticky top-0 z-30 shadow-sm transition-all no-print">
+                <div class="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between">
+                    <!-- Clean Brand Header & Sidebar Toggle -->
+                    <div class="flex items-center space-x-3">
+                        <button @click="isSidebarCollapsed = !isSidebarCollapsed" class="p-2 rounded-xl glass-3d hover:bg-white text-slate-700 transition flex items-center justify-center shadow-sm" title="Alternar Barra Lateral">
+                            <i class="fa-solid" :class="isSidebarCollapsed ? 'fa-bars-staggered' : 'fa-indent'"></i>
+                        </button>
+
+                        <div class="flex items-center space-x-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-600 via-pink-500 to-rose-300 flex items-center justify-center text-lg text-white shadow-md shadow-pink-500/20 border border-white/80">
+                                <i class="fa-solid fa-gem"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-base font-black leading-none text-slate-800 flex items-center gap-1.5">
+                                    by Julia Aleixo <span class="bg-pink-100 text-pink-700 text-[9px] font-black px-2 py-0.5 rounded-full border border-pink-200 uppercase">Pro Glass</span>
+                                </h1>
+                                <p class="text-[10px] text-pink-700/80 font-medium mt-0.5">Gestão Comercial & Precificação 3D</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Streamlined Right Actions & Tools Dropdown -->
+                    <div class="flex items-center space-x-2">
+                        <!-- Auto-save / Alert Pill -->
+                        <span v-if="lowStockInsumosCount > 0" @click="activeTab = 'insumos'; estoqueSubTab = 'insumos'" class="cursor-pointer flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-bold animate-pulse" title="Insumos com estoque baixo!">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                            <span class="hidden sm:inline">{{ lowStockInsumosCount }} Estoque Baixo</span>
+                        </span>
+
+                        <span class="hidden md:flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+                            <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                            <span>{{ formatCnpjDisplay(currentUserCnpj) }}</span>
+                        </span>
+
+                        <!-- Tools Menu Dropdown Button -->
+                        <div class="relative">
+                            <button @click="showToolsMenu = !showToolsMenu" class="p-2 rounded-xl glass-3d hover:bg-white text-slate-700 transition flex items-center gap-1.5 text-xs font-bold shadow-sm">
+                                <i class="fa-solid fa-ellipsis-vertical text-pink-600"></i>
+                                <span class="hidden sm:inline">Opções</span>
+                            </button>
+
+                            <!-- Floating Tools Dropdown -->
+                            <div v-if="showToolsMenu" @click.outside="showToolsMenu = false" class="absolute right-0 mt-2 w-56 glass-3d rounded-2xl p-2 shadow-2xl border border-white z-50 space-y-1 text-xs font-bold text-slate-700">
+                                <button @click="openExcelModal(); showToolsMenu = false" class="w-full text-left px-3 py-2 rounded-xl hover:bg-pink-50 flex items-center gap-2 text-emerald-700">
+                                    <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
+                                    <span>Planilhas Excel</span>
+                                </button>
+                                <button @click="exportDataJSON(); showToolsMenu = false" class="w-full text-left px-3 py-2 rounded-xl hover:bg-pink-50 flex items-center gap-2 text-pink-600">
+                                    <i class="fa-solid fa-download text-sm"></i>
+                                    <span>Exportar Backup JSON</span>
+                                </button>
+                                <div class="border-t border-slate-100 my-1 pt-1 text-[10px] text-slate-400 px-3 flex items-center justify-between">
+                                    <span>Auto-salvamento:</span>
+                                    <span class="font-bold text-slate-600">{{ lastSavedTime ? lastSavedTime : 'Ativo' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Logout Button -->
+                        <button @click="handleLogout" title="Sair da Conta" class="p-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 transition font-bold text-xs flex items-center gap-1">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span class="hidden sm:inline">Sair</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Streamlined 1-Line Compact Financial Summary Ribbon -->
+                <div class="max-w-7xl mx-auto px-4 py-1.5 border-t border-white/60 flex items-center justify-between text-[11px] gap-2 overflow-x-auto no-scrollbar">
+                    <div class="flex items-center gap-3 whitespace-nowrap">
+                        <span class="text-slate-500 font-semibold">Faturamento Mês: <strong class="text-emerald-700 font-black">R$ {{ formatMoney(monthlyFinancials.revenue) }}</strong></span>
+                        <span class="text-slate-300">•</span>
+                        <span class="text-slate-500 font-semibold">Lucro Líquido: <strong class="text-pink-600 font-black">R$ {{ formatMoney(monthlyFinancials.profit) }}</strong></span>
+                    </div>
+                    <div class="flex items-center gap-3 whitespace-nowrap">
+                        <span class="text-slate-500 font-semibold">Produção: <strong class="text-indigo-600 font-black">{{ activeQuotesCount }} ativos</strong></span>
+                        <span class="text-slate-300">•</span>
+                        <span class="text-slate-500 font-semibold">Sua Hora: <strong class="text-slate-800 font-black">R$ {{ formatMoney(valorHoraTrabalho) }}/h</strong></span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="max-w-7xl mx-auto px-2 sm:px-4 py-4 flex-grow flex gap-4 w-full relative">
+
+                <!-- RETRACTABLE LEFT SIDEBAR -->
+                <aside 
+                    :class="[
+                        isSidebarCollapsed ? 'w-16 md:w-20' : 'w-64',
+                        'transition-all duration-300 ease-in-out glass-3d rounded-3xl p-3 flex flex-col justify-between shrink-0 sticky top-24 h-[calc(100vh-7rem)] z-20 shadow-xl border border-white/90 no-print'
+                    ]"
+                >
+                    <!-- Sidebar Navigation Links -->
+                    <div class="space-y-2">
+                        <!-- Toggle Button Inside Sidebar Header -->
+                        <div class="flex items-center justify-between pb-3 mb-1 border-b border-white/80 px-2">
+                            <span v-if="!isSidebarCollapsed" class="text-[11px] font-black uppercase text-pink-700 tracking-wider">Navegação</span>
+                            <button @click="isSidebarCollapsed = !isSidebarCollapsed" class="p-1.5 rounded-xl hover:bg-white/80 text-pink-600 transition mx-auto">
+                                <i class="fa-solid" :class="isSidebarCollapsed ? 'fa-angles-right' : 'fa-angles-left'"></i>
+                            </button>
+                        </div>
+
+                        <!-- 1. Catálogo de Produtos -->
+                        <button 
+                            @click="activeTab = 'produtos'" 
+                            :class="activeTab === 'produtos' ? 'btn-3d-hotpink text-white font-black shadow-md' : 'btn-3d-glass text-slate-700 hover:text-pink-600 font-bold'" 
+                            class="w-full p-2.5 rounded-2xl text-xs transition flex items-center justify-start gap-3 relative group"
+                            :title="isSidebarCollapsed ? 'Catálogo de Produtos' : ''"
+                        >
+                            <i class="fa-solid fa-boxes-stacked text-sm text-center w-5 shrink-0"></i>
+                            <span v-if="!isSidebarCollapsed" class="truncate">Catálogo</span>
+                        </button>
+
+                        <!-- 2. Calculadora -->
+                        <button 
+                            @click="activeTab = 'calc'" 
+                            :class="activeTab === 'calc' ? 'btn-3d-hotpink text-white font-black shadow-md' : 'btn-3d-glass text-slate-700 hover:text-pink-600 font-bold'" 
+                            class="w-full p-2.5 rounded-2xl text-xs transition flex items-center justify-start gap-3 relative group"
+                            :title="isSidebarCollapsed ? 'Calculadora de Precificação' : ''"
+                        >
+                            <i class="fa-solid fa-calculator text-sm text-center w-5 shrink-0"></i>
+                            <span v-if="!isSidebarCollapsed" class="truncate">Calculadora</span>
+                        </button>
+
+                        <!-- 3. Pedidos & Vendas -->
+                        <button 
+                            @click="activeTab = 'orcamentos'" 
+                            :class="activeTab === 'orcamentos' ? 'btn-3d-hotpink text-white font-black shadow-md' : 'btn-3d-glass text-slate-700 hover:text-pink-600 font-bold'" 
+                            class="w-full p-2.5 rounded-2xl text-xs transition flex items-center justify-start gap-3 relative group"
+                            :title="isSidebarCollapsed ? 'Pedidos & Vendas' : ''"
+                        >
+                            <i class="fa-solid fa-industry text-sm text-center w-5 shrink-0"></i>
+                            <span v-if="!isSidebarCollapsed" class="truncate">Pedidos & Vendas</span>
+                            <span v-if="activeQuotesCount > 0" :class="isSidebarCollapsed ? 'absolute -top-1 -right-1' : 'ml-auto'" class="bg-white text-pink-600 px-1.5 py-0.2 rounded-full text-[9px] font-black border border-pink-200 shadow-sm">
+                                {{ activeQuotesCount }}
+                            </span>
+                        </button>
+
+                        <!-- 4. Livro Caixa -->
+                        <button 
+                            @click="activeTab = 'livroCaixa'" 
+                            :class="activeTab === 'livroCaixa' ? 'btn-3d-hotpink text-white font-black shadow-md' : 'btn-3d-glass text-slate-700 hover:text-pink-600 font-bold'" 
+                            class="w-full p-2.5 rounded-2xl text-xs transition flex items-center justify-start gap-3 relative group"
+                            :title="isSidebarCollapsed ? 'Livro Caixa' : ''"
+                        >
+                            <i class="fa-solid fa-book-bookmark text-sm text-center w-5 shrink-0"></i>
+                            <span v-if="!isSidebarCollapsed" class="truncate">Livro Caixa</span>
+                        </button>
+
+                        <!-- 5. Estoque & Materiais -->
+                        <button 
+                            @click="activeTab = 'insumos'" 
+                            :class="activeTab === 'insumos' ? 'btn-3d-hotpink text-white font-black shadow-md' : 'btn-3d-glass text-slate-700 hover:text-pink-600 font-bold'" 
+                            class="w-full p-2.5 rounded-2xl text-xs transition flex items-center justify-start gap-3 relative group"
+                            :title="isSidebarCollapsed ? 'Estoque & Materiais (Insumos/Componentes)' : ''"
+                        >
+                            <i class="fa-solid fa-cubes text-sm text-center w-5 shrink-0"></i>
+                            <span v-if="!isSidebarCollapsed" class="truncate">Estoque & Materiais</span>
+                            <span v-if="lowStockInsumosCount > 0" class="w-2.5 h-2.5 rounded-full bg-amber-500 absolute top-2 right-2 animate-ping"></span>
+                        </button>
+
+                        <!-- 6. Configurações -->
+                        <button 
+                            @click="activeTab = 'config'" 
+                            :class="activeTab === 'config' ? 'btn-3d-hotpink text-white font-black shadow-md' : 'btn-3d-glass text-slate-700 hover:text-pink-600 font-bold'" 
+                            class="w-full p-2.5 rounded-2xl text-xs transition flex items-center justify-start gap-3 relative group"
+                            :title="isSidebarCollapsed ? 'Configurações do Ateliê' : ''"
+                        >
+                            <i class="fa-solid fa-sliders text-sm text-center w-5 shrink-0"></i>
+                            <span v-if="!isSidebarCollapsed" class="truncate">Configurações</span>
+                        </button>
+                    </div>
+
+                    <!-- Sidebar Footer Info -->
+                    <div class="pt-3 border-t border-white/80 text-center" v-if="!isSidebarCollapsed">
+                        <p class="text-[10px] font-extrabold text-pink-700">by Julia Aleixo</p>
+                        <p class="text-[9px] text-slate-400 font-medium">Versão Pro Glass 3D</p>
+                    </div>
+                </aside>
+
+                <!-- MAIN CONTENT AREA -->
+                <main class="flex-1 min-w-0 no-print">
+                
+                <!-- TAB 1: CATÁLOGO DE PRODUTOS PRONTOS -->
+                <div v-if="activeTab === 'produtos'" class="space-y-6">
+                    <div class="glass-3d p-5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="flex-1 w-full md:w-auto relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-pink-400"></i>
+                            <input type="text" v-model="searchProduct" placeholder="Buscar produto no catálogo..." class="w-full pl-10 pr-4 py-2.5 rounded-2xl glass-3d text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                        </div>
+
+                        <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                            <select v-model="selectedCategory" class="px-3 py-2.5 rounded-2xl glass-3d text-xs font-bold text-slate-700 focus:outline-none">
+                                <option value="Todas">Todas Categorias</option>
+                                <option v-for="cat in productCategories" :key="cat" :value="cat">{{ cat }}</option>
+                            </select>
+
+                            <button @click="openExcelModal('produtos')" title="Importar/Exportar Produtos no Excel" class="p-2.5 rounded-2xl glass-3d text-emerald-700 hover:bg-emerald-50 text-xs font-bold flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-excel text-emerald-600"></i> Excel
+                            </button>
+
+                            <button @click="openProductModal()" class="btn-3d-hotpink text-white px-5 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 whitespace-nowrap shadow-md">
+                                <i class="fa-solid fa-plus-circle"></i> Novo Produto
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div v-if="filteredProducts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div v-for="prod in filteredProducts" :key="prod.id" class="glass-3d p-5 rounded-3xl space-y-4 flex flex-col justify-between hover:shadow-xl transition-all duration-300 relative group border border-white/90">
+                            <div>
+                                <div class="flex items-start justify-between gap-3 mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-10 h-10 rounded-2xl bg-pink-100 flex items-center justify-center text-xl shadow-sm border border-pink-200">
+                                            {{ prod.imagemEmoji || '🌸' }}
+                                        </div>
+                                        <div>
+                                            <h3 class="font-black text-sm text-slate-800 leading-tight">{{ prod.nome }}</h3>
+                                            <span class="text-[10px] font-bold text-pink-600 bg-pink-100/80 px-2 py-0.5 rounded-full">{{ prod.categoria || 'Geral' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Preço Venda</p>
+                                        <p class="text-lg font-black text-pink-600">R$ {{ formatMoney(getProductPrice(prod)) }}</p>
+                                    </div>
+                                </div>
+
+                                <p class="text-xs text-slate-500 line-clamp-2 mb-4 font-normal">{{ prod.descricao || 'Sem descrição cadastrada.' }}</p>
+
+                                <div class="grid grid-cols-3 gap-2 mb-4 bg-white/40 p-2.5 rounded-2xl border border-white/60 text-center">
+                                    <div>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase">Custo Total</p>
+                                        <p class="text-xs font-extrabold text-slate-700">R$ {{ formatMoney(getProductTotalCost(prod)) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase">Lucro Líquido</p>
+                                        <p class="text-xs font-extrabold text-emerald-600">R$ {{ formatMoney(getProductPrice(prod) - getProductTotalCost(prod)) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase">Margem</p>
+                                        <p class="text-xs font-extrabold text-pink-600">{{ prod.margemLucro }}%</p>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1 mb-4 text-[11px] text-slate-600 bg-pink-50/50 p-2.5 rounded-xl">
+                                    <div class="flex justify-between">
+                                        <span class="font-medium"><i class="fa-solid fa-cubes text-pink-400 mr-1"></i> Insumos ({{ prod.insumos ? prod.insumos.length : 0 }}):</span>
+                                        <span class="font-bold">R$ {{ formatMoney(getProductInsumosCost(prod)) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="font-medium"><i class="fa-solid fa-puzzle-piece text-pink-400 mr-1"></i> Componentes ({{ prod.componentes ? prod.componentes.length : 0 }}):</span>
+                                        <span class="font-bold">R$ {{ formatMoney(getProductComponentesCost(prod)) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="font-medium"><i class="fa-solid fa-clock text-pink-400 mr-1"></i> Mão de Obra ({{ prod.tempoProducaoMinutos }} min):</span>
+                                        <span class="font-bold">R$ {{ formatMoney(getProductLaborCost(prod)) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 pt-2 border-t border-white/80">
+                                <button @click="openQuickQuoteModal(prod)" class="w-full btn-3d-hotpink text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md">
+                                    <i class="fa-brands fa-whatsapp text-sm"></i> Gerar Orçamento no WhatsApp
+                                </button>
+
+                                <div class="grid grid-cols-3 gap-1.5">
+                                    <button @click="loadProductToCalc(prod)" class="btn-3d-glass py-2 rounded-xl text-[11px] font-bold text-slate-700 hover:text-pink-600 flex items-center justify-center gap-1" title="Editar na Calculadora">
+                                        <i class="fa-solid fa-calculator text-pink-500"></i> Simular
+                                    </button>
+                                    <button @click="openProductModal(prod)" class="btn-3d-glass py-2 rounded-xl text-[11px] font-bold text-slate-700 hover:text-pink-600 flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-pen-to-square text-amber-500"></i> Editar
+                                    </button>
+                                    <button @click="deleteProduct(prod.id)" class="btn-3d-glass py-2 rounded-xl text-[11px] font-bold text-rose-600 hover:bg-rose-50 flex items-center justify-center gap-1">
+                                        <i class="fa-solid fa-trash-can text-rose-500"></i> Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else class="glass-3d rounded-3xl p-12 text-center max-w-lg mx-auto">
+                        <div class="w-20 h-20 bg-pink-100 rounded-full flex items-center justify-center text-pink-500 text-3xl mx-auto mb-4 border border-white">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+                        <h3 class="text-base font-extrabold text-slate-800 mb-1">Nenhum produto encontrado</h3>
+                        <p class="text-xs text-slate-500 mb-5">Cadastre seus produtos prontos com insumos e componentes para gerar orçamentos instantâneos com PIX via WhatsApp.</p>
+                        <button @click="openProductModal()" class="btn-3d-hotpink text-white px-6 py-3 rounded-2xl text-xs font-bold inline-flex items-center gap-2">
+                            <i class="fa-solid fa-plus-circle"></i> Cadastrar Primeiro Produto
+                        </button>
+                    </div>
+                </div>
+
+                <div v-if="activeTab === 'calc'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-7 space-y-6">
+                        <div class="glass-3d p-5 rounded-3xl space-y-4">
+                            <div class="flex items-center justify-between border-b border-white/80 pb-3">
+                                <h2 class="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-sliders text-pink-500"></i> Configuração da Peça / Projeto
+                                </h2>
+                                <button @click="saveCalcAsProduct" class="btn-3d-glass px-3 py-1.5 rounded-xl text-xs font-bold text-pink-600 flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-box-archive"></i> Salvar no Catálogo
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Produto Simulado</label>
+                                    <input type="text" v-model="calc.nome" placeholder="Ex: Topo de Bolo Personalizado" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Tempo de Produção (Minutos)</label>
+                                    <div class="relative">
+                                        <input type="number" min="0" v-model.number="calc.tempoProducaoMinutos" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                        <span class="absolute right-3 top-2.5 text-xs text-slate-400 font-bold">min</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Margem Lucro (%)</label>
+                                    <input type="number" min="0" max="1000" v-model.number="calc.margemLucro" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Taxas & Impostos (%)</label>
+                                    <input type="number" min="0" max="100" v-model.number="calc.taxas" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-rose-600 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Margem Perda/Quebra (%)</label>
+                                    <input type="number" min="0" max="100" v-model.number="calc.margemPerda" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-amber-600 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Insumos Direct Selector -->
+                        <div class="glass-3d p-5 rounded-3xl space-y-4">
+                            <div class="flex items-center justify-between border-b border-white/80 pb-3">
+                                <h3 class="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-cubes text-pink-500"></i> Matérias-Primas (Insumos Diretamente Utilizados)
+                                </h3>
+                                <button @click="addInsumoToCalc" class="text-xs font-bold text-pink-600 hover:text-pink-700 flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> Adicionar
+                                </button>
+                            </div>
+
+                            <div v-if="calc.insumos.length > 0" class="space-y-2">
+                                <div v-for="(item, idx) in calc.insumos" :key="idx" class="flex items-center gap-2 bg-white/50 p-2.5 rounded-2xl border border-white">
+                                    <select v-model="item.insumoId" class="flex-1 px-3 py-1.5 rounded-xl glass-3d text-xs font-semibold focus:outline-none">
+                                        <option v-for="ins in insumos" :key="ins.id" :value="ins.id">
+                                            {{ ins.nome }} (R$ {{ formatMoney(ins.custoUnitario) }}/{{ ins.unidade }})
+                                        </option>
+                                    </select>
+                                    <div class="w-24">
+                                        <input type="number" step="0.01" min="0" v-model.number="item.quantidade" placeholder="Qtd" class="w-full px-2.5 py-1.5 rounded-xl glass-3d text-xs font-bold text-center">
+                                    </div>
+                                    <span class="text-xs font-extrabold text-slate-700 w-20 text-right">
+                                        R$ {{ formatMoney(getCalcInsumoCost(item)) }}
+                                    </span>
+                                    <button @click="calc.insumos.splice(idx, 1)" class="text-rose-400 hover:text-rose-600 p-1">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p v-else class="text-xs text-slate-400 italic text-center py-2">Nenhum insumo direto adicionado à simulação.</p>
+                        </div>
+
+                        <!-- Componentes Selector -->
+                        <div class="glass-3d p-5 rounded-3xl space-y-4">
+                            <div class="flex items-center justify-between border-b border-white/80 pb-3">
+                                <h3 class="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-puzzle-piece text-pink-500"></i> Componentes (Peças Pré-Fabricadas)
+                                </h3>
+                                <button @click="addComponenteToCalc" class="text-xs font-bold text-pink-600 hover:text-pink-700 flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> Adicionar
+                                </button>
+                            </div>
+
+                            <div v-if="calc.componentes.length > 0" class="space-y-2">
+                                <div v-for="(item, idx) in calc.componentes" :key="idx" class="flex items-center gap-2 bg-white/50 p-2.5 rounded-2xl border border-white">
+                                    <select v-model="item.componenteId" class="flex-1 px-3 py-1.5 rounded-xl glass-3d text-xs font-semibold focus:outline-none">
+                                        <option v-for="comp in componentes" :key="comp.id" :value="comp.id">
+                                            {{ comp.nome }} (Custo: R$ {{ formatMoney(getComponenteCost(comp)) }})
+                                        </option>
+                                    </select>
+                                    <div class="w-24">
+                                        <input type="number" step="1" min="1" v-model.number="item.quantidade" placeholder="Qtd" class="w-full px-2.5 py-1.5 rounded-xl glass-3d text-xs font-bold text-center">
+                                    </div>
+                                    <span class="text-xs font-extrabold text-slate-700 w-20 text-right">
+                                        R$ {{ formatMoney(getCalcComponenteCost(item)) }}
+                                    </span>
+                                    <button @click="calc.componentes.splice(idx, 1)" class="text-rose-400 hover:text-rose-600 p-1">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p v-else class="text-xs text-slate-400 italic text-center py-2">Nenhum componente adicionado à simulação.</p>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Final Price & Cost Breakdown Card -->
+                    <div class="lg:col-span-5 space-y-6">
+                        <div class="glass-3d-dark rounded-3xl p-6 text-white space-y-6 relative overflow-hidden shadow-2xl">
+                            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-pink-400/20 rounded-full blur-2xl"></div>
+
+                            <div>
+                                <span class="bg-white/20 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest border border-white/30">
+                                    Sugestão de Venda
+                                </span>
+                                <div class="mt-3 flex items-baseline gap-2">
+                                    <span class="text-2xl font-light text-pink-200">R$</span>
+                                    <span class="text-4xl font-black tracking-tight text-white">{{ formatMoney(calcSuggestedPrice) }}</span>
+                                </div>
+                                <p class="text-xs text-pink-200 mt-1 font-medium">Preço ideal sugerido com base nas taxas e margem informadas.</p>
+                            </div>
+
+                            <div class="space-y-2.5 pt-4 border-t border-white/20 text-xs">
+                                <div class="flex justify-between items-center text-pink-100">
+                                    <span><i class="fa-solid fa-cubes text-pink-300 mr-1.5"></i> Custo Insumos Diretos:</span>
+                                    <span class="font-bold text-white">R$ {{ formatMoney(totalCalcInsumosCost) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-pink-100">
+                                    <span><i class="fa-solid fa-puzzle-piece text-pink-300 mr-1.5"></i> Custo Componentes:</span>
+                                    <span class="font-bold text-white">R$ {{ formatMoney(totalCalcComponentesCost) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-pink-100">
+                                    <span><i class="fa-solid fa-clock text-pink-300 mr-1.5"></i> Mão de Obra Direta:</span>
+                                    <span class="font-bold text-white">R$ {{ formatMoney(calcLaborCost) }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-pink-100">
+                                    <span><i class="fa-solid fa-triangle-exclamation text-amber-300 mr-1.5"></i> Reserva Perda/Quebra:</span>
+                                    <span class="font-bold text-white">R$ {{ formatMoney(calcWasteCost) }}</span>
+                                </div>
+                                
+                                <div class="pt-2 border-t border-white/20 flex justify-between items-center font-extrabold text-white">
+                                    <span>Custo Total de Produção:</span>
+                                    <span>R$ {{ formatMoney(calcTotalProductionCost) }}</span>
+                                </div>
+
+                                <div class="flex justify-between items-center text-emerald-300 font-extrabold">
+                                    <span>Lucro Líquido Real:</span>
+                                    <span>R$ {{ formatMoney(calcNetProfit) }}</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <button @click="saveCalcAsProduct" class="w-full bg-white text-pink-700 py-3 rounded-2xl font-extrabold text-xs shadow-lg hover:bg-pink-50 transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-boxes-stacked"></i> Criar Produto
+                                </button>
+                                <button @click="saveCalcToQuotesHistory" class="w-full bg-pink-900/60 backdrop-blur-md border border-white/30 text-white py-3 rounded-2xl font-extrabold text-xs shadow-lg hover:bg-pink-900/80 transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-file-invoice"></i> Salvar Pedido
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="activeTab === 'orcamentos'" class="space-y-6">
+                    <div class="glass-3d p-5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div>
+                            <h2 class="font-extrabold text-base text-slate-800">Linha de Produção & Vendas</h2>
+                            <p class="text-xs text-slate-500">Acompanhe seus orçamentos e dê baixa no estoque de insumos ao iniciar a produção.</p>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1">
+                            <button @click="quoteStatusFilter = 'Todos'" :class="quoteStatusFilter === 'Todos' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700'" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+                                Todos ({{ savedQuotes.length }})
+                            </button>
+                            <button @click="quoteStatusFilter = 'Pendente'" :class="quoteStatusFilter === 'Pendente' ? 'bg-amber-500 text-white font-black' : 'btn-3d-glass text-amber-700'" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+                                ⏳ Pendentes
+                            </button>
+                            <button @click="quoteStatusFilter = 'Em Produção'" :class="quoteStatusFilter === 'Em Produção' ? 'bg-indigo-600 text-white font-black' : 'btn-3d-glass text-indigo-700'" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+                                ✂️ Em Produção
+                            </button>
+                            <button @click="quoteStatusFilter = 'Pronto'" :class="quoteStatusFilter === 'Pronto' ? 'bg-emerald-600 text-white font-black' : 'btn-3d-glass text-emerald-700'" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+                                🎉 Prontos
+                            </button>
+                            <button @click="quoteStatusFilter = 'Entregue'" :class="quoteStatusFilter === 'Entregue' ? 'bg-slate-700 text-white font-black' : 'btn-3d-glass text-slate-700'" class="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap">
+                                ✅ Entregues
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="filteredQuotes.length > 0" class="space-y-3">
+                        <div v-for="q in filteredQuotes" :key="q.id" class="glass-3d p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 border border-white/90 hover:shadow-md transition">
+                            <div class="space-y-1 w-full md:w-auto">
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-extrabold text-sm text-slate-800">{{ q.clienteNome || 'Cliente não informado' }}</h3>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 text-pink-700">{{ q.produtoNome }}</span>
+                                    <span :class="getStatusBadgeClass(q.status)" class="text-[10px] font-black px-2 py-0.5 rounded-full">
+                                        {{ q.status || 'Pendente' }}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-500">Data: {{ q.data }} • Qtd: {{ q.quantidade }} unid. • Tel: {{ q.clienteTelefone || 'Não informado' }}</p>
+                            </div>
+
+                            <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+                                <div class="text-right">
+                                    <span class="text-xs font-bold text-slate-400 block uppercase">Total</span>
+                                    <span class="text-base font-black text-pink-600">R$ {{ formatMoney(q.valorTotal) }}</span>
+                                </div>
+
+                                <select :value="q.status || 'Pendente'" @change="updateQuoteStatus(q, $event.target.value)" class="px-2.5 py-1.5 rounded-xl glass-3d text-xs font-extrabold text-slate-700 focus:outline-none">
+                                    <option value="Pendente">⏳ Pendente</option>
+                                    <option value="Em Produção">✂️ Em Produção (Dar Baixa Estoque)</option>
+                                    <option value="Pronto">🎉 Pronto / Embalado</option>
+                                    <option value="Entregue">✅ Entregue / Concluído</option>
+                                    <option value="Cancelado">❌ Cancelado</option>
+                                </select>
+
+                                <div class="flex gap-1.5">
+                                    <button @click="addQuoteToCash(q)" class="p-2.5 rounded-xl bg-pink-100 text-pink-700 font-bold text-xs hover:bg-pink-200" title="Lançar no Livro Caixa">
+                                        <i class="fa-solid fa-file-circle-plus"></i>
+                                    </button>
+                                    <button @click="openReceiptModal(q)" class="p-2.5 rounded-xl glass-3d text-slate-700 hover:text-pink-600 font-bold text-xs" title="Imprimir Recibo">
+                                        <i class="fa-solid fa-print"></i>
+                                    </button>
+                                    <button @click="sendWhatsAppQuote(q)" class="p-2.5 rounded-xl bg-emerald-500 text-white font-bold text-xs hover:bg-emerald-600 shadow-md" title="Reenviar pelo WhatsApp">
+                                        <i class="fa-brands fa-whatsapp"></i>
+                                    </button>
+                                    <button @click="deleteQuote(q.id)" class="p-2.5 rounded-xl glass-3d text-rose-500 hover:bg-rose-50 font-bold text-xs" title="Excluir">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else class="glass-3d rounded-3xl p-8 text-center text-xs text-slate-400">
+                        Nenhum pedido ou orçamento encontrado nesta categoria.
+                    </div>
+                </div>
+
+                <div v-if="activeTab === 'livroCaixa'" class="space-y-6">
+                    <div class="glass-3d p-5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div>
+                            <h2 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-book-bookmark text-pink-500"></i> Livro Caixa & Contabilidade do Ateliê
+                            </h2>
+                            <p class="text-xs text-slate-500">Acompanhe entradas, saídas e o histórico diário, semanal e mensal de caixa.</p>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button @click="exportCashExcel()" class="p-2.5 rounded-2xl glass-3d text-emerald-700 hover:bg-emerald-50 text-xs font-bold flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-excel text-emerald-600"></i> Baixar Caixa Excel
+                            </button>
+
+                            <button @click="openTransactionModal()" class="btn-3d-hotpink text-white px-5 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-md">
+                                <i class="fa-solid fa-plus-circle"></i> Nova Transação
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2 overflow-x-auto bg-white/40 p-2 rounded-2xl border border-white/60">
+                        <div class="flex items-center gap-1.5">
+                            <button @click="cashPeriodFilter = 'diario'" :class="cashPeriodFilter === 'diario' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700 font-bold'" class="px-4 py-2 rounded-xl text-xs whitespace-nowrap">
+                                📅 Diário (Hoje)
+                            </button>
+                            <button @click="cashPeriodFilter = 'semanal'" :class="cashPeriodFilter === 'semanal' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700 font-bold'" class="px-4 py-2 rounded-xl text-xs whitespace-nowrap">
+                                🗓️ Semanal (7 dias)
+                            </button>
+                            <button @click="cashPeriodFilter = 'mensal'" :class="cashPeriodFilter === 'mensal' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700 font-bold'" class="px-4 py-2 rounded-xl text-xs whitespace-nowrap">
+                                📆 Mensal (Mês Atual)
+                            </button>
+                            <button @click="cashPeriodFilter = 'todos'" :class="cashPeriodFilter === 'todos' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700 font-bold'" class="px-4 py-2 rounded-xl text-xs whitespace-nowrap">
+                                📂 Histórico Geral
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] font-bold text-slate-500 uppercase">Filtrar Tipo:</span>
+                            <select v-model="cashTypeFilter" class="px-3 py-1.5 rounded-xl glass-3d text-xs font-bold text-slate-800">
+                                <option value="Todos">Todas Transações</option>
+                                <option value="Entrada">🟢 Apenas Entradas (+)</option>
+                                <option value="Saida">🔴 Apenas Saídas (-)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="glass-3d p-4 rounded-3xl space-y-1 border-l-4 border-l-emerald-500">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Entradas (+)</span>
+                            <p class="text-xl font-black text-emerald-600">R$ {{ formatMoney(cashSummaryPeriod.totalEntradas) }}</p>
+                            <p class="text-[10px] text-slate-400 font-medium">Receitas no período selecionado</p>
+                        </div>
+
+                        <div class="glass-3d p-4 rounded-3xl space-y-1 border-l-4 border-l-rose-500">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Saídas (-)</span>
+                            <p class="text-xl font-black text-rose-600">R$ {{ formatMoney(cashSummaryPeriod.totalSaidas) }}</p>
+                            <p class="text-[10px] text-slate-400 font-medium">Despesas & compras no período</p>
+                        </div>
+
+                        <div class="glass-3d p-4 rounded-3xl space-y-1 border-l-4 border-l-pink-500">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Saldo Líquido</span>
+                            <p :class="cashSummaryPeriod.saldo >= 0 ? 'text-pink-600' : 'text-rose-600'" class="text-xl font-black">
+                                R$ {{ formatMoney(cashSummaryPeriod.saldo) }}
+                            </p>
+                            <p class="text-[10px] text-slate-400 font-medium">Balanço final do caixa</p>
+                        </div>
+
+                        <div class="glass-3d p-4 rounded-3xl space-y-1 border-l-4 border-l-indigo-500">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Margem Operacional</span>
+                            <p class="text-xl font-black text-indigo-600">{{ cashSummaryPeriod.margem.toFixed(1) }}%</p>
+                            <p class="text-[10px] text-slate-400 font-medium">Aproveitamento sobre o faturamento</p>
+                        </div>
+                    </div>
+
+                    <div class="glass-3d p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div class="relative flex-1 w-full">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-pink-400 text-xs"></i>
+                            <input type="text" v-model="cashSearch" placeholder="Buscar por descrição ou cliente..." class="w-full pl-9 pr-4 py-2 rounded-xl glass-3d text-xs font-semibold focus:outline-none">
+                        </div>
+
+                        <select v-model="cashCategoryFilter" class="w-full sm:w-auto px-3 py-2 rounded-xl glass-3d text-xs font-bold text-slate-700">
+                            <option value="Todas">Todas as Categorias</option>
+                            <option value="Venda de Produtos">Venda de Produtos</option>
+                            <option value="Compra de Insumos">Compra de Insumos</option>
+                            <option value="Custos Fixos / Atelier">Custos Fixos / Atelier</option>
+                            <option value="Retirada Pró-Labore">Retirada Pró-Labore</option>
+                            <option value="Taxas, Impostos & Frete">Taxas, Impostos & Frete</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+
+                    <div v-if="filteredCashTransactions.length > 0" class="space-y-2">
+                        <div v-for="t in filteredCashTransactions" :key="t.id" class="glass-3d p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border border-white/90 hover:shadow-md transition">
+                            <div class="flex items-center gap-3 w-full sm:w-auto">
+                                <div :class="t.tipo === 'Entrada' ? 'bg-emerald-100 text-emerald-600 border-emerald-200' : 'bg-rose-100 text-rose-600 border-rose-200'" class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg border shadow-sm flex-shrink-0">
+                                    <i :class="t.tipo === 'Entrada' ? 'fa-solid fa-arrow-down-left' : 'fa-solid fa-arrow-up-right'"></i>
+                                </div>
+
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-extrabold text-xs text-slate-800">{{ t.descricao }}</h4>
+                                        <span :class="getCashCategoryBadgeClass(t.categoria)" class="text-[9px] font-black px-2 py-0.2 rounded-full">
+                                            {{ t.categoria }}
+                                        </span>
+                                    </div>
+                                    <p class="text-[10px] font-semibold text-slate-400 mt-0.5">
+                                        {{ formatDateDisplay(t.data) }} • Forma: <strong class="text-slate-600">{{ t.formaPagamento || 'PIX' }}</strong>
+                                        <span v-if="t.status === 'Pendente'" class="ml-1 text-amber-600 font-bold bg-amber-50 px-1.5 py-0.2 rounded">(Pendente)</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-white/60">
+                                <span :class="t.tipo === 'Entrada' ? 'text-emerald-600' : 'text-rose-600'" class="font-black text-sm">
+                                    {{ t.tipo === 'Entrada' ? '+' : '-' }} R$ {{ formatMoney(t.valor) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: ESTOQUE DE INSUMOS & COMPONENTES (UNIFIED) -->
+                <div v-if="activeTab === 'insumos'" class="space-y-6">
+                    <!-- Sub-Tab Switcher for Estoque & Materiais -->
+                    <div class="glass-3d p-4 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-3 border border-white/90">
+                        <div>
+                            <h2 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-cubes text-pink-500"></i> Gestão de Estoque & Materiais
+                            </h2>
+                            <p class="text-xs text-slate-500">Cadastre suas matérias-primas (Insumos) e peças pré-fabricadas (Componentes).</p>
+                        </div>
+
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            <button @click="estoqueSubTab = 'insumos'" :class="estoqueSubTab === 'insumos' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700 font-bold'" class="px-3.5 py-2 rounded-2xl text-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-cubes"></i> Insumos ({{ insumos.length }})
+                            </button>
+                            <button @click="estoqueSubTab = 'componentes'" :class="estoqueSubTab === 'componentes' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700 font-bold'" class="px-3.5 py-2 rounded-2xl text-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-puzzle-piece"></i> Componentes ({{ componentes.length }})
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Actions Bar per Sub-Tab -->
+                    <div class="flex items-center justify-between gap-2">
+                        <div v-if="estoqueSubTab === 'insumos'" class="flex items-center justify-between w-full">
+                            <span class="text-xs font-bold text-slate-600">
+                                <strong>INSUMOS:</strong> Materiais brutos (ex: Cola quente, Fita de cetim, Papel fotográfico, Balas)
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <button @click="openExcelModal('insumos')" title="Importar/Exportar Insumos no Excel" class="p-2.5 rounded-2xl glass-3d text-emerald-700 hover:bg-emerald-50 text-xs font-bold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-file-excel text-emerald-600"></i> Excel Insumos
+                                </button>
+                                <button @click="openInsumoModal()" class="btn-3d-hotpink text-white px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-md">
+                                    <i class="fa-solid fa-plus-circle"></i> Novo Insumo
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-else class="flex items-center justify-between w-full">
+                            <span class="text-xs font-bold text-slate-600">
+                                <strong>COMPONENTES:</strong> Peças montadas compostas por Insumos + Mão de Obra (ex: Flor de Cetim, Bala Personalizada)
+                            </span>
+                            <button @click="openComponenteModal()" class="btn-3d-hotpink text-white px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-md">
+                                <i class="fa-solid fa-plus-circle"></i> Novo Componente
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sub-View 1: Insumos -->
+                    <div v-if="estoqueSubTab === 'insumos'">
+                        <div v-if="insumos.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div v-for="ins in insumos" :key="ins.id" class="glass-3d p-4 rounded-2xl space-y-3 relative border border-white/90">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <h3 class="font-extrabold text-sm text-slate-800">{{ ins.nome }}</h3>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">{{ ins.categoria || 'Geral' }}</span>
+                                    </div>
+                                    <span class="text-xs font-extrabold text-pink-600 bg-pink-100 px-2.5 py-1 rounded-xl">
+                                        R$ {{ formatMoney(ins.custoUnitario) }} / {{ ins.unidade }}
+                                    </span>
+                                </div>
+
+                                <div class="bg-white/50 p-2.5 rounded-xl grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span class="text-[9px] font-bold uppercase text-slate-400 block">Preço do Pacote</span>
+                                        <span class="font-bold text-slate-700">R$ {{ formatMoney(ins.precoPacote) }}</span>
+                                        <span class="text-[10px] text-slate-400 block">({{ ins.quantidadePacote }} {{ ins.unidade }})</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-[9px] font-bold uppercase text-slate-400 block">Estoque Atual</span>
+                                        <span :class="(ins.estoqueAtual <= ins.estoqueMinimo) ? 'text-amber-600 font-black' : 'text-emerald-700 font-bold'">
+                                            {{ ins.estoqueAtual || 0 }} {{ ins.unidade }}
+                                        </span>
+                                        <span class="text-[10px] text-slate-400 block">(Mín: {{ ins.estoqueMinimo || 0 }})</span>
+                                    </div>
+                                </div>
+
+                                <div v-if="ins.estoqueAtual <= ins.estoqueMinimo" class="bg-amber-100 text-amber-800 p-2 rounded-xl text-[10px] font-bold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                                    <span>Estoque baixo! Repor este material.</span>
+                                </div>
+
+                                <div class="flex items-center justify-end gap-2 pt-2 border-t border-white/80">
+                                    <button @click="openInsumoModal(ins)" class="text-xs font-bold text-amber-600 hover:text-amber-700 px-3 py-1.5 rounded-xl hover:bg-white/50">
+                                        <i class="fa-solid fa-pen-to-square"></i> Editar
+                                    </button>
+                                    <button @click="deleteInsumo(ins.id)" class="text-xs font-bold text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-xl hover:bg-white/50">
+                                        <i class="fa-solid fa-trash-can"></i> Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else class="glass-3d rounded-3xl p-8 text-center text-xs text-slate-400">
+                            Nenhum insumo cadastrado no estoque.
+                        </div>
+                    </div>
+
+                    <!-- Sub-View 2: Componentes -->
+                    <div v-else>
+                        <div v-if="componentes.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div v-for="comp in componentes" :key="comp.id" class="glass-3d p-5 rounded-3xl space-y-3 relative border border-white/90">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <h3 class="font-extrabold text-sm text-slate-800">{{ comp.nome }}</h3>
+                                        <p class="text-[10px] text-pink-600 font-bold">Tempo montagem: {{ comp.tempoMinutos }} min</p>
+                                    </div>
+                                    <span class="text-base font-black text-pink-600 bg-pink-100 px-2.5 py-1 rounded-xl">
+                                        R$ {{ formatMoney(getComponenteCost(comp)) }}
+                                    </span>
+                                </div>
+
+                                <div class="bg-white/50 p-2.5 rounded-2xl text-[11px] space-y-1">
+                                    <p class="font-bold text-slate-500 uppercase text-[9px]">Insumos Utilizados:</p>
+                                    <div v-for="ing in comp.insumos" :key="ing.insumoId" class="flex justify-between text-slate-600">
+                                        <span>• {{ getInsumoName(ing.insumoId) }} (x{{ ing.quantidade }})</span>
+                                        <span class="font-bold">R$ {{ formatMoney(getComponenteInsumoCost(ing)) }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-end gap-2 pt-2 border-t border-white/80">
+                                    <button @click="openComponenteModal(comp)" class="text-xs font-bold text-amber-600 hover:text-amber-700 px-3 py-1.5 rounded-xl hover:bg-white/50">
+                                        <i class="fa-solid fa-pen-to-square"></i> Editar
+                                    </button>
+                                    <button @click="deleteComponente(comp.id)" class="text-xs font-bold text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-xl hover:bg-white/50">
+                                        <i class="fa-solid fa-trash-can"></i> Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else class="glass-3d rounded-3xl p-8 text-center text-xs text-slate-400">
+                            Nenhum componente cadastrado.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 6: CONFIGURAÇÕES COMPLETAS DO ATELIÊ -->
+                <div v-if="activeTab === 'config'" class="max-w-4xl mx-auto space-y-6">
+                    <!-- Config Sub-tabs Switcher -->
+                    <div class="glass-3d p-4 rounded-3xl flex items-center justify-between gap-2 overflow-x-auto border border-white/90">
+                        <div class="flex items-center gap-2 min-w-max">
+                            <button @click="configSubTab = 'maoDeObra'" :class="configSubTab === 'maoDeObra' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700 font-bold'" class="px-4 py-2 rounded-2xl text-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock"></i> Mão de Obra & Horas
+                            </button>
+                            <button @click="configSubTab = 'pix'" :class="configSubTab === 'pix' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700 font-bold'" class="px-4 py-2 rounded-2xl text-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-qrcode"></i> Dados do PIX
+                            </button>
+                            <button @click="configSubTab = 'cnpjs'" :class="configSubTab === 'cnpjs' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700 font-bold'" class="px-4 py-2 rounded-2xl text-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-id-card"></i> Gestão de CNPJs
+                            </button>
+                            <button @click="configSubTab = 'dados'" :class="configSubTab === 'dados' ? 'btn-3d-hotpink text-white font-black' : 'btn-3d-glass text-slate-700 font-bold'" class="px-4 py-2 rounded-2xl text-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-database"></i> Backup & Planilhas
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Config Sub-View 1: Mão de Obra -->
+                    <div v-if="configSubTab === 'maoDeObra'" class="glass-3d p-6 rounded-3xl space-y-6 border border-white/90">
+                        <div class="border-b border-white/80 pb-3 flex items-center justify-between">
+                            <div>
+                                <h2 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-clock text-pink-500"></i> Mão de Obra & Custos Fixos do Ateliê
+                                </h2>
+                                <p class="text-xs text-slate-500">Configure sua pretensão salarial e despesas mensais para calcular o custo exato da sua hora de trabalho.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Salário Mensal Desejado (R$)</label>
+                                <input type="number" step="100" v-model.number="settings.salarioPretendido" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-extrabold text-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                <p class="text-[10px] text-slate-400 mt-1">Sua remuneração líquida por mês.</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Custos Fixos Mensais (R$)</label>
+                                <input type="number" step="50" v-model.number="settings.custosFixosMensais" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-extrabold text-rose-600 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                <p class="text-[10px] text-slate-400 mt-1">Luz, internet, MEI, aluguel, ferramentas.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-white/60">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Dias Trabalhados por Mês</label>
+                                <input type="number" min="1" max="31" v-model.number="settings.diasTrabalhadosMes" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                <p class="text-[10px] text-slate-400 mt-1">Média padrão: 22 dias úteis.</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Horas Trabalhadas por Dia</label>
+                                <input type="number" min="1" max="24" v-model.number="settings.horasTrabalhadasDia" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-bold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                                <p class="text-[10px] text-slate-400 mt-1">Jornada diária no ateliê.</p>
+                            </div>
+                        </div>
+
+                        <!-- Computed Rate Summary Card -->
+                        <div class="bg-gradient-to-r from-pink-500 via-pink-600 to-rose-500 rounded-2xl p-5 text-white grid grid-cols-1 sm:grid-cols-3 gap-4 shadow-xl">
+                            <div class="text-center sm:text-left">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider block text-pink-100">Carga Horária</span>
+                                <span class="text-xl font-black">{{ totalHorasMes }}h / mês</span>
+                            </div>
+                            <div class="text-center sm:text-left border-t sm:border-t-0 sm:border-l border-pink-300/40 pt-2 sm:pt-0 sm:pl-4">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider block text-pink-100">Valor da Sua Hora</span>
+                                <span class="text-xl font-black">R$ {{ formatMoney(valorHoraTrabalho) }}/h</span>
+                            </div>
+                            <div class="text-center sm:text-left border-t sm:border-t-0 sm:border-l border-pink-300/40 pt-2 sm:pt-0 sm:pl-4">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider block text-pink-100">Valor por Minuto</span>
+                                <span class="text-xl font-black">R$ {{ formatMoney(valorMinutoTrabalho) }}/min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Config Sub-View 2: Configuração PIX -->
+                    <div v-else-if="configSubTab === 'pix'" class="glass-3d p-6 rounded-3xl space-y-5 border border-white/90">
+                        <div class="border-b border-white/80 pb-3">
+                            <h2 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-qrcode text-pink-500"></i> Configuração dos Dados PIX
+                            </h2>
+                            <p class="text-xs text-slate-500">Cadastre suas informações bancárias para gerar mensagens automáticas de orçamento no WhatsApp.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Tipo de Chave PIX</label>
+                            <select v-model="settings.pixTipo" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-bold text-slate-800 focus:outline-none">
+                                <option value="CNPJ">CNPJ</option>
+                                <option value="CPF">CPF</option>
+                                <option value="Celular">Celular</option>
+                                <option value="E-mail">E-mail</option>
+                                <option value="Chave Aleatória">Chave Aleatória</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Chave PIX</label>
+                            <input type="text" v-model="settings.pixChave" placeholder="Cole sua chave PIX aqui" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-extrabold text-pink-600 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Beneficiário / Titular da Conta</label>
+                            <input type="text" v-model="settings.pixNomeBeneficiario" placeholder="Ex: Julia Aleixo Personalizados" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold focus:outline-none">
+                        </div>
+
+                        <div class="bg-pink-50/80 p-4 rounded-2xl border border-pink-200 text-xs space-y-1">
+                            <p class="font-extrabold text-pink-800 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-check text-pink-600"></i> Prévia da mensagem enviada ao cliente:
+                            </p>
+                            <p class="text-slate-600 italic">"💳 DADOS PARA PAGAMENTO PIX:\n• Chave ({{ settings.pixTipo }}): {{ settings.pixChave }}\n• Favorecido: {{ settings.pixNomeBeneficiario }}"</p>
+                        </div>
+                    </div>
+
+                    <!-- Config Sub-View 3: Gestão de CNPJs -->
+                    <div v-else-if="configSubTab === 'cnpjs'" class="glass-3d p-6 rounded-3xl space-y-5 border border-white/90">
+                        <div class="border-b border-white/80 pb-3">
+                            <h2 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-users-gear text-pink-500"></i> Controle de CNPJs Autorizados
+                            </h2>
+                            <p class="text-xs text-slate-500">Gerencie a lista de empresas ou colaboradores autorizados a acessar o sistema.</p>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="block text-xs font-bold text-slate-700">Adicionar Novo CNPJ à Lista de Permissões</label>
+                            <div class="flex gap-2">
+                                <input type="text" v-model="newCnpjInput" placeholder="00.000.000/0000-00" maxlength="18" class="flex-1 px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-bold focus:outline-none">
+                                <button @click="addAuthorizedCnpj" class="btn-3d-hotpink text-white px-5 py-2.5 rounded-2xl text-xs font-bold shadow-md">Adicionar</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 pt-3 border-t border-white/80">
+                            <p class="text-[10px] font-extrabold uppercase text-slate-400">Lista de CNPJs Cadastrados ({{ authorizedCnpjs.length }}):</p>
+                            <div v-for="cnpj in authorizedCnpjs" :key="cnpj" class="flex items-center justify-between p-3 rounded-2xl bg-white/60 border border-white text-xs font-bold">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-id-card text-pink-500"></i>
+                                    <span>{{ formatCnpjDisplay(cnpj) }}</span>
+                                    <span v-if="cleanCnpj(cnpj) === majorCnpj" class="bg-pink-600 text-white text-[9px] px-2 py-0.5 rounded-full font-black">MAJOR ADMIN</span>
+                                </div>
+                                <button v-if="cleanCnpj(cnpj) !== majorCnpj" @click="removeAuthorizedCnpj(cnpj)" class="text-rose-500 hover:text-rose-700 p-1">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Config Sub-View 4: Backup & Planilhas -->
+                    <div v-else-if="configSubTab === 'dados'" class="glass-3d p-6 rounded-3xl space-y-5 border border-white/90">
+                        <div class="border-b border-white/80 pb-3">
+                            <h2 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-database text-pink-500"></i> Gestão de Dados, Planilhas & Backup
+                            </h2>
+                            <p class="text-xs text-slate-500">Exporte ou importe planilhas Excel (.xlsx) e faça cópia de segurança completa do seu sistema.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-200 space-y-2">
+                                <h4 class="font-extrabold text-xs text-emerald-900 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-file-excel text-emerald-600"></i> Gerenciador de Planilhas Excel
+                                </h4>
+                                <p class="text-[11px] text-emerald-800/80">Importe produtos e insumos diretamente de planilhas Excel ou faça o download dos seus cadastros.</p>
+                                <button @click="openExcelModal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-file-arrow-up"></i> Abrir Painel Excel
+                                </button>
+                            </div>
+
+                            <div class="bg-pink-50/80 p-4 rounded-2xl border border-pink-200 space-y-2">
+                                <h4 class="font-extrabold text-xs text-pink-900 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-download text-pink-600"></i> Backup Geral do Sistema (JSON)
+                                </h4>
+                                <p class="text-[11px] text-pink-800/80">Faça o download de um arquivo com todos os seus produtos, orçamentos, insumos e livro caixa.</p>
+                                <button @click="exportDataJSON()" class="w-full btn-3d-hotpink text-white text-xs font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-download"></i> Baixar Backup em JSON
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                </main>
+            </div>
+        </template>
+
+        <!-- MODAL 1: CADASTRAR/EDITAR TRANSAÇÃO NO LIVRO CAIXA -->
+        <div v-if="showTransactionModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md no-print">
+            <div class="glass-3d rounded-3xl p-6 max-w-md w-full space-y-4 border border-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-white/80 pb-3">
+                    <h3 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-book-bookmark text-pink-500"></i>
+                        {{ transactionForm.id ? 'Editar Transação' : 'Nova Transação no Caixa' }}
+                    </h3>
+                    <button @click="showTransactionModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tipo de Transação</label>
+                        <select v-model="transactionForm.tipo" class="w-full px-3 py-2.5 rounded-2xl glass-3d text-xs font-black" :class="transactionForm.tipo === 'Entrada' ? 'text-emerald-700' : 'text-rose-700'">
+                            <option value="Entrada">🟢 Entrada / Receita (+)</option>
+                            <option value="Saida">🔴 Saída / Despesa (-)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Data</label>
+                        <input type="date" v-model="transactionForm.data" class="w-full px-3 py-2.5 rounded-2xl glass-3d text-xs font-bold text-slate-800">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Descrição / Histórico</label>
+                    <input type="text" v-model="transactionForm.descricao" placeholder="Ex: Venda Topo de Bolo 3D ou Compra de Papel" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" min="0" v-model.number="transactionForm.valor" placeholder="0,00" class="w-full px-3 py-2.5 rounded-2xl glass-3d text-xs font-extrabold text-pink-600">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Categoria</label>
+                        <select v-model="transactionForm.categoria" class="w-full px-3 py-2.5 rounded-2xl glass-3d text-xs font-semibold">
+                            <template v-if="transactionForm.tipo === 'Entrada'">
+                                <option value="Venda de Produtos">Venda de Produtos</option>
+                                <option value="Serviços de Design">Serviços de Design</option>
+                                <option value="Outros">Outros</option>
+                            </template>
+                            <template v-else>
+                                <option value="Compra de Insumos">Compra de Insumos</option>
+                                <option value="Custos Fixos / Atelier">Custos Fixos / Atelier</option>
+                                <option value="Retirada Pró-Labore">Retirada Pró-Labore</option>
+                                <option value="Taxas, Impostos & Frete">Taxas, Impostos & Frete</option>
+                                <option value="Outros">Outros</option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Forma de Pagamento</label>
+                        <select v-model="transactionForm.formaPagamento" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-semibold">
+                            <option value="PIX">PIX</option>
+                            <option value="Cartão de Crédito">Cartão de Crédito</option>
+                            <option value="Cartão de Débito">Cartão de Débito</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                            <option value="Transferência">Transferência</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Status</label>
+                        <select v-model="transactionForm.status" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-semibold">
+                            <option value="Confirmado">Confirmado / Pago</option>
+                            <option value="Pendente">Pendente / Agendado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end gap-2 border-t border-white/80">
+                    <button @click="showTransactionModal = false" class="px-4 py-2.5 rounded-xl glass-3d text-xs font-bold text-slate-600">Cancelar</button>
+                    <button @click="saveTransaction" class="btn-3d-hotpink text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-md">Salvar Transação</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 2: CADASTRAR/EDITAR PRODUTO NO CATÁLOGO -->
+        <div v-if="showProductModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md no-print">
+            <div class="glass-3d rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-4 border border-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-white/80 pb-3">
+                    <h3 class="font-extrabold text-base text-slate-800">
+                        {{ isEditingProduct ? 'Editar Produto do Catálogo' : 'Novo Produto no Catálogo' }}
+                    </h3>
+                    <button @click="showProductModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Produto</label>
+                        <input type="text" v-model="productForm.nome" placeholder="Ex: Topo de Bolo Glass 3D" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Ícone / Emoji</label>
+                        <input type="text" v-model="productForm.imagemEmoji" placeholder="🌸" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-bold text-center">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Categoria</label>
+                        <input type="text" v-model="productForm.categoria" placeholder="Ex: Papelaria Luxo" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tempo de Produção (Minutos)</label>
+                        <input type="number" min="0" v-model.number="productForm.tempoProducaoMinutos" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-bold">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Descrição</label>
+                    <textarea v-model="productForm.descricao" rows="2" placeholder="Detalhes do produto, acabamentos, papéis utilizados..." class="w-full px-3.5 py-2 rounded-2xl glass-3d text-xs font-medium"></textarea>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-white/80">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-extrabold text-slate-800">Matérias-Primas (Insumos)</span>
+                        <button @click="addProductInsumoRow" class="text-[11px] font-bold text-pink-600 hover:underline">+ Insumo</button>
+                    </div>
+                    <div v-for="(item, idx) in productForm.insumos" :key="idx" class="flex items-center gap-2">
+                        <select v-model="item.insumoId" class="flex-1 px-3 py-1.5 rounded-xl glass-3d text-xs font-semibold">
+                            <option v-for="ins in insumos" :key="ins.id" :value="ins.id">{{ ins.nome }}</option>
+                        </select>
+                        <input type="number" step="0.01" min="0" v-model.number="item.quantidade" placeholder="Qtd" class="w-20 px-2 py-1.5 rounded-xl glass-3d text-xs font-bold text-center">
+                        <button @click="productForm.insumos.splice(idx, 1)" class="text-rose-400 hover:text-rose-600 p-1"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-white/80">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-extrabold text-slate-800">Componentes Pré-Fabricados</span>
+                        <button @click="addProductComponenteRow" class="text-[11px] font-bold text-pink-600 hover:underline">+ Componente</button>
+                    </div>
+                    <div v-for="(item, idx) in productForm.componentes" :key="idx" class="flex items-center gap-2">
+                        <select v-model="item.componenteId" class="flex-1 px-3 py-1.5 rounded-xl glass-3d text-xs font-semibold">
+                            <option v-for="comp in componentes" :key="comp.id" :value="comp.id">{{ comp.nome }}</option>
+                        </select>
+                        <input type="number" step="1" min="1" v-model.number="item.quantidade" placeholder="Qtd" class="w-20 px-2 py-1.5 rounded-xl glass-3d text-xs font-bold text-center">
+                        <button @click="productForm.componentes.splice(idx, 1)" class="text-rose-400 hover:text-rose-600 p-1"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Margem Lucro (%)</label>
+                        <input type="number" v-model.number="productForm.margemLucro" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-pink-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Taxas/Impostos (%)</label>
+                        <input type="number" v-model.number="productForm.taxas" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-rose-600">
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-2 border-t border-white/80">
+                    <button @click="showProductModal = false" class="px-4 py-2.5 rounded-xl glass-3d text-xs font-bold text-slate-600">Cancelar</button>
+                    <button @click="saveProduct" class="btn-3d-hotpink text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-md">Salvar Produto</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 3: ORÇAMENTO RÁPIDO PARA WHATSAPP COM PIX -->
+        <div v-if="showQuickQuoteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md no-print">
+            <div class="glass-3d rounded-3xl p-6 max-w-lg w-full space-y-4 border border-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-white/80 pb-3">
+                    <h3 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                        <i class="fa-brands fa-whatsapp text-emerald-500 text-lg"></i> Gerar Orçamento com PIX
+                    </h3>
+                    <button @click="showQuickQuoteModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <div v-if="quickQuoteForm.produto" class="bg-pink-50/70 p-3 rounded-2xl flex items-center gap-3 border border-pink-100">
+                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm">
+                        {{ quickQuoteForm.produto.imagemEmoji || '🌸' }}
+                    </div>
+                    <div>
+                        <h4 class="font-extrabold text-xs text-slate-800">{{ quickQuoteForm.produto.nome }}</h4>
+                        <p class="text-[10px] text-pink-600 font-bold">Preço Unitário Base: R$ {{ formatMoney(getProductPrice(quickQuoteForm.produto)) }}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Cliente</label>
+                        <input type="text" v-model="quickQuoteForm.clienteNome" placeholder="Ex: Maria Silva" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp (DDD + Número)</label>
+                        <input type="text" v-model="quickQuoteForm.clienteTelefone" placeholder="Ex: 11999998888" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Quantidade</label>
+                        <input type="number" min="1" v-model.number="quickQuoteForm.quantidade" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-center">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Desconto (R$)</label>
+                        <input type="number" min="0" v-model.number="quickQuoteForm.desconto" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-rose-600 text-center">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Frete/Entrega (R$)</label>
+                        <input type="number" min="0" v-model.number="quickQuoteForm.frete" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-emerald-600 text-center">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Observações / Detalhes Personalização</label>
+                    <textarea v-model="quickQuoteForm.observacoes" rows="2" placeholder="Ex: Tema Jardim Encantado, nome e idade da criança..." class="w-full px-3.5 py-2 rounded-2xl glass-3d text-xs font-medium"></textarea>
+                </div>
+
+                <div class="bg-gradient-to-r from-pink-500 to-rose-500 text-white p-4 rounded-2xl flex items-center justify-between shadow-lg">
+                    <span class="text-xs font-bold uppercase tracking-wider">Valor Total do Orçamento</span>
+                    <span class="text-xl font-black">R$ {{ formatMoney(quickQuoteTotal) }}</span>
+                </div>
+
+                <div class="pt-3 flex items-center gap-2 justify-end border-t border-white/80">
+                    <button @click="showQuickQuoteModal = false" class="px-4 py-2.5 rounded-xl glass-3d text-xs font-bold text-slate-600">Cancelar</button>
+                    <button @click="sendQuickQuoteWhatsApp" class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-md">
+                        <i class="fa-brands fa-whatsapp text-sm"></i> Enviar pelo WhatsApp
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 4: COMPONENTE EDIT -->
+        <div v-if="showComponenteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md no-print">
+            <div class="glass-3d rounded-3xl p-6 max-w-lg w-full space-y-4 border border-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-white/80 pb-3">
+                    <h3 class="font-extrabold text-base text-slate-800">Cadastrar Componente</h3>
+                    <button @click="showComponenteModal = false" class="text-slate-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Componente</label>
+                    <input type="text" v-model="componenteForm.nome" placeholder="Ex: Flor de Cetim" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Tempo de Montagem (Minutos)</label>
+                    <input type="number" v-model.number="componenteForm.tempoMinutos" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold">
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-white/80">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-extrabold text-slate-800">Insumos Necessários</span>
+                        <button @click="addComponenteInsumoRow" class="text-[11px] font-bold text-pink-600 hover:underline">+ Insumo</button>
+                    </div>
+                    <div v-for="(item, idx) in componenteForm.insumos" :key="idx" class="flex items-center gap-2">
+                        <select v-model="item.insumoId" class="flex-1 px-3 py-1.5 rounded-xl glass-3d text-xs font-semibold">
+                            <option v-for="ins in insumos" :key="ins.id" :value="ins.id">{{ ins.nome }}</option>
+                        </select>
+                        <input type="number" step="0.01" min="0" v-model.number="item.quantidade" placeholder="Qtd" class="w-20 px-2 py-1.5 rounded-xl glass-3d text-xs font-bold text-center">
+                        <button @click="componenteForm.insumos.splice(idx, 1)" class="text-rose-400 p-1"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-2">
+                    <button @click="showComponenteModal = false" class="px-4 py-2 rounded-xl glass-3d text-xs font-bold">Cancelar</button>
+                    <button @click="saveComponente" class="btn-3d-hotpink text-white px-5 py-2 rounded-xl text-xs font-bold">Salvar Componente</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 5: INSUMO EDIT (COM CONTROLE DE ESTOQUE) -->
+        <div v-if="showInsumoModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md no-print">
+            <div class="glass-3d rounded-3xl p-6 max-w-md w-full space-y-4 border border-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-white/80 pb-3">
+                    <h3 class="font-extrabold text-base text-slate-800">Cadastrar / Editar Insumo</h3>
+                    <button @click="showInsumoModal = false" class="text-slate-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nome do Insumo</label>
+                    <input type="text" v-model="insumoForm.nome" placeholder="Ex: Fita de Cetim N9" class="w-full px-3.5 py-2.5 rounded-2xl glass-3d text-xs font-semibold">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Preço Pacote (R$)</label>
+                        <input type="number" step="0.01" v-model.number="insumoForm.precoPacote" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-pink-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Qtd no Pacote</label>
+                        <input type="number" step="0.01" v-model.number="insumoForm.quantidadePacote" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Estoque Atual</label>
+                        <input type="number" step="0.01" v-model.number="insumoForm.estoqueAtual" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-emerald-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Estoque Mínimo Alerta</label>
+                        <input type="number" step="0.01" v-model.number="insumoForm.estoqueMinimo" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-bold text-amber-600">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Unidade</label>
+                        <select v-model="insumoForm.unidade" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-semibold">
+                            <option value="unid">Unidade (unid)</option>
+                            <option value="metro">Metro (m)</option>
+                            <option value="cm">Centímetro (cm)</option>
+                            <option value="folha">Folha</option>
+                            <option value="grama">Grama (g)</option>
+                            <option value="kg">Quilo (kg)</option>
+                            <option value="ml">Mililitro (ml)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Categoria</label>
+                        <input type="text" v-model="insumoForm.categoria" placeholder="Ex: Aviamentos" class="w-full px-3 py-2 rounded-xl glass-3d text-xs font-semibold">
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-2">
+                    <button @click="showInsumoModal = false" class="px-4 py-2 rounded-xl glass-3d text-xs font-bold">Cancelar</button>
+                    <button @click="saveInsumo" class="btn-3d-hotpink text-white px-5 py-2 rounded-xl text-xs font-bold">Salvar Insumo</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 6: VISUALIZAR E IMPRIMIR RECIBO DO CLIENTE -->
+        <div v-if="showReceiptModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md">
+            <div class="glass-3d rounded-3xl p-6 max-w-md w-full space-y-4 border border-white shadow-2xl relative" id="printable-receipt">
+                <div class="text-center space-y-1 border-b border-slate-200 pb-3">
+                    <h2 class="text-lg font-black text-slate-800">by Julia Aleixo</h2>
+                    <p class="text-xs text-pink-600 font-bold">Personalizados & Artigos de Luxo</p>
+                    <p class="text-[10px] text-slate-400">Comprovante de Orçamento / Pedido</p>
+                </div>
+
+                <div v-if="selectedQuoteReceipt" class="space-y-3 text-xs">
+                    <div class="flex justify-between border-b border-slate-100 pb-1">
+                        <span class="font-bold text-slate-500">Cliente:</span>
+                        <span class="font-bold text-slate-800">{{ selectedQuoteReceipt.clienteNome }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-1">
+                        <span class="font-bold text-slate-500">Produto:</span>
+                        <span class="font-bold text-slate-800">{{ selectedQuoteReceipt.produtoNome }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-1">
+                        <span class="font-bold text-slate-500">Quantidade:</span>
+                        <span class="font-bold text-slate-800">{{ selectedQuoteReceipt.quantidade }} unid.</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-1">
+                        <span class="font-bold text-slate-500">Data do Pedido:</span>
+                        <span class="font-bold text-slate-800">{{ selectedQuoteReceipt.data }}</span>
+                    </div>
+
+                    <div class="bg-pink-50 p-3 rounded-2xl text-center border border-pink-100">
+                        <span class="text-[10px] font-bold uppercase text-pink-600 block">Valor Total</span>
+                        <span class="text-xl font-black text-slate-800">R$ {{ formatMoney(selectedQuoteReceipt.valorTotal) }}</span>
+                    </div>
+
+                    <div v-if="settings.pixChave" class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1">
+                        <p class="font-bold text-slate-700 text-[11px] flex items-center gap-1">
+                            <i class="fa-solid fa-qrcode text-pink-500"></i> Dados para Pagamento PIX:
+                        </p>
+                        <p class="text-[10px] font-semibold text-slate-600">Chave ({{ settings.pixTipo }}): {{ settings.pixChave }}</p>
+                        <p v-if="settings.pixNomeBeneficiario" class="text-[10px] font-semibold text-slate-600">Favorecido: {{ settings.pixNomeBeneficiario }}</p>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-between gap-2 border-t border-slate-200 no-print">
+                    <button @click="showReceiptModal = false" class="px-4 py-2 rounded-xl glass-3d text-xs font-bold">Fechar</button>
+                    <button @click="printReceipt" class="btn-3d-hotpink text-white px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md">
+                        <i class="fa-solid fa-print"></i> Imprimir Recibo
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 7: GERENCIAR CNPJS AUTORIZADOS -->
+        <div v-if="showManageCnpjsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md no-print">
+            <div class="glass-3d rounded-3xl p-6 max-w-md w-full space-y-4 border border-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-white/80 pb-3">
+                    <h3 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear text-emerald-600"></i> CNPJs Autorizados
+                    </h3>
+                    <button @click="showManageCnpjsModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="block text-xs font-bold text-slate-700">Adicionar Novo CNPJ à Lista de Permissões</label>
+                    <div class="flex gap-2">
+                        <input type="text" v-model="newCnpjInput" placeholder="00.000.000/0000-00" maxlength="18" class="flex-1 px-3.5 py-2 rounded-2xl glass-3d text-xs font-bold">
+                        <button @click="addAuthorizedCnpj" class="btn-3d-hotpink text-white px-4 py-2 rounded-2xl text-xs font-bold">Adicionar</button>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-3 border-t border-white/80 max-h-60 overflow-y-auto">
+                    <p class="text-[10px] font-extrabold uppercase text-slate-400">Lista de CNPJs Cadastrados ({{ authorizedCnpjs.length }}):</p>
+                    <div v-for="cnpj in authorizedCnpjs" :key="cnpj" class="flex items-center justify-between p-2.5 rounded-2xl bg-white/60 border border-white text-xs font-bold">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-id-card text-pink-500"></i>
+                            <span>{{ formatCnpjDisplay(cnpj) }}</span>
+                            <span v-if="cleanCnpj(cnpj) === majorCnpj" class="bg-pink-600 text-white text-[9px] px-1.5 py-0.2 rounded-full">MAJOR</span>
+                        </div>
+                        <button v-if="cleanCnpj(cnpj) !== majorCnpj" @click="removeAuthorizedCnpj(cnpj)" class="text-rose-500 hover:text-rose-700 p-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end border-t border-white/80">
+                    <button @click="showManageCnpjsModal = false" class="px-5 py-2 rounded-xl glass-3d text-xs font-bold text-slate-700">Fechar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL 8: GERENCIADOR DE PLANILHAS EXCEL (.XLSX / .CSV) -->
+        <div v-if="showExcelModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md no-print">
+            <div class="glass-3d rounded-3xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-5 border border-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-white/80 pb-3">
+                    <h3 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-file-excel text-emerald-600 text-lg"></i> Planilhas Excel (.xlsx / .csv)
+                    </h3>
+                    <button @click="showExcelModal = false" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 space-y-2">
+                        <h4 class="font-extrabold text-xs text-emerald-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-download text-emerald-600"></i> Exportar para Excel
+                        </h4>
+                        <p class="text-[11px] text-emerald-800/80">Baixe suas tabelas de Insumos e Produtos formatadas em arquivo Excel (.xlsx).</p>
+                        <div class="flex flex-wrap gap-2 pt-1">
+                            <button @click="exportDataExcel('tudo')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition flex items-center gap-1">
+                                <i class="fa-solid fa-file-export"></i> Exportar Tudo (.xlsx)
+                            </button>
+                            <button @click="exportDataExcel('insumos')" class="bg-white text-emerald-800 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-emerald-300 hover:bg-emerald-100 transition">
+                                Insumos
+                            </button>
+                            <button @click="exportDataExcel('produtos')" class="bg-white text-emerald-800 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-emerald-300 hover:bg-emerald-100 transition">
+                                Produtos
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-pink-50/70 p-4 rounded-2xl border border-pink-200 space-y-2">
+                        <h4 class="font-extrabold text-xs text-pink-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-circle-check text-pink-600"></i> Modelo de Planilha
+                        </h4>
+                        <p class="text-[11px] text-pink-800/80">Baixe um modelo para preencher com seus dados e importar de forma simples.</p>
+                        <button @click="downloadExcelTemplate()" class="bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition flex items-center gap-1">
+                            <i class="fa-solid fa-file-arrow-down"></i> Baixar Modelos Excel (.xlsx)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2 border-t border-white/80">
+                    <label class="block text-xs font-extrabold text-slate-800">
+                        <i class="fa-solid fa-upload text-pink-500 mr-1"></i> Importar Planilha de Produtos ou Insumos
+                    </label>
+
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold text-slate-700">Tipo de Dados:</span>
+                        <select v-model="excelImportTarget" class="px-3 py-1.5 rounded-xl glass-3d text-xs font-bold text-slate-800 focus:outline-none">
+                            <option value="auto">Detectar Automaticamente (Insumos e Produtos)</option>
+                            <option value="insumos">Planilha de Insumos / Matérias-Primas</option>
+                            <option value="produtos">Planilha de Produtos (Catálogo)</option>
+                        </select>
+                    </div>
+
+                    <div class="border-2 border-dashed border-pink-300 hover:border-pink-500 rounded-2xl p-6 text-center bg-white/40 transition cursor-pointer relative" @click="$refs.excelFileInput.click()">
+                        <input type="file" ref="excelFileInput" accept=".xlsx, .xls, .csv" @change="handleExcelFileSelect" class="hidden">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-pink-500 mb-2"></i>
+                        <p class="text-xs font-extrabold text-slate-800">Clique aqui para escolher seu arquivo Excel (.xlsx, .xls, .csv)</p>
+                        <p class="text-[11px] text-slate-500 mt-1">O sistema lerá os dados e mostrará uma prévia antes de salvar.</p>
+                    </div>
+                </div>
+
+                <div v-if="excelPreviewData.insumos.length > 0 || excelPreviewData.produtos.length > 0" class="space-y-3 p-4 bg-white/80 rounded-2xl border border-white shadow-sm">
+                    <h4 class="font-extrabold text-xs text-slate-800 flex items-center justify-between">
+                        <span><i class="fa-solid fa-eye text-pink-500 mr-1"></i> Prévia dos Registros Lidos</span>
+                        <span class="text-[10px] text-pink-700 bg-pink-100 px-2 py-0.5 rounded-full font-bold">
+                            {{ excelPreviewData.insumos.length }} Insumos | {{ excelPreviewData.produtos.length }} Produtos
+                        </span>
+                    </h4>
+
+                    <div v-if="excelPreviewData.insumos.length > 0" class="max-h-36 overflow-y-auto text-xs border border-slate-200 rounded-xl p-2 bg-white">
+                        <p class="font-bold text-pink-600 text-[10px] uppercase mb-1">Insumos Lidos:</p>
+                        <ul class="space-y-1 text-[11px]">
+                            <li v-for="(ins, i) in excelPreviewData.insumos" :key="i" class="flex justify-between border-b border-slate-100 pb-0.5">
+                                <span class="font-medium">{{ ins.nome }} ({{ ins.categoria }})</span>
+                                <span class="font-bold">R$ {{ formatMoney(ins.precoPacote) }} / {{ ins.quantidadePacote }} {{ ins.unidade }}</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div v-if="excelPreviewData.produtos.length > 0" class="max-h-36 overflow-y-auto text-xs border border-slate-200 rounded-xl p-2 bg-white">
+                        <p class="font-bold text-pink-600 text-[10px] uppercase mb-1">Produtos Lidos:</p>
+                        <ul class="space-y-1 text-[11px]">
+                            <li v-for="(prod, p) in excelPreviewData.produtos" :key="p" class="flex justify-between border-b border-slate-100 pb-0.5">
+                                <span class="font-medium">{{ prod.nome }} ({{ prod.categoria }})</span>
+                                <span class="font-bold">Margem: {{ prod.margemLucro }}% | Tempo: {{ prod.tempoProducaoMinutos }} min</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                        <div class="flex items-center gap-3 text-xs font-semibold">
+                            <span>Modo:</span>
+                            <label class="flex items-center gap-1 cursor-pointer">
+                                <input type="radio" v-model="excelImportMode" value="add" class="text-pink-600">
+                                <span>Adicionar aos existentes</span>
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer text-rose-600 font-bold">
+                                <input type="radio" v-model="excelImportMode" value="replace" class="text-rose-600">
+                                <span>Substituir existentes</span>
+                            </label>
+                        </div>
+
+                        <button @click="confirmImportExcel()" class="btn-3d-hotpink text-white px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md">
+                            <i class="fa-solid fa-check-circle"></i> Confirmar Importação
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end border-t border-white/80">
+                    <button @click="showExcelModal = false" class="px-5 py-2 rounded-xl glass-3d text-xs font-bold text-slate-700">Fechar</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="toast.show" class="fixed bottom-5 right-5 z-50 glass-3d-dark text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-pink-300/40 animate-bounce no-print">
+            <i class="fa-solid fa-circle-check text-pink-300 text-base"></i>
+            <span class="text-xs font-bold">{{ toast.message }}</span>
+        </div>
+
+        <footer class="bg-white/40 backdrop-blur-md border-t border-white/60 py-4 text-center text-xs text-pink-800/60 font-semibold no-print">
+            <p>by Julia Aleixo &copy; 2026 • Precificação, Estoque & Linha de Produção para Personalizados</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    isAuthenticated: false,
+                    inputCnpj: '',
+                    currentUserCnpj: '',
+                    loginError: '',
+                    majorCnpj: '63348579000106',
+                    authorizedCnpjs: ['63348579000106'],
+                    showManageCnpjsModal: false,
+                    newCnpjInput: '',
+
+                    isSidebarCollapsed: false,
+                    showToolsMenu: false,
+                    showExcelModal: false,
+                    excelImportTarget: 'auto',
+                    excelImportMode: 'add',
+                    excelPreviewData: { insumos: [], produtos: [] },
+
+                    activeTab: 'produtos',
+                    estoqueSubTab: 'insumos',
+                    configSubTab: 'maoDeObra',
+                    lastSavedTime: '',
+                    toast: { show: false, message: '' },
+                    searchProduct: '',
+                    selectedCategory: 'Todas',
+                    quoteStatusFilter: 'Todos',
+
+                    settings: {
+                        salarioPretendido: 4500,
+                        custosFixosMensais: 600,
+                        diasTrabalhadosMes: 22,
+                        horasTrabalhadasDia: 8,
+                        pixTipo: 'CNPJ',
+                        pixChave: '63.348.579/0001-06',
+                        pixNomeBeneficiario: 'Julia Aleixo Personalizados'
+                    },
+
+                    insumos: [
+                        { id: 'ins_1', nome: 'Cola Quente (Bastão)', precoPacote: 35.00, quantidadePacote: 50, unidade: 'unid', custoUnitario: 0.70, categoria: 'Adesivos', estoqueAtual: 45, estoqueMinimo: 10 },
+                        { id: 'ins_2', nome: 'Fita de Cetim N9 (Rolo 10m)', precoPacote: 18.00, quantidadePacote: 10, unidade: 'metro', custoUnitario: 1.80, categoria: 'Fitas', estoqueAtual: 8, estoqueMinimo: 5 },
+                        { id: 'ins_3', nome: 'Papel Fotográfico Glossy 180g (100fls)', precoPacote: 45.00, quantidadePacote: 100, unidade: 'folha', custoUnitario: 0.45, categoria: 'Papelaria', estoqueAtual: 120, estoqueMinimo: 30 },
+                        { id: 'ins_4', nome: 'Meia Pérola 6mm (1000un)', precoPacote: 15.00, quantidadePacote: 1000, unidade: 'unid', custoUnitario: 0.015, categoria: 'Aviamentos', estoqueAtual: 800, estoqueMinimo: 200 },
+                        { id: 'ins_5', nome: 'Bala Mastigável (Pct 100un)', precoPacote: 12.00, quantidadePacote: 100, unidade: 'unid', custoUnitario: 0.12, categoria: 'Doces', estoqueAtual: 15, estoqueMinimo: 20 }
+                    ],
+
+                    componentes: [
+                        {
+                            id: 'comp_1',
+                            nome: 'Flor de Cetim com Pérola',
+                            tempoMinutos: 4,
+                            insumos: [
+                                { insumoId: 'ins_2', quantidade: 0.4 },
+                                { insumoId: 'ins_1', quantidade: 0.1 },
+                                { insumoId: 'ins_4', quantidade: 1.0 }
+                            ]
+                        },
+                        {
+                            id: 'comp_2',
+                            nome: 'Bala Personalizada',
+                            tempoMinutos: 2,
+                            insumos: [
+                                { insumoId: 'ins_5', quantidade: 1.0 },
+                                { insumoId: 'ins_3', quantidade: 0.1 }
+                            ]
+                        }
+                    ],
+
+                    produtos: [
+                        {
+                            id: 'prod_1',
+                            nome: 'Topo de Bolo Glass 3D Luxo',
+                            categoria: 'Papelaria Luxo',
+                            imagemEmoji: '🎂',
+                            descricao: 'Topo de bolo multicamadas com flores de cetim e papéis especiais.',
+                            tempoProducaoMinutos: 45,
+                            margemLucro: 120,
+                            taxas: 10,
+                            insumos: [
+                                { insumoId: 'ins_3', quantidade: 3 }
+                            ],
+                            componentes: [
+                                { componenteId: 'comp_1', quantidade: 4 }
+                            ]
+                        },
+                        {
+                            id: 'prod_2',
+                            nome: 'Kit 50 Balas Personalizadas',
+                            categoria: 'Lembrancinhas',
+                            imagemEmoji: '🍬',
+                            descricao: 'Mimo doce para clientes e festas infantis.',
+                            tempoProducaoMinutos: 30,
+                            margemLucro: 100,
+                            taxas: 8,
+                            insumos: [],
+                            componentes: [
+                                { componenteId: 'comp_2', quantidade: 50 }
+                            ]
+                        }
+                    ],
+
+                    calc: {
+                        nome: 'Topo de Bolo Personalizado',
+                        tempoProducaoMinutos: 30,
+                        margemLucro: 100,
+                        taxas: 10,
+                        margemPerda: 5,
+                        insumos: [
+                            { insumoId: 'ins_3', quantidade: 2 }
+                        ],
+                        componentes: [
+                            { componenteId: 'comp_1', quantidade: 3 }
+                        ]
+                    },
+
+                    showProductModal: false,
+                    isEditingProduct: false,
+                    productForm: {
+                        id: null,
+                        nome: '',
+                        categoria: 'Geral',
+                        imagemEmoji: '🌸',
+                        descricao: '',
+                        tempoProducaoMinutos: 30,
+                        margemLucro: 100,
+                        taxas: 10,
+                        insumos: [],
+                        componentes: []
+                    },
+
+                    showQuickQuoteModal: false,
+                    quickQuoteForm: {
+                        produto: null,
+                        clienteNome: '',
+                        clienteTelefone: '',
+                        quantidade: 1,
+                        desconto: 0,
+                        frete: 0,
+                        observacoes: ''
+                    },
+
+                    showComponenteModal: false,
+                    componenteForm: { id: null, nome: '', tempoMinutos: 5, insumos: [] },
+
+                    showInsumoModal: false,
+                    insumoForm: { id: null, nome: '', precoPacote: 10, quantidadePacote: 1, unidade: 'unid', categoria: 'Geral', estoqueAtual: 0, estoqueMinimo: 0 },
+
+                    showReceiptModal: false,
+                    selectedQuoteReceipt: null,
+
+                    savedQuotes: [],
+
+                    cashPeriodFilter: 'mensal',
+                    cashTypeFilter: 'Todos',
+                    cashCategoryFilter: 'Todas',
+                    cashSearch: '',
+                    showTransactionModal: false,
+                    transactionForm: {
+                        id: null,
+                        tipo: 'Entrada',
+                        data: new Date().toISOString().slice(0, 10),
+                        descricao: '',
+                        categoria: 'Venda de Produtos',
+                        valor: 0,
+                        formaPagamento: 'PIX',
+                        status: 'Confirmado'
+                    },
+                    cashTransactions: [
+                        { id: 'cash_1', tipo: 'Entrada', data: new Date().toISOString().slice(0, 10), descricao: 'Venda Topo de Bolo 3D Luxo', categoria: 'Venda de Produtos', valor: 250.00, formaPagamento: 'PIX', status: 'Confirmado' },
+                        { id: 'cash_2', tipo: 'Saida', data: new Date().toISOString().slice(0, 10), descricao: 'Papel Fotográfico Glossy + Fita Cetim', categoria: 'Compra de Insumos', valor: 63.00, formaPagamento: 'Cartão de Crédito', status: 'Confirmado' },
+                        { id: 'cash_3', tipo: 'Saida', data: '2026-07-20', descricao: 'Conta de Luz & Internet do Ateliê', categoria: 'Custos Fixos / Atelier', valor: 180.00, formaPagamento: 'PIX', status: 'Confirmado' },
+                        { id: 'cash_4', tipo: 'Entrada', data: '2026-07-24', descricao: 'Kit 50 Balas Personalizadas - Maria', categoria: 'Venda de Produtos', valor: 120.00, formaPagamento: 'PIX', status: 'Confirmado' }
+                    ]
+                };
+            },
+
+            computed: {
+                totalHorasMes() {
+                    return (this.settings.diasTrabalhadosMes || 0) * (this.settings.horasTrabalhadasDia || 0);
+                },
+                valorHoraTrabalho() {
+                    if (this.totalHorasMes === 0) return 0;
+                    const totalDesejado = (this.settings.salarioPretendido || 0) + (this.settings.custosFixosMensais || 0);
+                    return totalDesejado / this.totalHorasMes;
+                },
+                valorMinutoTrabalho() {
+                    return this.valorHoraTrabalho / 60;
+                },
+
+                // Calculator Computed Properties
+                totalCalcInsumosCost() {
+                    return (this.calc.insumos || []).reduce((acc, item) => acc + this.getCalcInsumoCost(item), 0);
+                },
+                totalCalcComponentesCost() {
+                    return (this.calc.componentes || []).reduce((acc, item) => acc + this.getCalcComponenteCost(item), 0);
+                },
+                calcLaborCost() {
+                    return (this.calc.tempoProducaoMinutos || 0) * this.valorMinutoTrabalho;
+                },
+                calcWasteCost() {
+                    const direct = this.totalCalcInsumosCost + this.totalCalcComponentesCost + this.calcLaborCost;
+                    return direct * ((this.calc.margemPerda || 0) / 100);
+                },
+                calcTotalProductionCost() {
+                    return this.totalCalcInsumosCost + this.totalCalcComponentesCost + this.calcLaborCost + this.calcWasteCost;
+                },
+                calcSuggestedPrice() {
+                    const cost = this.calcTotalProductionCost;
+                    const margin = (this.calc.margemLucro || 0) / 100;
+                    const taxes = (this.calc.taxas || 0) / 100;
+                    const base = cost * (1 + margin);
+                    return taxes < 1 ? base / (1 - taxes) : base;
+                },
+                calcNetProfit() {
+                    const price = this.calcSuggestedPrice;
+                    const taxesVal = price * ((this.calc.taxas || 0) / 100);
+                    return price - taxesVal - this.calcTotalProductionCost;
+                },
+
+                monthlyFinancials() {
+                    const currentMonthStr = new Date().toISOString().slice(0, 7);
+                    const monthTx = this.cashTransactions.filter(t => t.data && t.data.startsWith(currentMonthStr));
+                    const revenue = monthTx.filter(t => t.tipo === 'Entrada').reduce((acc, t) => acc + (t.valor || 0), 0);
+                    const expenses = monthTx.filter(t => t.tipo === 'Saida').reduce((acc, t) => acc + (t.valor || 0), 0);
+                    return { revenue, expenses, profit: revenue - expenses };
+                },
+
+                lowStockInsumosCount() {
+                    return this.insumos.filter(i => (i.estoqueAtual || 0) <= (i.estoqueMinimo || 0)).length;
+                },
+
+                activeQuotesCount() {
+                    return this.savedQuotes.filter(q => (q.status || 'Pendente') === 'Em Produção' || (q.status || 'Pendente') === 'Pendente').length;
+                },
+
+                filteredCashTransactions() {
+                    const todayStr = new Date().toISOString().slice(0, 10);
+                    const currentMonthStr = new Date().toISOString().slice(0, 7);
+
+                    return this.cashTransactions.filter(t => {
+                        if (this.cashPeriodFilter === 'diario' && t.data !== todayStr) return false;
+                        if (this.cashPeriodFilter === 'mensal' && !t.data.startsWith(currentMonthStr)) return false;
+                        if (this.cashPeriodFilter === 'semanal') {
+                            const tDate = new Date(t.data);
+                            const now = new Date();
+                            const diffDays = (now - tDate) / (1000 * 3600 * 24);
+                            if (diffDays < 0 || diffDays > 7) return false;
+                        }
+
+                        if (this.cashTypeFilter !== 'Todos' && t.tipo !== this.cashTypeFilter) return false;
+                        if (this.cashCategoryFilter !== 'Todas' && t.categoria !== this.cashCategoryFilter) return false;
+
+                        if (this.cashSearch) {
+                            const query = this.cashSearch.toLowerCase();
+                            const matchesDesc = (t.descricao || '').toLowerCase().includes(query);
+                            const matchesCat = (t.categoria || '').toLowerCase().includes(query);
+                            if (!matchesDesc && !matchesCat) return false;
+                        }
+
+                        return true;
+                    }).sort((a, b) => new Date(b.data) - new Date(a.data));
+                },
+
+                cashSummaryPeriod() {
+                    const list = this.filteredCashTransactions;
+                    const totalEntradas = list.filter(t => t.tipo === 'Entrada').reduce((acc, t) => acc + (t.valor || 0), 0);
+                    const totalSaidas = list.filter(t => t.tipo === 'Saida').reduce((acc, t) => acc + (t.valor || 0), 0);
+                    const saldo = totalEntradas - totalSaidas;
+                    const margem = totalEntradas > 0 ? (saldo / totalEntradas) * 100 : 0;
+                    return { totalEntradas, totalSaidas, saldo, margem };
+                },
+
+                productCategories() {
+                    const cats = this.produtos.map(p => p.categoria || 'Geral');
+                    return Array.from(new Set(cats));
+                },
+                filteredProducts() {
+                    return this.produtos.filter(p => {
+                        const matchesSearch = p.nome.toLowerCase().includes(this.searchProduct.toLowerCase()) ||
+                                              (p.descricao && p.descricao.toLowerCase().includes(this.searchProduct.toLowerCase()));
+                        const matchesCat = this.selectedCategory === 'Todas' || (p.categoria || 'Geral') === this.selectedCategory;
+                        return matchesSearch && matchesCat;
+                    });
+                },
+                filteredQuotes() {
+                    if (this.quoteStatusFilter === 'Todos') return this.savedQuotes;
+                    return this.savedQuotes.filter(q => (q.status || 'Pendente') === this.quoteStatusFilter);
+                },
+
+                quickQuoteTotal() {
+                    if (!this.quickQuoteForm.produto) return 0;
+                    const unitPrice = this.getProductPrice(this.quickQuoteForm.produto);
+                    const subtotal = unitPrice * (this.quickQuoteForm.quantidade || 1);
+                    return Math.max(0, subtotal - (this.quickQuoteForm.desconto || 0) + (this.quickQuoteForm.frete || 0));
+                }
+            },
+
+            watch: {
+                $data: {
+                    handler() {
+                        this.saveToLocalStorage();
+                    },
+                    deep: true
+                }
+            },
+
+            created() {
+                this.loadFromLocalStorage();
+            },
+
+            methods: {
+                cleanCnpj(val) {
+                    return (val || '').replace(/\D/g, '');
+                },
+                formatCnpjDisplay(cnpj) {
+                    const clean = this.cleanCnpj(cnpj);
+                    if (clean.length !== 14) return cnpj || '';
+                    return clean.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+                },
+                formatInputCnpj(e) {
+                    let val = this.cleanCnpj(e.target.value);
+                    if (val.length > 14) val = val.substring(0, 14);
+                    this.inputCnpj = this.formatCnpjDisplay(val);
+                },
+                handleLogin() {
+                    const cleaned = this.cleanCnpj(this.inputCnpj);
+                    if (!cleaned) {
+                        this.loginError = 'Por favor, digite seu CNPJ.';
+                        return;
+                    }
+
+                    if (this.authorizedCnpjs.includes(cleaned)) {
+                        this.isAuthenticated = true;
+                        this.currentUserCnpj = cleaned;
+                        this.loginError = '';
+                        this.showToast('Acesso autorizado! Bem-vinda(o) ao sistema by Julia Aleixo.');
+                        this.saveToLocalStorage();
+                    } else {
+                        this.loginError = `O CNPJ ${this.formatCnpjDisplay(cleaned)} não possui autorização de acesso.`;
+                    }
+                },
+                handleLogout() {
+                    this.isAuthenticated = false;
+                    this.currentUserCnpj = '';
+                    this.inputCnpj = '';
+                    this.saveToLocalStorage();
+                    this.showToast('Sessão encerrada com sucesso.');
+                },
+                addAuthorizedCnpj() {
+                    const clean = this.cleanCnpj(this.newCnpjInput);
+                    if (clean.length !== 14) return this.showToast('Digite um CNPJ válido com 14 dígitos!');
+                    if (this.authorizedCnpjs.includes(clean)) return this.showToast('Este CNPJ já está cadastrado!');
+                    this.authorizedCnpjs.push(clean);
+                    this.newCnpjInput = '';
+                    this.showToast('Novo CNPJ autorizado com sucesso!');
+                },
+                removeAuthorizedCnpj(cnpj) {
+                    if (this.cleanCnpj(cnpj) === this.majorCnpj) return this.showToast('O CNPJ MAJOR não pode ser removido!');
+                    this.authorizedCnpjs = this.authorizedCnpjs.filter(c => c !== cnpj);
+                    this.showToast('CNPJ removido da lista de autorizados.');
+                },
+
+                formatMoney(val) {
+                    return (val || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                },
+                showToast(msg) {
+                    this.toast.message = msg;
+                    this.toast.show = true;
+                    setTimeout(() => { this.toast.show = false; }, 3000);
+                },
+
+                getInsumoById(id) {
+                    return this.insumos.find(i => i.id === id);
+                },
+                getInsumoName(id) {
+                    const ins = this.getInsumoById(id);
+                    return ins ? ins.nome : 'Insumo não encontrado';
+                },
+                getComponenteInsumoCost(ing) {
+                    const ins = this.getInsumoById(ing.insumoId);
+                    return ins ? (ins.custoUnitario || 0) * (ing.quantidade || 0) : 0;
+                },
+                getComponenteCost(comp) {
+                    if (!comp) return 0;
+                    const insumesCost = (comp.insumos || []).reduce((acc, ing) => acc + this.getComponenteInsumoCost(ing), 0);
+                    const laborCost = (comp.tempoMinutos || 0) * this.valorMinutoTrabalho;
+                    return insumesCost + laborCost;
+                },
+                getCalcInsumoCost(item) {
+                    const ins = this.getInsumoById(item.insumoId);
+                    return ins ? (ins.custoUnitario || 0) * (item.quantidade || 0) : 0;
+                },
+                getCalcComponenteCost(item) {
+                    const comp = this.componentes.find(c => c.id === item.componenteId);
+                    return comp ? this.getComponenteCost(comp) * (item.quantidade || 0) : 0;
+                },
+
+                getProductInsumosCost(prod) {
+                    return (prod.insumos || []).reduce((acc, i) => acc + this.getCalcInsumoCost(i), 0);
+                },
+                getProductComponentesCost(prod) {
+                    return (prod.componentes || []).reduce((acc, c) => acc + this.getCalcComponenteCost(c), 0);
+                },
+                getProductLaborCost(prod) {
+                    return (prod.tempoProducaoMinutos || 0) * this.valorMinutoTrabalho;
+                },
+                getProductTotalCost(prod) {
+                    const direct = this.getProductInsumosCost(prod) + this.getProductComponentesCost(prod) + this.getProductLaborCost(prod);
+                    return direct * 1.05;
+                },
+                getProductPrice(prod) {
+                    const cost = this.getProductTotalCost(prod);
+                    const margin = (prod.margemLucro || 0) / 100;
+                    const taxes = (prod.taxas || 0) / 100;
+                    const base = cost * (1 + margin);
+                    return taxes < 1 ? base / (1 - taxes) : base;
+                },
+
+                openProductModal(prod = null) {
+                    if (prod) {
+                        this.isEditingProduct = true;
+                        this.productForm = JSON.parse(JSON.stringify(prod));
+                    } else {
+                        this.isEditingProduct = false;
+                        this.productForm = {
+                            id: 'prod_' + Date.now(),
+                            nome: '',
+                            categoria: 'Geral',
+                            imagemEmoji: '🌸',
+                            descricao: '',
+                            tempoProducaoMinutos: 30,
+                            margemLucro: 100,
+                            taxas: 10,
+                            insumos: [],
+                            componentes: []
+                        };
+                    }
+                    this.showProductModal = true;
+                },
+                addProductInsumoRow() {
+                    if (this.insumos.length === 0) return this.showToast('Cadastre insumos primeiro!');
+                    this.productForm.insumos.push({ insumoId: this.insumos[0].id, quantidade: 1 });
+                },
+                addProductComponenteRow() {
+                    if (this.componentes.length === 0) return this.showToast('Cadastre componentes primeiro!');
+                    this.productForm.componentes.push({ componenteId: this.componentes[0].id, quantidade: 1 });
+                },
+                saveProduct() {
+                    if (!this.productForm.nome) return this.showToast('Informe o nome do produto!');
+                    
+                    if (this.isEditingProduct) {
+                        const idx = this.produtos.findIndex(p => p.id === this.productForm.id);
+                        if (idx !== -1) this.produtos[idx] = JSON.parse(JSON.stringify(this.productForm));
+                    } else {
+                        this.produtos.unshift(JSON.parse(JSON.stringify(this.productForm)));
+                    }
+                    this.showProductModal = false;
+                    this.showToast('Produto salvo no catálogo com sucesso!');
+                },
+                deleteProduct(id) {
+                    this.produtos = this.produtos.filter(p => p.id !== id);
+                    this.showToast('Produto removido do catálogo.');
+                },
+                loadProductToCalc(prod) {
+                    this.calc = {
+                        nome: prod.nome,
+                        tempoProducaoMinutos: prod.tempoProducaoMinutos,
+                        margemLucro: prod.margemLucro,
+                        taxas: prod.taxas,
+                        margemPerda: 5,
+                        insumos: JSON.parse(JSON.stringify(prod.insumos || [])),
+                        componentes: JSON.parse(JSON.stringify(prod.componentes || []))
+                    };
+                    this.activeTab = 'calc';
+                    this.showToast(`Simulador carregado com ${prod.nome}!`);
+                },
+                saveCalcAsProduct() {
+                    this.productForm = {
+                        id: 'prod_' + Date.now(),
+                        nome: this.calc.nome || 'Novo Produto Simulador',
+                        categoria: 'Geral',
+                        imagemEmoji: '✨',
+                        descricao: 'Produto salvo a partir da calculadora.',
+                        tempoProducaoMinutos: this.calc.tempoProducaoMinutos,
+                        margemLucro: this.calc.margemLucro,
+                        taxas: this.calc.taxas,
+                        insumos: JSON.parse(JSON.stringify(this.calc.insumos)),
+                        componentes: JSON.parse(JSON.stringify(this.calc.componentes))
+                    };
+                    this.isEditingProduct = false;
+                    this.showProductModal = true;
+                },
+
+                addInsumoToCalc() {
+                    if (this.insumos.length === 0) return this.showToast('Cadastre insumos primeiro!');
+                    this.calc.insumos.push({ insumoId: this.insumos[0].id, quantidade: 1 });
+                },
+                addComponenteToCalc() {
+                    if (this.componentes.length === 0) return this.showToast('Cadastre componentes primeiro!');
+                    this.calc.componentes.push({ componenteId: this.componentes[0].id, quantidade: 1 });
+                },
+
+                openQuickQuoteModal(prod) {
+                    this.quickQuoteForm = {
+                        produto: prod,
+                        clienteNome: '',
+                        clienteTelefone: '',
+                        quantidade: 1,
+                        desconto: 0,
+                        frete: 0,
+                        observacoes: ''
+                    };
+                    this.showQuickQuoteModal = true;
+                },
+                sendQuickQuoteWhatsApp() {
+                    const q = this.quickQuoteForm;
+                    const prod = q.produto;
+                    if (!prod) return;
+
+                    const unitPrice = this.getProductPrice(prod);
+                    const total = this.quickQuoteTotal;
+
+                    let msg = `🌸 *ORÇAMENTO PERSONALIZADO - BY JULIA ALEIXO* 🌸\n\n`;
+                    msg += `Olá, *${q.clienteNome || 'Cliente'}*! Segue a proposta detalhada do seu pedido:\n\n`;
+                    msg += `📦 *Produto:* ${prod.nome}\n`;
+                    msg += `🔢 *Quantidade:* ${q.quantidade} unid.\n`;
+                    msg += `💵 *Valor Unitário:* R$ ${this.formatMoney(unitPrice)}\n`;
+
+                    if (q.observacoes) {
+                        msg += `✨ *Detalhes:* ${q.observacoes}\n`;
+                    }
+
+                    msg += `\n------------------------------\n`;
+                    msg += `🏷️ *Subtotal:* R$ ${this.formatMoney(unitPrice * q.quantidade)}\n`;
+                    if (q.desconto > 0) msg += `🎁 *Desconto Especial:* - R$ ${this.formatMoney(q.desconto)}\n`;
+                    if (q.frete > 0) msg += `🚚 *Frete / Entrega:* + R$ ${this.formatMoney(q.frete)}\n`;
+                    msg += `💰 *VALOR TOTAL:* *R$ ${this.formatMoney(total)}*\n`;
+                    msg += `------------------------------\n\n`;
+
+                    if (this.settings.pixChave) {
+                        msg += `💳 *DADOS PARA PAGAMENTO PIX:*\n`;
+                        msg += `• *Chave (${this.settings.pixTipo}):* ${this.settings.pixChave}\n`;
+                        if (this.settings.pixNomeBeneficiario) msg += `• *Favorecido:* ${this.settings.pixNomeBeneficiario}\n`;
+                        msg += `\n`;
+                    } else {
+                        msg += `💳 *Formas de Pagamento:* PIX, Cartão de Crédito ou Boleto.\n`;
+                    }
+
+                    msg += `⏰ *Validade:* 7 dias.\n\n`;
+                    msg += `Fico à disposição para confirmar seu pedido e iniciar a produção! 💕`;
+
+                    this.savedQuotes.unshift({
+                        id: 'quote_' + Date.now(),
+                        clienteNome: q.clienteNome || 'Cliente',
+                        clienteTelefone: q.clienteTelefone,
+                        produtoNome: prod.nome,
+                        produtoRef: prod,
+                        quantidade: q.quantidade,
+                        valorTotal: total,
+                        status: 'Pendente',
+                        data: new Date().toLocaleDateString('pt-BR'),
+                        mensagemFormatada: msg
+                    });
+
+                    const phone = (q.clienteTelefone || '').replace(/\D/g, '');
+                    const encodedMsg = encodeURIComponent(msg);
+                    const waUrl = phone ? `https://wa.me/55${phone}?text=${encodedMsg}` : `https://wa.me/?text=${encodedMsg}`;
+                    
+                    window.open(waUrl, '_blank');
+                    this.showQuickQuoteModal = false;
+                    this.showToast('Orçamento salvo e enviado para o WhatsApp!');
+                },
+
+                saveCalcToQuotesHistory() {
+                    const msg = `🌸 *ORÇAMENTO - BY JULIA ALEIXO* 🌸\nItem: ${this.calc.nome}\nTotal: R$ ${this.formatMoney(this.calcSuggestedPrice)}`;
+                    this.savedQuotes.unshift({
+                        id: 'quote_' + Date.now(),
+                        clienteNome: 'Cliente Simulação',
+                        produtoNome: this.calc.nome,
+                        quantidade: 1,
+                        valorTotal: this.calcSuggestedPrice,
+                        status: 'Pendente',
+                        data: new Date().toLocaleDateString('pt-BR'),
+                        mensagemFormatada: msg
+                    });
+                    this.showToast('Pedido adicionado à Linha de Produção!');
+                },
+
+                sendWhatsAppQuote(quote) {
+                    const encoded = encodeURIComponent(quote.mensagemFormatada || '');
+                    window.open(`https://wa.me/?text=${encoded}`, '_blank');
+                },
+
+                updateQuoteStatus(quote, newStatus) {
+                    const oldStatus = quote.status;
+                    quote.status = newStatus;
+
+                    if (newStatus === 'Em Produção' && oldStatus !== 'Em Produção') {
+                        this.deductInventoryForQuote(quote);
+                    }
+
+                    this.showToast(`Status alterado para ${newStatus}!`);
+                },
+
+                deductInventoryForQuote(quote) {
+                    const prod = this.produtos.find(p => p.nome === quote.produtoNome) || quote.produtoRef;
+                    if (!prod) return;
+
+                    const multiplier = quote.quantidade || 1;
+
+                    (prod.insumos || []).forEach(item => {
+                        const ins = this.getInsumoById(item.insumoId);
+                        if (ins) {
+                            ins.estoqueAtual = Math.max(0, (ins.estoqueAtual || 0) - (item.quantidade * multiplier));
+                        }
+                    });
+
+                    (prod.componentes || []).forEach(compItem => {
+                        const comp = this.componentes.find(c => c.id === compItem.componenteId);
+                        if (comp) {
+                            (comp.insumos || []).forEach(ing => {
+                                const ins = this.getInsumoById(ing.insumoId);
+                                if (ins) {
+                                    ins.estoqueAtual = Math.max(0, (ins.estoqueAtual || 0) - (ing.quantidade * compItem.quantidade * multiplier));
+                                }
+                            });
+                        }
+                    });
+
+                    this.showToast('Baixa de insumos realizada no estoque!');
+                },
+
+                getStatusBadgeClass(status) {
+                    switch (status) {
+                        case 'Em Produção': return 'bg-indigo-100 text-indigo-700 border border-indigo-200';
+                        case 'Pronto': return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+                        case 'Entregue': return 'bg-slate-200 text-slate-800 border border-slate-300';
+                        case 'Cancelado': return 'bg-rose-100 text-rose-700 border border-rose-200';
+                        default: return 'bg-amber-100 text-amber-800 border border-amber-200';
+                    }
+                },
+
+                openReceiptModal(quote) {
+                    this.selectedQuoteReceipt = quote;
+                    this.showReceiptModal = true;
+                },
+                printReceipt() {
+                    window.print();
+                },
+
+                deleteQuote(id) {
+                    this.savedQuotes = this.savedQuotes.filter(q => q.id !== id);
+                    this.showToast('Orçamento removido.');
+                },
+
+                openComponenteModal(comp = null) {
+                    if (comp) {
+                        this.componenteForm = JSON.parse(JSON.stringify(comp));
+                    } else {
+                        this.componenteForm = { id: 'comp_' + Date.now(), nome: '', tempoMinutos: 5, insumos: [] };
+                    }
+                    this.showComponenteModal = true;
+                },
+                addComponenteInsumoRow() {
+                    if (this.insumos.length === 0) return;
+                    this.componenteForm.insumos.push({ insumoId: this.insumos[0].id, quantidade: 1 });
+                },
+                saveComponente() {
+                    if (!this.componenteForm.nome) return;
+                    const idx = this.componentes.findIndex(c => c.id === this.componenteForm.id);
+                    if (idx !== -1) this.componentes[idx] = JSON.parse(JSON.stringify(this.componenteForm));
+                    else this.componentes.push(JSON.parse(JSON.stringify(this.componenteForm)));
+                    this.showComponenteModal = false;
+                    this.showToast('Componente salvo!');
+                },
+                deleteComponente(id) {
+                    this.componentes = this.componentes.filter(c => c.id !== id);
+                    this.showToast('Componente excluído.');
+                },
+
+                openInsumoModal(ins = null) {
+                    if (ins) {
+                        this.insumoForm = JSON.parse(JSON.stringify(ins));
+                    } else {
+                        this.insumoForm = { id: 'ins_' + Date.now(), nome: '', precoPacote: 10, quantidadePacote: 1, unidade: 'unid', categoria: 'Geral', estoqueAtual: 50, estoqueMinimo: 10 };
+                    }
+                    this.showInsumoModal = true;
+                },
+                saveInsumo() {
+                    if (!this.insumoForm.nome) return;
+                    this.insumoForm.custoUnitario = (this.insumoForm.precoPacote || 0) / (this.insumoForm.quantidadePacote || 1);
+                    const idx = this.insumos.findIndex(i => i.id === this.insumoForm.id);
+                    if (idx !== -1) this.insumos[idx] = JSON.parse(JSON.stringify(this.insumoForm));
+                    else this.insumos.push(JSON.parse(JSON.stringify(this.insumoForm)));
+                    this.showInsumoModal = false;
+                    this.showToast('Insumo salvo no estoque!');
+                },
+                deleteInsumo(id) {
+                    this.insumos = this.insumos.filter(i => i.id !== id);
+                    this.showToast('Insumo excluído.');
+                },
+
+                formatDateDisplay(dateStr) {
+                    if (!dateStr) return '';
+                    const parts = dateStr.split('-');
+                    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    return dateStr;
+                },
+                getCashCategoryBadgeClass(cat) {
+                    switch (cat) {
+                        case 'Venda de Produtos': return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+                        case 'Compra de Insumos': return 'bg-amber-100 text-amber-800 border border-amber-200';
+                        case 'Custos Fixos / Atelier': return 'bg-rose-100 text-rose-800 border border-rose-200';
+                        case 'Retirada Pró-Labore': return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
+                        default: return 'bg-slate-100 text-slate-800 border border-slate-200';
+                    }
+                },
+                openTransactionModal(item = null) {
+                    if (item) {
+                        this.transactionForm = JSON.parse(JSON.stringify(item));
+                    } else {
+                        this.transactionForm = {
+                            id: null,
+                            tipo: 'Entrada',
+                            data: new Date().toISOString().slice(0, 10),
+                            descricao: '',
+                            categoria: 'Venda de Produtos',
+                            valor: 0,
+                            formaPagamento: 'PIX',
+                            status: 'Confirmado'
+                        };
+                    }
+                    this.showTransactionModal = true;
+                },
+                saveTransaction() {
+                    if (!this.transactionForm.descricao) return this.showToast('Informe a descrição da transação!');
+                    if (!this.transactionForm.valor || this.transactionForm.valor <= 0) return this.showToast('Informe um valor maior que zero!');
+
+                    if (this.transactionForm.id) {
+                        const idx = this.cashTransactions.findIndex(t => t.id === this.transactionForm.id);
+                        if (idx !== -1) this.cashTransactions[idx] = JSON.parse(JSON.stringify(this.transactionForm));
+                    } else {
+                        const newT = {
+                            ...JSON.parse(JSON.stringify(this.transactionForm)),
+                            id: 'cash_' + Date.now()
+                        };
+                        this.cashTransactions.unshift(newT);
+                    }
+                    this.showTransactionModal = false;
+                    this.showToast('Transação salva no Livro Caixa!');
+                },
+                deleteTransaction(id) {
+                    this.cashTransactions = this.cashTransactions.filter(t => t.id !== id);
+                    this.showToast('Transação removida do caixa.');
+                },
+                addQuoteToCash(quote) {
+                    const newT = {
+                        id: 'cash_' + Date.now(),
+                        tipo: 'Entrada',
+                        data: new Date().toISOString().slice(0, 10),
+                        descricao: `Venda Pedido: ${quote.produtoNome} (${quote.clienteNome || 'Cliente'})`,
+                        categoria: 'Venda de Produtos',
+                        valor: quote.valorTotal || 0,
+                        formaPagamento: 'PIX',
+                        status: 'Confirmado'
+                    };
+                    this.cashTransactions.unshift(newT);
+                    this.showToast('Pedido lançado com sucesso no Livro Caixa!');
+                },
+                exportCashExcel() {
+                    if (typeof XLSX === 'undefined') return this.showToast('Aguarde biblioteca carregar...');
+
+                    const rows = this.cashTransactions.map(t => ({
+                        "Data": this.formatDateDisplay(t.data),
+                        "Tipo": t.tipo,
+                        "Descrição": t.descricao,
+                        "Categoria": t.categoria,
+                        "Valor (R$)": t.valor,
+                        "Forma Pagamento": t.formaPagamento || 'PIX',
+                        "Status": t.status || 'Confirmado'
+                    }));
+
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.json_to_sheet(rows);
+                    XLSX.utils.book_append_sheet(wb, ws, "Livro Caixa");
+                    XLSX.writeFile(wb, `by_Julia_Aleixo_Livro_Caixa_${new Date().toISOString().slice(0,10)}.xlsx`);
+                    this.showToast('Livro Caixa exportado para Excel!');
+                },
+
+                openExcelModal(target = 'auto') {
+                    this.excelImportTarget = target;
+                    this.excelPreviewData = { insumos: [], produtos: [] };
+                    this.showExcelModal = true;
+                },
+
+                exportDataExcel(type = 'tudo') {
+                    if (typeof XLSX === 'undefined') {
+                        return this.showToast('Biblioteca Excel ainda carregando. Tente novamente em instantes.');
+                    }
+
+                    const wb = XLSX.utils.book_new();
+
+                    if (type === 'tudo' || type === 'insumos') {
+                        const insumosRows = this.insumos.map(i => ({
+                            "Nome": i.nome,
+                            "Preço Pacote (R$)": i.precoPacote,
+                            "Qtd no Pacote": i.quantidadePacote,
+                            "Unidade": i.unidade,
+                            "Categoria": i.categoria,
+                            "Estoque Atual": i.estoqueAtual || 0,
+                            "Estoque Mínimo": i.estoqueMinimo || 0,
+                            "Custo Unitário (R$)": i.custoUnitario
+                        }));
+                        const wsInsumos = XLSX.utils.json_to_sheet(insumosRows);
+                        XLSX.utils.book_append_sheet(wb, wsInsumos, "Insumos");
+                    }
+
+                    if (type === 'tudo' || type === 'produtos') {
+                        const produtosRows = this.produtos.map(p => ({
+                            "Nome": p.nome,
+                            "Categoria": p.categoria || "Geral",
+                            "Emoji": p.imagemEmoji || "🌸",
+                            "Descrição": p.descricao || "",
+                            "Tempo Produção (Min)": p.tempoProducaoMinutos || 0,
+                            "Margem Lucro (%)": p.margemLucro || 100,
+                            "Taxas (%)": p.taxas || 0,
+                            "Custo Total (R$)": this.getProductTotalCost(p),
+                            "Preço Venda (R$)": this.getProductPrice(p)
+                        }));
+                        const wsProdutos = XLSX.utils.json_to_sheet(produtosRows);
+                        XLSX.utils.book_append_sheet(wb, wsProdutos, "Produtos");
+                    }
+
+                    const dateStr = new Date().toISOString().slice(0,10);
+                    XLSX.writeFile(wb, `by_Julia_Aleixo_Planilha_${type}_${dateStr}.xlsx`);
+                    this.showToast('Planilha Excel exportada com sucesso!');
+                },
+
+                downloadExcelTemplate() {
+                    if (typeof XLSX === 'undefined') return;
+
+                    const wb = XLSX.utils.book_new();
+
+                    const sampleInsumos = [
+                        { "Nome": "Fita de Cetim N9", "Preço Pacote (R$)": 18.00, "Qtd no Pacote": 10, "Unidade": "metro", "Categoria": "Fitas", "Estoque Atual": 20, "Estoque Mínimo": 5 },
+                        { "Nome": "Papel Fotográfico 180g", "Preço Pacote (R$)": 45.00, "Qtd no Pacote": 100, "Unidade": "folha", "Categoria": "Papelaria", "Estoque Atual": 100, "Estoque Mínimo": 20 }
+                    ];
+                    const wsInsumos = XLSX.utils.json_to_sheet(sampleInsumos);
+                    XLSX.utils.book_append_sheet(wb, wsInsumos, "Insumos");
+
+                    const sampleProdutos = [
+                        { "Nome": "Caneca Personalizada", "Categoria": "Lembrancinhas", "Emoji": "☕", "Descrição": "Caneca de cerâmica 325ml", "Tempo Produção (Min)": 20, "Margem Lucro (%)": 100, "Taxas (%)": 8 },
+                        { "Nome": "Caixa Cenário Luxo", "Categoria": "Papelaria Luxo", "Emoji": "📦", "Descrição": "Caixa personalizada em camadas", "Tempo Produção (Min)": 40, "Margem Lucro (%)": 120, "Taxas (%)": 10 }
+                    ];
+                    const wsProdutos = XLSX.utils.json_to_sheet(sampleProdutos);
+                    XLSX.utils.book_append_sheet(wb, wsProdutos, "Produtos");
+
+                    XLSX.writeFile(wb, `by_Julia_Aleixo_Modelo_Planilha.xlsx`);
+                    this.showToast('Modelo de planilha baixado com sucesso!');
+                },
+
+                handleExcelFileSelect(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    if (typeof XLSX === 'undefined') {
+                        return this.showToast('Aguarde a biblioteca Excel carregar...');
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, { type: 'array' });
+
+                            let parsedInsumos = [];
+                            let parsedProdutos = [];
+
+                            workbook.SheetNames.forEach(sheetName => {
+                                const sheet = workbook.Sheets[sheetName];
+                                const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+                                const lowerSheetName = sheetName.toLowerCase();
+
+                                rows.forEach(row => {
+                                    const getVal = (keys) => {
+                                        for (let k of Object.keys(row)) {
+                                            const cleanK = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                                            if (keys.some(alias => cleanK.includes(alias))) {
+                                                return row[k];
+                                            }
+                                        }
+                                        return "";
+                                    };
+
+                                    const parseNum = (val, fallback = 0) => {
+                                        if (typeof val === 'number') return val;
+                                        if (!val) return fallback;
+                                        const cleanStr = String(val).replace("R$", "").replace(/\s/g, "").replace(",", ".");
+                                        const n = parseFloat(cleanStr);
+                                        return isNaN(n) ? fallback : n;
+                                    };
+
+                                    const nomeVal = String(getVal(['nome', 'insumo', 'produto', 'item', 'descricao'])).trim();
+                                    if (!nomeVal) return;
+
+                                    const isTargetInsumo = this.excelImportTarget === 'insumos' || lowerSheetName.includes('insumo') || getVal(['pacote', 'unidade', 'insumo']);
+                                    const isTargetProduto = this.excelImportTarget === 'produtos' || lowerSheetName.includes('produto') || getVal(['margem', 'tempo', 'lucro']);
+
+                                    if (isTargetProduto && !isTargetInsumo) {
+                                        parsedProdutos.push({
+                                            id: 'prod_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                                            nome: nomeVal,
+                                            categoria: String(getVal(['categoria', 'grupo']) || 'Geral'),
+                                            imagemEmoji: String(getVal(['emoji', 'icone', 'imagem']) || '🌸'),
+                                            descricao: String(getVal(['descricao', 'detalhes']) || ''),
+                                            tempoProducaoMinutos: parseNum(getVal(['tempo', 'minutos']), 30),
+                                            margemLucro: parseNum(getVal(['margem', 'lucro']), 100),
+                                            taxas: parseNum(getVal(['taxas', 'imposto']), 8),
+                                            insumos: [],
+                                            componentes: []
+                                        });
+                                    } else {
+                                        const precoPacote = parseNum(getVal(['precopacote', 'preco', 'valor', 'custo']), 10);
+                                        const quantidadePacote = parseNum(getVal(['qtd', 'quantidade', 'unidades']), 1);
+                                        const custoUnitario = quantidadePacote > 0 ? precoPacote / quantidadePacote : precoPacote;
+
+                                        parsedInsumos.push({
+                                            id: 'ins_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                                            nome: nomeVal,
+                                            precoPacote: precoPacote,
+                                            quantidadePacote: quantidadePacote,
+                                            unidade: String(getVal(['unidade', 'unid', 'medida']) || 'unid').toLowerCase(),
+                                            categoria: String(getVal(['categoria', 'grupo']) || 'Geral'),
+                                            estoqueAtual: parseNum(getVal(['estoque', 'atual']), 50),
+                                            estoqueMinimo: parseNum(getVal(['minimo']), 10),
+                                            custoUnitario: custoUnitario
+                                        });
+                                    }
+                                });
+                            });
+
+                            this.excelPreviewData = { insumos: parsedInsumos, produtos: parsedProdutos };
+
+                            if (parsedInsumos.length === 0 && parsedProdutos.length === 0) {
+                                this.showToast('Nenhum registro reconhecido na planilha. Verifique as colunas!');
+                            } else {
+                                this.showToast(`Planilha lida! ${parsedInsumos.length} Insumos e ${parsedProdutos.length} Produtos localizados.`);
+                            }
+                        } catch (err) {
+                            console.error('Erro ao ler arquivo Excel', err);
+                            this.showToast('Erro ao ler a planilha Excel. Verifique o formato do arquivo.');
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                },
+
+                confirmImportExcel() {
+                    const { insumos, produtos } = this.excelPreviewData;
+                    if (insumos.length === 0 && produtos.length === 0) return;
+
+                    if (this.excelImportMode === 'replace') {
+                        if (insumos.length > 0) this.insumos = insumos;
+                        if (produtos.length > 0) this.produtos = produtos;
+                    } else {
+                        if (insumos.length > 0) this.insumos = [...this.insumos, ...insumos];
+                        if (produtos.length > 0) this.produtos = [...this.produtos, ...produtos];
+                    }
+
+                    this.saveToLocalStorage();
+                    this.showExcelModal = false;
+                    this.excelPreviewData = { insumos: [], produtos: [] };
+                    this.showToast('Dados da planilha importados com sucesso!');
+                },
+
+                saveToLocalStorage() {
+                    const state = {
+                        isAuthenticated: this.isAuthenticated,
+                        currentUserCnpj: this.currentUserCnpj,
+                        authorizedCnpjs: this.authorizedCnpjs,
+                        settings: this.settings,
+                        insumos: this.insumos,
+                        componentes: this.componentes,
+                        produtos: this.produtos,
+                        savedQuotes: this.savedQuotes,
+                        calc: this.calc,
+                        cashTransactions: this.cashTransactions
+                    };
+                    localStorage.setItem('byJuliaAleixoData', JSON.stringify(state));
+                    this.lastSavedTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                },
+                loadFromLocalStorage() {
+                    const data = localStorage.getItem('byJuliaAleixoData');
+                    if (data) {
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (parsed.authorizedCnpjs && Array.isArray(parsed.authorizedCnpjs)) {
+                                this.authorizedCnpjs = Array.from(new Set([...parsed.authorizedCnpjs, this.majorCnpj]));
+                            }
+                            if (parsed.isAuthenticated && parsed.currentUserCnpj && this.authorizedCnpjs.includes(parsed.currentUserCnpj)) {
+                                this.isAuthenticated = true;
+                                this.currentUserCnpj = parsed.currentUserCnpj;
+                            }
+                            if (parsed.settings) this.settings = parsed.settings;
+                            if (parsed.insumos) this.insumos = parsed.insumos;
+                            if (parsed.componentes) this.componentes = parsed.componentes;
+                            if (parsed.produtos) this.produtos = parsed.produtos;
+                            if (parsed.savedQuotes) this.savedQuotes = parsed.savedQuotes;
+                            if (parsed.calc) this.calc = parsed.calc;
+                            if (parsed.cashTransactions) this.cashTransactions = parsed.cashTransactions;
+                        } catch(e) {
+                            console.error('Erro ao restaurar dados', e);
+                        }
+                    }
+                },
+                exportDataJSON() {
+                    const state = {
+                        settings: this.settings,
+                        insumos: this.insumos,
+                        componentes: this.componentes,
+                        produtos: this.produtos,
+                        savedQuotes: this.savedQuotes,
+                        calc: this.calc,
+                        cashTransactions: this.cashTransactions,
+                        exportDate: new Date().toISOString()
+                    };
+                    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `by_Julia_Aleixo_Backup_${new Date().toISOString().slice(0,10)}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    this.showToast('Backup JSON exportado!');
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
