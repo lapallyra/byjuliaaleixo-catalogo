@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { AppConfig, Product } from '../types';
 import { useHomeData } from './Home/useHomeData';
 import { OpeningCurtain } from './Home/OpeningCurtain';
-import { HomeAnnouncementBar } from './Home/HomeAnnouncementBar';
 import { HomeCommemorativeBanner } from './Home/HomeCommemorativeBanner';
 import { HomeAteliersFlipGrid } from './Home/HomeAteliersFlipGrid';
 import { HomeCuratedProducts } from './Home/HomeCuratedProducts';
@@ -51,10 +50,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [], 
         siteName={config.site_name || config.site_title || "by Júlia Aleixo"}
       />
 
-      {/* 2. Top Announcement Bar */}
-      <HomeAnnouncementBar />
-
-      {/* 3. Commemorative Seasonal Banner */}
+      {/* 2. Commemorative Seasonal Banner */}
       <HomeCommemorativeBanner 
         activeCampaigns={activeCampaigns} 
         commemorativeDates={commemorativeDates}

@@ -152,6 +152,23 @@ body {
   .animate-curtain-glow {
     animation: curtainGoldenGlow 3.5s ease-in-out infinite;
   }
+  .animate-marquee {
+    display: flex;
+    width: max-content;
+    animation: marqueeScroll 38s linear infinite;
+  }
+  .animate-marquee:hover {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes curtainGoldenGlow {
