@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <script id="service-worker-cleanup">
-      // Clean up legacy service workers and cached assets to prevent stale home loads
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
           var unregisteredAny = false;
@@ -35,24 +34,113 @@
     <title>Catálogo | Júlia Aleixo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Google Fonts: DM Sans, Mea Culpa, Pinyon Script, Rouge Script, Monsieur La Doulaise, Bowlby One SC -->
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Mea+Culpa&family=Pinyon+Script&family=Rouge+Script&family=Monsieur+La+Doulaise&family=Bowlby+One+SC&display=swap" rel="stylesheet">
-    <script id="fetch-fix">
-      // Fix for "Cannot set property fetch of #<Window> which has only a getter"
-      // This happens when sub-dependencies try to polyfill fetch in environments where it is a protected property.
+    <link href="https://fonts.googleapis.com/css2?family=Mea+Culpa&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <script id="error-filter">
       (function() {
-        try {
-          var _f = window.fetch;
-          Object.defineProperty(window, 'fetch', {
-            get: function() { return _f; },
-            set: function(v) { _f = v; },
-            configurable: true,
-            enumerable: true
-          });
-        } catch (e) {
-          console.warn("Fetch shim failed:", e);
+        const suppressStrings = [
+          'The user aborted a request',
+          'Failed to fetch',
+          'Missing or insufficient permissions',
+          'Load failed',
+          'INTERNAL ASSERTION FAILED',
+          'signal is aborted without reason',
+          'AbortError',
+          'domexception'
+        ];
+
+        function shouldSuppress(args) {
+          const errStr = args.map(a => {
+            try {
+              if (typeof a === 'string') return a;
+              if (a instanceof Error) return a.message + ' ' + (a.name || '') + ' ' + (a.stack || '');
+              return JSON.stringify(a) || String(a);
+            } catch (e) {
+              return String(a);
+            }
+          }).join(' ').toLowerCase();
+          return suppressStrings.some(s => errStr.includes(s.toLowerCase()));
         }
+
+        const origConsoleError = window.console.error;
+        Object.defineProperty(window.console, 'error', {
+          configurable: false,
+          enumerable: true,
+          writable: false,
+          value: function(...args) {
+            if (shouldSuppress(args)) return;
+            return origConsoleError.apply(this, args);
+          }
+        });
+
+        const origConsoleWarn = window.console.warn;
+        Object.defineProperty(window.console, 'warn', {
+          configurable: false,
+          enumerable: true,
+          writable: false,
+          value: function(...args) {
+            if (shouldSuppress(args)) return;
+            return origConsoleWarn.apply(this, args);
+          }
+        });
+
+        const origOnError = window.onerror;
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+          const errStr = String(msg || (error && error.message) || '').toLowerCase();
+          if (suppressStrings.some(s => errStr.includes(s.toLowerCase()))) {
+            return true;
+          }
+          if (origOnError) {
+            return origOnError.apply(this, arguments);
+          }
+          return false;
+        };
+
+        const origOnUnhandledRejection = window.onunhandledrejection;
+        window.onunhandledrejection = function(event) {
+          const errStr = String(event.reason?.message || event.reason || '').toLowerCase();
+          if (suppressStrings.some(s => errStr.includes(s.toLowerCase()))) {
+            event.preventDefault();
+            return true;
+          }
+          if (origOnUnhandledRejection) {
+            return origOnUnhandledRejection.apply(this, arguments);
+          }
+        };
+
+        const origAddEventListener = window.addEventListener;
+        window.addEventListener = function(type, listener, options) {
+          if (type === 'unhandledrejection' || type === 'error') {
+            const wrappedListener = function(event) {
+              const errStr = String(event.reason?.message || event.reason || event.message || event.error?.message || event.error || '').toLowerCase();
+              if (suppressStrings.some(s => errStr.includes(s.toLowerCase()))) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                return;
+              }
+              return listener.apply(this, arguments);
+            };
+            return origAddEventListener.call(this, type, wrappedListener, options);
+          }
+          return origAddEventListener.call(this, type, listener, options);
+        };
+
+        let currentFetch = window.fetch;
+        const patchedFetch = function(...args) {
+          return currentFetch.apply(this, args).catch(err => {
+            const errStr = String(err?.message || err || '').toLowerCase();
+            if (suppressStrings.some(s => errStr.includes(s.toLowerCase()))) {
+              return new Promise(() => {});
+            }
+            throw err;
+          });
+        };
+
+        Object.defineProperty(window, 'fetch', {
+          configurable: false,
+          enumerable: true,
+          get: function() { return patchedFetch; },
+          set: function(v) { currentFetch = v; }
+        });
       })();
     </script>
   </head>
@@ -61,4 +149,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

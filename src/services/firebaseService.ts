@@ -2047,8 +2047,13 @@ export const subscribeToAppConfig = (callback: (config: AppConfig) => void) => {
   return onSnapshot(doc(db, 'appConfig', 'main'), (snapshot) => {
     if (snapshot.exists()) {
       callback(snapshot.data() as AppConfig);
+    } else {
+      callback({} as AppConfig);
     }
-  }, (error) => handleFirestoreError(error, OperationType.GET, path, false));
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, path, false);
+    callback({} as AppConfig);
+  });
 };
 
 export const saveGiftList = async (list: { code: string; items: Product[]; companyId: string }) => {

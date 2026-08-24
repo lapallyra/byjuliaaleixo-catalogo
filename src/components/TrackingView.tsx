@@ -73,10 +73,6 @@ export const TrackingView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center p-8">
-       <button onClick={onBack} className="self-start text-[10px] font-bold uppercase tracking-widest text-[#A09898] hover:text-[#D48C8C] mb-10 transition-colors">
-         ← Voltar para a loja
-       </button>
-
        <div className="w-full max-w-md bg-white p-8 rounded-[2rem] border border-[#F0E6D2] shadow-xl text-center">
          <div className="w-16 h-16 bg-[#FAF9F6] text-[#D48C8C] rounded-2xl flex items-center justify-center mx-auto mb-6">
            <Package size={28} />

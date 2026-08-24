@@ -38,6 +38,7 @@ import {
 import { CompanyId, AppConfig, Product, CartItem, SiteSettings, Campaign } from '../types';
 import { CartSidebar } from './CartSidebar';
 import { CheckoutModal } from './CheckoutModal';
+import { PrizeRouletteModal } from './PrizeRouletteModal';
 import { GiftListSidebar } from './GiftListSidebar';
 import { SuggestionBox } from './SuggestionBox';
 import { ProductDetailPage } from './ProductDetailPage';
@@ -217,6 +218,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isDirectCheckoutLoading, setIsDirectCheckoutLoading] = useState(false);
 
+  // Surprise Cards State
+  const [showSurpriseCards, setShowSurpriseCards] = useState(false);
+  const [pendingCheckoutData, setPendingCheckoutData] = useState<any>(null);
+  const [wonPrize, setWonPrize] = useState<string | null>(null);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     // Auto deep-link to product details on load
@@ -253,6 +259,18 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
   const handleDirectCheckout = async (checkoutData: any = {}) => {
     if (cart.length === 0) return;
+
+    // Calculate total to check for prize
+    const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
+    const total = checkoutData?.total ?? subtotal;
+
+    // Trigger Surprise Cards BEFORE payment if total >= 300 and no prize won yet
+    if (total >= 300 && !wonPrize && !showSurpriseCards && !checkoutData.wonPrize) {
+      setPendingCheckoutData(checkoutData);
+      setShowSurpriseCards(true);
+      return;
+    }
+
     setIsDirectCheckoutLoading(true);
     
     try {
@@ -301,6 +319,10 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
          if (pers.persAge) combinedObs += `\nIdade/Frase: ${pers.persAge}`;
          if (pers.persTheme) combinedObs += `\nTema: ${pers.persTheme}`;
          if (pers.persColors) combinedObs += `\nCores: ${pers.persColors}`;
+      }
+
+      if (checkoutData.wonPrize || wonPrize) {
+        combinedObs += `\n\nBRINDE CONQUISTADO (CARD SURPRESA): ${checkoutData.wonPrize || wonPrize}`;
       }
 
       let addressString = "";
@@ -965,12 +987,12 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           )}
                           <div className="space-y-1">
                             {highlightProd.original_price && highlightProd.original_price > highlightProd.current_price && (
-                              <span className="text-[10px] font-sans font-black tracking-[0.1em] uppercase text-[#8E8E93] line-through">
-                                R$ {highlightProd.original_price.toFixed(2)}
+                              <span className="text-[11px] font-poppins font-medium tracking-tight text-[#8E8E93] line-through tabular-nums">
+                                {formatCurrency(highlightProd.original_price)}
                               </span>
                             )}
-                            <div className="text-2xl font-light text-[#3A312D]">
-                              R$ {highlightProd.current_price.toFixed(2)}
+                            <div className="text-2xl font-poppins font-semibold text-[#3A312D] tracking-tight tabular-nums">
+                              {formatCurrency(highlightProd.current_price)}
                             </div>
                           </div>
                           <div className="flex gap-4 pt-2">
@@ -1182,6 +1204,21 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
           onAddToCart={onAddToCart}
           onCheckoutSubmit={handleDirectCheckout}
           isSubmitting={isDirectCheckoutLoading}
+        />
+
+        <PrizeRouletteModal 
+          isOpen={showSurpriseCards}
+          onClose={() => {
+            setShowSurpriseCards(false);
+            if (pendingCheckoutData) {
+              handleDirectCheckout({ ...pendingCheckoutData, wonPrize });
+            }
+          }}
+          onResult={(prize) => {
+            setWonPrize(prize);
+          }}
+          prizes={siteSettings?.roulette_prizes || []}
+          theme={theme}
         />
 
         {isGiftListOpen && (

@@ -214,26 +214,26 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
                   </button>
                 </div>
 
-                {/* Single Checkbox representation requested as well */}
-                <label className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-pink-100/20 cursor-pointer hover:bg-pink-50/25 transition-all">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 text-pink-500 border-pink-200 rounded focus:ring-pink-400"
-                    checked={formData.classification === "componente"}
-                    onChange={(e) => {
-                      const isComponent = e.target.checked;
-                      setFormData(prev => ({
-                        ...prev,
-                        classification: isComponent ? "componente" : "insumo",
-                        category: prev.category || (isComponent ? "Físico" : "Consumível")
-                      }));
-                    }}
-                  />
-                  <div>
-                    <span className="text-xs font-bold text-gray-700">Este item faz parte do produto final (Componente)</span>
-                    <span className="block text-[10px] text-gray-400 font-semibold">Deixe desmarcado se for um material consumível (Insumo)</span>
+                {/* Single Switch representation requested */}
+                <div 
+                  className="flex items-center justify-between p-4 bg-white rounded-xl border border-pink-100/30 cursor-pointer"
+                  onClick={() => {
+                    const isComponent = formData.classification !== "componente";
+                    setFormData(prev => ({
+                      ...prev,
+                      classification: isComponent ? "componente" : "insumo",
+                      category: prev.category || (isComponent ? "Físico" : "Consumível")
+                    }));
+                  }}
+                >
+                  <div className="flex-1">
+                    <span className="text-xs font-bold text-gray-700 block">Este item faz parte do produto final?</span>
+                    <span className="text-[10px] text-gray-400 font-semibold">Insumo (Consumível) vs Componente (Físico)</span>
                   </div>
-                </label>
+                  <div className={`w-12 h-6 rounded-full p-1 transition-all duration-300 relative ${formData.classification === "componente" ? "bg-emerald-500" : "bg-slate-200"}`}>
+                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${formData.classification === "componente" ? "translate-x-6" : "translate-x-0"}`} />
+                  </div>
+                </div>
               </div>
 
               {/* Nome */}

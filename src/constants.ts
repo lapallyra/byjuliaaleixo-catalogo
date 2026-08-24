@@ -2,17 +2,17 @@ import { Product, AppConfig } from './types';
 
 export const INITIAL_CONFIG: AppConfig = {
   company_1_name: "La Pallyra",
-  company_1_slogan: "é um atelie de encadernação personalizada, onde o seu dia a dia está garantido com alta qualidade.",
+  company_1_slogan: "Papelaria premium e exclusiva para o dia a dia. Encadernação, álbuns, agendas e afins.",
   company_1_logo: "📓",
-  company_2_name: "com amor, Guennita",
-  company_2_slogan: "é um atelie de personalizados com cetim e cartonagem de luxo para momentos que tem que ser excepcionais.",
-  company_2_logo: "👑",
-  company_3_name: "Mimada Sim",
-  company_3_slogan: "é um atelie que pra qualquer momento da sua vida você vai encontar uma lembrancinha/brinde personalizado que é do seu jeitinho.",
-  company_3_logo: "💅",
-  company_4_name: "Tutty Mimo",
-  company_4_slogan: "para o nicho de bebês, maternidade e primeira infância, um estilo acolhedor, afetivo e premium.",
-  company_4_logo: "🍼",
+  company_2_name: "Mimada Sim",
+  company_2_slogan: "Brindes e lembrancinhas para todo o tipo de evento. Casamento, empresarial, batizado, aniversário, afins.",
+  company_2_logo: "🎀",
+  company_3_name: "Tutty Mimo",
+  company_3_slogan: "Dedicado a acolher a chegada de uma nova vida através de presentes delicados, únicos e essenciais com acabamentos cheios de ternura.",
+  company_3_logo: "🧸",
+  company_4_name: "com amor, Guennita",
+  company_4_slogan: "Caixas cartonadas de luxo, flores de cetim, presentes luxuosos para momentos eternos e únicos.",
+  company_4_logo: "👑",
   whatsapp_number: "+55 (44) 974002857",
   background_color: "#ffeef8",
   text_color: "#333333",
@@ -26,10 +26,10 @@ export const INITIAL_CONFIG: AppConfig = {
 };
 
 export const ATELIERS = [
-  { id: 'pallyra', name: 'Ateliê La Pallyra', route: '/lapallyra', icon: '✨' },
-  { id: 'guennita', name: 'Ateliê Com Amor Guennita', route: '/comamorguennita', icon: '💝' },
-  { id: 'mimada', name: 'Ateliê Mimada Sim', route: '/mimadasim', icon: '🎀' },
-  { id: 'tuttymimo', name: 'Ateliê Tutty Mimo', route: '/tuttymimo', icon: '🧸' }
+  { id: 'pallyra', name: 'La Pallyra', route: '/lapallyra', icon: '✨' },
+  { id: 'mimada', name: 'Mimada Sim', route: '/mimadasim', icon: '🎀' },
+  { id: 'tuttymimo', name: 'Tutty Mimo', route: '/tuttymimo', icon: '🧸' },
+  { id: 'guennita', name: 'com amor, Guennita', route: '/comamorguennita', icon: '💝' }
 ];
 
 export const PRODUCTS: Product[] = [

@@ -113,9 +113,6 @@ export const GiftListHowItWorksView: React.FC = () => {
   return (
     <div className="bg-[#FCFAF7] min-h-screen font-sans selection:bg-[#E8DCC8] selection:text-[#3A312D] overflow-x-hidden relative">
       
-      {/* Return Button */}
-      <BotaoVoltar variant="light" />
-
       {/* 1. HERO SECTION */}
       <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
         <motion.div 

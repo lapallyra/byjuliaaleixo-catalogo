@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, Award, Smile, Camera } from 'lucide-react';
 import { getSiteSettings } from '../services/firebaseService';
 import { ImageWithFallback } from './ImageWithFallback';
+import { LoadingScreen } from './LoadingScreen';
 
 export const AboutMeView: React.FC = () => {
   const navigate = useNavigate();
@@ -32,22 +33,12 @@ export const AboutMeView: React.FC = () => {
   const photo = aboutSettings?.about_me_photo || "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?q=80&w=800&auto=format&fit=crop";
 
   return (
-    <div className="bg-[#FFF9F6] min-h-screen text-[#6d5443] font-sans selection:bg-[#e8dcc8] selection:text-[#3A312D] py-12 px-6 select-none overflow-x-hidden relative">
+    <div className="bg-[#FDFCFA] min-h-screen text-[#4A332A] font-sans selection:bg-[#E8DFC8] selection:text-[#2C1810] py-12 px-6 select-none overflow-x-hidden relative">
       {/* BACKGROUND GRAPHICS */}
-      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#F8F5EE]/50 to-transparent pointer-events-none -z-10" />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         
-        {/* BACK ACTION */}
-        <button 
-          id="back-to-home"
-          onClick={() => navigate('/')}
-          className="group flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-[#cca062] hover:text-[#c36266] transition-colors mb-12 outline-none cursor-pointer"
-        >
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Voltar ao Início
-        </button>
-
         {/* HEADER */}
         <div className="text-center mb-16">
           <h1 id="about-us-title" className="font-serif text-3xl sm:text-4xl md:text-5xl uppercase tracking-[0.25em] text-[#6d5443] mb-3">
@@ -59,10 +50,7 @@ export const AboutMeView: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="w-10 h-10 border-2 border-[#cca062] border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs uppercase tracking-widest text-[#cca062] font-bold">Carregando história...</p>
-          </div>
+          <LoadingScreen fullScreen={false} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 items-start mb-16">
             

@@ -41,3 +41,22 @@ export const safeFormatISO = (dateStr: any, formatStr: string, options?: any) =>
     return '---';
   }
 };
+
+export const addBusinessDays = (startDate: Date | string = new Date(), daysToAdd: number = 10): string => {
+  try {
+    let current = new Date(startDate);
+    if (isNaN(current.getTime())) current = new Date();
+    let added = 0;
+    while (added < daysToAdd) {
+      current.setDate(current.getDate() + 1);
+      const day = current.getDay();
+      if (day !== 0 && day !== 6) {
+        added++;
+      }
+    }
+    return format(current, 'yyyy-MM-dd');
+  } catch (err) {
+    return format(new Date(), 'yyyy-MM-dd');
+  }
+};
+

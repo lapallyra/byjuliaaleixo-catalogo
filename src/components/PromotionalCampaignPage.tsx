@@ -5,6 +5,7 @@ import { ArrowLeft, Megaphone, ShoppingBag, Info } from 'lucide-react';
 import { ProductCard } from './ui/ProductCard';
 import { promotionalCampaignService } from '../services/promotionalCampaignService';
 import { Product, PromotionalCampaign } from '../types';
+import { LoadingScreen } from './LoadingScreen';
 
 interface PromotionalCampaignPageProps {
   allProducts: Product[];
@@ -46,14 +47,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
   }, [campaign, allProducts]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FCFAF7] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-2 border-[#3D2E24]/10 border-t-[#cca062] rounded-full animate-spin" />
-          <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#3D2E24]/40">Carregando...</span>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!campaign) {

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Product, CompanyId, Order, Componente, Insumo, Customer, AuditLog } from "../types";
+import { checkIsAdminDomain } from "../lib/utils";
+import { LoadingScreen } from "./LoadingScreen";
 import {
   addProduct,
   updateProduct,
@@ -145,20 +147,78 @@ interface AdminDashboardProps {
   onGoBack: () => void;
 }
 
-const TabLoader = () => (
-  <div className="h-64 flex flex-col items-center justify-center gap-4 animate-in fade-in">
-    <div className="w-10 h-10 border-2 border-[#3D2E24]/10 border-t-[#cca062] rounded-full animate-spin" />
-    <span className="text-[10px] font-black uppercase text-[#3D2E24]/40 tracking-[0.3em]">
-      Carregando...
-    </span>
-  </div>
-);
+const TabLoader = () => <LoadingScreen fullScreen={false} />;
+
+const TAB_TO_PATH: Record<TabType, string> = {
+  dashboard: "/",
+  orders: "/pedidos",
+  inventory: "/estoque",
+  products: "/produtos",
+  kits: "/kits",
+  clients: "/clientes",
+  financeiro: "/financeiro",
+  auditoria: "/auditoria",
+  deliveries: "/entregas",
+  "gift-lists": "/listas-presentes",
+  "commemorative-dates": "/datas-comemorativas",
+  "promotional-campaigns": "/campanhas",
+  reports: "/relatorios",
+  settings: "/configuracoes",
+  addons: "/adicionais",
+  prizes: "/premios",
+  feedbacks: "/feedbacks",
+  funnel: "/funil",
+  "activity-logs": "/logs",
+  collections: "/colecoes",
+  "media-center": "/midia",
+  campaigns: "/marketing",
+  integrations: "/integracoes",
+  notifications: "/notificacoes",
+  componentes: "/componentes",
+  purchases: "/compras",
+  efficiency: "/eficiencia",
+  control_center: "/controle",
+  coupons: "/cupons",
+  users: "/usuarios",
+  backup: "/backup",
+  migration: "/migracao"
+};
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   const { user, isAdmin, role, loading, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const orchestrator = useAdminOrchestrator();
-  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  const isAdminDomain = checkIsAdminDomain();
+  
+  // Initialize activeTab from URL
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    const path = location.pathname.replace(/^\/admin/, "");
+    const foundTab = (Object.entries(TAB_TO_PATH) as [TabType, string][]).find(
+      ([_, tabPath]) => tabPath === (path || "/")
+    );
+    return foundTab ? foundTab[0] : "dashboard";
+  });
+
+  // Sync activeTab when URL changes
+  useEffect(() => {
+    const path = location.pathname.replace(/^\/admin/, "");
+    const foundTab = (Object.entries(TAB_TO_PATH) as [TabType, string][]).find(
+      ([_, tabPath]) => tabPath === (path || "/")
+    );
+    if (foundTab && foundTab[0] !== activeTab) {
+      setActiveTab(foundTab[0]);
+    }
+  }, [location.pathname, activeTab]);
+
+  // Update URL when activeTab changes (e.g. via sidebar click)
+  const handleSetTab = (tab: TabType) => {
+    if (tab === activeTab) return;
+    setActiveTab(tab);
+    const path = TAB_TO_PATH[tab];
+    const fullPath = isAdminDomain ? path : `/admin${path === "/" ? "" : path}`;
+    navigate(fullPath);
+  };
   const [selectedCompanyId, setSelectedCompanyId] =
     useState<CompanyId>("pallyra"); // Default to first
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -241,7 +301,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       const customEvent = e as CustomEvent;
       if (customEvent.detail) {
         setSelectedOrderId(customEvent.detail);
-        setActiveTab("orders");
+        handleSetTab("orders");
       }
     };
 
@@ -388,7 +448,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         isCollapsed={isSidebarCollapsed}
         toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         activeTab={activeTab}
-        setActiveTab={(tab) => setActiveTab(tab as TabType)}
+        setActiveTab={handleSetTab}
         menuGroups={menuGroups}
         groupedMenu={groupedMenu}
         logout={() => {
@@ -436,7 +496,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                         <button
                           key={`mob-${item.id}`}
                           onClick={() => {
-                            setActiveTab(item.id);
+                            handleSetTab(item.id as TabType);
                             setIsMobileMenuOpen(false);
                           }}
                           className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative mb-2 ${isActive ? "bg-[#FF1493] text-white" : "text-[#8E8E93] hover:text-[#FF1493]"}`}
@@ -490,7 +550,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                                     <button
                                       key={`mob-sub-${item.id}`}
                                       onClick={() => {
-                                        setActiveTab(item.id);
+                                        handleSetTab(item.id as TabType);
                                         setIsMobileMenuOpen(false);
                                       }}
                                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative ${isActive ? "bg-gradient-to-b from-pink-400 to-pink-500 text-white font-bold shadow-md" : "text-[#8E8E93] hover:text-[#FF1493]"}`}
@@ -549,25 +609,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
             {/* CENTRAL - Quick Action Buttons */}
             <div className="hidden md:flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
               <button 
-                onClick={() => setActiveTab("orders")}
+                onClick={() => handleSetTab("orders")}
                 className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-all shadow-sm border border-slate-100 active:scale-95"
               >
                 <ShoppingBag size={14} className="text-pink-500" /> Novo Pedido
               </button>
               <button 
-                onClick={() => setActiveTab("clients")}
+                onClick={() => handleSetTab("clients")}
                 className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-emerald-500 transition-all shadow-sm border border-slate-100 active:scale-95"
               >
                 <User size={14} className="text-emerald-500" /> Novo Cliente
               </button>
               <button 
-                onClick={() => setActiveTab("inventory")}
+                onClick={() => handleSetTab("inventory")}
                 className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-amber-500 transition-all shadow-sm border border-slate-100 active:scale-95"
               >
                 <Package size={14} className="text-amber-500" /> Novo Insumo
               </button>
               <button 
-                onClick={() => setActiveTab("products")}
+                onClick={() => handleSetTab("products")}
                 className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-sky-500 transition-all shadow-sm border border-slate-100 active:scale-95"
               >
                 <Box size={14} className="text-sky-500" /> Novo Produto
@@ -582,11 +642,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                 customers={customers} 
                 insumos={insumos} 
                 onResultClick={(type, id) => {
-                  if (type === 'Pedido') { setSelectedOrderId(id); setActiveTab('orders'); }
-                  else if (type === 'Cliente') { setSelectedCustomerId(id); setActiveTab('clients'); }
-                  else if (type === 'Produto') { setActiveTab('products'); }
-                  else if (type === 'Insumo') { setActiveTab('inventory'); }
-                  else if (type === 'Componente') { setActiveTab('componentes'); }
+                  if (type === 'Pedido') { setSelectedOrderId(id); handleSetTab('orders'); }
+                  else if (type === 'Cliente') { setSelectedCustomerId(id); handleSetTab('clients'); }
+                  else if (type === 'Produto') { handleSetTab('products'); }
+                  else if (type === 'Insumo') { handleSetTab('inventory'); }
+                  else if (type === 'Componente') { handleSetTab('componentes'); }
                 }}
               />
               <div className="relative">
@@ -618,7 +678,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         )}
 
         {/* Content Tabs Container */}
-        <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto w-full max-w-[1600px] mx-auto px-6 py-8 lg:px-10 lg:py-10 scrollbar-hide scroll-smooth">
+        <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto w-full max-w-[1600px] mx-auto px-2 sm:px-3 lg:px-4 py-4 lg:py-6 scrollbar-hide scroll-smooth">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -658,15 +718,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       customers={customers}
                       companyId={selectedCompanyId}
                       onAction={(action: any) => {
-                        if (action === "new_order" || action === "orders") setActiveTab("orders");
-                        else if (action === "new_client" || action === "clients") setActiveTab("clients");
-                        else if (action === "new_insumo" || action === "inventory") setActiveTab("inventory");
-                        else if (action === "products") setActiveTab("products");
-                        else if (action === "campaigns") setActiveTab("campaigns");
-                        else if (action === "coupons") setActiveTab("coupons");
-                        else if (action === "notifications") setActiveTab("notifications");
-                        else if (action === "purchases") setActiveTab("purchases");
-                        else if (action === "finance") setActiveTab("financeiro");
+                        if (action === "new_order" || action === "orders") handleSetTab("orders");
+                        else if (action === "new_client" || action === "clients") handleSetTab("clients");
+                        else if (action === "new_insumo" || action === "inventory") handleSetTab("inventory");
+                        else if (action === "products") handleSetTab("products");
+                        else if (action === "campaigns") handleSetTab("campaigns");
+                        else if (action === "coupons") handleSetTab("coupons");
+                        else if (action === "notifications") handleSetTab("notifications");
+                        else if (action === "purchases") handleSetTab("purchases");
+                        else if (action === "finance") handleSetTab("financeiro");
                         else if (action === "go_back") onGoBack();
                       }}
                       onOpenOrder={(order) => setPrintingOrder(order)}
@@ -832,7 +892,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       customers={customers}
                       onNewOrder={(customerId) => {
                         setSelectedCustomerId(customerId);
-                        setActiveTab("orders");
+                        handleSetTab("orders");
                       }}
                     />
                   )}

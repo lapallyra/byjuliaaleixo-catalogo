@@ -154,13 +154,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       
       {/* HEADER / NAVIGATION */}
       <div className="max-w-[1600px] mx-auto px-6 py-8">
-        <button 
-          onClick={onClose}
-          className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-900 transition-colors group"
-        >
-          <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-          Voltar para a Vitrine
-        </button>
       </div>
 
       <div className="max-w-[1600px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">

@@ -16,16 +16,18 @@ import { GiftListInfoView } from '../GiftListInfoView';
 import { GiftListView } from '../GiftListView';
 import { CheckoutPage } from '../CheckoutPage';
 import { OrderApprovalPage } from '../Approval/OrderApprovalPage';
-import { ClientCheckout } from '../Checkout/ClientCheckout';
 import { TrackingView } from '../TrackingView';
 import { MinhaExperienciaPage } from '../cliente/MinhaExperienciaPage';
 import { DocumentSearch } from '../DocumentSearch';
 import { StudioPage } from '../../studiomockup/pages/StudioPage';
 import { TopAnnouncementBar } from '../TopAnnouncementBar';
 import { Footer } from '../Footer';
+import { BotaoVoltar } from '../BotaoVoltar';
+import { SiteHeader } from './SiteHeader';
 import { CustomerSocialProofToast } from '../CustomerSocialProofToast';
 import { CompanyCatalogWrapper } from './CompanyCatalogWrapper';
 import { GlobalSearchView } from '../GlobalSearchView';
+import { LoadingScreen } from '../LoadingScreen';
 import { CommemorativeCampaignPage } from '../CommemorativeCampaignPage';
 import { PromotionalCampaignPage } from '../PromotionalCampaignPage';
 import { INITIAL_CONFIG, PRODUCTS } from '../../constants';
@@ -60,18 +62,29 @@ export function SiteApp() {
 
   useEffect(() => {
     const unsubConfig = subscribeToAppConfig((newConfig) => {
-      setConfig(prev => ({ ...prev, ...newConfig }));
+      if (newConfig && Object.keys(newConfig).length > 0) {
+        setConfig(prev => ({ ...prev, ...newConfig }));
+      }
       setIsConfigLoaded(true);
     });
     
     const unsubProducts = subscribeToProducts((loaded) => {
-      if (loaded.length > 0) setAllProducts(loaded);
+      if (loaded && loaded.length > 0) {
+        setAllProducts(loaded);
+      }
       setIsProductsLoaded(true);
     });
+
+    // Safety fallback: ensure loading flags are set after 600ms even on slow networks
+    const safetyTimer = setTimeout(() => {
+      setIsConfigLoaded(true);
+      setIsProductsLoaded(true);
+    }, 600);
 
     return () => {
       unsubConfig();
       unsubProducts();
+      clearTimeout(safetyTimer);
     };
   }, []);
 
@@ -145,53 +158,23 @@ export function SiteApp() {
   }, []);
 
   if (!isConfigLoaded || !isProductsLoaded) {
-    return (
-      <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center font-sans">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="flex flex-col items-center"
-        >
-          <div className="relative mb-8">
-            <motion.div 
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="text-[#3D2E24]/10"
-            >
-              <Loader2 size={48} strokeWidth={1} />
-            </motion.div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-1.5 h-1.5 bg-[#3D2E24]/40 rounded-full animate-pulse" />
-            </div>
-          </div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="flex flex-col items-center gap-2"
-          >
-            <span className="text-[#3D2E24] font-mea-culpa text-3xl mb-1 opacity-80">
-              by Julia Aleixo
-            </span>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-[1px] bg-[#3D2E24]/10" />
-              <span className="text-[#3D2E24]/40 font-sans text-[9px] uppercase tracking-[0.4em] font-medium">
-                Sincronizando Afeto
-              </span>
-              <div className="w-8 h-[1px] bg-[#3D2E24]/10" />
-            </div>
-          </motion.div>
-        </motion.div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
-    <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen bg-[#FCFAF7]">
+    <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen bg-[#FDFCFA]">
       <TopAnnouncementBar />
-      <div className="flex-grow flex flex-col">
+      {location.pathname !== '/' && (
+        <SiteHeader onOpenSearch={() => setIsGlobalSearchOpen(true)} />
+      )}
+      
+      <div className="flex-grow flex flex-col relative">
+        {location.pathname !== '/' && (
+          <div className="hidden md:block">
+            <BotaoVoltar variant="dark" />
+          </div>
+        )}
+        
         <Routes>
           <Route path="/" element={<EntryView config={effectiveConfig} allProducts={allProducts} onOpenSearch={() => setIsGlobalSearchOpen(true)} />} />
           <Route path="/comemorativas/:slug" element={<CommemorativeCampaignPage allProducts={allProducts} />} />
@@ -220,9 +203,9 @@ export function SiteApp() {
           
           <Route path="/checkout/:id" element={<CheckoutPage config={effectiveConfig} />} />
           <Route path="/ped-:code" element={<CheckoutPage config={effectiveConfig} />} />
-          <Route path="/checkoutdois/:code" element={<ClientCheckout />} />
+          <Route path="/checkoutdois/:code" element={<CheckoutPage config={effectiveConfig} />} />
           <Route path="/approval/:code" element={<OrderApprovalPage />} />
-          <Route path="/client-checkout/:code" element={<ClientCheckout />} />
+          <Route path="/client-checkout/:code" element={<CheckoutPage config={effectiveConfig} />} />
           <Route path="/rastreamento" element={<TrackingView onBack={() => window.history.back()} />} />
           <Route path="/minha-experiencia/*" element={<MinhaExperienciaPage />} />
           <Route path="/document" element={<DocumentSearch onGoBack={() => window.history.back()} />} />

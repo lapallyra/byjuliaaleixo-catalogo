@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Order, Product, CompanyId } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
-import { safeFormat } from "../../lib/dateUtils";
+import { safeFormat, addBusinessDays } from "../../lib/dateUtils";
 import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
 import { X, CheckCircle, Trash2 } from "lucide-react";
 
@@ -370,13 +370,13 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
-                Data de Entrega / Evento
+                Previsão de Entrega (+10 dias úteis)
               </label>
               <input
                 name="deliveryDate"
                 defaultValue={
                   editingOrder?.deliveryDate ||
-                  safeFormat(new Date(), "yyyy-MM-dd")
+                  addBusinessDays(new Date(), 10)
                 }
                 required
                 type="date"
@@ -408,7 +408,7 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
+          <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-top-1">
             <div className="space-y-1">
               <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
                 Responsável
@@ -420,21 +420,6 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
                 onChange={(e) => setResponsible(e.target.value)}
                 className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900 font-sans"
               />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
-                Prioridade
-              </label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as Order["priority"])}
-                className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-medium outline-none text-slate-900"
-              >
-                <option value="baixa">Baixa</option>
-                <option value="normal">Normal</option>
-                <option value="alta">Alta</option>
-                <option value="urgente">Urgente</option>
-              </select>
             </div>
           </div>
 

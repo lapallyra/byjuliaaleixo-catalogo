@@ -280,25 +280,6 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
                       <label className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest ml-1">Categoria *</label>
                       <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} placeholder="Ex: Papelaria" className="w-full bg-white border border-[#E5E5EA] rounded-2xl p-4 text-xs font-bold text-[#1C1C1E] outline-none focus:border-[#1C1C1E]/20 shadow-inner transition-all"/>
                     </div>
-                    <div className="col-span-2 space-y-2">
-                      <label className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest ml-1">Tipo de Produto *</label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {["fabricado", "kit", "revenda", "digital", "servico"].map(t => (
-                          <button
-                            key={t}
-                            type="button"
-                            onClick={() => setFormData({...formData, type: t as any})}
-                            className={`p-4 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all ${
-                              formData.type === t 
-                                ? 'bg-[#1C1C1E] text-white border-[#1C1C1E] shadow-3d-soft elevated-3d' 
-                                : 'bg-white text-[#8E8E93] border-[#E5E5EA] hover:border-[#1C1C1E]/20'
-                            }`}
-                          >
-                            {t}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
                   </div>
                 </motion.div>
               )}

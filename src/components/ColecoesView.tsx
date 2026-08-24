@@ -201,21 +201,12 @@ export const ColecoesView: React.FC<ColecoesViewProps> = ({ allProducts = [] }) 
   );
 
   return (
-    <div className="bg-[#FFF9F6] min-h-screen text-[#6d5443] font-sans selection:bg-[#e8dcc8] selection:text-[#3A312D] py-12 px-6 select-none overflow-x-hidden relative">
+    <div className="bg-[#FDFCFA] min-h-screen text-[#4A332A] font-sans selection:bg-[#E8DFC8] selection:text-[#2C1810] py-12 px-6 select-none overflow-x-hidden relative">
       {/* BACKGROUND GRAPHICS */}
-      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#F8F5EE]/50 to-transparent pointer-events-none -z-10" />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         
-        {/* BACK TO HOME */}
-        <button 
-          onClick={() => navigate('/')}
-          className="group flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-[#cca062] hover:text-[#c36266] transition-colors mb-12 outline-none cursor-pointer"
-        >
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Voltar ao Início
-        </button>
-
         {/* HEADER */}
         <div className="text-center mb-16">
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl uppercase tracking-[0.25em] text-[#6d5443] mb-3">

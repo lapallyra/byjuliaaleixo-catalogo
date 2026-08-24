@@ -60,7 +60,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = React.memo(({
   const [filterType, setFilterType] = useState<string>("all"); // all, fabricado, revenda, kit
   const [filterStatus, setFilterStatus] = useState<string>("all"); // all, active, inactive
   const [sortBy, setSortBy] = useState<string>("name"); // name, date, price, margin, best_sellers, last_update
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   

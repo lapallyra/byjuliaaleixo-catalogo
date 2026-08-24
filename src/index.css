@@ -1,20 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Mea+Culpa&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Pinyon+Script&family=Monsieur+La+Doulaise&family=Bowlby+One+SC&family=Playfair+Display:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mea+Culpa&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 @import "tailwindcss";
 
 html {
   scroll-behavior: smooth;
-  background-color: #FCFAF7;
+  background-color: #FDFCFA;
 }
 
 body {
-  @apply bg-[#FCFAF7] text-[#161616] font-sans antialiased;
+  @apply bg-[#FDFCFA] text-[#2C1810] font-sans antialiased;
   margin: 0;
   padding: 0;
+  font-family: var(--font-sans);
 }
 
 @theme {
-  --font-sans: "DM Sans", sans-serif;
-  --font-poppins: "DM Sans", sans-serif;
+  --font-sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-poppins: "Poppins", sans-serif;
+  --font-meaculpa: "Mea Culpa", cursive;
+  --font-mea-culpa: "Mea Culpa", cursive;
   --font-serif: "Playfair Display", serif;
   --font-playfair: "Playfair Display", serif;
   --font-hello-olivia: "Mea Culpa", cursive;
@@ -25,79 +28,73 @@ body {
   --font-sofia: "Mea Culpa", cursive;
   --font-imperial: "Mea Culpa", cursive;
   --font-allura: "Mea Culpa", cursive;
-  --font-mea-culpa: "Mea Culpa", cursive;
-  --font-number: "DM Sans", sans-serif;
-  --font-tahoma: "DM Sans", sans-serif;
-  --color-gold: #C6A664;
-  --color-gold-deep: #B39254;
-  --color-charcoal: #161616;
-  --color-soft-white: #F8F8F6;
+  --font-rouge: "Mea Culpa", cursive;
+  --font-pinyon: "Mea Culpa", cursive;
+  --font-monsieur: "Mea Culpa", cursive;
+  --font-bowlby: "Poppins", sans-serif;
+  --font-number: "Poppins", sans-serif;
+  --font-tahoma: "Poppins", sans-serif;
+  --color-brand-background: #FDFCFA;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-surface-alt: #F8F5EE;
+  --color-brand-text: #2C1810;
+  --color-brand-muted: #593E32;
+  --color-brand-muted-light: #8C6D37;
+  --color-brand-border: #E8DFC8;
+  --color-brand-border-light: #D4AF37;
+  --color-brand-accent: #B38F4D;
+  --color-brand-accent-light: #D4AF37;
+  --color-gold: #D4AF37;
+  --color-gold-deep: #B38F4D;
+  --color-charcoal: #2C1810;
+  --color-soft-white: #FDFCFA;
   --color-lilac: #E9D5FF;
   --color-lilac-baby: #F5EBFF;
-  --color-deep-black: #050505;
-  --color-off-white: #FAF9F6;
-  --color-cream: #FCFAF7;
-  --color-white: #FCFAF7;
-  --color-neutral-50: #FCFAF7;
-  --color-neutral-100: #F9F7F2;
-  --color-gray-50: #FCFAF7;
-  --color-gray-100: #F9F7F2;
-  --color-slate-50: #FCFAF7;
-  --color-slate-100: #F9F7F2;
-  --font-pinyon: "Pinyon Script", cursive;
-  --font-gloock: "Gloock", serif;
-  --font-monsieur: "Monsieur La Doulaise", cursive;
-  --font-bowlby: "Bowlby One SC", sans-serif;
-  --font-rouge: "Mea Culpa", cursive;
+  --color-deep-black: #0A0A0A;
+  --color-off-white: #FDFCFA;
+  --color-cream: #FDFCFA;
+  --color-white: #FFFFFF;
+  --color-neutral-50: #FDFCFA;
+  --color-neutral-100: #F8F5EE;
+  --color-gray-50: #FDFCFA;
+  --color-gray-100: #F8F5EE;
+  --color-slate-50: #FDFCFA;
+  --color-slate-100: #F8F5EE;
 }
 
 @layer utilities {
+  .font-meaculpa {
+    font-family: "Mea Culpa", cursive !important;
+  }
+  .font-poppins {
+    font-family: "Poppins", sans-serif !important;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .font-serif {
+    font-family: "Playfair Display", serif !important;
+    font-feature-settings: "lnum" 1, "pnum" 1;
+    font-variant-numeric: lining-nums proportional-nums;
+  }
+  .font-number, .font-nums {
+    font-family: "Poppins", sans-serif !important;
+    font-feature-settings: "lnum" 1, "tnum" 1;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
   .mea-culpa-regular {
     font-family: "Mea Culpa", cursive;
     font-weight: 400;
     font-style: normal;
   }
-  .dm-sans-regular {
-    font-family: "DM Sans", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 400;
-    font-style: normal;
-  }
-  .pinyon-script-regular {
-    font-family: "Pinyon Script", cursive;
-    font-weight: 400;
-    font-style: normal;
-  }
-  .rouge-script-regular {
-    font-family: "Mea Culpa", cursive;
-    font-weight: 400;
-    font-style: normal;
-  }
-  .monsieur-la-doulaise-regular {
-    font-family: "Monsieur La Doulaise", cursive;
-    font-weight: 400;
-    font-style: normal;
-  }
-  .bowlby-one-sc-regular {
-    font-family: "Bowlby One SC", sans-serif;
-    font-weight: 400;
-    font-style: normal;
-  }
-  .font-poppins {
-    font-family: var(--font-poppins);
-  }
-  .font-playfair {
-    font-family: var(--font-playfair);
-  }
   .font-hello-olivia {
-    font-family: var(--font-hello-olivia);
+    font-family: "Mea Culpa", cursive;
   }
   .font-fancy {
-    font-family: var(--font-rouge);
+    font-family: "Mea Culpa", cursive;
     font-weight: 400;
   }
   .font-beauty {
-    font-family: var(--font-rouge);
+    font-family: "Mea Culpa", cursive;
   }
   .font-signature {
     font-family: var(--font-rouge);
@@ -138,6 +135,41 @@ body {
     font-family: sans-serif; /* Needs to be a generic simple font for the symbol */
     font-size: 0.75rem;
     color: #C6A664;
+  }
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+  .animate-curtain-glow {
+    animation: curtainGoldenGlow 3.5s ease-in-out infinite;
+  }
+}
+
+@keyframes curtainGoldenGlow {
+  0%, 100% {
+    text-shadow: 
+      0 0 18px rgba(245, 222, 168, 0.7),
+      0 0 38px rgba(229, 195, 136, 0.5),
+      0 0 70px rgba(212, 175, 55, 0.35),
+      0 0 110px rgba(179, 143, 77, 0.2);
+    filter: drop-shadow(0 0 20px rgba(229, 195, 136, 0.35));
+  }
+  50% {
+    text-shadow: 
+      0 0 28px rgba(255, 238, 195, 0.95),
+      0 0 58px rgba(229, 195, 136, 0.75),
+      0 0 98px rgba(212, 175, 55, 0.55),
+      0 0 150px rgba(212, 175, 55, 0.3);
+    filter: drop-shadow(0 0 35px rgba(229, 195, 136, 0.6));
   }
 }
 

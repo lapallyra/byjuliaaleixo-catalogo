@@ -30,29 +30,19 @@ export const AteliersPresentationView: React.FC = () => {
     {
       id: 'pallyra',
       name: 'La Pallyra',
-      title: 'Papelaria Artesanal & Blocagem',
-      concept: 'A Arte da Escrita e Memória',
-      description: 'Organização e rotina transformadas em momentos de poesia. Nossos planners e blocos são tecidos com técnicas de cartonagem secular, abraçando suas ideias em papéis de gramatura nobre.',
+      title: 'Papelaria Premium & Encadernação',
+      concept: 'A Arte da Escrita e Organização',
+      description: 'Papelaria premium e exclusiva para o dia a dia. Encadernação nobre, álbuns personalizados, agendas e planners exclusivos feitos à mão.',
       image: PALLYRA_IMAGE,
       route: '/lapallyra',
       color: '#1A1A1A'
     },
     {
-      id: 'guennita',
-      name: 'com amor, Guennita',
-      title: 'Romantismo & Flores de Cetim',
-      concept: 'Eternizando Sentimentos',
-      description: 'Cada pétala é moldada individualmente em cetim premium. Buquês que desafiam o tempo, conservando a doçura dos dias mais felizes de uma vida.',
-      image: GUENNITA_IMAGE,
-      route: '/comamorguennita',
-      color: '#6D0D0D'
-    },
-    {
       id: 'mimada',
       name: 'Mimada Sim',
-      title: 'Lembranças com Alma',
-      concept: 'O Brilho de Celebrar',
-      description: 'Onde a festa ganha sofisticação. Transformamos o ato de presentear em uma experiência sensorial, com acabamentos delicados e design exclusivo para momentos inesquecíveis.',
+      title: 'Brindes & Lembrancinhas para Eventos',
+      concept: 'Celebrar com Identidade',
+      description: 'Brindes e lembrancinhas para todo o tipo de evento. Casamento, empresarial, batizado, aniversário e celebrações especiais feitas do seu jeitinho.',
       image: MIMADA_IMAGE,
       route: '/mimadasim',
       color: '#D4AF37'
@@ -60,21 +50,28 @@ export const AteliersPresentationView: React.FC = () => {
     {
       id: 'tuttymimo',
       name: 'Tutty Mimo',
-      title: 'Maternidade Premium',
+      title: 'Maternidade & Primeira Infância',
       concept: 'O Primeiro Acolhimento',
-      description: 'Uma curadoria afetiva para o início da jornada. Estilo minimalista e tecidos naturais que envolvem o bebê em um abraço de cuidado e elegância.',
+      description: 'Dedicado a acolher a chegada de uma nova vida através de presentes delicados, únicos e essenciais com acabamentos cheios de ternura.',
       image: TUTTY_IMAGE,
       route: '/tuttymimo',
       color: '#CCA062'
+    },
+    {
+      id: 'guennita',
+      name: 'com amor, Guennita',
+      title: 'Cartonagem de Luxo & Flores de Cetim',
+      concept: 'Eternizando Momentos Únicos',
+      description: 'Caixas cartonadas de luxo, flores de cetim moldadas à mão e presentes luxuosos para momentos eternos e inesquecíveis.',
+      image: GUENNITA_IMAGE,
+      route: '/comamorguennita',
+      color: '#6D0D0D'
     }
   ];
 
   return (
-    <div className="bg-[#FCFAF7] min-h-screen font-sans selection:bg-[#E8DCC8] selection:text-[#3A312D] overflow-x-hidden relative">
+    <div className="bg-[#FDFCFA] min-h-screen font-sans selection:bg-[#E8DCC8] selection:text-[#3A312D] overflow-x-hidden relative">
       
-      {/* Return Button */}
-      <BotaoVoltar variant="light" />
-
       {/* 1. HERO SECTION */}
       <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
         <motion.div 

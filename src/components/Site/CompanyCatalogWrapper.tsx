@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Product, AppConfig, CompanyId, CartItem } from '../../types';
 import { CatalogView } from '../CatalogView';
 import { SuccessOverlay } from '../SuccessOverlay';
+import { checkIsAdminDomain } from '../../lib/utils';
 import { PrizeRouletteModal } from '../PrizeRouletteModal';
 import { playSuccessSound } from '../../utils/audio';
 import { sendNotifications } from '../../services/notificationService';
@@ -32,8 +33,6 @@ export function CompanyCatalogWrapper({
   onOpenGlobalSearch?: () => void
 }) {
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showMPRoulette, setShowMPRoulette] = useState(false);
-  const [mpPendingOrderData, setMpPendingOrderData] = useState<any>(null);
   const [orderCode, setOrderCode] = useState<string | undefined>(undefined);
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,9 +55,7 @@ export function CompanyCatalogWrapper({
           const pendingOrder = JSON.parse(pendingOrderStr);
           if (pendingOrder && pendingOrder.companyName) {
             handleClearCart();
-            setMpPendingOrderData(pendingOrder);
             if (pendingOrder.orderId) setOrderCode(pendingOrder.orderId);
-            setShowMPRoulette(true);
             playSuccessSound();
             localStorage.removeItem('mp_pending_order');
             navigate(location.pathname, { replace: true });
@@ -162,7 +159,10 @@ export function CompanyCatalogWrapper({
         onAddToFavorite={handleAddToFavorite}
         onGoBack={() => navigate('/')}
         onCheckoutComplete={() => setShowSuccess(true)}
-        onOpenAdmin={() => navigate('/admin')}
+        onOpenAdmin={() => {
+          const isAdminDomain = checkIsAdminDomain();
+          navigate(isAdminDomain ? '/' : '/admin');
+        }}
         onOpenGlobalSearch={onOpenGlobalSearch}
       />
       {showSuccess && (
@@ -173,37 +173,6 @@ export function CompanyCatalogWrapper({
             setOrderCode(undefined);
             handleClearCart();
           }} 
-        />
-      )}
-      {showMPRoulette && mpPendingOrderData && (
-        <PrizeRouletteModal 
-          isOpen={showMPRoulette}
-          onClose={async () => {
-            setShowMPRoulette(false);
-            setShowSuccess(true);
-            try {
-              const url = await sendNotifications(mpPendingOrderData.config || config, mpPendingOrderData.cart, mpPendingOrderData.formData, mpPendingOrderData.total, mpPendingOrderData.companyName);
-              if (url) {
-                setTimeout(() => window.open(url, '_blank'), 1500);
-              }
-            } catch(e) {
-              console.error("Error generating whatsapp", e);
-            }
-          }}
-          onResult={async (prize) => {
-            try {
-              if (mpPendingOrderData.orderId) {
-                await updateOrder(mpPendingOrderData.orderId, { giftInfo: prize });
-              }
-              if (mpPendingOrderData.formData) {
-                mpPendingOrderData.formData.wonPrize = prize;
-              }
-            } catch(e) {
-              console.error("Error updating prize", e);
-            }
-          }}
-          prizes={mpPendingOrderData.config?.roulette_prizes || []}
-          theme={{ accentColor: mpPendingOrderData.config?.theme?.primary_color || '#000000' }}
         />
       )}
     </>

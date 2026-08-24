@@ -397,10 +397,10 @@ export function CommemorativeDatesTab() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <HorizontalScroll className="items-center gap-2 pb-2">
+        <HorizontalScroll className="items-center gap-4 pb-4">
           <button
             onClick={() => setSelectedCategory("all")}
-            className={`px-6 py-3 rounded-full text-xs font-medium tracking-normal whitespace-nowrap transition-all border ${selectedCategory === "all" ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-[#E5E5EA] text-slate-500 hover:bg-slate-50"}`}
+            className={`px-8 py-4 rounded-full text-sm font-bold tracking-normal whitespace-nowrap transition-all border ${selectedCategory === "all" ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-[#E5E5EA] text-slate-500"}`}
           >
             Todos
           </button>
@@ -408,9 +408,9 @@ export function CommemorativeDatesTab() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-6 py-3 rounded-full text-xs font-medium tracking-normal whitespace-nowrap transition-all border flex items-center gap-2 ${selectedCategory === cat.id ? "bg-white border-slate-900 text-slate-900 shadow-lg" : "bg-white border-[#E5E5EA] text-slate-500 hover:bg-slate-50"}`}
+              className={`px-8 py-4 rounded-full text-sm font-bold tracking-normal whitespace-nowrap transition-all border flex items-center gap-3 ${selectedCategory === cat.id ? "bg-white border-slate-900 text-slate-900 shadow-lg" : "bg-white border-[#E5E5EA] text-slate-500"}`}
             >
-              <cat.icon size={14} style={{ color: cat.color }} />
+              <cat.icon size={16} style={{ color: cat.color }} />
               {cat.label}
             </button>
           ))}
@@ -434,7 +434,7 @@ export function CommemorativeDatesTab() {
               return (
                 <div
                   key={date.id}
-                  className="bg-white rounded-2xl border border-[#E5E5EA] p-8 hover:shadow-2xl hover:shadow-slate-200/50 transition-all group relative overflow-hidden"
+                  className="bg-white rounded-2xl border border-[#E5E5EA] p-8 shadow-sm transition-all group relative overflow-hidden"
                 >
                   {!date.active && (
                     <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
@@ -447,7 +447,7 @@ export function CommemorativeDatesTab() {
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-500"
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center duration-500"
                         style={{ backgroundColor: `${catInfo?.color}15` }}
                       >
                         <Icon size={20} style={{ color: catInfo?.color }} />
@@ -461,9 +461,14 @@ export function CommemorativeDatesTab() {
                             <Sparkles size={12} className="text-yellow-500" />
                           )}
                         </div>
-                        <p className="text-[10px] text-[#8E8E93] font-bold tracking-normal">
-                          {catInfo?.label}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[10px] text-[#8E8E93] font-bold tracking-normal">
+                            {catInfo?.label}
+                          </p>
+                          <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase tracking-wider">
+                            {date.scope || (date.is_national ? 'Nacional' : 'Regional')}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -673,7 +678,7 @@ export function CommemorativeDatesTab() {
               </div>
 
               <form onSubmit={handleSave} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
                       Nome da Data
@@ -708,6 +713,26 @@ export function CommemorativeDatesTab() {
                           {c.label}
                         </option>
                       ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
+                      Escopo da Data
+                    </label>
+                    <select
+                      value={editingDate?.scope || (editingDate?.is_national ? 'nacional' : 'regional')}
+                      onChange={(e) =>
+                        setEditingDate({
+                          ...editingDate,
+                          scope: e.target.value as 'nacional' | 'mundial' | 'regional',
+                          is_national: e.target.value === 'nacional'
+                        })
+                      }
+                      className="w-full h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none"
+                    >
+                      <option value="nacional">Nacional (Brasil)</option>
+                      <option value="mundial">Mundial / Internacional</option>
+                      <option value="regional">Regional / Tradição de Ateliê</option>
                     </select>
                   </div>
                 </div>

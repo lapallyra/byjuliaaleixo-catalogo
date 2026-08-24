@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './AuthProvider';
 import { LogIn, ArrowLeft, X, Loader2 } from 'lucide-react';
 import { login, loginWithRedirect } from '../lib/firebase';
+import { checkIsAdminDomain } from '../lib/utils';
 
 export function AdminLoginView() {
   const { user, isAdmin, loading, logout } = useAuth();
@@ -59,7 +60,8 @@ export function AdminLoginView() {
 
   // If user is logged in and is admin, redirect to admin dashboard
   if (user && isAdmin) {
-    return <Navigate to="/admin" replace />;
+    const isAdminDomain = checkIsAdminDomain();
+    return <Navigate to={isAdminDomain ? "/" : "/admin"} replace />;
   }
 
   const handleLogin = async () => {

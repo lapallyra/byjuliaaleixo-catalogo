@@ -14,12 +14,13 @@ import {
   ShoppingBag
 } from 'lucide-react';
 import { differenceInDays, startOfToday, isToday, isBefore } from 'date-fns';
-import { getMobileDateOccurrence, slugify } from '../lib/commemorativeDateUtils';
+import { getMobileDateOccurrence, slugify, DEFAULT_COMMEMORATIVE_DATES } from '../lib/commemorativeDateUtils';
 import { ProductCard } from './ui/ProductCard';
 import { ImageWithFallback } from './ImageWithFallback';
 import { commemorativeDateService } from '../services/commemorativeDateService';
 import { Product, CommemorativeDate, CompanyId } from '../types';
 import { themes, getTheme } from '../lib/theme';
+import { LoadingScreen } from './LoadingScreen';
 
 // BubbleHearts Floating Background Effect matching visual identity of Home
 const BubbleHearts = ({ themeColor }: { themeColor: string }) => {
@@ -74,7 +75,14 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
   useEffect(() => {
     setLoading(true);
     const unsub = commemorativeDateService.subscribe((loadedDates) => {
-      setDates(loadedDates);
+      if (loadedDates && loadedDates.length > 0) {
+        const mergedMap = new Map<string, CommemorativeDate>();
+        DEFAULT_COMMEMORATIVE_DATES.forEach(d => mergedMap.set(d.id, d));
+        loadedDates.forEach(d => mergedMap.set(d.id, d));
+        setDates(Array.from(mergedMap.values()));
+      } else {
+        setDates(DEFAULT_COMMEMORATIVE_DATES);
+      }
       setLoading(false);
     });
     return unsub;
@@ -203,12 +211,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center p-8">
-        <div className="w-12 h-12 border-4 border-[#cca062] border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-[#8C7864] font-serif tracking-wider text-sm">Carregando Campanha Especial...</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   // Campaign Not Found State
@@ -258,18 +261,8 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
       {/* BACKGROUND GRAPHICS */}
       <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
       
-      {/* Botão flutuante de voltar */}
-      <div className="max-w-6xl mx-auto px-4 pt-6 sm:px-6 relative z-30">
-        <button 
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-[#8C7864] hover:text-[#3A312D] transition-colors cursor-pointer bg-white/80 backdrop-blur-xs py-2 px-4 rounded-full border border-[#EAE4DC] shadow-xs"
-        >
-          <ArrowLeft size={14} /> Voltar
-        </button>
-      </div>
-
       {/* Hero seguindo exatamente a identidade visual do banner da Home (versão expandida, unboxed) */}
-      <header className="max-w-6xl mx-auto px-4 mt-4 sm:px-6 relative">
+      <header className="max-w-6xl mx-auto px-4 mt-16 sm:px-6 relative">
         <div className="relative w-full flex flex-col md:flex-row min-h-[420px] select-none items-center gap-8 py-4">
           
           {/* Lado Esquerdo: Conteúdo Editorial */}

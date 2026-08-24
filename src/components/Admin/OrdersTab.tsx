@@ -173,7 +173,8 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
         case "pending_payment": return ["waiting_payment", "waiting_deposit"].includes(s);
         case "shipped": return ["delivery"].includes(s);
         case "completed": return ["delivered", "fully_paid"].includes(s);
-        case "cancelled": return s === "cancelled";
+        case "cancelled": return ["cancelled", "cancelado"].includes(s);
+        case "quote": return ["quote", "orcamento", "orçamento"].includes(s);
         case "all":
         default: return true;
       }
@@ -181,8 +182,15 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
 
     // Sorting
     result.sort((a, b) => {
-      const isCompletedA = ["delivered", "fully_paid", "cancelled"].includes((a.status || "").toLowerCase()) ? 1 : 0;
-      const isCompletedB = ["delivered", "fully_paid", "cancelled"].includes((b.status || "").toLowerCase()) ? 1 : 0;
+      const isCancelledA = ["cancelled", "cancelado"].includes((a.status || "").toLowerCase()) ? 1 : 0;
+      const isCancelledB = ["cancelled", "cancelado"].includes((b.status || "").toLowerCase()) ? 1 : 0;
+      
+      if (isCancelledA !== isCancelledB) {
+        return isCancelledA - isCancelledB; // Canceled always at the very bottom of queue
+      }
+
+      const isCompletedA = ["delivered", "fully_paid"].includes((a.status || "").toLowerCase()) ? 1 : 0;
+      const isCompletedB = ["delivered", "fully_paid"].includes((b.status || "").toLowerCase()) ? 1 : 0;
       
       if (isCompletedA !== isCompletedB) {
         return isCompletedA - isCompletedB;
@@ -418,20 +426,20 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
 
         {/* Top Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="clean-3d-card p-6 flex flex-col justify-between hover:border-slate-300 transition-all group">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover:text-indigo-600 transition-colors">Pedidos Hoje</span>
+          <div className="clean-3d-card p-6 flex flex-col justify-between border-slate-100 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 transition-colors">Pedidos Hoje</span>
             <span className="text-3xl font-black text-slate-900 tracking-tighter">{todayCount}</span>
           </div>
-          <div className="clean-3d-card p-6 flex flex-col justify-between hover:border-blue-300 transition-all group">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover:text-blue-600 transition-colors">Em Produção</span>
+          <div className="clean-3d-card p-6 flex flex-col justify-between border-slate-100 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 transition-colors">Em Produção</span>
             <span className="text-3xl font-black text-slate-900 tracking-tighter">{productionCount}</span>
           </div>
-          <div className="clean-3d-card p-6 flex flex-col justify-between hover:border-amber-300 transition-all group">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover:text-amber-600 transition-colors">Aguardando Pgto</span>
+          <div className="clean-3d-card p-6 flex flex-col justify-between border-slate-100 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 transition-colors">Aguardando Pgto</span>
             <span className="text-3xl font-black text-slate-900 tracking-tighter">{pendingPaymentCount}</span>
           </div>
-          <div className="clean-3d-card p-6 flex flex-col justify-between hover:border-emerald-300 transition-all group">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 group-hover:text-emerald-600 transition-colors">Enviados</span>
+          <div className="clean-3d-card p-6 flex flex-col justify-between border-slate-100 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 transition-colors">Enviados</span>
             <span className="text-3xl font-black text-slate-900 tracking-tighter">{shippedCount}</span>
           </div>
         </div>
@@ -442,9 +450,10 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
         
         {/* Quick Filters */}
         <div className="w-full md:w-auto">
-          <HorizontalScroll className="gap-2 pb-2 md:pb-0">
+          <HorizontalScroll className="gap-4 pb-3 md:pb-0">
             {[
               { id: "all", label: "Todos" },
+              { id: "quote", label: "Orçamentos" },
               { id: "today", label: "Hoje" },
               { id: "week", label: "Esta semana" },
               { id: "month", label: "Este mês" },
@@ -457,7 +466,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
               <button
                 key={f.id}
                 onClick={() => setSelectedFilter(f.id)}
-                className={`px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-xl whitespace-nowrap transition-all elevated-3d ${selectedFilter === f.id ? 'bg-[#1C1C1E] text-white shadow-3d-soft' : 'text-[#8E8E93] hover:text-[#1C1C1E] hover:bg-white/60'}`}
+                className={`px-8 py-3.5 text-xs font-black uppercase tracking-widest rounded-xl whitespace-nowrap transition-all elevated-3d ${selectedFilter === f.id ? 'bg-[#1C1C1E] text-white shadow-3d-soft' : 'text-[#8E8E93] bg-white/60'}`}
               >
                 {f.label}
               </button>

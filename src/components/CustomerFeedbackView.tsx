@@ -44,11 +44,8 @@ export const CustomerFeedbackView: React.FC = () => {
   const displayFeedbacks = feedbacks.length > 0 ? feedbacks : defaultFeedbacks;
 
   return (
-    <div className="bg-[#FCFAF7] min-h-screen font-sans selection:bg-[#E8DCC8] selection:text-[#3A312D] overflow-x-hidden relative">
+    <div className="bg-[#FDFCFA] min-h-screen font-sans selection:bg-[#E8DCC8] selection:text-[#3A312D] overflow-x-hidden relative">
       
-      {/* Return Button */}
-      <BotaoVoltar variant="light" />
-
       {/* Hero Section */}
       <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
         <motion.div 

@@ -1,6 +1,8 @@
 import React from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
+import { checkIsAdminDomain } from '../lib/utils';
+import { LoadingScreen } from './LoadingScreen';
 
 export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAdmin, loading } = useAuth();
@@ -17,16 +19,12 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [location.pathname, loading, user, isAdmin]);
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-slate-950">
-        <div className="w-12 h-12 border-4 border-lilac border-t-transparent rounded-full animate-spin" />
-        <p className="mt-4 text-[10px] font-black uppercase tracking-widest text-lilac">Verificando Credenciais...</p>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!user || !isAdmin) {
-    return <Navigate to="/admin/login" replace />;
+    const isAdminDomain = checkIsAdminDomain();
+    return <Navigate to={isAdminDomain ? "/login" : "/admin/login"} replace />;
   }
 
   return <>{children}</>;

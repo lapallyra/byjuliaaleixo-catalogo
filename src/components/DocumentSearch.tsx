@@ -71,15 +71,6 @@ export const DocumentSearch: React.FC<DocumentSearchProps> = ({ onGoBack }) => {
   return (
     <div className="min-h-[100dvh] bg-[#F8F6F2] flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Decorative background Elements */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-3xl -mr-32 -mt-32" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#D4AF37]/5 rounded-full blur-3xl -ml-32 -mb-32" />
-
-      <button 
-        onClick={onGoBack} 
-        className="fixed top-6 left-6 p-4 rounded-full bg-white hover:bg-gray-50 transition-all z-50 text-black border border-[#D4AF37]/20 shadow-sm"
-      >
-        <ChevronLeft size={20} />
-      </button>
 
       <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10">
         <div className="text-center mb-10 space-y-4">

@@ -69,15 +69,6 @@ export const GiftListInfoView: React.FC = () => {
       <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#E8DCC8]/15 via-[#FCFAF7] to-transparent pointer-events-none -z-10" />
       
       <div className="max-w-6xl mx-auto px-6 py-12">
-        {/* BACK BUTTON */}
-        <button 
-          onClick={() => navigate('/')}
-          className="group inline-flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-pink-600 hover:text-pink-700 transition-colors mb-12 outline-none cursor-pointer"
-        >
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Voltar ao início
-        </button>
-
         {/* HERO SECTION */}
         <div className="text-center max-w-3xl mx-auto mb-20">
           <motion.div 

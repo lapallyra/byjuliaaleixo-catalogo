@@ -93,21 +93,12 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] pb-32">
-      {/* TOPO: Apenas os dois links */}
-      <div className="bg-[#FAF9F6] pt-6 pb-4 md:pt-10 md:pb-8 flex justify-center items-center">
-        <div className="flex gap-4 md:gap-8 border-b border-[#e8dcc8]/60 pb-2 px-4">
-          <button 
-            onClick={() => navigate('/kits')}
-            className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[#6d5443]/50 hover:text-[#cca062] transition-colors"
-          >
-            Kits Prontos
-          </button>
-          <button 
-            className="text-[10px] md:text-xs font-black uppercase tracking-widest text-[#cca062] border-b-2 border-[#cca062] px-2"
-          >
-            Monte seu Kit
-          </button>
-        </div>
+      {/* Header Info */}
+      <div className="max-w-3xl mx-auto px-4 md:px-6 pt-12 pb-8 text-center">
+        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#cca062]">Personalização Total</span>
+        <h2 className="text-4xl md:text-5xl font-serif italic text-[#6d5443] mt-2 mb-4">Monte seu Kit</h2>
+        <p className="text-[#8c7864] text-sm font-light leading-relaxed max-w-md mx-auto">Selecione os itens abaixo para criar uma composição exclusiva e cheia de afeto.</p>
+        <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-6" />
       </div>
 
       {/* CATEGORIAS COMO FICHÁRIOS HORIZONTAIS */}

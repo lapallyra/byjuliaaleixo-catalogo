@@ -471,6 +471,8 @@ export interface SiteSettings {
   about_me_title?: string;
   about_me_bio?: string;
   about_me_purpose?: string;
+  store_description?: string;
+  about_us?: string;
   
   // Mercado Pago Pix Automatic
   mercadopago_token?: string;
@@ -622,6 +624,7 @@ export interface CommemorativeDate {
   priority: number;
   mobile_id?: 'carnaval' | 'pascoa' | 'corpus_christi' | 'mothers_day' | 'fathers_day' | 'black_friday';
   is_national?: boolean;
+  scope?: 'nacional' | 'mundial' | 'regional';
   createdAt: any;
   updatedAt: any;
 }

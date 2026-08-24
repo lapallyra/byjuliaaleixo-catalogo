@@ -8,7 +8,7 @@ export function AdminApp() {
   return (
     <Routes>
       <Route path="login" element={<AdminLoginView />} />
-      <Route path="" element={
+      <Route path="*" element={
         <ProtectedRoute>
           <ErrorBoundary fallback={
             <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
@@ -31,7 +31,6 @@ export function AdminApp() {
           </ErrorBoundary>
         </ProtectedRoute>
       } />
-      <Route path="*" element={<Navigate to="" replace />} />
     </Routes>
   );
 }

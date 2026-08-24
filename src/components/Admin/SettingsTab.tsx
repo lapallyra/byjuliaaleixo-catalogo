@@ -355,12 +355,10 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
           { id: "about", label: "Sobre Nós", icon: User },
           { id: "clients", label: "Clientes", icon: Users },
           { id: "products", label: "Produtos", icon: Package },
-          { id: "payments", label: "Pagamentos", icon: CreditCard },
           { id: "approval", label: "Aprovação", icon: CheckCircle2 },
-          { id: "pix", label: "PIX & Checkout", icon: QrCode },
           { id: "pricing", label: "Formação de Preço", icon: Calculator },
           { id: "receipt", label: "Comprovantes", icon: FileText },
-          { id: "roulette", label: "Roleta de Brindes", icon: Gift },
+          { id: "roulette", label: "Cards Surpresa", icon: Gift },
           { id: "notifications", label: "Notificações", icon: Bell },
           { id: "system", label: "Sistema", icon: Settings },
           { id: "shortcuts", label: "Atalhos", icon: Keyboard },
@@ -408,13 +406,13 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
               {(
                 [
                   { id: "pallyra", label: "La Pallyra", color: "text-sky-500" },
+                  { id: "mimada", label: "Mimada Sim", color: "text-pink-600" },
+                  { id: "tuttymimo", label: "Tutty Mimo", color: "text-orange-400" },
                   {
                     id: "guennita",
                     label: "com amor, Guennita",
                     color: "text-slate-400",
                   },
-                  { id: "mimada", label: "Mimada Sim", color: "text-pink-600" },
-                  { id: "tuttymimo", label: "Tutty Mimo", color: "text-orange-400" },
                 ] as const
               ).map((atl) => {
                 const atlSettings = allAteliers[atl.id] || {};

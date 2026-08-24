@@ -5,6 +5,7 @@ import { ProductCard } from './ui/ProductCard';
 import { themes } from '../lib/theme';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { subscribeToCampaigns, subscribeToProducts } from '../services/firebaseService';
+import { formatCurrency } from '../lib/currencyUtils';
 
 export function VitrinePage() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export function VitrinePage() {
   const initialCategory = searchParams.get('category') || 'Todos';
 
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
+  const [selectedAtelier, setSelectedAtelier] = useState<string>('Todos');
   const [allProducts, setAllProducts] = useState<Product[]>(PRODUCTS);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
@@ -24,22 +26,26 @@ export function VitrinePage() {
     };
   }, []);
 
-  // Update category when URL changes
-  useEffect(() => {
-    const cat = searchParams.get('category');
-    if (cat) {
-      setSelectedCategory(cat);
-    }
-  }, [searchParams]);
-
   const categories = useMemo(() => {
     const cats = Array.from(new Set(allProducts.map(p => p.category)));
     return ['Todos', ...cats];
   }, [allProducts]);
 
+  const atelieOptions = [
+    { id: 'Todos', label: 'Todos os Ateliês' },
+    { id: 'pallyra', label: 'La Pallyra' },
+    { id: 'guennita', label: 'com amor, Guennita' },
+    { id: 'mimada', label: 'Mimada Sim' },
+    { id: 'tuttymimo', label: 'Tutty Mimo' }
+  ];
+
   const filteredProducts = useMemo(() => {
     let result = [...allProducts];
     
+    if (selectedAtelier !== 'Todos') {
+      result = result.filter(p => p.company === selectedAtelier);
+    }
+
     if (selectedCategory !== 'Todos') {
       result = result.filter(p => p.category === selectedCategory);
     }
@@ -56,7 +62,7 @@ export function VitrinePage() {
     }
 
     return result;
-  }, [selectedCategory, allProducts, searchParams]);
+  }, [selectedCategory, selectedAtelier, allProducts, searchParams]);
 
   const catalogCampaign = useMemo(() => {
     const campaignId = searchParams.get('campaign');
@@ -93,9 +99,9 @@ export function VitrinePage() {
   const otherCampaignProducts = campaignProducts.filter(p => p.id !== featuredProduct?.id).slice(0, 8);
 
   return (
-    <div className="min-h-screen bg-[#FFF9F6] text-gray-900 font-sans relative overflow-x-hidden select-none">
+    <div className="min-h-screen bg-[#FDFCFA] text-gray-900 font-sans relative overflow-x-hidden select-none">
       {/* BACKGROUND GRAPHICS */}
-      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#F8F5EE]/50 to-transparent pointer-events-none -z-10" />
 
       <div className="max-w-[1850px] mx-auto px-4 sm:px-6 py-12 relative z-10">
         {/* Campaign Section */}
@@ -113,7 +119,7 @@ export function VitrinePage() {
                 <div className="text-xs font-bold tracking-[0.2em] uppercase text-[#cca062]">Destaque da Campanha</div>
                 <h2 className="text-4xl font-medium tracking-tight text-gray-900">{featuredProduct.product_name}</h2>
                 <p className="text-gray-600 leading-relaxed">{featuredProduct.description}</p>
-                <p className="text-3xl font-light text-gray-900">R$ {featuredProduct.current_price.toFixed(2)}</p>
+                <p className="text-3xl font-medium tracking-tight font-poppins tabular-nums text-gray-900">{formatCurrency(featuredProduct.current_price)}</p>
                 <button 
                   onClick={() => {
                     const targetRoute = featuredProduct.company === 'pallyra' ? '/lapallyra' : featuredProduct.company === 'guennita' ? '/comamorguennita' : featuredProduct.company === 'mimada' ? '/mimadasim' : '/tuttymimo';
@@ -146,17 +152,43 @@ export function VitrinePage() {
         </section>
 
         {/* Filter Section */}
-        <section className="mb-12">
-          <div className="flex flex-wrap justify-center gap-4">
-            {categories.map(cat => (
-              <button 
-                key={cat} 
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-6 py-2 rounded-full border ${selectedCategory === cat ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-900'}`}
-              >
-                {cat}
-              </button>
-            ))}
+        <section className="mb-12 space-y-6">
+          <div className="flex flex-col items-center gap-4">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#8c7864]">Filtrar por Ateliê</span>
+            <div className="flex flex-wrap justify-center gap-2">
+              {atelieOptions.map(opt => (
+                <button 
+                  key={opt.id} 
+                  onClick={() => setSelectedAtelier(opt.id)}
+                  className={`px-5 py-2 text-xs font-bold rounded-full border transition-all ${
+                    selectedAtelier === opt.id 
+                      ? 'bg-[#3A312D] text-white border-[#3A312D] shadow-md' 
+                      : 'bg-white text-[#8c7864] border-gray-200 hover:border-[#cca062]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-4">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#8c7864]">Filtrar por Categoria</span>
+            <div className="flex flex-wrap justify-center gap-2">
+              {categories.map(cat => (
+                <button 
+                  key={cat} 
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-5 py-2 text-xs font-bold rounded-full border transition-all ${
+                    selectedCategory === cat 
+                      ? 'bg-[#cca062] text-white border-[#cca062] shadow-md' 
+                      : 'bg-white text-[#8c7864] border-gray-200 hover:border-[#cca062]'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 

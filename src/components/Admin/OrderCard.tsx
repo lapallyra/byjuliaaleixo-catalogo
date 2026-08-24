@@ -83,12 +83,14 @@ export const OrderCard: React.FC<OrderCardProps> = ({
             onViewDetails(order.id!);
         }
       }}
-      className={`clean-3d-card bg-white p-4 md:p-5 group flex flex-col md:flex-row items-start md:items-center justify-between relative pl-12 md:pl-16 ${isMenuOpen ? 'z-50' : 'z-10'} gap-4 md:gap-5 cursor-pointer hover:shadow-lg transition-all ${isSelected ? 'ring-2 ring-indigo-500' : ''}`}
+      className={`clean-3d-card bg-white p-4 md:p-5 group flex flex-col md:flex-row items-start md:items-center justify-between relative pl-12 md:pl-16 ${isMenuOpen ? 'z-50' : 'z-10'} gap-4 md:gap-5 cursor-pointer shadow-sm transition-all ${isSelected ? 'ring-2 ring-indigo-500' : ''}`}
     >
       <input type="checkbox" checked={isSelected} onChange={(e) => { e.stopPropagation(); onToggleSelect(); }} className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded border-gray-300" />
       
-      {/* Faixa LED Lateral - Apenas a cor sólida e o brilho para fora */}
-      <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-[28px] ${statusInfo.color} z-20`} style={{ boxShadow: '-6px 0 20px 2px ' + statusInfo.color.replace('bg-[', '').replace(']', '') + '80' }} />
+      {/* Faixa LED Lateral - Apenas se não estiver cancelado */}
+      {!["cancelled", "cancelado"].includes((order.status || "").toLowerCase()) && (
+        <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-[28px] ${statusInfo.color} z-20`} style={{ boxShadow: '-6px 0 20px 2px ' + statusInfo.color.replace('bg-[', '').replace(']', '') + '80' }} />
+      )}
       
       <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between w-full">
         {/* Left Section: Order & Client Info */}

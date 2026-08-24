@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Search, Plus, X, Calendar, Loader2, Save, User, Minus, Trash2, ShoppingCart, Truck } from "lucide-react";
 import { Product, Customer, Order, CompanyId, CartItem } from "../../types";
 import { addCustomer } from "../../services/firebaseService";
-import { safeFormatISO } from "../../lib/dateUtils";
+import { safeFormatISO, addBusinessDays } from "../../lib/dateUtils";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
@@ -31,14 +31,15 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [orderDate, setOrderDate] = useState(safeFormatISO(new Date(), "yyyy-MM-dd"));
-  const [status, setStatus] = useState<Order["status"]>("pending");
+  const [status, setStatus] = useState<Order["status"]>("quote");
   const [origin, setOrigin] = useState("Vitrine");
   const [customOrigins, setCustomOrigins] = useState<string[]>([]);
   const [isAddingOrigin, setIsAddingOrigin] = useState(false);
   const [newOrigin, setNewOrigin] = useState("");
 
   const [productionDate, setProductionDate] = useState("");
-  const [deliveryDate, setDeliveryDate] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState(() => addBusinessDays(new Date(), 10));
+
   const [description, setDescription] = useState("");
   const [responsible, setResponsible] = useState("");
   const [priority, setPriority] = useState<Order["priority"]>("normal");
@@ -371,7 +372,8 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                   onChange={(e) => setStatus(e.target.value as Order["status"])}
                   className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
                 >
-                  <option value="pending">Pendente</option>
+                  <option value="quote">Orçamento</option>
+                  <option value="pending">Pendente / Novo</option>
                   <option value="waiting_payment">Aguardando Pagamento</option>
                   <option value="paid">Pago</option>
                   <option value="production">Em Produção</option>
@@ -442,7 +444,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
               </div>
 
               {/* Responsável */}
-              <div className="space-y-1">
+              <div className="space-y-1 md:col-span-2">
                 <label className="text-[11px] font-bold text-gray-400 block">
                   Responsável
                 </label>
@@ -456,23 +458,6 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                     onChange={(e) => setResponsible(e.target.value)}
                   />
                 </div>
-              </div>
-
-              {/* Prioridade */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-gray-400 block">
-                  Prioridade
-                </label>
-                <select
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value as Order["priority"])}
-                  className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
-                >
-                  <option value="baixa">Baixa</option>
-                  <option value="normal">Normal</option>
-                  <option value="alta">Alta</option>
-                  <option value="urgente">Urgente</option>
-                </select>
               </div>
             </div>
           </div>

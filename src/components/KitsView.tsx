@@ -57,32 +57,23 @@ export const KitsView: React.FC<KitsViewProps> = ({ allProducts, setCarts }) => 
       {/* BACKGROUND GRAPHICS */}
       <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FFF2EC] via-[#FFF9F6] to-transparent pointer-events-none -z-10" />
 
-      <header className="bg-white/80 backdrop-blur-md border-b border-[#EAE4DC] sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate('/')} 
-              className="p-2 hover:bg-neutral-50 rounded-full transition-colors text-neutral-400 hover:text-neutral-900 cursor-pointer"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <h1 className="text-lg font-serif italic text-[#6d5443]">Kits Prontos</h1>
-          </div>
-          <div className="flex gap-4">
-             <button 
-              onClick={() => navigate('/kit-meukit')}
-              className="text-[10px] font-bold uppercase tracking-widest text-[#cca062] hover:text-[#c36266] transition-colors cursor-pointer"
-            >
-              Monte seu Kit
-            </button>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12 relative z-10">
         <div className="mb-12 text-center">
-          <h2 className="text-4xl font-serif italic text-[#6d5443] mb-4">Combinações Exclusivas</h2>
-          <p className="text-[#8c7864] max-w-xl mx-auto text-sm">Kits cuidadosamente montados para surpreender em qualquer ocasião.</p>
+          <div className="flex flex-col items-center gap-2 mb-4">
+             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#cca062]">Combinações Exclusivas</span>
+             <h2 className="text-4xl md:text-5xl font-serif italic text-[#6d5443]">Kits Prontos</h2>
+             <div className="h-[1px] w-12 bg-[#cca062] mt-4" />
+          </div>
+          <p className="text-[#8c7864] max-w-xl mx-auto text-sm font-light leading-relaxed">Kits cuidadosamente montados para surpreender em qualquer ocasião, unindo afeto e design em composições prontas para presentear.</p>
+          
+          <div className="mt-8">
+            <button 
+              onClick={() => navigate('/kit-meukit')}
+              className="px-8 py-3 bg-[#3A312D] text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-black transition-all shadow-md active:scale-95"
+            >
+              Ou monte seu kit personalizado
+            </button>
+          </div>
         </div>
 
         {kits.length === 0 ? (

@@ -42,6 +42,7 @@ import {
   AppConfig 
 } from "../types";
 import { useAuth } from "./AuthProvider";
+import { LoadingScreen } from "./LoadingScreen";
 import { getPublicAtelierImage } from "../utils/atelierImage";
 import { validateCPF, validateCNPJ } from "../utils/validation";
 
@@ -692,11 +693,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
   );
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-lilac border-t-transparent"></div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
