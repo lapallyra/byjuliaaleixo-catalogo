@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useMemo 
 import { CompanyId, Order } from '../types';
 import { subscribeToSales } from '../services/firebaseService';
 import { useAuth } from './AuthProvider';
+import { safeRandomUUID } from '../lib/utils';
 
 // Types of Orchestrated Events
 export type EventPriority = 'HIGH' | 'MEDIUM' | 'LOW';
@@ -119,7 +120,7 @@ export const AdminOrchestratorProvider: React.FC<{ children: React.ReactNode }> 
 
   // 3. Dispatch & Priority Routing
   const processAndDispatch = (rawEvent: Omit<OrchestratedEvent, 'id' | 'timestamp'>) => {
-    const eventId = crypto.randomUUID();
+    const eventId = safeRandomUUID();
     const event: OrchestratedEvent = {
       ...rawEvent,
       id: eventId,

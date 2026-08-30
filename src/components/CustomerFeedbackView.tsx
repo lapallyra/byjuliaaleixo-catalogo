@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { Quote, Heart, Sparkles } from 'lucide-react';
 import { subscribeToApprovedFeedbacks } from '../services/firebaseService';
 import { ContinueExploring } from './ContinueExploring';
-import { BotaoVoltar } from './BotaoVoltar';
 
 const FEEDBACK_HERO_IMAGE = "/src/assets/images/customer_feedback_editorial_1784216601476.jpg";
 
@@ -69,7 +68,7 @@ export const CustomerFeedbackView: React.FC = () => {
             <span className="inline-block mb-6 text-white/80 uppercase tracking-[0.4em] text-[10px] font-medium bg-black/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
               Confiança & Experiência
             </span>
-            <h1 className="text-white font-mea-culpa text-7xl md:text-9xl mb-8 tracking-tight drop-shadow-sm">
+            <h1 className="text-white font-mea-culpa text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-6 tracking-tight drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
               Feedback que Amamos
             </h1>
             <p className="text-white/90 text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto leading-relaxed mb-12">
@@ -133,7 +132,7 @@ export const CustomerFeedbackView: React.FC = () => {
       <section className="bg-white py-32 px-6">
         <div className="max-w-5xl mx-auto text-center">
           <Sparkles className="w-8 h-8 text-[#CCA062]/30 mx-auto mb-8" />
-          <h2 className="text-[#3D2E24] font-mea-culpa text-5xl md:text-7xl mb-8">O afeto está nos detalhes</h2>
+          <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl mb-6">O afeto está nos detalhes</h2>
           <p className="text-[#8E8E93] text-sm md:text-base font-light tracking-wide max-w-xl mx-auto leading-relaxed uppercase">
             Cada depoimento é uma confirmação de que o trabalho manual carrega uma energia única, capaz de emocionar e criar memórias eternas.
           </p>
@@ -152,7 +151,7 @@ export const CustomerFeedbackView: React.FC = () => {
           className="max-w-2xl mx-auto"
         >
           <Heart className="w-8 h-8 text-[#6D0D0D]/20 mx-auto mb-8" />
-          <h2 className="text-[#3D2E24] font-serif text-3xl md:text-4xl uppercase tracking-[0.2em] mb-6">
+          <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl mb-6">
             Queremos ouvir sua história
           </h2>
           <p className="text-[#8E8E93] text-sm md:text-base font-light tracking-wide mb-12 uppercase leading-relaxed">

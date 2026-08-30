@@ -143,10 +143,10 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
 
                 </div>
 
-                {/* Main Commemorative Date Name in Noble Calligraphy / Font Mea Culpa */}
+                {/* Main Commemorative Date Name in Noble Calligraphy / Font Mea Culpa (Single line) */}
                 <div className="space-y-1">
                   <h2 
-                    className="font-mea-culpa text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal leading-tight select-none tracking-normal drop-shadow-xs"
+                    className="font-mea-culpa text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal leading-tight select-none tracking-normal drop-shadow-xs whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
                     style={{ color: themeColor }}
                   >
                     {activeDate.name}

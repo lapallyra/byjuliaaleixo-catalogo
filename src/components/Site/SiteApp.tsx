@@ -30,6 +30,7 @@ import { GlobalSearchView } from '../GlobalSearchView';
 import { LoadingScreen } from '../LoadingScreen';
 import { CommemorativeCampaignPage } from '../CommemorativeCampaignPage';
 import { PromotionalCampaignPage } from '../PromotionalCampaignPage';
+import { PersonalizePage } from '../PersonalizePage';
 import { INITIAL_CONFIG, PRODUCTS } from '../../constants';
 import { AppConfig, Product, CompanyId, CartItem } from '../../types';
 import { subscribeToAppConfig, subscribeToProducts } from '../../services/firebaseService';
@@ -157,6 +158,10 @@ export function SiteApp() {
     return () => window.removeEventListener('giftlist-updated', handleGiftListUpdate);
   }, []);
 
+  const isExcludedHeaderRoute = [
+    '/lapallyra', '/comamorguennita', '/mimadasim', '/tuttymimo', '/mimada', '/guennita', '/pallyra'
+  ].includes(location.pathname);
+
   if (!isConfigLoaded || !isProductsLoaded) {
     return <LoadingScreen />;
   }
@@ -164,13 +169,13 @@ export function SiteApp() {
   return (
     <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen bg-[#FDFCFA]">
       <TopAnnouncementBar />
-      {location.pathname !== '/' && (
+      {location.pathname !== '/' && !isExcludedHeaderRoute && (
         <SiteHeader onOpenSearch={() => setIsGlobalSearchOpen(true)} />
       )}
       
       <div className="flex-grow flex flex-col relative">
-        {location.pathname !== '/' && (
-          <div className="hidden md:block">
+        {location.pathname !== '/' && !isExcludedHeaderRoute && (
+          <div className="block">
             <BotaoVoltar variant="dark" />
           </div>
         )}
@@ -185,6 +190,7 @@ export function SiteApp() {
           <Route path="/comofunciona-lp" element={<GiftListHowItWorksView />} />
           <Route path="/feedclientes" element={<CustomerFeedbackView />} />
           <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />
+          <Route path="/personalize" element={<PersonalizePage />} />
           <Route path="/kits" element={<KitsView allProducts={allProducts} setCarts={setUnifiedCart} />} />
           <Route path="/kit-meukit" element={<KitConstructor allProducts={allProducts} setCarts={setUnifiedCart} />} />
           <Route path="/sobrenos" element={<AboutMeView />} />
@@ -208,6 +214,10 @@ export function SiteApp() {
           <Route path="/client-checkout/:code" element={<CheckoutPage config={effectiveConfig} />} />
           <Route path="/rastreamento" element={<TrackingView onBack={() => window.history.back()} />} />
           <Route path="/minha-experiencia/*" element={<MinhaExperienciaPage />} />
+          <Route path="/cliente/*" element={<MinhaExperienciaPage />} />
+          <Route path="/login" element={<MinhaExperienciaPage />} />
+          <Route path="/cadastro" element={<MinhaExperienciaPage />} />
+          <Route path="/perfil" element={<MinhaExperienciaPage />} />
           <Route path="/document" element={<DocumentSearch onGoBack={() => window.history.back()} />} />
           <Route path="/studiomockup" element={<StudioPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

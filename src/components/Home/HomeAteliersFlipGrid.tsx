@@ -81,11 +81,8 @@ export const HomeAteliersFlipGrid: React.FC<HomeAteliersFlipGridProps> = ({ cust
     },
   ];
 
-  const handleTouchToggle = (id: string) => {
-    setTouchFlipped((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+  const handleCardClick = (atelier: AtelierData) => {
+    navigate(atelier.route);
   };
 
   const getIsotypeImage = (atelier: AtelierData): string => {
@@ -107,11 +104,11 @@ export const HomeAteliersFlipGrid: React.FC<HomeAteliersFlipGridProps> = ({ cust
           <Sparkles size={12} strokeWidth={1.5} />
           <span>Quatro Universos de Criação</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-[#2C1810] font-normal tracking-tight">
+        <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#2C1810] tracking-tight">
           Nossos Ateliês
         </h2>
         <p className="text-xs sm:text-sm text-[#593E32] font-light">
-          Passe o cursor sobre o card para ver os detalhes ou clique para entrar no ateliê.
+          Passe o cursor sobre o card para ver os detalhes e clique para entrar no catálogo do ateliê.
         </p>
       </div>
 
@@ -126,11 +123,13 @@ export const HomeAteliersFlipGrid: React.FC<HomeAteliersFlipGridProps> = ({ cust
             <div
               key={atelier.id}
               className="flex flex-col items-center group/card cursor-pointer"
-              onClick={() => handleTouchToggle(atelier.id)}
             >
               
               {/* VERTICAL RECTANGULAR CARD WITH 3D FLIP */}
-              <div className="w-full aspect-[3/4] max-w-[340px] perspective-1000">
+              <div 
+                className="w-full aspect-[3/4] max-w-[340px] perspective-1000"
+                onClick={() => handleCardClick(atelier)}
+              >
                 <div
                   className={`w-full h-full relative transition-transform duration-700 preserve-3d rounded-2xl ${
                     isTouchActive ? 'rotate-y-180' : 'group-hover/card:rotate-y-180'
@@ -166,7 +165,7 @@ export const HomeAteliersFlipGrid: React.FC<HomeAteliersFlipGridProps> = ({ cust
                     )}
                   </div>
 
-                  {/* BACK OF CARD: DETAILS */}
+                  {/* BACK OF CARD: DETAILS & DIRECT ACTION */}
                   <div
                     className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-2xl p-6 sm:p-7 flex flex-col justify-between items-start text-left bg-[#FAF6F0] border border-[#B38F4D]/60 shadow-[0_8px_30px_rgba(179,143,77,0.12)] overflow-hidden"
                   >
@@ -198,11 +197,19 @@ export const HomeAteliersFlipGrid: React.FC<HomeAteliersFlipGridProps> = ({ cust
                       </div>
                     </div>
 
-                    {/* Subtle bottom note */}
-                    <div className="w-full pt-2 border-t border-[#D4AF37]/15 text-center">
-                      <span className="text-[10px] text-[#8C6D37] font-light italic">
-                        Clique para acessar o catálogo
-                      </span>
+                    {/* Prominent Action Button on Back of Card */}
+                    <div className="w-full pt-3 border-t border-[#D4AF37]/20">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(atelier.route);
+                        }}
+                        className="w-full py-2.5 px-4 rounded-xl bg-[#2C1810] hover:bg-[#3D261C] text-[#FAF8F5] text-xs font-medium tracking-wider uppercase flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer"
+                      >
+                        <span>Entrar no Ateliê</span>
+                        <ArrowRight size={13} className="text-[#E5C388]" />
+                      </button>
                     </div>
 
                   </div>

@@ -1045,7 +1045,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
                       onClick={() => {
                         const newRules = [...(settings.shipping_rules || [])];
                         newRules.push({
-                          id: crypto.randomUUID(),
+                          id: (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9)),
                           region: 'Nova Região',
                           cep_start: '',
                           cep_end: '',

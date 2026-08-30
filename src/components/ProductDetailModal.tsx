@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Minus, Plus, Share2, ShoppingCart, Gift, Upload, Trash2, Loader2, Check } from 'lucide-react';
+import { X, Minus, Plus, Share2, ShoppingCart, Gift, Upload, Trash2, Loader2, Check, Sparkles } from 'lucide-react';
 import { PriceDisplay } from './ui/PriceDisplay';
 import { Product, CompanyId } from '../types';
 import { themes, getTheme } from '../lib/theme';
@@ -20,6 +20,8 @@ interface ProductDetailModalProps {
   isReadOnly?: boolean;
   isKitConstructor?: boolean;
   allProducts?: Product[];
+  isExclusive?: boolean;
+  campaignYear?: number | string;
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
@@ -29,7 +31,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onAddToGiftList,
   companyId,
   isKitConstructor = false,
-  allProducts = []
+  allProducts = [],
+  isExclusive = false,
+  campaignYear
 }) => {
   const theme = getTheme(companyId);
   const accentColor = theme.accentColor || '#000000';
@@ -209,6 +213,24 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {/* Product details */}
           <div className="space-y-3">
+            {/* Badges / Selos: Exclusivo e Edição AAAA */}
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-[#8C7864]/70">
+                {product.category || 'Ateliê'}
+              </span>
+              {(isExclusive || product.isExclusive) && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs">
+                  <Sparkles size={11} className="animate-pulse" />
+                  Exclusivo
+                </span>
+              )}
+              {(campaignYear || product.edition_year) && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-[#3A312D] text-white shadow-xs">
+                  Edição {campaignYear || product.edition_year}
+                </span>
+              )}
+            </div>
+
             <h2 className={`text-2xl font-serif italic ${theme.textPrimary}`}>
               {product.product_name}
             </h2>
@@ -473,7 +495,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           {product.isWholesaleEnabled && product.wholesale_price > 0 && (
             <div className="text-[10px] uppercase font-black tracking-wider text-amber-600 flex items-center gap-1.5 bg-amber-50/50 p-2 rounded-xl border border-amber-500/10 justify-center">
               {isWholesaleActive 
-                ? '✨ Atacado Ativado! Desconto Aplicado' 
+                ? 'Atacado Ativado! Desconto Aplicado' 
                 : `Adicione ${wholesaleMinQty} un. para Preço de Atacado`}
             </div>
           )}

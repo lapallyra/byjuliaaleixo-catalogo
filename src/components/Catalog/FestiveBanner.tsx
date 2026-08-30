@@ -82,8 +82,8 @@ export const FestiveBanner: React.FC<FestiveBannerProps> = ({ companyId, primary
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.4em] text-[#A68B80] mb-0">
               {daysRemaining === 0 ? `É HOJE O GRANDE` : `FALTAM ${daysRemaining} DIAS PARA O GRANDE`}
             </span>
-            <span className="text-3xl sm:text-5xl md:text-6xl font-serif text-[#3A312D] tracking-tight leading-tight">
-              {upcomingDate.name.toUpperCase()}.
+            <span className="text-3xl sm:text-5xl md:text-6xl font-mea-culpa text-[#3A312D] tracking-tight leading-tight">
+              {upcomingDate.name}
             </span>
           </motion.div>
 

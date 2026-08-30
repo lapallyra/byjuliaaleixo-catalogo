@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, Heart } from 'lucide-react';
 import { subscribeToAllSettings } from '../services/firebaseService';
 import { ContinueExploring } from './ContinueExploring';
-import { BotaoVoltar } from './BotaoVoltar';
 
 // Editorial Images
 const HERO_IMAGE = "/src/assets/images/ateliers_hero_editorial_1784213492614.jpg";
@@ -95,7 +94,7 @@ export const AteliersPresentationView: React.FC = () => {
             <span className="inline-block mb-6 text-white/80 uppercase tracking-[0.4em] text-[10px] font-medium bg-black/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
               Inovação & Identidade
             </span>
-            <h1 className="text-white font-mea-culpa text-7xl md:text-9xl mb-8 tracking-tight drop-shadow-sm">
+            <h1 className="text-white font-mea-culpa text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-6 tracking-tight drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
               Nossos Ateliês
             </h1>
             <p className="text-white/90 text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto leading-relaxed mb-12">
@@ -126,7 +125,7 @@ export const AteliersPresentationView: React.FC = () => {
       </section>
 
       {/* 2. ATELIERS NARRATIVE SECTION */}
-      <section id="ateliers-narrative" className="py-24 md:py-40 px-6 md:px-12 max-w-[1400px] mx-auto space-y-40 md:space-y-64">
+      <section id="ateliers-narrative" className="py-16 md:py-28 px-4 sm:px-6 md:px-8 max-w-[1850px] mx-auto space-y-32 md:space-y-48">
         {ateliers.map((atelier, index) => {
           const isEven = index % 2 === 0;
           return (
@@ -140,7 +139,8 @@ export const AteliersPresentationView: React.FC = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
-                className="w-full md:w-1/2 aspect-[4/5] relative group"
+                onClick={() => navigate(atelier.route)}
+                className="w-full md:w-1/2 aspect-[4/5] relative group cursor-pointer"
               >
                 <div className="absolute -inset-4 border border-[#E8DCC8]/30 rounded-[2rem] -z-10 group-hover:inset-0 transition-all duration-700" />
                 <img 
@@ -149,6 +149,12 @@ export const AteliersPresentationView: React.FC = () => {
                   className="w-full h-full object-cover rounded-2xl shadow-2xl transition-transform duration-1000 group-hover:scale-[1.02]"
                 />
                 <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/5" />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                  <span className="px-4 py-2 rounded-full bg-white/95 text-[#2C1810] text-xs uppercase tracking-wider font-semibold shadow-lg flex items-center gap-2">
+                    <span>Ver Catálogo {atelier.name}</span>
+                    <ArrowRight size={13} className="text-[#B38F4D]" />
+                  </span>
+                </div>
               </motion.div>
 
               {/* Content Block */}
@@ -162,7 +168,7 @@ export const AteliersPresentationView: React.FC = () => {
                 <span className="inline-block text-[#CCA062] text-[10px] font-bold uppercase tracking-[0.4em] mb-4">
                   {atelier.concept}
                 </span>
-                <h2 className="text-[#3D2E24] font-mea-culpa text-5xl md:text-7xl mb-6">
+                <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl mb-4 whitespace-nowrap">
                   {atelier.name}
                 </h2>
                 <h3 className="text-[#8E8E93] text-sm uppercase tracking-[0.2em] mb-8 font-medium">
@@ -199,7 +205,7 @@ export const AteliersPresentationView: React.FC = () => {
             transition={{ duration: 1 }}
           >
             <Sparkles className="w-12 h-12 text-[#CCA062]/40 mx-auto mb-10" strokeWidth={1} />
-            <h2 className="font-mea-culpa text-6xl md:text-8xl text-[#3D2E24] mb-12">
+            <h2 className="font-mea-culpa text-4xl sm:text-5xl md:text-6xl text-[#3D2E24] mb-8">
               Um propósito. Diferentes estilos.
             </h2>
             <div className="grid md:grid-cols-3 gap-12 text-center">
@@ -238,7 +244,7 @@ export const AteliersPresentationView: React.FC = () => {
           className="max-w-2xl mx-auto"
         >
           <Heart className="w-8 h-8 text-[#6D0D0D]/20 mx-auto mb-8" />
-          <h2 className="text-[#3D2E24] font-serif text-3xl md:text-4xl uppercase tracking-[0.2em] mb-6">
+          <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl mb-6">
             Encontre o ateliê que combina com você
           </h2>
           <p className="text-[#8E8E93] text-sm md:text-base font-light tracking-wide mb-12 uppercase leading-relaxed">

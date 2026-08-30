@@ -106,7 +106,7 @@ export function VitrinePage() {
       <div className="max-w-[1850px] mx-auto px-4 sm:px-6 py-12 relative z-10">
         {/* Campaign Section */}
         <section className="mb-20">
-          <h1 className="text-4xl md:text-5xl font-serif italic text-[#6d5443] mb-4 text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-mea-culpa text-[#6d5443] mb-4 text-center">
             {catalogCampaign?.title || "Campanha da Semana"}
           </h1>
           <p className="text-center text-[#8c7864] mb-10 text-sm">

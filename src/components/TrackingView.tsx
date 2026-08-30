@@ -72,8 +72,8 @@ export const TrackingView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center p-8">
-       <div className="w-full max-w-md bg-white p-8 rounded-[2rem] border border-[#F0E6D2] shadow-xl text-center">
+    <div className="min-h-screen bg-[#FDFCFA] flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
+       <div className="w-full max-w-xl bg-white p-6 sm:p-10 rounded-3xl border border-[#E8DFC8]/60 shadow-xs text-center">
          <div className="w-16 h-16 bg-[#FAF9F6] text-[#D48C8C] rounded-2xl flex items-center justify-center mx-auto mb-6">
            <Package size={28} />
          </div>

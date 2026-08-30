@@ -290,7 +290,7 @@ export function CommemorativeBanner({ allProducts = [], onSearch }: Commemorativ
               {/* Header Alinhado à Esquerda: Nome do evento EM DESTAQUE com recuo de 1.5 polegada (pl-36) e a mesma cor */}
               <div className="w-full flex flex-col items-center md:items-start text-center md:text-left md:pl-36 mb-1.5">
                 <h2 
-                  className="font-mea-culpa text-4xl md:text-6xl lg:text-7xl leading-none select-none tracking-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.01)]"
+                  className="font-mea-culpa text-3xl sm:text-4xl md:text-5xl lg:text-[54px] leading-tight select-none tracking-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.01)] whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
                   style={{ color: themeColor }}
                 >
                   {upcomingMajorDate.name}

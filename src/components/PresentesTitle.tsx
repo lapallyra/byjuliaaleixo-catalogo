@@ -7,7 +7,7 @@ export function PresentesTitle() {
         PRESENTES
         <span className="signature">✦</span>
       </h1>
-      <h2 className="personalizados text-3xl md:text-5xl text-gray-800 -mt-2">
+      <h2 className="font-mea-culpa text-4xl md:text-6xl text-gray-800 -mt-2">
         Personalizados
       </h2>
     </div>

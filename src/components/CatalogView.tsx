@@ -361,7 +361,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         address: addressString
       });
 
-      const savedOrderCode = docId || crypto.randomUUID();
+      const savedOrderCode = docId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9));
       
       if (checkoutData?.isSimulated) {
         console.log('[MODO TESTE] Simulando pagamento aprovado...');
@@ -784,7 +784,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     <div 
       className={`vitrine-root min-h-[100dvh] pt-0 ${theme.bg} flex flex-col relative theme-${companyId === 'mimada' ? 'mimadasim' : companyId === 'pallyra' ? 'lapallyra' : companyId === 'tuttymimo' ? 'tuttymimo' : 'guennita'}`}
     >
-       <CatalogHeader 
+      <CatalogHeader 
         companyName={companyName}
         theme={theme}
         onCartClick={() => setIsCartOpen(true)}
@@ -798,22 +798,17 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         onViewNews={() => highlightsScrollRef.current?.scrollIntoView({ behavior: 'smooth' })}
         onViewContact={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
         onProfileClick={() => {
-          // Rola para a seção de contato/rodapé como mock de perfil/suporte
           window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }}
         onFilterClick={() => {
-          // Rola para a barra de filtros ou foca a busca
-          if (searchInputRef.current) {
-            searchInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setTimeout(() => searchInputRef.current?.focus(), 500);
-          } else {
-            const infoBar = document.querySelector('.catalog-info-bar');
-            if (infoBar) infoBar.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
+          const catMenu = document.querySelector('.category-pill-container') || document.querySelector('.catalog-info-bar');
+          if (catMenu) catMenu.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }}
         logoUrl={isotipo}
         companyId={companyId}
         searchQuery={searchQuery}
+        suggestions={suggestions}
+        onSelectSuggestion={(label) => handleSearch(label)}
         onOpenGlobalSearch={onOpenGlobalSearch}
       />
       
@@ -847,62 +842,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         ) : (
           <>
             {/* Content Area */}
-            <div className="flex-1 flex flex-col min-h-0 bg-[#FAF9F6] overflow-y-auto scrollbar-none">
+            <div className="flex-1 flex flex-col min-h-0 bg-[#FAF9F6] overflow-y-auto scrollbar-none pt-1">
               
-
-
-              {/* Active Campaigns Banner Section */}
-
-              {/* Active Campaigns Banner Section - Moved to Home */}
-              
-              {/* Elegant Persistent Search Bar Container */}
-              <div className="max-w-xl mx-auto w-full px-4 mt-6 mb-6">
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-[#cca062] transition-colors">
-                    <Search size={18} className="transition-transform duration-300 group-focus-within:scale-110" />
-                  </div>
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="O que você deseja buscar no ateliê?"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      handleSearch(e.target.value);
-                      setShowSuggestions(true);
-                    }}
-                    onFocus={() => setShowSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                    className="w-full pl-12 pr-12 py-3.5 bg-white/70 backdrop-blur-sm border border-[#e8dcc8]/40 hover:border-[#e8dcc8]/80 focus:border-[#cca062] rounded-full text-sm font-sans placeholder-neutral-400 text-[#3A312D] outline-none transition-all shadow-sm focus:shadow-md focus:bg-white"
-                  />
-                  {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#e8dcc8]/40 rounded-2xl shadow-lg z-50 overflow-hidden">
-                      {suggestions.map((s, idx) => (
-                        <button
-                          key={idx}
-                          className="w-full text-left px-6 py-3 text-sm hover:bg-[#F5F5F7] transition-colors flex items-center gap-2"
-                          onClick={() => {
-                            handleSearch(s.label);
-                            setShowSuggestions(false);
-                          }}
-                        >
-                          <span className="text-[#8E8E93] text-xs uppercase tracking-wider">{s.type === 'category' ? 'Categoria' : 'Produto'}</span>
-                          <span className="font-medium text-[#1C1C1E]">{s.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {searchQuery && (
-                    <button
-                      onClick={() => handleSearch('')}
-                      className="absolute inset-y-0 right-4 flex items-center p-1 hover:bg-neutral-100 rounded-full text-neutral-400 hover:text-neutral-600 transition-colors cursor-pointer"
-                      title="Limpar busca"
-                    >
-                      <X size={16} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
               <CategoryPillMenu 
                 categories={categories}
                 selectedCategory={selectedCategory}
@@ -915,7 +856,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
                       Lançamentos
                     </span>
-                    <h2 className="text-xl md:text-2xl font-serif text-[#3A312D] tracking-tight leading-tight mt-1">
+                    <h2 className="text-2xl md:text-3xl font-mea-culpa text-[#3A312D] tracking-tight leading-tight mt-1">
                       Novidades
                     </h2>
                   </div>
@@ -942,7 +883,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                         <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
                           {camp.subtitle || "Seleção Exclusiva"}
                         </span>
-                        <h2 className="text-xl md:text-2xl font-serif text-[#3A312D] tracking-tight leading-tight mt-1">
+                        <h2 className="text-2xl md:text-3xl font-mea-culpa text-[#3A312D] tracking-tight leading-tight mt-1">
                           {camp.title}
                         </h2>
                         {camp.description && (
@@ -977,7 +918,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
                             {camp.subtitle || "Destaque do Ateliê"}
                           </span>
-                          <h2 className="text-2xl md:text-3xl font-serif text-[#3A312D] tracking-tight leading-tight">
+                          <h2 className="text-3xl md:text-4xl font-mea-culpa text-[#3A312D] tracking-tight leading-tight">
                             {highlightProd.product_name}
                           </h2>
                           {highlightProd.description && (
@@ -1019,9 +960,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               })}
               
               {/* Main Scroll Content */}
-              <main className="p-2 md:p-4 relative">
+              <main className="p-1 md:p-2 relative">
 
-                <div className="max-w-[1850px] mx-auto h-full flex flex-col pt-4">
+                <div className="max-w-[1850px] mx-auto h-full flex flex-col pt-1">
                   
                   <CatalogInfoBar 
                     selectedCategory={selectedCategory}
@@ -1172,11 +1113,13 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       )}
     </div>
 
-    {/* Footer Legal & Copyright - Full Width and Side-by-Side */}
-    <footer className={`flex-shrink-0 w-full pt-10 pb-20 border-t ${theme.borderLine} text-center space-y-4 px-6 bg-white/80 backdrop-blur-md relative z-10`}>
+    {/* Footer Legal & Copyright - Slim & Compact */}
+    <footer className={`flex-shrink-0 w-full py-4 sm:py-5 border-t ${theme.borderLine} text-center px-4 sm:px-6 bg-white/70 backdrop-blur-md relative z-10`}>
         <div className="max-w-[1850px] mx-auto">
-          <p className={`text-[8px] font-sans font-black tracking-[0.3em] mb-4 uppercase text-neutral-800 opacity-60 text-center`}>Avisos Legais, Direitos e Produção</p>
-          <p className="text-[9px] leading-relaxed font-medium font-sans text-neutral-500 max-w-5xl mx-auto text-center px-4">
+          <p className="text-[8px] font-sans font-black tracking-[0.25em] mb-1.5 uppercase text-neutral-600 opacity-70 text-center">
+            Avisos Legais, Direitos e Produção
+          </p>
+          <p className="text-[8.5px] sm:text-[9px] leading-relaxed font-normal font-sans text-neutral-500 max-w-4xl mx-auto text-center">
             Ao realizar um pedido em nossa plataforma, você consente com os termos regulados de confecção artesanal exclusiva. O ciclo de produção e entrega dos produtos sob encomenda respeita o prazo especificado em cada item, dependendo da especificidade, complexidade e ordem de fila de solicitações do ateliê. As fotografias são meramente ilustrativas e editoriais; cores e acabamentos podem sofrer mudanças de cor dependendo da configuração de seu dispositivo. Dados de faturamento coletados operam sob conformidade e proteção legal vigentes.
           </p>
         </div>

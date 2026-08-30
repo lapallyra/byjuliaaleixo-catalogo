@@ -11,6 +11,9 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app);
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 export const login = async () => {
   try {
@@ -26,12 +29,18 @@ export const login = async () => {
     });
     if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
       console.log('[Auth] Login popup closed by user.');
-      return;
+      return null;
     }
-    // Check if we are in an iframe or if popup is blocked
-    if (error.code === 'auth/popup-blocked') {
-      console.log('[Auth] Popup blocked, suggesting redirect login');
-      throw error; 
+    // Fallback to redirect if popup is blocked or network request failed in iframe/preview
+    if (error.code === 'auth/popup-blocked' || error.code === 'auth/network-request-failed') {
+      console.log('[Auth] Popup/Network request failed, redirecting...');
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return null;
+      } catch (redirectErr) {
+        console.error('[Auth] Redirect fallback error:', redirectErr);
+        throw error;
+      }
     }
     throw error; 
   }

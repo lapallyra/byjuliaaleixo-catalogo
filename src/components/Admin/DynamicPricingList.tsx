@@ -40,7 +40,7 @@ export const DynamicPricingList: React.FC<DynamicPricingListProps> = ({
     onChange([
       ...items,
       {
-        id: crypto.randomUUID(),
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9)),
         name: newItemName,
         value: Number(newItemValue),
         category: finalCategory,

@@ -12,7 +12,8 @@ import {
   Check,
   ArrowLeft,
   Upload,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import { Product, CompanyId, Variation } from '../types';
 import { getTheme } from '../lib/theme';
@@ -28,6 +29,8 @@ interface ProductDetailPageProps {
   onAddToGiftList?: (product: Product) => void;
   allProducts: Product[];
   companyId: CompanyId;
+  isExclusive?: boolean;
+  campaignYear?: number | string;
 }
 
 export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
@@ -35,7 +38,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   onClose,
   onAddToCart,
   onAddToGiftList,
-  companyId
+  companyId,
+  isExclusive = false,
+  campaignYear
 }) => {
   const theme = getTheme(companyId);
 
@@ -150,24 +155,24 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const originalPrice = product.original_price;
 
   return (
-    <div className="w-full bg-[#FAFAF9] min-h-screen text-slate-900 pb-20 font-sans">
+    <div className="w-full bg-[#FDFCFA] min-h-screen text-slate-900 pb-20 font-sans">
       
       {/* HEADER / NAVIGATION */}
-      <div className="max-w-[1600px] mx-auto px-6 py-8">
+      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
+      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         
-        {/* BLOCO 01 - LADO ESQUERDO: Carrossel */}
-        <div className="space-y-6">
-          <div className="aspect-[4/5] bg-white rounded-[2.5rem] overflow-hidden relative shadow-sm group">
+        {/* BLOCO 01 - LADO ESQUERDO: Carrossel (Tamanho Médio) */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="aspect-[4/4] max-w-[480px] mx-auto lg:max-w-none bg-white rounded-3xl overflow-hidden relative shadow-sm border border-neutral-100 group">
             <AnimatePresence mode="wait">
               <motion.div
                 key={imageIndex}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.3 }}
                 className="w-full h-full"
               >
                 <ImageWithFallback 
@@ -184,15 +189,15 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               <>
                 <button 
                   onClick={prevImage}
-                  className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-neutral-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-white shadow-lg"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-neutral-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-white shadow-md cursor-pointer"
                 >
-                  <ChevronLeft size={24} />
+                  <ChevronLeft size={20} />
                 </button>
                 <button 
                   onClick={nextImage}
-                  className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-neutral-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-white shadow-lg"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-neutral-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-white shadow-md cursor-pointer"
                 >
-                  <ChevronRight size={24} />
+                  <ChevronRight size={20} />
                 </button>
               </>
             )}
@@ -200,13 +205,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
           {/* Thumbnails */}
           {images.length > 1 && (
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none justify-center lg:justify-start">
               {images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setImageIndex(i)}
-                  className={`w-20 h-20 rounded-2xl overflow-hidden shrink-0 border-2 transition-all ${
-                    i === imageIndex ? 'border-neutral-900 scale-105' : 'border-transparent opacity-60'
+                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                    i === imageIndex ? 'border-neutral-900 scale-105 shadow-sm' : 'border-transparent opacity-60 hover:opacity-100'
                   }`}
                 >
                   <ImageWithFallback src={img} alt={`${product.product_name} ${i}`} className="w-full h-full object-cover" />
@@ -216,12 +221,25 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           )}
         </div>
 
-        {/* BLOCO 01 - LADO DIREITO: Detalhes */}
-        <div className="flex flex-col py-4">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] text-neutral-400">
-              {product.category}
-            </span>
+        {/* BLOCO 01 - LADO DIREITO: Detalhes, Ações e Especificações reposicionadas */}
+        <div className="lg:col-span-7 flex flex-col py-1">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] text-neutral-400">
+                {product.category}
+              </span>
+              {(isExclusive || product.isExclusive) && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs">
+                  <Sparkles size={11} className="animate-pulse" />
+                  Exclusivo
+                </span>
+              )}
+              {(campaignYear || product.edition_year) && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-[#3A312D] text-white shadow-xs">
+                  Edição {campaignYear || product.edition_year}
+                </span>
+              )}
+            </div>
             
             {/* TAG ATACADO */}
             <button 
@@ -587,82 +605,70 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 </span>
               </button>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* BLOCO 02 - Informações Técnicas */}
-      <div className="max-w-[1600px] mx-auto px-6 mt-24">
-        <div className="bg-white rounded-[3rem] p-12 md:p-20 shadow-sm border border-neutral-100">
-          <div className="max-w-3xl">
-            <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] text-neutral-400 mb-6">
-              Especificações
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <div className="space-y-4">
-                <h3 className="text-xl font-serif text-neutral-900 italic">Detalhes Técnicos</h3>
-                <ul className="space-y-3 text-sm text-neutral-500 font-sans">
-                  <li className="flex justify-between border-b border-neutral-50 pb-2">
-                    <span>Código:</span>
-                    <span className="font-bold text-neutral-700">{product.code}</span>
-                  </li>
-                  <li className="flex justify-between border-b border-neutral-50 pb-2">
-                    <span>Categoria:</span>
-                    <span className="font-bold text-neutral-700">{product.category}</span>
-                  </li>
-                  {product.dimensions && (
-                    <li className="flex justify-between border-b border-neutral-50 pb-2">
-                      <span>Dimensões:</span>
-                      <span className="font-bold text-neutral-700">
-                        {product.dimensions.length}x{product.dimensions.width}x{product.dimensions.height} cm
-                      </span>
+            {/* ESPECIFICAÇÕES & PRAZOS (Movidos para o lado direito) */}
+            <div className="mt-8 pt-6 border-t border-neutral-100 bg-white/70 rounded-2xl p-5 sm:p-6 border shadow-xs space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <h3 className="text-sm font-serif text-neutral-900 italic font-semibold">Detalhes Técnicos</h3>
+                  <ul className="space-y-2 text-xs text-neutral-500 font-sans">
+                    <li className="flex justify-between border-b border-neutral-100 pb-1.5">
+                      <span>Código:</span>
+                      <span className="font-bold text-neutral-700">{product.code}</span>
                     </li>
-                  )}
-                  {product.weight && (
-                    <li className="flex justify-between border-b border-neutral-50 pb-2">
-                      <span>Peso:</span>
-                      <span className="font-bold text-neutral-700">{product.weight}g</span>
+                    <li className="flex justify-between border-b border-neutral-100 pb-1.5">
+                      <span>Categoria:</span>
+                      <span className="font-bold text-neutral-700">{product.category}</span>
                     </li>
-                  )}
-                </ul>
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-xl font-serif text-neutral-900 italic">Prazos & Produção</h3>
-                <p className="text-sm text-neutral-500 leading-relaxed">
-                  Cada peça é produzida sob demanda com o cuidado e exclusividade que você merece. O prazo médio de produção é de <strong>{product.productionTime || 5} dias úteis</strong> após a confirmação do pedido.
-                </p>
-                <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-100 flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-neutral-400 shrink-0 shadow-sm">
-                    <Check size={14} />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-neutral-900 uppercase tracking-wider mb-1">Qualidade Garantida</p>
-                    <p className="text-[10px] text-neutral-500 font-sans">Revisão minuciosa antes do envio.</p>
+                    {product.dimensions && (
+                      <li className="flex justify-between border-b border-neutral-100 pb-1.5">
+                        <span>Dimensões:</span>
+                        <span className="font-bold text-neutral-700">
+                          {product.dimensions.length}x{product.dimensions.width}x{product.dimensions.height} cm
+                        </span>
+                      </li>
+                    )}
+                    {product.weight && (
+                      <li className="flex justify-between border-b border-neutral-100 pb-1.5">
+                        <span>Peso:</span>
+                        <span className="font-bold text-neutral-700">{product.weight}g</span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-sm font-serif text-neutral-900 italic font-semibold">Prazos & Produção</h3>
+                  <p className="text-xs text-neutral-500 leading-relaxed">
+                    Produção sob demanda. Prazo médio de <strong>{product.productionTime || 5} dias úteis</strong> após a confirmação do pedido.
+                  </p>
+                  <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-100 flex items-start gap-2.5">
+                    <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center text-neutral-500 shrink-0 shadow-xs">
+                      <Check size={12} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-neutral-900 uppercase tracking-wider">Qualidade Garantida</p>
+                      <p className="text-[9.5px] text-neutral-500 font-sans">Revisão minuciosa antes do envio.</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Seção Personalização */}
-            <div className="mt-16 pt-16 border-t border-neutral-50">
-              <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] text-neutral-400 mb-6">
-                Personalização
-              </h2>
-              <div className="flex items-center gap-3 p-6 bg-neutral-50 rounded-[2rem] border border-neutral-100">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${
-                  (product.personalizationSettings && product.personalizationSettings.length > 0) ? 'bg-white text-green-600' : 'bg-white text-rose-400'
+              {/* Informação de Personalização */}
+              <div className="pt-3 border-t border-neutral-100 flex items-center gap-2.5">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 shadow-xs ${
+                  (product.personalizationSettings && product.personalizationSettings.length > 0) ? 'bg-emerald-50 text-emerald-600' : 'bg-neutral-100 text-neutral-400'
                 }`}>
-                  {(product.personalizationSettings && product.personalizationSettings.length > 0) ? <Check size={18} /> : <X size={18} />}
+                  {(product.personalizationSettings && product.personalizationSettings.length > 0) ? <Check size={12} /> : <X size={12} />}
                 </div>
-                <p className={`text-sm font-sans font-bold ${
-                  (product.personalizationSettings && product.personalizationSettings.length > 0) ? 'text-neutral-700' : 'text-neutral-400'
-                }`}>
+                <p className="text-xs font-sans font-medium text-neutral-600">
                   {(product.personalizationSettings && product.personalizationSettings.length > 0)
-                    ? '✓ Este produto pode ser personalizado.' 
-                    : '✗ Este produto não possui personalização.'}
+                    ? 'Este produto pode ser personalizado com suas preferências.' 
+                    : 'Este produto é enviado conforme o modelo padrão.'}
                 </p>
               </div>
             </div>
+
           </div>
         </div>
       </div>

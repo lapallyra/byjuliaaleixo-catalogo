@@ -33,15 +33,15 @@ export const AboutMeView: React.FC = () => {
   const photo = aboutSettings?.about_me_photo || "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?q=80&w=800&auto=format&fit=crop";
 
   return (
-    <div className="bg-[#FDFCFA] min-h-screen text-[#4A332A] font-sans selection:bg-[#E8DFC8] selection:text-[#2C1810] py-12 px-6 select-none overflow-x-hidden relative">
+    <div className="bg-[#FDFCFA] min-h-screen text-[#4A332A] font-sans selection:bg-[#E8DFC8] selection:text-[#2C1810] py-8 sm:py-12 select-none overflow-x-hidden relative">
       {/* BACKGROUND GRAPHICS */}
-      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#F8F5EE]/50 to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#FAF6F0]/60 to-transparent pointer-events-none -z-10" />
       
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8">
         
         {/* HEADER */}
-        <div className="text-center mb-16">
-          <h1 id="about-us-title" className="font-serif text-3xl sm:text-4xl md:text-5xl uppercase tracking-[0.25em] text-[#6d5443] mb-3">
+        <div className="text-center mb-12 sm:mb-16">
+          <h1 id="about-us-title" className="font-mea-culpa text-4xl sm:text-5xl md:text-6xl text-[#6d5443] mb-3">
             Quem Faz Acontecer
           </h1>
           <p id="about-us-subtitle" className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-[#cca062] flex items-center justify-center gap-2">

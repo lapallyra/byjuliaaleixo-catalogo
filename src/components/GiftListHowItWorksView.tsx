@@ -3,7 +3,6 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, PlusCircle, ShoppingBag, Share2, Eye, ChevronDown, Heart, Sparkles } from 'lucide-react';
 import { ContinueExploring } from './ContinueExploring';
-import { BotaoVoltar } from './BotaoVoltar';
 
 // Editorial Images
 const HERO_IMAGE = "/src/assets/images/gift_list_hero_editorial_1784215289939.jpg";
@@ -136,7 +135,7 @@ export const GiftListHowItWorksView: React.FC = () => {
             <span className="inline-block mb-6 text-white/80 uppercase tracking-[0.4em] text-[10px] font-medium bg-black/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
               Emoção & Celebração
             </span>
-            <h1 className="text-white font-mea-culpa text-7xl md:text-9xl mb-8 tracking-tight drop-shadow-sm">
+            <h1 className="text-white font-mea-culpa text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-6 tracking-tight drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
               Lista de Presentes
             </h1>
             <p className="text-white/90 text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto leading-relaxed mb-12">
@@ -165,9 +164,9 @@ export const GiftListHowItWorksView: React.FC = () => {
       </section>
 
       {/* 2. COMO FUNCIONA - JORNADA VISUAL */}
-      <section className="py-24 md:py-40 px-6 md:px-12 max-w-[1200px] mx-auto">
-        <div className="text-center mb-32">
-          <h2 className="text-[#3D2E24] font-mea-culpa text-6xl md:text-8xl mb-8">
+      <section className="py-16 md:py-28 px-4 sm:px-6 md:px-8 max-w-[1850px] mx-auto">
+        <div className="text-center mb-24 md:mb-32">
+          <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl mb-6">
             Sua lista em quatro atos
           </h2>
           <div className="w-16 h-[1px] bg-[#CCA062] mx-auto" />
@@ -210,8 +209,8 @@ export const GiftListHowItWorksView: React.FC = () => {
       </section>
 
       {/* 3. EXPERIÊNCIA DA LISTA */}
-      <section className="bg-white py-32 md:py-48 px-6 overflow-hidden">
-        <div className="max-w-[1400px] mx-auto space-y-32 md:space-y-64">
+      <section className="bg-white py-24 md:py-36 px-4 sm:px-6 md:px-8 overflow-hidden">
+        <div className="max-w-[1850px] mx-auto space-y-24 md:space-y-36">
           
           {/* Block 1 */}
           <div className="flex flex-col md:flex-row items-center gap-16 md:gap-32">
@@ -232,7 +231,7 @@ export const GiftListHowItWorksView: React.FC = () => {
               className="w-full md:w-1/2 space-y-8"
             >
               <span className="text-[#CCA062] text-[10px] font-bold uppercase tracking-[0.5em]">Curadoria Digital</span>
-              <h2 className="text-[#3D2E24] font-mea-culpa text-6xl md:text-8xl leading-none">Organize seus desejos com elegância</h2>
+              <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl leading-tight">Organize seus desejos com elegância</h2>
               <p className="text-[#8E8E93] text-lg font-light leading-relaxed max-w-lg">
                 Nossa interface foi pensada para ser tão bela quanto os produtos que você escolhe. Visualize sua lista, organize por prioridade e veja o carinho dos seus convidados se transformar em mimos reais.
               </p>
@@ -258,7 +257,7 @@ export const GiftListHowItWorksView: React.FC = () => {
               className="w-full md:w-1/2 space-y-8 text-center md:text-left"
             >
               <span className="text-[#CCA062] text-[10px] font-bold uppercase tracking-[0.5em]">Conexão Real</span>
-              <h2 className="text-[#3D2E24] font-mea-culpa text-6xl md:text-8xl leading-none">Compartilhe a alegria de presentear</h2>
+              <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl leading-tight">Compartilhe a alegria de presentear</h2>
               <p className="text-[#8E8E93] text-lg font-light leading-relaxed max-w-lg mx-auto md:mx-0">
                 Facilite a escolha de quem te ama. Seus convidados acessam uma página exclusiva, escolhem os produtos e podem até deixar mensagens personalizadas. Uma ponte de afeto em cada presente.
               </p>
@@ -273,7 +272,7 @@ export const GiftListHowItWorksView: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-24">
             <Sparkles className="w-10 h-10 text-[#CCA062]/30 mx-auto mb-8" />
-            <h2 className="text-[#3D2E24] font-serif text-3xl md:text-4xl uppercase tracking-[0.2em]">
+            <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl tracking-tight">
               Dúvidas Frequentes
             </h2>
           </div>
@@ -300,7 +299,7 @@ export const GiftListHowItWorksView: React.FC = () => {
           className="max-w-2xl mx-auto"
         >
           <Heart className="w-8 h-8 text-[#6D0D0D]/20 mx-auto mb-8" />
-          <h2 className="text-[#3D2E24] font-mea-culpa text-7xl md:text-9xl mb-10">
+          <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl mb-8">
             Crie sua lista e compartilhe momentos especiais
           </h2>
           <p className="text-[#8E8E93] text-sm md:text-base font-light tracking-[0.2em] mb-12 uppercase leading-relaxed max-w-lg mx-auto">

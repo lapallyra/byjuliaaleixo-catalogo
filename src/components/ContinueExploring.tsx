@@ -46,7 +46,7 @@ export const ContinueExploring: React.FC<{ currentPath: string }> = ({ currentPa
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-16">
           <span className="text-[#CCA062] text-[10px] font-bold uppercase tracking-[0.4em] mb-4 block">Navegação Editorial</span>
-          <h2 className="text-[#3D2E24] font-mea-culpa text-5xl md:text-6xl mb-4">Continue explorando</h2>
+          <h2 className="text-[#3D2E24] font-mea-culpa text-3xl sm:text-4xl md:text-5xl mb-3">Continue explorando</h2>
           <div className="w-12 h-[1px] bg-[#CCA062]/30 mx-auto" />
         </div>
 

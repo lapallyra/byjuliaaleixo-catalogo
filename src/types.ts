@@ -57,6 +57,7 @@ export interface Product {
   // Custom properties for advanced editor tabs
   brand?: string;
   isExclusive?: boolean;
+  edition_year?: number;
   collection?: string;
   collectionCoverImage?: string;
   minStock?: number;
@@ -622,6 +623,8 @@ export interface CommemorativeDate {
   hashtags: string[];
   marketing_phrase: string;
   priority: number;
+  exclusive_product_id?: string;
+  edition_year?: number;
   mobile_id?: 'carnaval' | 'pascoa' | 'corpus_christi' | 'mothers_day' | 'fathers_day' | 'black_friday';
   is_national?: boolean;
   scope?: 'nacional' | 'mundial' | 'regional';
@@ -754,6 +757,8 @@ export interface PromotionalCampaign {
   bannerMobile?: string;
   theme_color?: string;
   products: string[]; // Product IDs
+  exclusive_product_id?: string;
+  edition_year?: number;
   priority: number;
   createdAt: any;
   updatedAt: any;

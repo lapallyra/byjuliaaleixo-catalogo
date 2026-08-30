@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   PauseCircle,
   XCircle,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PromotionalCampaign, Product } from "../../types";
@@ -563,6 +564,105 @@ export function PromotionalCampaignsTab({ products }: PromotionalCampaignsTabPro
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Produto Exclusivo da Edição */}
+                  <div className="border-t border-slate-100 pt-8 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-xs font-semibold uppercase tracking-widest text-slate-900 flex items-center gap-2">
+                          <Sparkles size={14} className="text-amber-500" />
+                          Produto Exclusivo da Edição
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Produto destaque da edição exibido na campanha com os selos "Exclusivo" e "Edição {editingCampaign?.edition_year || new Date().getFullYear()}".
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="sm:col-span-1 space-y-2">
+                        <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
+                          Ano da Edição
+                        </label>
+                        <input
+                          type="number"
+                          min="2020"
+                          max="2040"
+                          value={editingCampaign?.edition_year || new Date().getFullYear()}
+                          onChange={(e) =>
+                            setEditingCampaign({
+                              ...editingCampaign,
+                              edition_year: parseInt(e.target.value) || new Date().getFullYear(),
+                            })
+                          }
+                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold focus:bg-white outline-none"
+                          placeholder="2026"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2 space-y-2">
+                        <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
+                          Selecionar dos Produtos Vinculados
+                        </label>
+                        <select
+                          value={editingCampaign?.exclusive_product_id || ""}
+                          onChange={(e) =>
+                            setEditingCampaign({
+                              ...editingCampaign,
+                              exclusive_product_id: e.target.value || undefined,
+                              edition_year: editingCampaign?.edition_year || new Date().getFullYear(),
+                            })
+                          }
+                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-medium focus:bg-white outline-none"
+                        >
+                          <option value="">Nenhum (usar padrão)</option>
+                          {products.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.product_name} - R$ {p.current_price?.toFixed(2).replace('.', ',')}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Selected Exclusive Preview */}
+                    {editingCampaign?.exclusive_product_id && (
+                      (() => {
+                        const selectedProd = products.find(p => p.id === editingCampaign.exclusive_product_id);
+                        if (!selectedProd) return null;
+                        return (
+                          <div className="p-4 bg-amber-50/60 border border-amber-200/80 rounded-2xl flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 min-w-0">
+                              <div className="w-14 h-14 rounded-xl overflow-hidden bg-white shrink-0 border border-amber-200 shadow-xs">
+                                <img src={selectedProd.image || selectedProd.main_image} alt="" className="w-full h-full object-cover" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-widest bg-amber-500 text-white px-2 py-0.5 rounded-full shadow-xs">
+                                    <Sparkles size={10} />
+                                    Exclusivo
+                                  </span>
+                                  <span className="text-[9px] font-extrabold uppercase tracking-widest bg-slate-900 text-white px-2 py-0.5 rounded-full shadow-xs">
+                                    Edição {editingCampaign?.edition_year || new Date().getFullYear()}
+                                  </span>
+                                </div>
+                                <p className="text-sm font-bold text-slate-900 truncate">{selectedProd.product_name}</p>
+                                <p className="text-xs text-amber-900/70 font-medium">R$ {selectedProd.current_price?.toFixed(2).replace('.', ',')}</p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setEditingCampaign({ ...editingCampaign, exclusive_product_id: undefined })}
+                              className="p-2 text-rose-500 hover:bg-rose-100/50 rounded-xl transition-colors shrink-0 cursor-pointer"
+                              title="Remover produto exclusivo"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        );
+                      })()
+                    )}
                   </div>
 
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col justify-center min-h-[72px]">

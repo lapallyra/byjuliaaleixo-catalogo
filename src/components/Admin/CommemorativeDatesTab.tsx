@@ -22,7 +22,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { commemorativeDateService } from "../../services/commemorativeDateService";
-import { CommemorativeDate, CategoryId } from "../../types";
+import { CommemorativeDate, CategoryId, Product } from "../../types";
+import { subscribeToProducts } from "../../services/firebaseService";
+import { PRODUCTS } from "../../constants";
 import {
   format,
   isToday,
@@ -91,6 +93,8 @@ function isValidDayMonth(day: number, month: number): boolean {
 
 export function CommemorativeDatesTab() {
   const [dates, setDates] = useState<CommemorativeDate[]>([]);
+  const [products, setProducts] = useState<Product[]>(PRODUCTS);
+  const [productSearchTerm, setProductSearchTerm] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | "all">(
     "all",
@@ -105,19 +109,28 @@ export function CommemorativeDatesTab() {
   const openModal = (date: Partial<CommemorativeDate> | null) => {
     setEditingDate(date);
     setFormError(null);
+    setProductSearchTerm("");
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingDate(null);
+    setProductSearchTerm("");
     setFormError(null);
   };
 
   useEffect(() => {
     const unsub = commemorativeDateService.subscribe(setDates);
-  // No longer seeding initial dates to comply with SITE-005
-    return unsub;
+    const unsubProducts = subscribeToProducts((loaded) => {
+      if (loaded && loaded.length > 0) {
+        setProducts(loaded);
+      }
+    });
+    return () => {
+      unsub();
+      unsubProducts();
+    };
   }, []);
 
   const getFullDate = (
@@ -870,6 +883,138 @@ export function CommemorativeDatesTab() {
                       />
                     </div>
                   </div>
+                </div>
+
+                {/* Produto Exclusivo da Edição */}
+                <div className="border-t border-slate-100 pt-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-semibold uppercase tracking-widest text-slate-900 flex items-center gap-2">
+                        <Sparkles size={14} className="text-amber-500" />
+                        Produto Exclusivo da Edição
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Produto destaque da edição exibido na lateral do banner da campanha com os selos "Exclusivo" e "Edição {editingDate?.edition_year || new Date().getFullYear()}".
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="sm:col-span-1 space-y-2">
+                      <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
+                        Ano da Edição
+                      </label>
+                      <input
+                        type="number"
+                        min="2020"
+                        max="2040"
+                        value={editingDate?.edition_year || new Date().getFullYear()}
+                        onChange={(e) =>
+                          setEditingDate({
+                            ...editingDate,
+                            edition_year: parseInt(e.target.value) || new Date().getFullYear(),
+                          })
+                        }
+                        className="w-full h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl px-6 text-sm font-bold focus:bg-white outline-none"
+                        placeholder="2026"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2 space-y-2">
+                      <label className="text-[10px] font-medium tracking-normal text-[#8E8E93] ml-2">
+                        Buscar e Selecionar Produto
+                      </label>
+                      <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                          type="text"
+                          placeholder="Digite o nome ou categoria do produto..."
+                          value={productSearchTerm}
+                          onChange={(e) => setProductSearchTerm(e.target.value)}
+                          className="w-full pl-10 pr-4 h-14 bg-slate-50 border border-[#E5E5EA] rounded-2xl text-sm focus:bg-white outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Search Results Dropdown */}
+                  {productSearchTerm.trim() && (
+                    <div className="bg-white border border-slate-200 rounded-2xl max-h-56 overflow-y-auto shadow-lg divide-y divide-slate-100">
+                      {products
+                        .filter(p => 
+                          p.product_name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+                          p.id.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+                          (p.category && p.category.toLowerCase().includes(productSearchTerm.toLowerCase()))
+                        )
+                        .slice(0, 8)
+                        .map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              setEditingDate({
+                                ...editingDate,
+                                exclusive_product_id: p.id,
+                                edition_year: editingDate?.edition_year || new Date().getFullYear(),
+                              });
+                              setProductSearchTerm("");
+                            }}
+                            className="w-full text-left p-3 hover:bg-slate-50 flex items-center justify-between gap-3 transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
+                                <img src={p.image || p.main_image} alt="" className="w-full h-full object-cover" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-slate-900 truncate">{p.product_name}</p>
+                                <p className="text-[10px] text-slate-500 uppercase tracking-wider">{p.category || p.company} • R$ {p.current_price?.toFixed(2).replace('.', ',')}</p>
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 shrink-0">
+                              Selecionar Exclusivo
+                            </span>
+                          </button>
+                        ))}
+                    </div>
+                  )}
+
+                  {/* Selected Exclusive Product Card Preview */}
+                  {editingDate?.exclusive_product_id && (
+                    (() => {
+                      const selectedProd = products.find(p => p.id === editingDate.exclusive_product_id);
+                      if (!selectedProd) return null;
+                      return (
+                        <div className="p-4 bg-amber-50/60 border border-amber-200/80 rounded-2xl flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div className="w-14 h-14 rounded-xl overflow-hidden bg-white shrink-0 border border-amber-200 shadow-xs">
+                              <img src={selectedProd.image || selectedProd.main_image} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-widest bg-amber-500 text-white px-2 py-0.5 rounded-full shadow-xs">
+                                  <Sparkles size={10} />
+                                  Exclusivo
+                                </span>
+                                <span className="text-[9px] font-extrabold uppercase tracking-widest bg-slate-900 text-white px-2 py-0.5 rounded-full shadow-xs">
+                                  Edição {editingDate?.edition_year || new Date().getFullYear()}
+                                </span>
+                              </div>
+                              <p className="text-sm font-bold text-slate-900 truncate">{selectedProd.product_name}</p>
+                              <p className="text-xs text-amber-900/70 font-medium">R$ {selectedProd.current_price?.toFixed(2).replace('.', ',')}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditingDate({ ...editingDate, exclusive_product_id: undefined })}
+                            className="p-2 text-rose-500 hover:bg-rose-100/50 rounded-xl transition-colors shrink-0 cursor-pointer"
+                            title="Remover produto exclusivo"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      );
+                    })()
+                  )}
                 </div>
 
                 {/* Status and Rules Section */}

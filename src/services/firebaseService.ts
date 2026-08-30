@@ -1607,7 +1607,7 @@ export const syncCustomerIndicatorsForOrder = async (
 
     if (!currentCustomerDoc) {
       if (orderData.customerName && companyId) {
-        const customerCode = crypto.randomUUID().slice(0, 8).toUpperCase();
+        const customerCode = (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 10)).slice(0, 8).toUpperCase();
         const newCustomerData = sanitize({
           code: customerCode,
           name: orderData.customerName,
@@ -1703,10 +1703,10 @@ export const syncCustomerFromCheckout = async (companyId: CompanyId, data: Parti
     console.error('Failed to sync customer from checkout:', error);
   }
 };
-export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdAt'>) => {
+export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdAt'>, options?: { bypassCpfCheck?: boolean }) => {
   const settings = await getCrmSettings(data.companyId);
   
-  if (settings.requireCpf && (!data.cpfCnpj || data.cpfCnpj.length < 11)) {
+  if (!options?.bypassCpfCheck && settings.requireCpf && (!data.cpfCnpj || data.cpfCnpj.length < 11)) {
      throw new Error("CPF/CNPJ é obrigatório.");
   }
   
@@ -1714,7 +1714,8 @@ export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdA
      const q = query(collection(db, 'customers'), where('companyId', '==', data.companyId), where('contact', '==', data.contact));
      const snap = await getDocs(q);
      if (!snap.empty) {
-        throw new Error("Cliente com esse WhatsApp já cadastrado.");
+        // If checking phone ID, return existing customer ID instead of breaking
+        return snap.docs[0].id;
      }
   }
 
@@ -1744,6 +1745,41 @@ export const addCustomer = async (data: Omit<Customer, 'id' | 'code' | 'createdA
   } catch (error) {
     handleFirestoreError(error, OperationType.CREATE, path);
   }
+};
+
+export const saveCustomer = async (data: Partial<Customer>, options?: { bypassCpfCheck?: boolean }) => {
+  if (data.id) {
+    await updateCustomer(data.id, data);
+    return data.id;
+  }
+
+  // Check if a customer with the same email already exists in Firestore
+  if (data.email) {
+    try {
+      const q = query(collection(db, 'customers'), where('email', '==', data.email.toLowerCase().trim()));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const existingId = snap.docs[0].id;
+        await updateCustomer(existingId, data);
+        return existingId;
+      }
+    } catch (e) {
+      console.warn('Could not check existing customer by email:', e);
+    }
+  }
+
+  return addCustomer({
+    name: data.name || 'Cliente',
+    email: data.email ? data.email.toLowerCase().trim() : '',
+    contact: data.contact || data.phone || '',
+    phone: data.phone || data.contact || '',
+    companyId: data.companyId || 'pallyra',
+    cpfCnpj: data.cpfCnpj || '',
+    totalSpent: data.totalSpent || 0,
+    ordersCount: data.ordersCount || 0,
+    birthDate: data.birthDate || '',
+    ...data
+  } as any, options);
 };
 
 export const subscribeToCustomers = (callback: (customers: Customer[]) => void, companyId?: CompanyId) => {

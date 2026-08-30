@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { ArrowLeft, Megaphone, ShoppingBag, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Megaphone, ShoppingBag, Info, Sparkles } from 'lucide-react';
 import { ProductCard } from './ui/ProductCard';
 import { promotionalCampaignService } from '../services/promotionalCampaignService';
 import { Product, PromotionalCampaign } from '../types';
 import { LoadingScreen } from './LoadingScreen';
+import { ProductDetailModal } from './ProductDetailModal';
 
 interface PromotionalCampaignPageProps {
   allProducts: Product[];
@@ -16,6 +17,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
   const navigate = useNavigate();
   const [campaign, setCampaign] = useState<PromotionalCampaign | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedModalProduct, setSelectedModalProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     async function fetchCampaign() {
@@ -73,17 +75,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
       {/* BACKGROUND GRAPHICS */}
       <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#E8DCC8]/10 via-[#FCFAF7] to-transparent pointer-events-none -z-10" />
 
-      <header className="fixed top-0 inset-x-0 h-20 bg-[#FCFAF7]/80 backdrop-blur-xl z-50 border-b border-[#EAE4DC] flex items-center px-4 sm:px-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-full bg-white border border-[#EAE4DC] flex items-center justify-center text-[#1F1F1F] hover:bg-[#F4EFE8] transition-colors cursor-pointer"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <h1 className="ml-6 text-lg font-serif text-[#6d5443] truncate">{campaign.name}</h1>
-      </header>
-
-      <main className="pt-20 pb-24 relative z-10">
+      <main className="pb-24 relative z-10">
         {/* Banner Section */}
         <section 
           className="relative min-h-[40vh] md:min-h-[50vh] flex flex-col items-center justify-center p-8 overflow-hidden text-center"
@@ -107,7 +99,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-6xl font-serif font-medium mb-6 leading-tight"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-mea-culpa font-normal mb-4 leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
             >
               {campaign.name}
             </motion.h1>
@@ -153,7 +145,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
             </button>
           </div>
         ) : (
-          <section className="max-w-6xl mx-auto px-4 sm:px-6 mt-16">
+          <section className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 mt-12 sm:mt-16">
             <div className="flex items-center gap-3 mb-12">
               <ShoppingBag className="text-[#6d5443]" size={24} />
               <h2 className="text-2xl font-serif text-[#6d5443]">
@@ -172,6 +164,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
                   >
                     <ProductCard 
                       product={product} 
+                      onClick={() => setSelectedModalProduct(product)}
                     />
                   </motion.div>
                 ))}
@@ -184,6 +177,37 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
           </section>
         )}
       </main>
+
+      {/* Product Detail Modal */}
+      <AnimatePresence>
+        {selectedModalProduct && (
+          <ProductDetailModal
+            product={selectedModalProduct}
+            isExclusive={selectedModalProduct.id === campaign.exclusive_product_id || Boolean(selectedModalProduct.isExclusive)}
+            campaignYear={campaign.edition_year || new Date().getFullYear()}
+            companyId={selectedModalProduct.company}
+            allProducts={allProducts}
+            onClose={() => setSelectedModalProduct(null)}
+            onAddToCart={(prod, qty) => {
+              try {
+                const saved = localStorage.getItem('unified_cart_v2');
+                const cart = saved ? JSON.parse(saved) : [];
+                const existing = cart.find((i: any) => i.product.id === prod.id);
+                if (existing) {
+                  existing.quantity += qty;
+                } else {
+                  cart.push({ product: prod, quantity: qty });
+                }
+                localStorage.setItem('unified_cart_v2', JSON.stringify(cart));
+                window.dispatchEvent(new Event('cart-updated'));
+              } catch (e) {
+                console.error(e);
+              }
+              setSelectedModalProduct(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

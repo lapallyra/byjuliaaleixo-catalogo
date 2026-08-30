@@ -169,7 +169,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
                 playSuccessSound();
                 try {
                   const purchaseInfo = {
-                    id: fetched.id || crypto.randomUUID(),
+                    id: fetched.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9)),
                     customerName: fetched.customerName || 'Cliente',
                     productName: fetched.items?.[0]?.product_name || 'um produto especial',
                     timeAgo: 'agora mesmo em São Paulo - SP',

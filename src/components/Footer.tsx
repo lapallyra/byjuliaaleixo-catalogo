@@ -13,8 +13,8 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
   const navigate = useNavigate();
 
   return (
-    <footer className="bg-[#FDFCFA] border-t border-[#E8DFC8]/40 pt-8 pb-5 sm:pt-10 sm:pb-6 px-4 md:px-8 font-sans overflow-hidden mt-auto select-none">
-      <div className="max-w-[1600px] mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 mb-6">
+    <footer className="bg-[#FDFCFA] border-t border-[#E8DFC8]/40 pt-8 pb-5 sm:pt-10 sm:pb-6 px-4 sm:px-6 md:px-8 font-sans overflow-hidden mt-auto select-none">
+      <div className="max-w-[1850px] mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 mb-6">
         
         {/* Col 1: Bio & Quick Icons */}
         <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex flex-col items-start text-left">

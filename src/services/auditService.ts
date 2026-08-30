@@ -40,7 +40,7 @@ export const createAuditLog = async (
     const now = new Date();
     
     const auditData: Omit<AuditLog, 'id'> = {
-      correlationId: data?.correlationId || crypto.randomUUID(),
+      correlationId: data?.correlationId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 12)),
       timestamp: serverTimestamp(),
       date: now.toISOString().split('T')[0],
       time: now.toLocaleTimeString('pt-BR'),

@@ -66,7 +66,7 @@ export const SeasonalBanner: React.FC<SeasonalBannerProps> = ({ campaign, theme 
         <span className="text-[10px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
           {campaign.subtitle || "Campanha Especial"}
         </span>
-        <h2 className="text-2xl md:text-4xl font-serif text-[#3A312D] tracking-tight leading-tight group-hover:text-black transition-colors duration-300">
+        <h2 className="text-3xl md:text-5xl font-mea-culpa text-[#3A312D] tracking-tight leading-tight group-hover:text-black transition-colors duration-300">
           {campaign.title}
         </h2>
         {campaign.description && (

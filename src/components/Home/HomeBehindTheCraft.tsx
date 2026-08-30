@@ -72,7 +72,7 @@ export const HomeBehindTheCraft: React.FC<HomeBehindTheCraftProps> = ({ customSe
               <span>Nossa Filosofia & Essência</span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-[#2C1810] font-normal tracking-tight leading-snug">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#2C1810] tracking-tight leading-snug">
               Por Trás de Cada Detalhe
             </h2>
 

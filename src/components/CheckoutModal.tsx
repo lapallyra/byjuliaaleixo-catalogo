@@ -618,7 +618,7 @@ export function CheckoutModal({
 
   const addUpsell = (productName: string, price: number) => {
     const fakeProduct = {
-      id: crypto.randomUUID(),
+      id: (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9)),
       company: companyId,
       product_name: productName,
       retail_price: price,

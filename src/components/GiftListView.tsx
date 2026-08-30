@@ -210,13 +210,13 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
 
       {/* HEADER SECTION (ELEGANT DESIGN SYSTEM IN LINE WITH THE COZY BRANDING) */}
       <header className="bg-white/90 backdrop-blur-md border-b border-pink-100/50 sticky top-0 z-[100] shadow-xs">
-        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+        <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 h-20 sm:h-24 flex items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="w-12 h-12 sm:w-14 sm:h-14 bg-pink-600 rounded-2xl flex items-center justify-center text-white shadow-md shadow-pink-100">
                <Gift size={24} />
             </div>
             <div>
-              <h1 className="text-base sm:text-xl font-serif text-slate-900 leading-tight">{giftList.listName || "Lista de Presentes"}</h1>
+              <h1 className="text-xl sm:text-2xl font-mea-culpa text-slate-900 leading-tight">{giftList.listName || "Lista de Presentes"}</h1>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{giftList.hostName}</span>
                 <span className="w-1 h-1 rounded-full bg-pink-200 hidden sm:inline" />
@@ -238,7 +238,7 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
       </header>
 
       {/* MAIN CONSULTATION */}
-      <main className="max-w-7xl mx-auto px-6 py-12 space-y-12 w-full flex-grow">
+      <main className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12 space-y-12 w-full flex-grow">
         
         {/* EVENT DETAILS & INFOS */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
@@ -262,7 +262,7 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
               
               <div className="space-y-1.5">
                 <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 block">Homenageado(a)</span>
-                <h2 className="text-2xl sm:text-3xl font-serif text-slate-900 leading-tight">{giftList.hostName}</h2>
+                <h2 className="text-3xl sm:text-4xl font-mea-culpa text-slate-900 leading-tight">{giftList.hostName}</h2>
               </div>
             </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Heart } from "lucide-react";
 import { SaleNotification, CompanyId, Product } from "../types";
 import { generateRandomNotification } from "../services/saleNotificationService";
 
@@ -114,7 +115,7 @@ export const CustomerSocialProofToast: React.FC<
 
             {/* Glass Card */}
             <div className="relative flex items-center gap-3 px-5 py-3 bg-white/40 backdrop-blur-xl border border-white/40 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
-              <span className="text-xl">❤️</span>
+              <Heart size={20} className="text-rose-500 fill-rose-500 shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[13px] font-semibold text-slate-900 leading-tight">
                   {notification.customerName}

@@ -36,6 +36,7 @@ import { subscribeToGiftLists, OperationType, handleFirestoreError } from "../..
 import { db } from "../../lib/firebase";
 import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { Product } from "../../types";
+import { safeRandomUUID } from "../../lib/utils";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
@@ -371,7 +372,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
         status: formData.status || "active",
         items: formData.items || [],
         history: isNew ? [{
-          id: crypto.randomUUID(),
+          id: safeRandomUUID(),
           type: "created",
           title: "Lista Criada",
           description: `A lista de presentes "${formData.listName.trim()}" foi criada com sucesso para o anfitrião ${formData.hostName.trim()}.`,
@@ -408,7 +409,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
     try {
       const docRef = doc(db, "giftLists", newCode);
       const newHistoryEntry: GiftListHistoryEntry = {
-        id: crypto.randomUUID(),
+        id: safeRandomUUID(),
         type: "created",
         title: "Lista Duplicada",
         description: `Esta lista foi duplicada a partir da lista original ${list.code}.`,
@@ -445,7 +446,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
     try {
       const docRef = doc(db, "giftLists", list.code);
       const newHistoryEntry: GiftListHistoryEntry = {
-        id: crypto.randomUUID(),
+        id: safeRandomUUID(),
         type: "archived",
         title: "Lista Arquivada",
         description: "A lista foi movida para os arquivos do painel administrativo.",
@@ -475,7 +476,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
     try {
       const docRef = doc(db, "giftLists", list.code);
       const newHistoryEntry: GiftListHistoryEntry = {
-        id: crypto.randomUUID(),
+        id: safeRandomUUID(),
         type: "ended",
         title: "Lista Encerrada",
         description: "A lista de presentes foi finalizada e dada como encerrada.",
@@ -559,7 +560,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
     };
 
     const newHistoryEntry: GiftListHistoryEntry = {
-      id: crypto.randomUUID(),
+      id: safeRandomUUID(),
       type: "product_added",
       title: "Presente Adicionado",
       description: `O presente "${product.product_name}" foi adicionado à lista.`,
@@ -580,7 +581,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
     if (!confirm(`Tem certeza de que deseja remover "${productName}" da lista?`)) return;
 
     const newHistoryEntry: GiftListHistoryEntry = {
-      id: crypto.randomUUID(),
+      id: safeRandomUUID(),
       type: "product_removed",
       title: "Presente Removido",
       description: `O presente "${productName}" foi excluído da lista de presentes.`,
@@ -609,7 +610,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
     const isNowHighlighted = updatedItems.find((i) => i.id === itemId)?.isHighlighted;
 
     const newHistoryEntry: GiftListHistoryEntry = {
-      id: crypto.randomUUID(),
+      id: safeRandomUUID(),
       type: "highlight_changed",
       title: isNowHighlighted ? "Presente em Destaque" : "Destaque Removido",
       description: `O presente "${productName}" foi ${isNowHighlighted ? "marcado como destaque" : "retirado dos destaques"}.`,
@@ -642,7 +643,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
     }
 
     const newHistoryEntry: GiftListHistoryEntry = {
-      id: crypto.randomUUID(),
+      id: safeRandomUUID(),
       type: "order_changed",
       title: "Ordenação de Presentes",
       description: "A ordem manual de exibição dos presentes foi ajustada.",
@@ -693,7 +694,7 @@ export const GiftListsTab: React.FC<GiftListsTabProps> = React.memo(({
     });
 
     const newHistoryEntry: GiftListHistoryEntry = {
-      id: crypto.randomUUID(),
+      id: safeRandomUUID(),
       type: logType,
       title: logTitle,
       description: logDesc,

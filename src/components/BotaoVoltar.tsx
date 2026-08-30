@@ -26,8 +26,8 @@ export const BotaoVoltar: React.FC<BotaoVoltarProps> = ({ variant = 'light', onC
       animate={{ opacity: 1, x: 0 }}
       whileHover={{ x: -5 }}
       onClick={handleBack}
-      className={`flex items-center gap-3 transition-colors group fixed top-24 left-8 z-40 ${
-        isLight ? 'text-white/80 hover:text-white' : 'text-[#3D2E24]/60 hover:text-[#3D2E24]'
+      className={`flex items-center gap-2 sm:gap-2.5 transition-colors group fixed top-24 sm:top-28 md:top-32 left-2 sm:left-3 md:left-4 z-40 cursor-pointer ${
+        isLight ? 'text-white/80 hover:text-white' : 'text-[#3D2E24]/70 hover:text-[#3D2E24]'
       }`}
     >
       <div className={`w-10 h-10 rounded-full border flex items-center justify-center backdrop-blur-md transition-all ${

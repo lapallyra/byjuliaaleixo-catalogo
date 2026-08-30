@@ -64,11 +64,11 @@ export const GiftListInfoView: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#FCFAF7] min-h-screen text-slate-800 font-sans selection:bg-[#FFD2E5] selection:text-pink-900 overflow-x-hidden">
+    <div className="bg-[#FDFCFA] min-h-screen text-slate-800 font-sans selection:bg-[#E8DFC8] selection:text-[#2C1810] overflow-x-hidden">
       {/* BACKGROUND GRAPHICS */}
-      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#E8DCC8]/15 via-[#FCFAF7] to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FAF6F0]/60 via-[#FDFCFA] to-transparent pointer-events-none -z-10" />
       
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12">
         {/* HERO SECTION */}
         <div className="text-center max-w-3xl mx-auto mb-20">
           <motion.div 
@@ -84,10 +84,10 @@ export const GiftListInfoView: React.FC = () => {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.5 }}
-            className="font-serif text-4xl sm:text-5xl md:text-6xl text-slate-900 tracking-tight leading-tight mb-6"
+            className="font-mea-culpa text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-slate-900 tracking-tight leading-tight mb-6"
           >
             Sua Lista de Presentes <br />
-            <span className="text-pink-600 font-serif italic">com afeto e sofisticação</span>
+            <span className="text-pink-600 font-mea-culpa">com afeto e sofisticação</span>
           </motion.h1>
 
           <motion.p 
@@ -359,7 +359,7 @@ export const GiftListInfoView: React.FC = () => {
             </div>
 
             <div className="bg-white border border-pink-100/30 p-8 rounded-3xl space-y-4">
-              <span className="text-3xl">✨</span>
+              <Sparkles className="w-8 h-8 text-[#8C6D37]" />
               <h3 className="font-bold text-sm text-slate-900">Aniversários & Ciclos</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
                 Marque datas especiais e conquistas marcantes recebendo mimos que traduzem o seu estilo.

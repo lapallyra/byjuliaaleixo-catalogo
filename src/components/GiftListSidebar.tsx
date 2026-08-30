@@ -22,7 +22,7 @@ export const GiftListSidebar: React.FC<{
   useEffect(() => {
     // Generate code once when list has items and we don't have a code
     if (giftList.length > 0 && !listCode) {
-      const random = crypto.randomUUID().slice(0, 5).toUpperCase();
+      const random = (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 8)).slice(0, 5).toUpperCase();
       setListCode(`L${random}P`);
     }
   }, [giftList, listCode]);

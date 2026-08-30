@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
+import { User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
 import { auth, db } from '../lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { UserRole } from '../types';
+import { saveCustomer } from '../services/firebaseService';
 
 interface AuthContextType {
   user: User | null;
@@ -30,6 +31,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const ADMIN_EMAILS = ['juualleixo@gmail.com', 'lapallyra@gmail.com'];
 
   useEffect(() => {
+    // Check for redirect login result
+    getRedirectResult(auth).then(async (result) => {
+      if (result?.user) {
+        console.log('[Auth] Successfully logged in via redirect:', result.user.email);
+        try {
+          await saveCustomer({
+            name: result.user.displayName || 'Cliente Ateliê',
+            email: result.user.email || '',
+            phone: result.user.phoneNumber || '',
+            contacts: [{ id: '1', phone: result.user.phoneNumber || '', email: result.user.email || '', type: 'Principal', isMain: true }]
+          }, { bypassCpfCheck: true });
+        } catch (e) {
+          console.warn('[Auth] Redirect customer sync warning:', e);
+        }
+      }
+    }).catch((err) => {
+      console.warn('[Auth] Redirect result check warning:', err);
+    });
+
     console.log('[Auth] Initializing onAuthStateChanged');
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log('[Auth] Auth state changed:', firebaseUser ? `${firebaseUser.email} (UID: ${firebaseUser.uid})` : 'No user');

@@ -56,7 +56,7 @@ export const HomeCuratedProducts: React.FC<HomeCuratedProductsProps> = ({ allPro
           <Sparkles size={12} strokeWidth={1.5} />
           <span>Curadoria de Peças Especiais</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-[#2C1810] font-normal tracking-tight">
+        <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#2C1810] tracking-tight">
           Criações em Destaque
         </h2>
         <p className="text-xs sm:text-sm text-[#593E32] font-light">

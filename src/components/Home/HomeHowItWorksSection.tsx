@@ -5,8 +5,8 @@ export const HomeHowItWorksSection: React.FC = () => {
   const steps = [
     {
       stepNumber: '01',
-      title: 'Escolha ou Monte',
-      description: 'Navegue pelos 4 ateliês ou utilize nosso montador interativo para criar um presente único.',
+      title: 'Escolha',
+      description: 'Navegue pelo catalogo e escolha um presente único para a pessoa que você deseja presentear.',
       icon: Compass,
     },
     {
@@ -18,13 +18,13 @@ export const HomeHowItWorksSection: React.FC = () => {
     {
       stepNumber: '03',
       title: 'Confecção Artesanal',
-      description: 'Cada peça é confeccionada manualmente com papéis nobres, tecidos finos e acabamentos de luxo.',
+      description: 'Cada peça é confeccionada manualmente com papéis nobres, aplicações finas e acabamentos premium delicados.',
       icon: Sparkles,
     },
     {
       stepNumber: '04',
       title: 'Embalagem & Envio',
-      description: 'Seu pedido é perfumado, embalado com laço de cetim e enviado com seguro para qualquer lugar do país.',
+      description: 'Seu pedido é perfumado, embalado e enviado com segurança para qualquer lugar do país.',
       icon: Gift,
     },
   ];
@@ -39,7 +39,7 @@ export const HomeHowItWorksSection: React.FC = () => {
           <span>Da Inspiração à Entrega</span>
           <span>◇</span>
         </div>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif text-[#2C1810] font-normal tracking-tight">
+        <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#2C1810] tracking-tight">
           Como Funciona
         </h2>
         <p className="text-xs sm:text-sm text-[#593E32] font-light">

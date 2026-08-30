@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { ShoppingCart, Search, Gift, Menu, X, ArrowLeft, Filter, User } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ShoppingCart, Search, X, Filter } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const CatalogHeader: React.FC<{
   companyName: string;
@@ -20,6 +21,8 @@ export const CatalogHeader: React.FC<{
   logoUrl?: string;
   companyId?: string;
   searchQuery?: string;
+  suggestions?: { label: string; type: 'product' | 'category' }[];
+  onSelectSuggestion?: (label: string) => void;
 }> = ({ 
   companyName, 
   theme, 
@@ -38,142 +41,81 @@ export const CatalogHeader: React.FC<{
   onOpenGlobalSearch,
   logoUrl,
   companyId,
-  searchQuery = ""
+  searchQuery = "",
+  suggestions = [],
+  onSelectSuggestion
 }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState(searchQuery);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     setSearchValue(searchQuery);
   }, [searchQuery]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(searchValue);
-    setIsSearchVisible(false);
-  };
-
   const handleSearchChange = (val: string) => {
     setSearchValue(val);
     onSearch(val);
+    setShowSuggestions(true);
   };
 
   const handleClearSearch = () => {
     setSearchValue("");
     onSearch("");
+    setShowSuggestions(false);
   };
 
   return (
-    <header className="relative bg-white z-50">
-      {/* Search Overlay */}
-      {isSearchVisible && (
-        <div className="absolute inset-0 bg-white z-[60] flex items-center px-4 shadow-md border-b border-neutral-100">
-          <form onSubmit={handleSearchSubmit} className="flex-1 max-w-4xl mx-auto flex items-center gap-4">
-            <Search size={20} className="text-[#3A312D]/40 shrink-0" />
-            <input 
-              autoFocus
-              type="text" 
-              placeholder="O que você está procurando?" 
-              className="flex-1 bg-transparent border-none outline-none text-lg font-serif italic text-[#3A312D] placeholder-neutral-300"
-              value={searchValue}
-              onChange={(e) => handleSearchChange(e.target.value)}
-            />
-            {searchValue && (
-              <button 
-                type="button"
-                onClick={handleClearSearch}
-                className="p-1.5 hover:bg-neutral-100 rounded-full text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
-                title="Limpar busca"
-              >
-                <X size={16} />
-              </button>
-            )}
-            <button 
-              type="button" 
-              onClick={() => setIsSearchVisible(false)}
-              className="p-2 hover:bg-neutral-100 rounded-full transition-colors shrink-0"
-              title="Fechar"
-            >
-              <X size={20} className="text-[#3A312D]/60" />
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Faixa acima do topo (Announcement Bar) */}
-      <div className="w-full bg-white text-[#3A312D] text-[10px] sm:text-[11px] text-center py-2 px-4 font-sans tracking-wide border-b border-[#3A312D]/5">
-        Compras acima de <span className="font-bold">R$ 300,00</span> ganha <span className="italic">presente surpresa</span>.
-      </div>
-
-      <div className="max-w-[1850px] mx-auto px-4 py-4 flex items-center justify-between">
-        {/* Left Side: Logo and Atelier Name */}
-        <div className="flex items-center gap-3 group cursor-pointer relative" onClick={onGoBack}>
-          <div className="w-[120px] h-[120px] bg-white border border-[#e8dcc8]/60 rounded-full flex items-center justify-center shadow-sm overflow-hidden transition-transform duration-300 group-hover:scale-105">
+    <header className="relative bg-white z-50 border-b border-[#E8DFC8]/40">
+      {/* Main Atelier Header Bar */}
+      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+        {/* Left Side: Atelier Logo & Brand Name */}
+        <div className="flex items-center gap-3 sm:gap-4 group cursor-pointer relative" onClick={onGoBack}>
+          <div className="w-[85px] h-[85px] sm:w-[100px] sm:h-[100px] bg-white border border-[#E8DFC8]/70 rounded-full flex items-center justify-center shadow-sm overflow-hidden transition-transform duration-300 group-hover:scale-105">
             {logoUrl ? (
               <img 
                 src={logoUrl} 
-                alt="Logo" 
-                className="w-[100px] h-[100px] object-contain rounded-full"
+                alt={companyName} 
+                className="w-[75px] h-[75px] sm:w-[90px] sm:h-[90px] object-contain rounded-full"
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <span className="text-6xl">{companyId === 'pallyra' ? '📓' : '💅'}</span>
+              <span className="text-4xl sm:text-5xl">{companyId === 'pallyra' ? '📓' : '💅'}</span>
             )}
           </div>
           <div className="flex flex-col">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-mea-culpa text-[#3A312D] leading-[0.8] mb-1">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mea-culpa text-[#3A312D] leading-[0.9] tracking-tight">
               {companyName}
             </h1>
           </div>
 
-          {/* Dica de Voltar no Hover */}
-          <div className="absolute -bottom-7 left-0 z-[100] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
-            <span className="bg-[#3A312D] text-white text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shadow-lg">
-              Voltar
+          {/* Hover Tooltip: Voltar */}
+          <div className="absolute -bottom-6 left-2 z-[100] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+            <span className="bg-[#3A312D] text-[#FAF8F5] text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shadow-md">
+              ← Voltar ao Início
             </span>
           </div>
         </div>
 
-        {/* Right Side: Utility Icons */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          <button 
-            onClick={onProfileClick} 
-            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-neutral-50 rounded-full transition-all active:scale-95" 
-            title="Perfil do Cliente"
-          >
-            <User size={20} strokeWidth={1.5} />
-          </button>
-          <button 
-            onClick={onOpenGlobalSearch} 
-            className="p-2.5 text-[#cca062] hover:bg-neutral-50 rounded-full transition-all active:scale-95 flex items-center gap-2 group/search" 
-            title="Busca Global"
-          >
-            <Search size={20} strokeWidth={1.5} />
-            <span className="hidden md:inline text-[9px] uppercase tracking-widest font-bold opacity-0 group-hover/search:opacity-100 transition-opacity">Busca Global</span>
-          </button>
-          <button 
-            onClick={() => setIsSearchVisible(true)} 
-            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-neutral-50 rounded-full transition-all active:scale-95" 
-            title="Pesquisar Produtos"
-          >
-            <Search size={20} strokeWidth={1.5} />
-          </button>
+        {/* Right Side: Clean Action Icons */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <button 
             onClick={onFilterClick} 
-            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-neutral-50 rounded-full transition-all active:scale-95" 
-            title="Filtrar Resultados"
+            className="p-2.5 text-[#5C4033] hover:text-[#B38F4D] hover:bg-[#FAF8F5] rounded-full transition-all active:scale-95" 
+            title="Filtrar Produtos"
           >
-            <Filter size={20} strokeWidth={1.5} />
+            <Filter size={20} strokeWidth={1.75} />
           </button>
+          
           <button 
             onClick={onCartClick} 
-            className="p-2.5 text-[#3A312D]/70 hover:text-[#D4AF37] hover:bg-neutral-50 rounded-full transition-all relative active:scale-95" 
+            className="p-2.5 text-[#5C4033] hover:text-[#B38F4D] hover:bg-[#FAF8F5] rounded-full transition-all relative active:scale-95 cursor-pointer" 
             title="Meu Carrinho"
           >
-            <ShoppingCart size={20} strokeWidth={1.5} />
+            <ShoppingCart size={20} strokeWidth={1.75} />
             {cartCount > 0 && (
-              <span className="absolute top-1 right-1 bg-[#D4AF37] text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
+              <span className="absolute top-1 right-1 bg-[#B38F4D] text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
                 {cartCount}
               </span>
             )}
@@ -181,24 +123,93 @@ export const CatalogHeader: React.FC<{
         </div>
       </div>
 
-      {/* Faixa abaixo do HEADER (Secondary Navigation Bar) */}
-      <nav className="w-full border-t border-neutral-100 bg-white/50 backdrop-blur-sm">
-        <div className="max-w-[1850px] mx-auto px-4 h-12 flex items-center justify-center gap-6 sm:gap-12">
-          <button onClick={onViewAll} className="text-[11px] sm:text-[13px] font-bold text-[#3A312D] hover:text-[#D4AF37] uppercase tracking-widest transition-colors cursor-pointer">
-            Atelie
-          </button>
-          <button onClick={onViewNews} className="text-[11px] sm:text-[13px] font-bold text-[#3A312D] hover:text-[#D4AF37] uppercase tracking-widest transition-colors cursor-pointer">
-            Novidades
-          </button>
-          <button onClick={onViewCollections} className="text-[11px] sm:text-[13px] font-bold text-[#3A312D] hover:text-[#D4AF37] uppercase tracking-widest transition-colors cursor-pointer">
-            Personalize
-          </button>
-          <button onClick={onGiftListClick} className="text-[11px] sm:text-[13px] font-bold text-[#3A312D] hover:text-[#D4AF37] uppercase tracking-widest transition-colors cursor-pointer">
-            Lista de presentes
-          </button>
-          <button className="text-[11px] sm:text-[13px] font-bold text-[#3A312D] hover:text-[#D4AF37] uppercase tracking-widest transition-colors cursor-pointer">
-            Cliente
-          </button>
+      {/* Secondary Navigation Row: Menu Links on Left + Search Input on Right */}
+      <nav className="w-full border-t border-[#E8DFC8]/50 bg-[#FCFAF6]/90 backdrop-blur-sm">
+        <div className="max-w-[1850px] mx-auto px-4 sm:px-6 py-2.5 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-6">
+          
+          {/* Atelier Navigation Buttons */}
+          <div className="flex items-center flex-wrap justify-center gap-4 sm:gap-7 lg:gap-10">
+            <button 
+              onClick={onViewAll} 
+              className="text-[11px] sm:text-[12px] font-bold text-[#3A312D] hover:text-[#B38F4D] uppercase tracking-[0.14em] transition-colors cursor-pointer"
+            >
+              Atelie
+            </button>
+            <button 
+              onClick={onViewNews} 
+              className="text-[11px] sm:text-[12px] font-bold text-[#3A312D] hover:text-[#B38F4D] uppercase tracking-[0.14em] transition-colors cursor-pointer"
+            >
+              Novidades
+            </button>
+            <button 
+              onClick={() => navigate('/personalize')} 
+              className="text-[11px] sm:text-[12px] font-bold text-[#3A312D] hover:text-[#B38F4D] uppercase tracking-[0.14em] transition-colors cursor-pointer"
+            >
+              Personalize
+            </button>
+            <button 
+              onClick={onGiftListClick} 
+              className="text-[11px] sm:text-[12px] font-bold text-[#3A312D] hover:text-[#B38F4D] uppercase tracking-[0.14em] transition-colors cursor-pointer"
+            >
+              Lista de presentes
+            </button>
+          </div>
+
+          {/* Search Box Moved to the Right of this Row */}
+          <div className="relative w-full md:w-80 lg:w-96">
+            <div className="relative flex items-center">
+              <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-[#8C6D37]">
+                <Search size={15} strokeWidth={2} />
+              </div>
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="O que você deseja buscar no ateliê?"
+                value={searchValue}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 250)}
+                className="w-full pl-9 pr-8 py-2 bg-white/90 hover:bg-white focus:bg-white border border-[#E8DFC8] focus:border-[#B38F4D] rounded-full text-xs font-sans placeholder-[#8C7A70] text-[#2C1810] outline-none transition-all shadow-sm focus:shadow-md"
+              />
+              {searchValue && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute inset-y-0 right-2.5 flex items-center p-1 text-neutral-400 hover:text-neutral-700 cursor-pointer"
+                  title="Limpar busca"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Auto Suggestions Dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#E8DFC8] rounded-xl shadow-xl z-50 overflow-hidden">
+                {suggestions.map((s, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="w-full text-left px-4 py-2.5 text-xs hover:bg-[#F9F6F0] transition-colors flex items-center justify-between cursor-pointer border-b border-[#F0EBE0] last:border-0"
+                    onMouseDown={() => {
+                      if (onSelectSuggestion) {
+                        onSelectSuggestion(s.label);
+                      } else {
+                        handleSearchChange(s.label);
+                      }
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    <span className="font-medium text-[#2C1810]">{s.label}</span>
+                    <span className="text-[10px] text-[#8C6D37] uppercase tracking-wider font-mono">
+                      {s.type === 'category' ? 'Categoria' : 'Produto'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       </nav>
     </header>
