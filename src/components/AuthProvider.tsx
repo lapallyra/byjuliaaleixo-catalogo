@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [role, setRole] = useState<UserRole | null>(null);
 
   // Fallback admin emails if not found in db
-  const ADMIN_EMAILS = ['juualleixo@gmail.com', 'lapallyra@gmail.com'];
+  const ADMIN_EMAILS = ['juualleixo@gmail.com', 'lapallyra@gmail.com', 'byjuliaaleixo@gmail.com'];
 
   useEffect(() => {
     // Check for redirect login result

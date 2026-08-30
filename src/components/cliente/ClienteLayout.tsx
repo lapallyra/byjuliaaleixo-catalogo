@@ -4,7 +4,7 @@ import { SidebarCliente } from './SidebarCliente';
 import { ClienteAuthPage } from './ClienteAuthPage';
 import { useAuth } from '../AuthProvider';
 import { useCustomer } from '../../hooks/useCustomer';
-import { Menu, LogOut, Sparkles, User as UserIcon, ShieldCheck, Heart } from 'lucide-react';
+import { Menu, LogOut, Sparkles, User as UserIcon, ShieldCheck, Heart, Store } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const ClienteLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -86,10 +86,11 @@ export const ClienteLayout: React.FC<{ children: React.ReactNode }> = ({ childre
 
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
               <button
-                onClick={() => navigate('/vitrine')}
-                className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium border border-white/20 transition-all cursor-pointer"
+                onClick={() => navigate('/')}
+                className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-medium border border-white/20 transition-all cursor-pointer flex items-center gap-1.5"
               >
-                Ver Vitrine
+                <Store size={14} />
+                <span>Ir para a Loja</span>
               </button>
               <button
                 onClick={logout}

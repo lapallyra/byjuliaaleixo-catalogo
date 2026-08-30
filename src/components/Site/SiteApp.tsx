@@ -162,14 +162,33 @@ export function SiteApp() {
     '/lapallyra', '/comamorguennita', '/mimadasim', '/tuttymimo', '/mimada', '/guennita', '/pallyra'
   ].includes(location.pathname);
 
+  const isCustomerPortalRoute = [
+    '/minha-experiencia', '/cliente', '/login', '/cadastro', '/perfil'
+  ].some(route => location.pathname.startsWith(route));
+
   if (!isConfigLoaded || !isProductsLoaded) {
     return <LoadingScreen />;
+  }
+
+  if (isCustomerPortalRoute) {
+    return (
+      <div className="app-wrapper w-full min-h-screen bg-[#FDFCFA]">
+        <Routes>
+          <Route path="/minha-experiencia/*" element={<MinhaExperienciaPage />} />
+          <Route path="/cliente/*" element={<MinhaExperienciaPage />} />
+          <Route path="/login" element={<MinhaExperienciaPage />} />
+          <Route path="/cadastro" element={<MinhaExperienciaPage />} />
+          <Route path="/perfil" element={<MinhaExperienciaPage />} />
+          <Route path="*" element={<Navigate to="/minha-experiencia" replace />} />
+        </Routes>
+      </div>
+    );
   }
 
   return (
     <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen bg-[#FDFCFA]">
       <TopAnnouncementBar />
-      {location.pathname !== '/' && !isExcludedHeaderRoute && (
+      {!isExcludedHeaderRoute && (
         <SiteHeader onOpenSearch={() => setIsGlobalSearchOpen(true)} />
       )}
       

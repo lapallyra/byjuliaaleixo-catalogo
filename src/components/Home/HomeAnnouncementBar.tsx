@@ -1,12 +1,7 @@
 import React from 'react';
-import { Truck, Sparkles, HeartHandshake, ShieldCheck, Gift, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../AuthProvider';
+import { Truck, Sparkles, HeartHandshake, ShieldCheck, Gift } from 'lucide-react';
 
 export const HomeAnnouncementBar: React.FC = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-
   const announcements = [
     {
       icon: Sparkles,
@@ -40,7 +35,7 @@ export const HomeAnnouncementBar: React.FC = () => {
       id="home-announcement-bar"
       className="w-full bg-[#FBF9F4] border-b border-[#E8DFC8]/60 text-[#4A332A] py-1.5 text-xs select-none relative"
     >
-      <div className="max-w-[1850px] mx-auto px-3 sm:px-6 flex items-center justify-between gap-3">
+      <div className="max-w-[1850px] mx-auto px-2 sm:px-4 flex items-center justify-between gap-3">
         {/* Infinite scrolling marquee track */}
         <div className="flex-1 overflow-hidden relative">
           {/* Side gradient fade masks for ultra-smooth edge blending */}
@@ -80,16 +75,6 @@ export const HomeAnnouncementBar: React.FC = () => {
             ))}
           </div>
         </div>
-
-        {/* BUSTO / CLIENT LOGIN ICON (SEM TEXTO) */}
-        <button
-          onClick={() => navigate('/minha-experiencia')}
-          className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FAF0E6] hover:bg-[#2C1810] text-[#8C6D37] hover:text-white border border-[#E8DFC8] flex items-center justify-center transition-all duration-200 shadow-2xs group cursor-pointer z-20"
-          title={user ? (user.displayName || 'Minha Conta') : 'Área do Cliente'}
-          aria-label="Área do Cliente"
-        >
-          <User size={15} strokeWidth={2} className="transition-transform group-hover:scale-110" />
-        </button>
       </div>
     </div>
   );
