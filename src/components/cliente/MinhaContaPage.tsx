@@ -60,9 +60,9 @@ export const MinhaContaPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-gray-500 flex flex-col items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-[#CCA062] border-t-transparent animate-spin mb-3" />
-        <p className="text-xs">Carregando dados da sua conta...</p>
+      <div className="p-8 text-center text-stone-500 flex flex-col items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-[#8C6D37] border-t-transparent animate-spin mb-3" />
+        <p className="text-xs font-semibold text-[#2A2421]">Carregando dados da sua conta...</p>
       </div>
     );
   }
@@ -118,13 +118,13 @@ export const MinhaContaPage: React.FC = () => {
   const activeEmail = customer?.email || user?.email || 'Sem e-mail cadastrado';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 pb-8 px-2 sm:px-3">
       
       {/* HEADER PAGE */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E8DFC8] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-3xl p-5 border border-stone-200/80 shadow-2xs">
         <div>
-          <h1 className="font-mea-culpa text-4xl text-[#2C1810]">Minha Conta & Perfil</h1>
-          <p className="text-xs text-[#6D5443] font-light mt-0.5">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#2A2421] tracking-tight">Minha Conta & Perfil</h1>
+          <p className="text-xs text-[#6E645E] mt-0.5">
             Gerencie suas informações pessoais e credenciais do Ateliê.
           </p>
         </div>
@@ -132,22 +132,22 @@ export const MinhaContaPage: React.FC = () => {
         {!editing ? (
           <button 
             onClick={() => setEditing(true)} 
-            className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider bg-[#FAF6F0] hover:bg-[#2C1810] text-[#2C1810] hover:text-white px-5 py-2.5 rounded-full border border-[#E8DFC8] transition-all shadow-xs cursor-pointer"
+            className="flex items-center gap-2 text-xs font-bold bg-[#F5F1EB] hover:bg-[#2A2421] text-[#2A2421] hover:text-white px-5 py-2.5 rounded-full border border-stone-200/80 transition-all shadow-2xs cursor-pointer self-start sm:self-auto"
           >
             <Edit2 size={14} /> Editar Perfil
           </button>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <button 
               onClick={() => setEditing(false)} 
-              className="text-xs font-bold uppercase tracking-wider bg-gray-100 hover:bg-gray-200 text-[#593E32] px-4 py-2.5 rounded-full transition-all cursor-pointer"
+              className="text-xs font-bold bg-stone-100 hover:bg-stone-200 text-[#2A2421] px-4 py-2.5 rounded-full transition-all cursor-pointer"
             >
               <X size={14} /> Cancelar
             </button>
             <button 
               onClick={handleSave} 
               disabled={saving}
-              className="text-xs font-bold uppercase tracking-wider bg-[#2C1810] hover:bg-[#8C6D37] text-white px-5 py-2.5 rounded-full transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+              className="text-xs font-bold bg-[#2A2421] hover:bg-[#8C6D37] text-white px-5 py-2.5 rounded-full transition-all shadow-2xs flex items-center gap-2 cursor-pointer"
             >
               {saving ? 'Salvando...' : (
                 <>
@@ -176,8 +176,8 @@ export const MinhaContaPage: React.FC = () => {
       )}
 
       {/* MAIN PROFILE CARD */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8DFC8] shadow-sm space-y-6">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#8C6D37] border-b border-[#E8DFC8]/60 pb-3">
+      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-stone-200/80 shadow-2xs space-y-6">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#8C6D37] border-b border-stone-200/80 pb-3">
           <Sparkles size={14} />
           <span>Dados Pessoais</span>
         </div>
@@ -186,7 +186,7 @@ export const MinhaContaPage: React.FC = () => {
           
           {/* NOME COMPLETO */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#6D5443] uppercase tracking-wider">
+            <label className="text-[11px] font-bold text-[#6E645E] uppercase tracking-wider">
               Nome Completo
             </label>
             {editing ? (
@@ -194,31 +194,31 @@ export const MinhaContaPage: React.FC = () => {
                 type="text"
                 value={formData.name} 
                 onChange={(e) => setFormData({...formData, name: e.target.value})} 
-                className="w-full bg-[#FAF6F0]/60 p-3 rounded-xl border border-[#E8DFC8] text-xs text-[#2C1810] focus:outline-none focus:border-[#8C6D37]" 
+                className="w-full bg-[#F5F1EB] p-3 rounded-xl border border-stone-200/80 text-xs text-[#2A2421] focus:outline-none focus:border-[#8C6D37]" 
               />
             ) : (
-              <div className="flex items-center gap-3 p-3 bg-[#FAF6F0]/40 rounded-xl border border-[#E8DFC8]/50 text-xs text-[#2C1810]">
+              <div className="flex items-center gap-3 p-3 bg-[#F5F1EB]/60 rounded-xl border border-stone-200/60 text-xs text-[#2A2421]">
                 <User size={18} className="text-[#8C6D37] shrink-0" />
-                <span className="font-medium">{formData.name || 'Não informado'}</span>
+                <span className="font-semibold">{formData.name || 'Não informado'}</span>
               </div>
             )}
           </div>
 
           {/* EMAIL */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#6D5443] uppercase tracking-wider">
+            <label className="text-[11px] font-bold text-[#6E645E] uppercase tracking-wider">
               E-mail de Acesso (Login)
             </label>
-            <div className="flex items-center gap-3 p-3 bg-[#FAF6F0]/30 rounded-xl border border-[#E8DFC8]/40 text-xs text-[#6D5443]">
+            <div className="flex items-center gap-3 p-3 bg-[#F5F1EB]/60 rounded-xl border border-stone-200/60 text-xs text-[#2A2421]">
               <Mail size={18} className="text-[#8C6D37] shrink-0" />
-              <span className="font-medium">{activeEmail}</span>
-              <span className="ml-auto text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Verificado</span>
+              <span className="font-semibold">{activeEmail}</span>
+              <span className="ml-auto text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full font-bold">Verificado</span>
             </div>
           </div>
 
           {/* TELEFONE */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#6D5443] uppercase tracking-wider">
+            <label className="text-[11px] font-bold text-[#6E645E] uppercase tracking-wider">
               WhatsApp / Telefone
             </label>
             {editing ? (
@@ -227,19 +227,19 @@ export const MinhaContaPage: React.FC = () => {
                 value={formData.phone} 
                 onChange={(e) => setFormData({...formData, phone: e.target.value})} 
                 placeholder="(11) 99999-9999"
-                className="w-full bg-[#FAF6F0]/60 p-3 rounded-xl border border-[#E8DFC8] text-xs text-[#2C1810] focus:outline-none focus:border-[#8C6D37]" 
+                className="w-full bg-[#F5F1EB] p-3 rounded-xl border border-stone-200/80 text-xs text-[#2A2421] focus:outline-none focus:border-[#8C6D37]" 
               />
             ) : (
-              <div className="flex items-center gap-3 p-3 bg-[#FAF6F0]/40 rounded-xl border border-[#E8DFC8]/50 text-xs text-[#2C1810]">
+              <div className="flex items-center gap-3 p-3 bg-[#F5F1EB]/60 rounded-xl border border-stone-200/60 text-xs text-[#2A2421]">
                 <Phone size={18} className="text-[#8C6D37] shrink-0" />
-                <span>{formData.phone || 'Não informado'}</span>
+                <span className="font-semibold">{formData.phone || 'Não informado'}</span>
               </div>
             )}
           </div>
 
           {/* CPF */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#6D5443] uppercase tracking-wider">
+            <label className="text-[11px] font-bold text-[#6E645E] uppercase tracking-wider">
               CPF (para Emissão de Nota Fiscal)
             </label>
             {editing ? (
@@ -248,19 +248,19 @@ export const MinhaContaPage: React.FC = () => {
                 value={formData.cpf} 
                 onChange={(e) => setFormData({...formData, cpf: e.target.value})} 
                 placeholder="000.000.000-00"
-                className="w-full bg-[#FAF6F0]/60 p-3 rounded-xl border border-[#E8DFC8] text-xs text-[#2C1810] focus:outline-none focus:border-[#8C6D37]" 
+                className="w-full bg-[#F5F1EB] p-3 rounded-xl border border-stone-200/80 text-xs text-[#2A2421] focus:outline-none focus:border-[#8C6D37]" 
               />
             ) : (
-              <div className="flex items-center gap-3 p-3 bg-[#FAF6F0]/40 rounded-xl border border-[#E8DFC8]/50 text-xs text-[#2C1810]">
+              <div className="flex items-center gap-3 p-3 bg-[#F5F1EB]/60 rounded-xl border border-stone-200/60 text-xs text-[#2A2421]">
                 <CreditCard size={18} className="text-[#8C6D37] shrink-0" />
-                <span>{formData.cpf || 'Não cadastrado'}</span>
+                <span className="font-semibold">{formData.cpf || 'Não cadastrado'}</span>
               </div>
             )}
           </div>
 
           {/* DATA DE NASCIMENTO */}
           <div className="space-y-1.5 md:col-span-2">
-            <label className="text-[11px] font-bold text-[#6D5443] uppercase tracking-wider">
+            <label className="text-[11px] font-bold text-[#6E645E] uppercase tracking-wider">
               Data de Nascimento (para Mimos de Aniversário)
             </label>
             {editing ? (
@@ -268,12 +268,12 @@ export const MinhaContaPage: React.FC = () => {
                 type="date"
                 value={formData.birthDate} 
                 onChange={(e) => setFormData({...formData, birthDate: e.target.value})} 
-                className="w-full bg-[#FAF6F0]/60 p-3 rounded-xl border border-[#E8DFC8] text-xs text-[#2C1810] focus:outline-none focus:border-[#8C6D37]" 
+                className="w-full bg-[#F5F1EB] p-3 rounded-xl border border-stone-200/80 text-xs text-[#2A2421] focus:outline-none focus:border-[#8C6D37]" 
               />
             ) : (
-              <div className="flex items-center gap-3 p-3 bg-[#FAF6F0]/40 rounded-xl border border-[#E8DFC8]/50 text-xs text-[#2C1810]">
+              <div className="flex items-center gap-3 p-3 bg-[#F5F1EB]/60 rounded-xl border border-stone-200/60 text-xs text-[#2A2421]">
                 <Calendar size={18} className="text-[#8C6D37] shrink-0" />
-                <span>{formData.birthDate ? new Date(formData.birthDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não informada'}</span>
+                <span className="font-semibold">{formData.birthDate ? new Date(formData.birthDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'Não informada'}</span>
               </div>
             )}
           </div>
@@ -282,21 +282,21 @@ export const MinhaContaPage: React.FC = () => {
       </div>
 
       {/* SECURITY CARD */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8DFC8] shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-[#E8DFC8]/60 pb-3">
+      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-stone-200/80 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between border-b border-stone-200/80 pb-3">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#8C6D37]">
             <Shield size={16} />
             <span>Segurança da Conta</span>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#FAF6F0] border border-[#E8DFC8]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#F5F1EB]/70 border border-stone-200/80">
           <div className="space-y-1">
-            <h4 className="text-xs font-bold text-[#2C1810] flex items-center gap-1.5">
+            <h4 className="text-xs font-bold text-[#2A2421] flex items-center gap-1.5">
               <Key size={14} className="text-[#8C6D37]" />
               <span>Redefinir Senha de Acesso</span>
             </h4>
-            <p className="text-[11px] text-[#6D5443]">
+            <p className="text-[11px] text-[#6E645E]">
               Enviaremos um link de segurança direto para o seu e-mail cadastrado.
             </p>
           </div>
@@ -304,7 +304,7 @@ export const MinhaContaPage: React.FC = () => {
           <button
             onClick={handleSendResetPassword}
             disabled={resetSent}
-            className="px-4 py-2 rounded-full bg-[#2C1810] hover:bg-[#8C6D37] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-xs cursor-pointer shrink-0"
+            className="px-4 py-2 rounded-full bg-[#2A2421] hover:bg-[#8C6D37] text-white text-xs font-bold uppercase tracking-wider transition-all shadow-2xs cursor-pointer shrink-0"
           >
             {resetSent ? 'E-mail Enviado! ✓' : 'Enviar Link de Senha'}
           </button>

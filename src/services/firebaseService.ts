@@ -25,6 +25,7 @@ import { Product, SaleNotification, CheckoutData, CompanyId, Order, CartItem, In
 import { eventBus } from './eventBus';
 import { normalizeCustomerAddresses, syncAddressesToLegacy } from '../lib/addressUtils';
 import { normalizePhone, isOrderFromCustomer } from '../utils/customerUtils';
+import { matchesAtelierScope } from './atelierScopePolicy';
 
 // --- Smart Cache & Subscription Multiplexing Layer ---
 const getTimestampMillis = (ts: any): number => {
@@ -67,9 +68,7 @@ class FirestoreMultiplexer<T> {
     const filteredCallback = (data: T[]) => {
       if (companyIdFilter) {
         callback(data.filter((item: any) => {
-          const val = (item as any)[companyIdField];
-          const secondaryVal = (item as any).company;
-          return val === companyIdFilter || secondaryVal === companyIdFilter;
+          return matchesAtelierScope(item, companyIdFilter as any);
         }));
       } else {
         callback(data);
@@ -988,22 +987,25 @@ export const updateOrder = async (orderId: string, data: Partial<Order>) => {
         finalData.status = (oldStatus === 'waiting_payment') ? 'waiting_production' : (dbOrderData?.status || 'novo pedido');
       }
       
-      try {
-        await addDoc(collection(db, 'finance'), sanitize({
-          type: 'revenue',
-          category: 'Quitação de Parcela',
-          description: `Quitação ${fullyCleared ? "Integral" : "Parcial"} Pedido ${orderData.code || orderId} - ${orderData.customerName || 'Cliente'}`,
-          value: payAmount,
-          date: new Date().toISOString().split('T')[0],
-          status: 'paid',
-          paymentMethod: paymentMethod,
-          companyId: orderData.companyId || '',
-          orderId: orderId,
-          createdAt: serverTimestamp()
-        }));
-        console.log(`✅ Lançamento financeiro registrado automaticamente para o pedido ${orderId}`);
-      } catch (e) {
-        console.warn('Non-blocking finance registration error in updateOrder:', e);
+      const isInvestment = orderData.operationType === 'investment' || dbOrderData?.operationType === 'investment';
+      if (!isInvestment && paymentMethod !== 'barter' && paymentMethod !== 'Permuta') {
+        try {
+          await addDoc(collection(db, 'finance'), sanitize({
+            type: 'revenue',
+            category: 'Quitação de Parcela',
+            description: `Quitação ${fullyCleared ? "Integral" : "Parcial"} Pedido ${orderData.code || orderId} - ${orderData.customerName || 'Cliente'}`,
+            value: payAmount,
+            date: new Date().toISOString().split('T')[0],
+            status: 'paid',
+            paymentMethod: paymentMethod,
+            companyId: orderData.companyId || dbOrderData?.companyId || '',
+            orderId: orderId,
+            createdAt: serverTimestamp()
+          }));
+          console.log(`✅ Lançamento financeiro registrado automaticamente para o pedido ${orderId}`);
+        } catch (e) {
+          console.warn('Non-blocking finance registration error in updateOrder:', e);
+        }
       }
       
       delete finalData.payAmount;
@@ -1346,13 +1348,14 @@ export const saveSale = async (data: any) => {
 
     const saleData = sanitize({
       ...data,
+      operationType: data.operationType || 'sale',
       timeline: [createdEvent],
       createdAt: serverTimestamp(),
       dateFormatted: formatDate(today),
       code: code,
       status: normalizedStatus,
-      source: 'catalogo',
-      deliveryDate: deliveryDate,
+      source: data.source || 'catalogo',
+      deliveryDate: data.deliveryDate || deliveryDate,
       estimatedDelivery: deliveryDate,
       insumosDeducted: false
     });
@@ -1388,24 +1391,28 @@ export const saveSale = async (data: any) => {
       console.warn('Non-blocking customer registration error:', e);
     }
 
-    // Auto-register finance entry (Revenue)
-    try {
-      const isPaid = data.paymentStatus === 'paid' || data.status === 'paid' || data.status === 'fully_paid';
-      await addDoc(collection(db, 'finance'), sanitize({
-        type: 'revenue',
-        category: 'Venda de Produto',
-        description: `Pedido ${saleData.code} - ${saleData.customerName}`,
-        value: saleData.total,
-        date: new Date().toISOString().split('T')[0],
-        status: isPaid ? 'paid' : 'pending',
-        companyId: saleData.companyId,
-        orderId: docRef.id,
-        marketplace: saleData.marketplace || '',
-        marketplaceTax: saleData.marketplaceTax || 0,
-        createdAt: serverTimestamp()
-      }));
-    } catch (e) {
-      console.warn('Non-blocking finance registration error:', e);
+    // Auto-register finance entry (Revenue) - Not created for investments (products used for marketing/partnership) or barter
+    if (saleData.operationType !== 'investment') {
+      try {
+        const isPaid = data.paymentStatus === 'paid' || data.status === 'paid' || data.status === 'fully_paid';
+        await addDoc(collection(db, 'finance'), sanitize({
+          type: 'revenue',
+          category: 'Venda de Produto',
+          description: `Pedido ${saleData.code} - ${saleData.customerName}`,
+          value: saleData.total,
+          date: new Date().toISOString().split('T')[0],
+          status: isPaid ? 'paid' : 'pending',
+          companyId: saleData.companyId,
+          orderId: docRef.id,
+          marketplace: saleData.marketplace || '',
+          marketplaceTax: saleData.marketplaceTax || 0,
+          createdAt: serverTimestamp()
+        }));
+      } catch (e) {
+        console.warn('Non-blocking finance registration error:', e);
+      }
+    } else {
+      console.log(`ℹ️ Pedido de investimento #${saleData.code}: valor comercial de referência preservado sem geração automática de receita.`);
     }
 
     // Automatic stock deduction for products, insumos, and kits (ERP-098)
@@ -1464,7 +1471,8 @@ function generateOrderCode(companyId: CompanyId): string {
     'pallyra': 'LP',
     'guennita': 'CG',
     'mimada': 'MS',
-    'tuttymimo': 'TM'
+    'tuttymimo': 'TM',
+    'madrinha': 'MD'
   };
   const prefix = prefixMap[companyId] || 'LP';
   const random = Math.floor(10000 + Math.random() * 90000).toString();
@@ -1493,6 +1501,7 @@ export const findMatchingCustomer = async (orderData: Partial<Order>, companyId:
 
   if (conditions.length > 0) {
     try {
+      // First try to match within the company
       const q = query(
         collection(db, path),
         where('companyId', '==', companyId),
@@ -1500,6 +1509,14 @@ export const findMatchingCustomer = async (orderData: Partial<Order>, companyId:
       );
       const snap = await getDocs(q);
       if (!snap.empty) return snap.docs[0];
+
+      // Fallback: check other ateliers to reuse existing profile without duplicating
+      const qGlobal = query(
+        collection(db, path),
+        or(...conditions) as any
+      );
+      const snapGlobal = await getDocs(qGlobal);
+      if (!snapGlobal.empty) return snapGlobal.docs[0];
     } catch (err) {
       console.warn("Failed targeted customer search, falling back to name match.", err);
     }
@@ -1514,6 +1531,14 @@ export const findMatchingCustomer = async (orderData: Partial<Order>, companyId:
     );
     const snap = await getDocs(qName);
     if (!snap.empty) return snap.docs[0];
+
+    // Fallback global name match
+    const qNameGlobal = query(
+      collection(db, path),
+      where('name', '==', orderData.customerName)
+    );
+    const snapGlobal = await getDocs(qNameGlobal);
+    if (!snapGlobal.empty) return snapGlobal.docs[0];
   }
 
   return null;
@@ -1845,12 +1870,15 @@ export const deleteCustomer = async (id: string) => {
 };
 
 export const subscribeToFinance = (callback: (entries: FinanceEntry[]) => void, companyId?: CompanyId) => {
-  const q = companyId 
-    ? query(collection(db, 'finance'), where('companyId', '==', companyId))
-    : collection(db, 'finance');
+  const q = collection(db, 'finance');
     
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FinanceEntry)));
+    const raw = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FinanceEntry));
+    if (companyId && (companyId as string) !== 'all') {
+      callback(raw.filter(item => matchesAtelierScope(item, companyId, 'financeiro')));
+    } else {
+      callback(raw);
+    }
   }, (error) => handleFirestoreError(error, OperationType.LIST, 'finance', false));
 };
 
@@ -2843,12 +2871,15 @@ export const subscribeToProductionBatches = (companyId: CompanyId, callback: (ba
 
 export const subscribeToAuditLogs = (callback: (logs: AuditLog[]) => void, companyId?: CompanyId) => {
   const path = 'audit_logs';
-  const q = companyId && (companyId as string) !== 'all'
-    ? query(collection(db, path), where('companyId', '==', companyId), orderBy('createdAt', 'desc'))
-    : query(collection(db, path), orderBy('createdAt', 'desc'));
+  const q = query(collection(db, path), orderBy('timestamp', 'desc'), limit(300));
   
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuditLog)));
+    const raw = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuditLog));
+    if (companyId && (companyId as string) !== 'all') {
+      callback(raw.filter(item => matchesAtelierScope(item, companyId, 'auditoria')));
+    } else {
+      callback(raw);
+    }
   }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
 };
 

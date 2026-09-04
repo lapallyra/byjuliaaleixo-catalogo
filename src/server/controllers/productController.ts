@@ -76,9 +76,11 @@ export const productController = {
     try {
       const productData = req.body as Product;
       const { id, ...data } = productData;
+      const companyVal = productData.company || (productData as any).companyId;
 
       const sanitizedData = sanitize({
         ...data,
+        ...(companyVal ? { company: companyVal, companyId: (productData as any).companyId || companyVal } : {}),
         createdAt: FieldValue.serverTimestamp(),
         salesCount: data.salesCount ?? 0,
         clicksCount: data.clicksCount ?? 0
@@ -93,7 +95,7 @@ export const productController = {
           id,
           productData.product_name || 'Novo Produto',
           { newData: sanitizedData },
-          productData.company
+          companyVal
         );
       } else {
         const docRef = await dbAdmin.collection('products').add(sanitizedData);
@@ -104,7 +106,7 @@ export const productController = {
           docRef.id,
           productData.product_name || 'Novo Produto',
           { newData: sanitizedData },
-          productData.company
+          companyVal
         );
       }
 
@@ -133,8 +135,12 @@ export const productController = {
       const oldData = snap.exists ? snap.data() : {};
 
       const { id: _, ...dataWithoutId } = productData as any;
+      const companyVal = productData.company || (productData as any).companyId || oldData?.company || oldData?.companyId;
+
       const sanitizedData = sanitize({
         ...dataWithoutId,
+        ...(productData.company ? { company: productData.company } : {}),
+        ...(productData.company || (productData as any).companyId ? { companyId: (productData as any).companyId || productData.company } : {}),
         updatedAt: FieldValue.serverTimestamp()
       });
 
@@ -157,7 +163,7 @@ export const productController = {
             observations: priceObservations
           }
         },
-        productData.company || oldData?.company
+        companyVal
       );
 
       res.status(200).json({ success: true });
@@ -186,6 +192,7 @@ export const productController = {
         return;
       }
       const oldData = snap.data() || {};
+      const companyVal = oldData?.company || oldData?.companyId;
 
       // EXCLUSÃO LÓGICA (Soft Delete / Inativar)
       // sets isVisible to false as requested by "exclusão lógica / inativar"
@@ -201,7 +208,7 @@ export const productController = {
         id,
         oldData.product_name || id,
         { oldData: oldData },
-        oldData.company
+        companyVal
       );
 
       res.status(200).json({ success: true });
@@ -395,7 +402,7 @@ export const productController = {
             newData: { kitItems: sanitizedKitItems },
             details: { isKit: true }
           },
-          product.company
+          product.company || (product as any).companyId
         );
 
         res.status(200).json({ success: true, message: "Composição do kit atualizada com sucesso." });
@@ -440,7 +447,7 @@ export const productController = {
             newData: { insumos: sanitizedInsumos },
             details: { isKit: false }
           },
-          product.company
+          product.company || (product as any).companyId
         );
 
         res.status(200).json({ success: true, message: "Ficha técnica atualizada com sucesso." });

@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ChevronRight, LogOut, LayoutDashboard, ShoppingBag, Box, User, Gift, Zap, Archive, Activity, Package, DollarSign, FileCheck, PackagePlus, TrendingUp, BarChart3, Megaphone, Layers, Star, Tag, Settings, Bell, Sparkles, Crown } from 'lucide-react';
+import { CompanyId } from '../../types';
+import { AtelierSelector } from './AtelierSelector';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -10,9 +12,11 @@ interface SidebarProps {
   menuGroups: string[];
   groupedMenu: Record<string, { id: string; label: string; icon: any }[]>;
   logout: () => void;
+  selectedCompanyId: CompanyId;
+  onSelectCompany: (companyId: CompanyId) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse, activeTab, setActiveTab, menuGroups, groupedMenu, logout }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse, activeTab, setActiveTab, menuGroups, groupedMenu, logout, selectedCompanyId, onSelectCompany }) => {
   const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     menuGroups.forEach((groupName, idx) => {
@@ -45,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse, a
       </button>
 
       <div className={`flex flex-col flex-1 overflow-hidden p-5 ${isCollapsed ? "px-3" : ""}`}>
-        <div className="flex items-center gap-2 mb-8 px-2">
+        <div className="flex items-center gap-2 mb-6 px-2">
             <div className="w-9 h-9 bg-pink-500/10 rounded-xl flex items-center justify-center border border-pink-200/50 shadow-sm">
                 <Crown className="text-pink-500" size={18} strokeWidth={1.5} />
             </div>
@@ -56,6 +60,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse, a
               </div>
             )}
         </div>
+
+        {/* Central Multi-Atelier Selector */}
+        <AtelierSelector
+          selectedCompanyId={selectedCompanyId}
+          onSelectCompany={onSelectCompany}
+          variant="sidebar"
+          isCollapsed={isCollapsed}
+        />
 
         <div className="flex-1 overflow-y-auto scrollbar-hide px-0 py-2 flex flex-col gap-3">
             {menuGroups.map((groupName) => {

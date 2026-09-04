@@ -1,4 +1,4 @@
-export type CompanyId = 'pallyra' | 'guennita' | 'mimada' | 'tuttymimo';
+export type CompanyId = 'pallyra' | 'guennita' | 'mimada' | 'tuttymimo' | 'madrinha';
 
 export interface CrmSettings {
   id?: string;
@@ -13,6 +13,7 @@ export interface Product {
   id: string;
   code: string;
   company: CompanyId;
+  companyId?: CompanyId;
   product_name: string;
   description: string;
   isWholesaleEnabled?: boolean;
@@ -158,6 +159,7 @@ export interface OrderPayment {
   amount: number;
   method: string;
   notes?: string;
+  description?: string; // Descrição do que foi recebido (obrigatório quando method === 'barter')
 }
 
 export interface OrderTimelineEvent {
@@ -169,10 +171,14 @@ export interface OrderTimelineEvent {
   timestamp?: any;
 }
 
+export type OrderOperationType = 'sale' | 'investment' | 'barter';
+
 export interface Order {
   id: string;
   code: string; // MS12345
   companyId: CompanyId;
+  operationType?: OrderOperationType;
+  investmentPurpose?: string;
   customerName: string;
   customerCpfCnpj: string;
   contact: string;
@@ -531,6 +537,9 @@ export interface AppConfig {
   company_4_name: string;
   company_4_slogan: string;
   company_4_logo?: string;
+  company_5_name?: string;
+  company_5_slogan?: string;
+  company_5_logo?: string;
   whatsapp_number: string;
   background_color: string;
   text_color: string;

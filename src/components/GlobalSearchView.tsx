@@ -14,14 +14,16 @@ const COMPANY_NAMES: Record<CompanyId, string> = {
   pallyra: 'Ateliê Pallyra',
   guennita: 'Ateliê Guennita',
   mimada: 'Ateliê Mimada',
-  tuttymimo: 'Ateliê TuttyMimo'
+  tuttymimo: 'Ateliê TuttyMimo',
+  madrinha: 'Ateliê Madrinha'
 };
 
 const COMPANY_THEMES: Record<CompanyId, string> = {
   pallyra: 'border-[#E8DCC8] text-[#3D2E24]',
   guennita: 'border-[#EAEAEA] text-[#1A1A1A]',
   mimada: 'border-[#FFE4E1] text-[#D87093]',
-  tuttymimo: 'border-[#E0F2F1] text-[#006064]'
+  tuttymimo: 'border-[#E0F2F1] text-[#006064]',
+  madrinha: 'border-[#E8DCC8] text-[#3D2E24]'
 };
 
 export const GlobalSearchView: React.FC<GlobalSearchViewProps> = ({ isOpen, onClose, allProducts }) => {

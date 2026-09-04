@@ -47,6 +47,7 @@ import { Order, Product, Componente, CompanyId, FinanceEntry, AuditLog } from ".
 import { formatCurrency } from "../../lib/currencyUtils";
 import { calculateProductCost } from "../../lib/finance";
 import { safeFormatISO } from "../../lib/dateUtils";
+import { matchesAtelierScope } from "../../services/atelierScopePolicy";
 import {
   subscribeToFinance,
   createFinanceEntry,
@@ -83,7 +84,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [originFilter, setOriginFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>(" ");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Local storage for goals
   const [monthlyGoal, setMonthlyGoal] = useState<number>(() => {
@@ -134,7 +135,8 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
 
     return () => {
       unsubFinance();
-      };
+      unsubAudit();
+    };
   }, [companyId]);
 
   // Unified Transaction List (Real database entries only)
@@ -234,6 +236,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
       if (o.status === "cancelled") return false;
+      if (!matchesAtelierScope(o, companyId, 'pedidos')) return false;
       const dateObj = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
       const dateStr = dateObj instanceof Date && !isNaN(dateObj.getTime())
         ? dateObj.toISOString().split("T")[0]
@@ -243,7 +246,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       }
       return true;
     });
-  }, [orders, dateFilter, customStartDate, customEndDate]);
+  }, [orders, companyId, dateFilter, customStartDate, customEndDate]);
 
   // Consolidated Financial Calculations
   const calculations = useMemo(() => {
@@ -298,6 +301,9 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       .reduce((sum, t) => sum + t.value, 0);
 
     const pendingOrdersAmount = filteredOrders.reduce((sum, order) => {
+      // Pedidos de investimento não geram contas a receber
+      if (order.operationType === 'investment') return sum;
+      
       const sub = order.items?.reduce((s, i) => s + ((i.retail_price || i.current_price || 0) * (i.quantity || 1)), 0) || 0;
       const tot = order.total || sub;
       const paid = order.hasSignal 
@@ -560,7 +566,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       date: newEntryDate,
       status: newEntryStatus,
       paymentMethod: newEntryPaymentMethod,
-      companyId,
+      companyId: companyId || 'pallyra',
     });
 
     // Reset Form
@@ -627,7 +633,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       date: new Date().toISOString().split("T")[0],
       status: "paid",
       paymentMethod: paymentMethod,
-      companyId: paymentTargetOrder.companyId,
+      companyId: paymentTargetOrder.companyId || companyId || 'pallyra',
       orderId: paymentTargetOrder.id,
     });
 

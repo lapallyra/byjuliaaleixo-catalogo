@@ -27,22 +27,7 @@ export const login = async () => {
       message: error.message,
       name: error.name
     });
-    if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
-      console.log('[Auth] Login popup closed by user.');
-      return null;
-    }
-    // Fallback to redirect if popup is blocked or network request failed in iframe/preview
-    if (error.code === 'auth/popup-blocked' || error.code === 'auth/network-request-failed') {
-      console.log('[Auth] Popup/Network request failed, redirecting...');
-      try {
-        await signInWithRedirect(auth, googleProvider);
-        return null;
-      } catch (redirectErr) {
-        console.error('[Auth] Redirect fallback error:', redirectErr);
-        throw error;
-      }
-    }
-    throw error; 
+    throw error;
   }
 };
 

@@ -279,7 +279,7 @@ export const FunnelLogsTab: React.FC<FunnelLogsTabProps> = ({ events = [], selec
                 </div>
 
                 <div className="text-[9px] uppercase text-slate-550 border border-slate-800 py-1.5 px-3 rounded-xl bg-slate-950 font-semibold self-start sm:self-center tracking-widest">
-                  Store: {log.companyId === 'pallyra' ? 'La Pallyra' : log.companyId === 'guennita' ? 'Guennita' : log.companyId === 'mimada' ? 'Mimada Sim' : 'Tutty Mimo'}
+                  Store: {log.companyId === 'pallyra' ? 'La Pallyra' : log.companyId === 'guennita' ? 'Guennita' : log.companyId === 'mimada' ? 'Mimada Sim' : log.companyId === 'madrinha' ? 'Madrinha' : 'Tutty Mimo'}
                 </div>
               </div>
             ))

@@ -36,6 +36,7 @@ import { formatCurrency } from "../../lib/currencyUtils";
 import { calculateProductCost } from "../../lib/finance";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+import { matchesAtelierScope } from "../../services/atelierScopePolicy";
 
 interface ProductsTabProps {
   products: Product[];
@@ -72,6 +73,11 @@ export const ProductsTab: React.FC<ProductsTabProps> = React.memo(({
 
   const { filteredProducts, paginatedProducts, totalPages } = useMemo(() => {
     let result = products.filter(p => {
+      // Atelier scope filter
+      if (!matchesAtelierScope(p, companyId, 'produtos')) {
+        return false;
+      }
+
       const s = searchTerm.toLowerCase();
       const matchesSearch = !s || 
         (p.product_name || "").toLowerCase().includes(s) ||
@@ -128,6 +134,8 @@ export const ProductsTab: React.FC<ProductsTabProps> = React.memo(({
     const { id, ...data } = product;
     await onSaveProduct({
       ...data,
+      company: companyId,
+      companyId: companyId,
       product_name: `${product.product_name} (Cópia)`,
       code: `${product.code}-COPY`,
       createdAt: new Date(),

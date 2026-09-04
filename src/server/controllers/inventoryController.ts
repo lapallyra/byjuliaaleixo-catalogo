@@ -225,7 +225,7 @@ export const inventoryController = {
    */
   recordMovement: async (req: Request, res: Response): Promise<void> => {
     try {
-      const { componenteId, type, quantity, reason, origin, cost, user, componenteName } = req.body;
+      const { componenteId, type, quantity, reason, origin, cost, user, componenteName, companyId } = req.body;
 
       if (!componenteId || !type || typeof quantity !== "number" || quantity <= 0) {
         res.status(400).json({ success: false, error: "Parâmetros de movimentação inválidos ou incompletos." });
@@ -277,6 +277,7 @@ export const inventoryController = {
           componenteId,
           insumoName: finalName,
           componenteName: finalName,
+          companyId: companyId || insumoSnap.data()?.companyId || null,
           date: FieldValue.serverTimestamp(),
           type,
           quantity,
@@ -302,7 +303,8 @@ export const inventoryController = {
             origin,
             newQuantity: newQty
           }
-        }
+        },
+        companyId
       );
 
       if (newQty <= 10) {
@@ -495,6 +497,7 @@ export const inventoryController = {
                   insumoName: insumoSnap.data()?.name || 'Material',
                   orderId: orderId,
                   orderCode: orderData.code || orderId,
+                  companyId: orderData.companyId || null,
                   productName: item.product_name || 'Produto',
                   quantityDeducted: reduction,
                   timestamp: new Date().toISOString(),
@@ -543,6 +546,7 @@ export const inventoryController = {
                     insumoName: insumoSnap.data()?.name || 'Material Kit',
                     orderId: orderId,
                     orderCode: orderData.code || orderId,
+                    companyId: orderData.companyId || null,
                     productName: `[Kit] ${item.product_name}`,
                     quantityDeducted: qtyToDeduct,
                     timestamp: new Date().toISOString(),
@@ -707,6 +711,7 @@ export const inventoryController = {
                   insumoName: insumoSnap.data()?.name || 'Material',
                   orderId: orderId,
                   orderCode: orderData.code || orderId,
+                  companyId: orderData.companyId || null,
                   productName: item.product_name || 'Produto',
                   quantityDeducted: addition,
                   timestamp: new Date().toISOString(),
@@ -751,6 +756,7 @@ export const inventoryController = {
                     insumoName: insumoSnap.data()?.name || 'Material Kit',
                     orderId: orderId,
                     orderCode: orderData.code || orderId,
+                    companyId: orderData.companyId || null,
                     productName: `[Kit] ${item.product_name}`,
                     quantityDeducted: qtyToRestore,
                     timestamp: new Date().toISOString(),

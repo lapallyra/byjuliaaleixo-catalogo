@@ -132,14 +132,24 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
 
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [paymentValue, setPaymentValue] = useState("");
+  const [barterDescription, setBarterDescription] = useState("");
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentNotes, setPaymentNotes] = useState("");
   const [selectedInstallments, setSelectedInstallments] = useState<number[]>([]);
+
+  const barterPaid = useMemo(() => {
+    return paymentsList.filter(p => p.method === 'barter').reduce((sum, p) => sum + (p.amount || 0), 0);
+  }, [paymentsList]);
+
+  const cashPaid = useMemo(() => {
+    return paymentsList.filter(p => p.method !== 'barter').reduce((sum, p) => sum + (p.amount || 0), 0);
+  }, [paymentsList]);
 
   useEffect(() => {
     if (isPaymentModalOpen) {
       setPaymentMethod("pix");
       setPaymentValue(remaining.toFixed(2).replace(".", ","));
+      setBarterDescription("");
       setSelectedInstallments([]);
       setPaymentDate(new Date().toISOString().split('T')[0]);
       setPaymentNotes("");
@@ -311,11 +321,33 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
               <span className="text-[10px] font-bold text-gray-400 tracking-wider">PEDIDO</span>
               <h1 className="text-base font-black text-gray-800 tracking-tight">#{order.code}</h1>
               {getStatusBadge(order.status)}
+              {(() => {
+                const op = order.operationType || 'sale';
+                if (op === 'investment') {
+                  return (
+                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200 flex items-center gap-1">
+                      🎁 Investimento
+                    </span>
+                  );
+                }
+                if (op === 'barter') {
+                  return (
+                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                      Permuta
+                    </span>
+                  );
+                }
+                return (
+                  <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                    Venda
+                  </span>
+                );
+              })()}
             </div>
             <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
               <span className="font-semibold">{order.customerName}</span>
               <span className="w-1 h-1 rounded-full bg-pink-200" />
-              <span>Total: <strong className="text-gray-800">{formatCurrency(total)}</strong></span>
+              <span>{order.operationType === 'investment' ? 'Valor Ref.: ' : 'Total: '}<strong className="text-gray-800">{formatCurrency(total)}</strong></span>
               <span className="w-1 h-1 rounded-full bg-pink-200" />
               <span>Entrega: <strong className="text-gray-800">{order.deliveryDate ? safeFormatISO(order.deliveryDate, "dd/MM/yyyy") : "A combinar"}</strong></span>
             </div>
@@ -479,6 +511,34 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                       <span className="text-gray-400 font-medium block">Origem</span>
                       <span className="font-bold text-gray-700 capitalize">{order.source || "admin"}</span>
                     </div>
+                    <div>
+                      <span className="text-gray-400 font-medium block">Tipo de Operação</span>
+                      <span className="font-bold text-gray-700 capitalize flex items-center gap-1">
+                        {(order.operationType === 'investment')
+                          ? '🎁 Investimento'
+                          : (order.operationType === 'barter')
+                          ? 'Permuta'
+                          : 'Venda'}
+                      </span>
+                    </div>
+                    {order.operationType === 'investment' && (
+                      <div className="col-span-2 bg-purple-50/80 border border-purple-200 rounded-xl p-3 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-purple-950 font-black text-xs flex items-center gap-1">
+                            Finalidade do investimento:
+                          </span>
+                          <span className="text-[10px] bg-purple-200 text-purple-900 font-bold px-2 py-0.5 rounded-full">
+                            Sem receita em caixa
+                          </span>
+                        </div>
+                        <span className="text-purple-900 font-bold block text-sm">
+                          {order.investmentPurpose || "Não informada"}
+                        </span>
+                        <p className="text-[10px] text-purple-700 font-medium leading-relaxed">
+                          Produtos ou materiais utilizados estrategicamente para divulgação, presentes, parcerias ou campanhas promocionais.
+                        </p>
+                      </div>
+                    )}
                     <div>
                       <span className="text-gray-400 font-medium block">Criado em</span>
                       <span className="font-bold text-gray-700">
@@ -767,6 +827,20 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                 <div className="bg-white/75 backdrop-blur-md border border-white/80 rounded-[22px] p-6 shadow-sm flex flex-col justify-between space-y-4">
                   <div className="space-y-3">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest block border-b border-white pb-2">Resumo do Faturamento</h3>
+                    {order.operationType === 'investment' && (
+                      <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 text-xs text-purple-900 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-black flex items-center gap-1">🎁 Operação de Investimento</span>
+                          <span className="text-[10px] bg-purple-200 text-purple-900 font-bold px-2 py-0.5 rounded-full">
+                            Sem receita em caixa
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-purple-800 leading-snug">
+                          O valor deste pedido representa o <strong>Valor Comercial de Referência</strong> dos produtos investidos estrategicamente.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between items-center pb-1 border-b border-white">
                         <span className="text-gray-500">Subtotal</span>
@@ -785,15 +859,23 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                         </div>
                       )}
                       <div className="flex justify-between items-center text-sm pt-1.5">
-                        <span className="font-bold text-slate-800">Total do Pedido</span>
+                        <span className="font-bold text-slate-800">
+                          {order.operationType === 'investment' ? 'Valor Comercial Ref.' : 'Total do Pedido'}
+                        </span>
                         <span className="font-black text-gray-800">{formatCurrency(total)}</span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-white/60">
                       <div>
-                        <span className="text-gray-400 block">Sinal Pago</span>
+                        <span className="text-gray-400 block">Total Quitado</span>
                         <span className="font-bold text-emerald-600">{formatCurrency(paid)}</span>
+                        {barterPaid > 0 && (
+                          <div className="text-[10px] text-gray-500 font-medium mt-0.5 space-y-0.5">
+                            {cashPaid > 0 && <span>Recebido em caixa: {formatCurrency(cashPaid)}</span>}
+                            <span className="text-amber-700 font-semibold block">Permuta: {formatCurrency(barterPaid)}</span>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <span className="text-gray-400 block">Saldo Restante</span>
@@ -822,8 +904,15 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div className="bg-white/50 border border-white/60 rounded-xl p-3">
-                      <span className="text-gray-400 block">Receita Bruta</span>
+                      <span className="text-gray-400 block">
+                        {order.operationType === 'investment' ? 'Valor Comercial Ref.' : 'Receita Bruta'}
+                      </span>
                       <span className="text-sm font-bold text-gray-700">{formatCurrency(total)}</span>
+                      {order.operationType === 'investment' && (
+                        <span className="text-[10px] text-purple-700 font-bold block mt-0.5">
+                          (Sem receita financeira)
+                        </span>
+                      )}
                     </div>
                     <div className="bg-white/50 border border-white/60 rounded-xl p-3">
                       <span className="text-gray-400 block">Custo de Insumos</span>
@@ -859,26 +948,51 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-pink-50/30 text-gray-700">
-                      {paymentsList.map((pay) => (
-                        <tr key={pay.id} className="hover:bg-white/30 transition-colors">
-                          <td className="py-2.5 font-medium">
-                            {pay.date ? (() => {
-                              try {
-                                const [year, month, day] = pay.date.split('-');
-                                if (year && month && day) return `${day}/${month}/${year}`;
-                                return pay.date;
-                              } catch (e) {
-                                return pay.date;
-                              }
-                            })() : "--"}
-                          </td>
-                          <td className="py-2.5 font-semibold capitalize">{pay.method}</td>
-                          <td className="py-2.5 text-right font-bold text-emerald-600">{formatCurrency(pay.amount)}</td>
-                          <td className="py-2.5 pl-4 text-gray-500 max-w-xs truncate" title={pay.notes}>
-                            {pay.notes || "--"}
-                          </td>
-                        </tr>
-                      ))}
+                      {paymentsList.map((pay) => {
+                        const isBarter = pay.method === 'barter' || pay.method?.toLowerCase() === 'permuta';
+                        return (
+                          <tr key={pay.id} className="hover:bg-white/30 transition-colors">
+                            <td className="py-2.5 font-medium">
+                              {pay.date ? (() => {
+                                try {
+                                  const [year, month, day] = pay.date.split('-');
+                                  if (year && month && day) return `${day}/${month}/${year}`;
+                                  return pay.date;
+                                } catch (e) {
+                                  return pay.date;
+                                }
+                              })() : "--"}
+                            </td>
+                            <td className="py-2.5">
+                              {isBarter ? (
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                                      Permuta
+                                    </span>
+                                    <span className="font-bold text-gray-800 text-xs">
+                                      — {formatCurrency(pay.amount)}
+                                    </span>
+                                  </div>
+                                  {pay.description && (
+                                    <p className="text-[11px] font-medium text-amber-950/80 bg-amber-50/70 border border-amber-100 rounded-md px-2 py-0.5 inline-block">
+                                      {pay.description}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="font-semibold capitalize">{pay.method}</span>
+                              )}
+                            </td>
+                            <td className={`py-2.5 text-right font-bold ${isBarter ? 'text-amber-700' : 'text-emerald-600'}`}>
+                              {formatCurrency(pay.amount)}
+                            </td>
+                            <td className="py-2.5 pl-4 text-gray-500 max-w-xs truncate" title={pay.notes}>
+                              {pay.notes || "--"}
+                            </td>
+                          </tr>
+                        );
+                      })}
                       {paymentsList.length === 0 && (
                         <tr>
                           <td colSpan={4} className="py-6 text-center text-gray-400 italic">Nenhum pagamento registrado.</td>
@@ -1108,12 +1222,15 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   <option value="debito">Cartão de Débito</option>
                   <option value="transferencia">Transferência</option>
                   <option value="boleto">Boleto</option>
+                  <option value="barter">Permuta</option>
                   <option value="outro">Outro</option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-gray-400 block">Valor pago</label>
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  {paymentMethod === 'barter' ? "Valor da Permuta (R$)" : "Valor pago"}
+                </label>
                 <input 
                   type="text" 
                   placeholder="R$ 0,00"
@@ -1122,6 +1239,25 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                   className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
                 />
               </div>
+
+              {paymentMethod === 'barter' && (
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-amber-800 block">
+                    Descrição do que foi recebido <span className="text-pink-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: Divulgação no Instagram, Ensaio fotográfico..."
+                    value={barterDescription}
+                    onChange={(e) => setBarterDescription(e.target.value)}
+                    className="w-full bg-white border border-amber-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-amber-400 transition-all text-gray-800"
+                    required
+                  />
+                  <p className="text-[10px] text-amber-700/80">
+                    Obrigatório: especifique o serviço ou produto recebido em troca.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-gray-400 block">Data do pagamento</label>
@@ -1175,6 +1311,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                  onClick={() => {
                    const parsedValue = parseFloat(paymentValue.replace(",", "."));
                    if (isNaN(parsedValue) || parsedValue <= 0) return;
+                   if (paymentMethod === 'barter' && !barterDescription.trim()) return;
                    if (order.paymentMode === 'planned' && order.remainingInstallments) {
                      const instVal = order.remainingInstallmentValue || 0;
                      if (selectedInstallments.length === 0) return;
@@ -1196,6 +1333,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                        date: paymentDate || new Date().toISOString().split('T')[0],
                        amount: parsedValue,
                        method: paymentMethod,
+                       description: paymentMethod === 'barter' ? barterDescription.trim() : undefined,
                        notes: paymentNotes || ""
                      };
                      
@@ -1217,6 +1355,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                    (() => {
                      const valNum = parseFloat(paymentValue.replace(",", "."));
                      if (isNaN(valNum) || valNum <= 0) return true;
+                     if (paymentMethod === 'barter' && !barterDescription.trim()) return true;
                      if (order.paymentMode === 'planned' && order.remainingInstallments) {
                        const instVal = order.remainingInstallmentValue || 0;
                        if (selectedInstallments.length === 0) return true;

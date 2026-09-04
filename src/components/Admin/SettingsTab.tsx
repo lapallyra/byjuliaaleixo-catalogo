@@ -153,6 +153,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
     guennita: {},
     mimada: {},
     tuttymimo: {},
+    madrinha: {},
   });
 
   useEffect(() => {
@@ -177,7 +178,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
       }
 
       // Load others for branding overview
-      const ids: CompanyId[] = ["pallyra", "guennita", "mimada", "tuttymimo"];
+      const ids: CompanyId[] = ["pallyra", "guennita", "mimada", "tuttymimo", "madrinha"];
       const multi: Record<string, Partial<SiteSettings>> = {};
       for (const id of ids) {
         const d = await getSiteSettings(id);
@@ -216,6 +217,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
             configUpdate.company_3_logo = atelierData.store_logo;
           if (id === "tuttymimo")
             configUpdate.company_4_logo = atelierData.store_logo;
+          if (id === "madrinha")
+            configUpdate.company_5_logo = atelierData.store_logo;
         }
         if (settings.store_contact) {
           configUpdate.whatsapp_number = settings.store_contact;
@@ -244,6 +247,8 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
             configUpdate.company_3_logo = settings.store_logo;
           if (companyId === "tuttymimo")
             configUpdate.company_4_logo = settings.store_logo;
+          if (companyId === "madrinha")
+            configUpdate.company_5_logo = settings.store_logo;
         }
         if (settings.store_qrcode)
           configUpdate.store_qrcode = settings.store_qrcode;
@@ -412,6 +417,11 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
                     id: "guennita",
                     label: "com amor, Guennita",
                     color: "text-slate-400",
+                  },
+                  {
+                    id: "madrinha",
+                    label: "Madrinha",
+                    color: "text-amber-600",
                   },
                 ] as const
               ).map((atl) => {

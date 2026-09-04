@@ -12,7 +12,7 @@ function validateOrderPayload(body: any): string | null {
 
   const { companyId, customerName, customerCpfCnpj, contact, items } = body;
 
-  const validCompanies: CompanyId[] = ["pallyra", "guennita", "mimada", "tuttymimo"];
+  const validCompanies: CompanyId[] = ["pallyra", "guennita", "mimada", "tuttymimo", "madrinha"];
   if (!companyId || !validCompanies.includes(companyId)) {
     return "ID da empresa inválido ou ausente.";
   }
@@ -54,6 +54,7 @@ function generateOrderCode(companyId: CompanyId): string {
     guennita: "CG",
     mimada: "MS",
     tuttymimo: "TM",
+    madrinha: "MD",
   };
   const prefix = prefixMap[companyId] || "LP";
   const random = Math.floor(10000 + Math.random() * 90000).toString();

@@ -6,6 +6,7 @@ import { ImageUpload } from "./ImageUpload";
 import { uploadImage, compressImage } from "../../services/firebaseStorageService";
 import { motion, AnimatePresence } from "motion/react";
 import { formatCurrency } from "../../lib/currencyUtils";
+import { matchesAtelierScope } from "../../services/atelierScopePolicy";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
@@ -18,8 +19,8 @@ interface KitsTabProps {
 export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }) => {
   const orchestrator = useAdminOrchestrator();
   const [addons, setAddons] = useState<CheckoutAddon[]>([]);
-  const kits = products.filter(p => p.company === companyId && p.isKit);
-  const normalProducts = products.filter(p => !p.isKit && p.company === companyId);
+  const kits = products.filter(p => matchesAtelierScope(p, companyId, 'kits') && p.isKit);
+  const normalProducts = products.filter(p => !p.isKit && matchesAtelierScope(p, companyId, 'produtos'));
   const companyInsumos = insumos.filter(i => !i.category || true); // Assuming all insumos or company specific if possible
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,6 +104,7 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
       const kitData = {
         ...formData,
         company: companyId,
+        companyId: companyId,
         isKit: true,
         current_price: finalPrice,
         retail_price: finalPrice,

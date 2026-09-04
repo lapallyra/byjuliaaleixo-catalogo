@@ -98,6 +98,23 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           <div className="flex-1 min-w-0 pr-2">
             <div className="mb-0.5 flex items-center gap-2 flex-wrap">
               <span className="text-[10px] text-[#8E8E93] font-mono bg-[#F5F5F7] px-1.5 py-0.5 rounded inline-block">#{order.code}</span>
+              {order.operationType === "investment" && (
+                <>
+                  <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+                    🎁 Investimento
+                  </span>
+                  {order.investmentPurpose && (
+                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded shrink-0 bg-purple-100/90 text-purple-800 truncate max-w-[140px]" title={order.investmentPurpose}>
+                      {order.investmentPurpose}
+                    </span>
+                  )}
+                </>
+              )}
+              {order.operationType === "barter" && (
+                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 bg-amber-50 text-amber-700 border border-amber-200">
+                  Permuta
+                </span>
+              )}
               {order.priority && order.priority !== "normal" && (
                 <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 ${
                   order.priority === "baixa" ? "bg-slate-100 text-slate-600 border border-slate-200" :
@@ -122,7 +139,12 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
         {/* Middle Section: Value, Date, Payment */}
         <div className="flex flex-col gap-1 shrink-0 md:items-end">
-          <div className="text-sm font-black text-[#1C1C1E] tracking-tighter">{formatCurrency(Number(order.total) || 0)}</div>
+          <div className="flex items-baseline gap-1.5 md:flex-col md:items-end md:gap-0">
+            <div className="text-sm font-black text-[#1C1C1E] tracking-tighter">{formatCurrency(Number(order.total) || 0)}</div>
+            {order.operationType === "investment" && (
+              <span className="text-[8px] font-bold text-purple-600 uppercase tracking-tight">Valor Ref.</span>
+            )}
+          </div>
           <div className="text-[10px] font-bold text-[#8E8E93] flex items-center gap-1.5">
             <Calendar size={10} />
             {order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy") : "--/--/--"}

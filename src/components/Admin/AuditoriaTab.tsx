@@ -32,6 +32,7 @@ import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, serverTi
 import { jsPDF } from 'jspdf';
 import { safeFormat } from '../../lib/dateUtils';
 import { addInsumo, updateInsumo } from '../../services/firebaseService';
+import { filterByAtelierScope, matchesAtelierScope } from '../../services/atelierScopePolicy';
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
@@ -62,14 +63,24 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
   const [activeSubmenu, setActiveSubmenu] = useState<'dashboard' | 'materials' | 'suppliers' | 'formulas' | 'simulator' | 'viability' | 'reports'>('dashboard');
   
   // Filter states
-  const [selectedAtelier, setSelectedAtelier] = useState<string>('all');
+  const [selectedAtelier, setSelectedAtelier] = useState<string>(initialCompanyId || 'all');
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d' | 'custom'>('30d');
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
 
+  useEffect(() => {
+    if (initialCompanyId) {
+      setSelectedAtelier(initialCompanyId);
+    }
+  }, [initialCompanyId]);
+
   // Firebase states
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isSuppliersLoading, setIsSuppliersLoading] = useState(false);
+
+  const filteredSuppliers = useMemo(() => {
+    return filterByAtelierScope(suppliers, initialCompanyId, 'fornecedores');
+  }, [suppliers, initialCompanyId]);
   
   // UI Selection states
   const [selectedProductIdForFormula, setSelectedProductIdForFormula] = useState<string>('');
@@ -94,7 +105,8 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
     pallyra: "La Pallyra",
     guennita: "com amor, Guennita",
     mimada: "Mimada Sim",
-    tuttymimo: "Tutty Mimo"
+    tuttymimo: "Tutty Mimo",
+    madrinha: "Madrinha"
   };
 
   // Default fallback suppliers if Firestore is empty
@@ -132,7 +144,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
       // Atelier filter
-      if (selectedAtelier !== 'all' && o.companyId !== selectedAtelier) {
+      if (selectedAtelier !== 'all' && !matchesAtelierScope(o, selectedAtelier as CompanyId, 'pedidos')) {
         return false;
       }
       
@@ -180,7 +192,10 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
     let costOfGoodsSold = 0;
     
     filteredOrders.forEach(order => {
-      revenue += (Number(order.total) || 0);
+      // Pedidos de investimento não geram receita financeira automática
+      if (order.operationType !== 'investment') {
+        revenue += (Number(order.total) || 0);
+      }
       
       // Calculate material cost of this order based on its product items
       order.items?.forEach(item => {
@@ -520,6 +535,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
         contact: editingSupplier.contact || '',
         defaultDiscount: Number(editingSupplier.defaultDiscount) || 0,
         notes: editingSupplier.notes || '',
+        companyId: (editingSupplier as any).companyId || initialCompanyId,
         createdAt: new Date().toISOString()
       };
 
@@ -756,6 +772,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
             <option value="guennita">COM AMOR, GUENNITA</option>
             <option value="mimada">MIMADA SIM</option>
             <option value="tuttymimo">TUTTY MIMO</option>
+            <option value="madrinha">MADRINHA</option>
           </select>
 
           {/* Period selection */}
@@ -1081,7 +1098,7 @@ export const AuditoriaTab: React.FC<AuditoriaTabProps> = ({
                 <div className="flex justify-center p-12 text-[#8E8E93]">Carregando fornecedores...</div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {suppliers.map((sup) => (
+                  {filteredSuppliers.map((sup) => (
                     <div key={sup.id} className="p-6 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl hover:shadow-md transition-shadow relative space-y-4">
                       
                       <div className="flex justify-between items-start">

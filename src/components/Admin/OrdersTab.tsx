@@ -139,6 +139,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
       const contactMatch = (o.contact || "").toLowerCase().includes(term);
       const cityMatch = (o.customerCity || "").toLowerCase().includes(term);
       const observationsMatch = (o.observations || "").toLowerCase().includes(term);
+      const purposeMatch = (o.investmentPurpose || "").toLowerCase().includes(term);
       
       const productsMatch = (o.items || []).some(item => {
         const nameMatch = (item.product_name || "").toLowerCase().includes(term);
@@ -146,7 +147,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
         return nameMatch || categoryMatch;
       });
 
-      const searchMatch = codeMatch || customerMatch || contactMatch || cityMatch || observationsMatch || productsMatch;
+      const searchMatch = codeMatch || customerMatch || contactMatch || cityMatch || observationsMatch || productsMatch || purposeMatch;
       
       if (!searchMatch) return false;
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Search, Plus, X, Calendar, Loader2, Save, User, Minus, Trash2, ShoppingCart, Truck } from "lucide-react";
-import { Product, Customer, Order, CompanyId, CartItem } from "../../types";
+import { Product, Customer, Order, CompanyId, CartItem, OrderOperationType, OrderPayment } from "../../types";
 import { addCustomer } from "../../services/firebaseService";
 import { safeFormatISO, addBusinessDays } from "../../lib/dateUtils";
 
@@ -31,6 +31,8 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [orderDate, setOrderDate] = useState(safeFormatISO(new Date(), "yyyy-MM-dd"));
+  const [operationType, setOperationType] = useState<OrderOperationType>("sale");
+  const [investmentPurpose, setInvestmentPurpose] = useState("");
   const [status, setStatus] = useState<Order["status"]>("quote");
   const [origin, setOrigin] = useState("Vitrine");
   const [customOrigins, setCustomOrigins] = useState<string[]>([]);
@@ -54,8 +56,11 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   const [items, setItems] = useState<CartItem[]>([]);
   const [shippingCost, setShippingCost] = useState(0);
   const [discount, setDiscount] = useState(0);
-  const [signalValue, setSignalValue] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [payments, setPayments] = useState<OrderPayment[]>([]);
+  const [currentPaymentMethod, setCurrentPaymentMethod] = useState("Pix");
+  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number | "">("");
+  const [currentBarterDescription, setCurrentBarterDescription] = useState("");
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const [productSearch, setProductSearch] = useState("");
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
@@ -176,6 +181,60 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
     }
   };
 
+  const subtotalItems = useMemo(() => {
+    return items.reduce((acc, item) => acc + (item.quantity * (item.current_price || item.retail_price || 0)), 0);
+  }, [items]);
+
+  const finalOrderTotal = useMemo(() => {
+    return Math.max(0, subtotalItems - discount + shippingCost);
+  }, [subtotalItems, discount, shippingCost]);
+
+  const totalPaidSum = useMemo(() => {
+    return payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  }, [payments]);
+
+  const barterPaidSum = useMemo(() => {
+    return payments.filter(p => p.method === 'barter' || p.method?.toLowerCase() === 'permuta').reduce((sum, p) => sum + (p.amount || 0), 0);
+  }, [payments]);
+
+  const cashPaidSum = useMemo(() => {
+    return Math.max(0, totalPaidSum - barterPaidSum);
+  }, [totalPaidSum, barterPaidSum]);
+
+  const remainingOrderBalance = useMemo(() => {
+    return Math.max(0, finalOrderTotal - totalPaidSum);
+  }, [finalOrderTotal, totalPaidSum]);
+
+  const handleAddPayment = () => {
+    setPaymentError(null);
+    const amountNum = typeof currentPaymentAmount === 'number' ? currentPaymentAmount : parseFloat(currentPaymentAmount || "0");
+    if (!amountNum || isNaN(amountNum) || amountNum <= 0) {
+      setPaymentError("Informe um valor de pagamento válido maior que zero.");
+      return;
+    }
+    if (currentPaymentMethod === 'barter' && !currentBarterDescription.trim()) {
+      setPaymentError("A descrição do que foi recebido é obrigatória para pagamentos em Permuta.");
+      return;
+    }
+
+    const newPay: OrderPayment = {
+      id: Date.now().toString(),
+      date: new Date().toISOString().split('T')[0],
+      amount: amountNum,
+      method: currentPaymentMethod,
+      description: currentPaymentMethod === 'barter' ? currentBarterDescription.trim() : undefined,
+      notes: ""
+    };
+
+    setPayments(prev => [...prev, newPay]);
+    setCurrentPaymentAmount("");
+    setCurrentBarterDescription("");
+  };
+
+  const handleRemovePayment = (id: string) => {
+    setPayments(prev => prev.filter(p => p.id !== id));
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCustomerId) {
@@ -196,8 +255,40 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
       const subtotal = items.reduce((acc, item) => acc + (item.quantity * (item.current_price || item.retail_price || 0)), 0);
       const total = Math.max(0, subtotal - discount + shippingCost);
 
+      let finalPayments = [...payments];
+      const pendingAmount = typeof currentPaymentAmount === 'number' ? currentPaymentAmount : parseFloat(currentPaymentAmount || "0");
+      if (pendingAmount && pendingAmount > 0) {
+        if (currentPaymentMethod === 'barter' && !currentBarterDescription.trim()) {
+          setPaymentError("A descrição do que foi recebido é obrigatória para o pagamento em Permuta.");
+          setIsSaving(false);
+          return;
+        }
+        finalPayments.push({
+          id: Date.now().toString(),
+          date: new Date().toISOString().split('T')[0],
+          amount: pendingAmount,
+          method: currentPaymentMethod,
+          description: currentPaymentMethod === 'barter' ? currentBarterDescription.trim() : undefined,
+          notes: ""
+        });
+      }
+
+      const calculatedTotalPaid = finalPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const isInvestment = operationType === 'investment';
+      const primaryMethod = isInvestment && finalPayments.length === 0
+        ? 'Investimento'
+        : (finalPayments.length === 1 
+            ? (finalPayments[0].method === 'barter' ? 'Permuta' : finalPayments[0].method)
+            : (finalPayments.length > 1 ? 'Múltiplos' : 'Não informado'));
+
+      const calculatedPaymentStatus = isInvestment && finalPayments.length === 0
+        ? 'paid'
+        : (calculatedTotalPaid >= total - 0.01 ? 'paid' : (calculatedTotalPaid > 0 ? 'partial' : 'pending'));
+
       const orderData: Partial<Order> = {
         companyId,
+        operationType,
+        investmentPurpose: isInvestment ? (investmentPurpose.trim() || "Divulgação / Parceria") : undefined,
         customerName: selectedCustomer?.name || "",
         customerCpfCnpj: selectedCustomer?.cpfCnpj || "",
         contact: selectedCustomer?.contact || "",
@@ -208,9 +299,11 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
         items: items,
         shippingCost: shippingCost,
         discount: discount,
-        hasSignal: signalValue > 0,
-        signalValue: signalValue,
-        paymentMethod: paymentMethod || "Não informado",
+        payments: finalPayments,
+        hasSignal: calculatedTotalPaid > 0,
+        signalValue: calculatedTotalPaid,
+        paymentMethod: primaryMethod,
+        paymentStatus: calculatedPaymentStatus,
         total: total,
         createdAt: new Date(orderDate).toISOString(),
         isWholesale: false,
@@ -442,6 +535,101 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Tipo de Operação */}
+              <div className="space-y-1.5 md:col-span-2">
+                <label className="text-[11px] font-bold text-gray-400 block">
+                  Tipo de operação <span className="text-pink-500">*</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setOperationType("sale")}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 ${
+                      operationType === "sale"
+                        ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                        : "bg-white/60 border-pink-100/85 text-gray-700 hover:bg-white"
+                    }`}
+                  >
+                    <span>Venda</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOperationType("investment")}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 ${
+                      operationType === "investment"
+                        ? "bg-purple-600 text-white border-purple-600 shadow-sm"
+                        : "bg-white/60 border-pink-100/85 text-gray-700 hover:bg-white"
+                    }`}
+                  >
+                    <span>🎁 Investimento</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOperationType("barter")}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 ${
+                      operationType === "barter"
+                        ? "bg-amber-600 text-white border-amber-600 shadow-sm"
+                        : "bg-white/60 border-pink-100/85 text-gray-700 hover:bg-white"
+                    }`}
+                  >
+                    <span>Permuta</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-400 pl-1">
+                  {operationType === "sale" && "Operação comercial normal de venda."}
+                  {operationType === "investment" && "Investimento em divulgação, presentes estratégicos, parcerias ou ações promocionais (sem receita em caixa)."}
+                  {operationType === "barter" && "Troca de produtos ou serviços por outro produto ou serviço."}
+                </p>
+              </div>
+
+              {/* Bloco Dedicado de Investimento */}
+              {operationType === "investment" && (
+                <div className="md:col-span-2 bg-purple-50/70 border border-purple-200/90 rounded-2xl p-4 space-y-2.5 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-purple-900 flex items-center gap-1.5">
+                      🎁 Operação de Investimento
+                    </span>
+                    <span className="text-[10px] font-bold text-purple-700 bg-purple-100/80 px-2.5 py-0.5 rounded-full border border-purple-200">
+                      Não gera receita financeira
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-purple-800 leading-relaxed">
+                    Produtos ou materiais utilizados estrategicamente para divulgação, presentes para influenciadores, parcerias ou ações promocionais. O estoque segue a baixa normal, registrando o valor comercial como referência.
+                  </p>
+                  <div className="space-y-1.5 pt-1">
+                    <label className="text-[11px] font-bold text-purple-950 block">
+                      Finalidade do investimento <span className="text-pink-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={investmentPurpose}
+                      onChange={(e) => setInvestmentPurpose(e.target.value)}
+                      placeholder="Ex: Divulgação com influenciadora, Presente estratégico, Campanha promocional..."
+                      className="w-full bg-white border border-purple-300 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-purple-500 shadow-xs"
+                    />
+                    <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                      <span className="text-[10px] text-purple-700 font-medium">Exemplos:</span>
+                      {[
+                        "Divulgação com influenciadora",
+                        "Presente estratégico",
+                        "Campanha promocional",
+                        "Parceria comercial",
+                        "Material de demonstração"
+                      ].map((example) => (
+                        <button
+                          key={example}
+                          type="button"
+                          onClick={() => setInvestmentPurpose(example)}
+                          className="text-[10px] bg-white hover:bg-purple-100 text-purple-800 font-medium px-2 py-0.5 rounded-md border border-purple-200 transition-colors"
+                        >
+                          + {example}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Responsável */}
               <div className="space-y-1 md:col-span-2">
@@ -690,50 +878,182 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                     />
                   </div>
 
-                  {/* Sinal Recebido */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-gray-400 block">
-                      Sinal Recebido (R$)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={signalValue || ""}
-                      onChange={(e) => setSignalValue(parseFloat(e.target.value) || 0)}
-                      className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700"
-                      placeholder="0.00"
-                    />
-                  </div>
+                  {/* Seção de Registro de Pagamentos & Quitação */}
+                  <div className="col-span-1 md:col-span-2 space-y-3 pt-3 border-t border-pink-100/70">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Registrar Pagamentos / Quitação
+                      </h4>
+                      <span className="text-[11px] text-gray-400">
+                        Permite pagamentos múltiplos (ex: PIX + Permuta)
+                      </span>
+                    </div>
 
-                  {/* Forma de Pagamento */}
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-gray-400 block">
-                      Forma de Pagamento
-                    </label>
-                    <select
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full bg-white/60 border border-pink-100/85 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-pink-300 transition-all text-gray-700 font-semibold"
-                    >
-                      <option value="">Selecione...</option>
-                      <option value="Pix">Pix</option>
-                      <option value="Dinheiro">Dinheiro</option>
-                      <option value="Cartão de Débito">Cartão de Débito</option>
-                      <option value="Cartão de Crédito">Cartão de Crédito</option>
-                      <option value="Boleto">Boleto</option>
-                      <option value="Transferência">Transferência</option>
-                      <option value="Outro">Outro</option>
-                    </select>
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-white/60 border border-pink-100/80 rounded-2xl p-4">
+                      {/* Forma de Pagamento */}
+                      <div className="sm:col-span-5 space-y-1">
+                        <label className="text-[11px] font-bold text-gray-500 block">
+                          Forma de Pagamento
+                        </label>
+                        <select
+                          value={currentPaymentMethod}
+                          onChange={(e) => setCurrentPaymentMethod(e.target.value)}
+                          className="w-full bg-white border border-pink-100/90 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-pink-300 transition-all text-gray-700"
+                        >
+                          <option value="Pix">Pix</option>
+                          <option value="Dinheiro">Dinheiro</option>
+                          <option value="Cartão de Débito">Cartão de Débito</option>
+                          <option value="Cartão de Crédito">Cartão de Crédito</option>
+                          <option value="Boleto">Boleto</option>
+                          <option value="Transferência">Transferência</option>
+                          <option value="barter">Permuta</option>
+                          <option value="Outro">Outro</option>
+                        </select>
+                      </div>
+
+                      {/* Valor ou Valor da Permuta */}
+                      <div className="sm:col-span-4 space-y-1">
+                        <label className="text-[11px] font-bold text-gray-500 block">
+                          {currentPaymentMethod === 'barter' ? "Valor da Permuta (R$)" : "Valor Pago (R$)"}
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={currentPaymentAmount}
+                          onChange={(e) => {
+                            setCurrentPaymentAmount(e.target.value === "" ? "" : parseFloat(e.target.value) || 0);
+                            setPaymentError(null);
+                          }}
+                          className="w-full bg-white border border-pink-100/90 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none focus:border-pink-300 transition-all text-gray-700"
+                          placeholder="0,00"
+                        />
+                      </div>
+
+                      {/* Botão Adicionar */}
+                      <div className="sm:col-span-3 flex items-end">
+                        <button
+                          type="button"
+                          onClick={handleAddPayment}
+                          className="w-full py-2.5 px-3 bg-pink-500 hover:bg-pink-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"
+                        >
+                          <Plus size={14} /> Adicionar
+                        </button>
+                      </div>
+
+                      {/* Campo condicional para Permuta */}
+                      {currentPaymentMethod === 'barter' && (
+                        <div className="sm:col-span-12 space-y-1 bg-amber-50/80 border border-amber-200/90 rounded-xl p-3">
+                          <label className="text-[11px] font-bold text-amber-900 block">
+                            Descrição do que foi recebido <span className="text-pink-600">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Ex: Divulgação no Instagram, Ensaio fotográfico, Produto em troca..."
+                            value={currentBarterDescription}
+                            onChange={(e) => {
+                              setCurrentBarterDescription(e.target.value);
+                              setPaymentError(null);
+                            }}
+                            className="w-full bg-white border border-amber-300 rounded-lg px-3 py-2 text-xs font-medium text-gray-800 outline-none focus:border-amber-500"
+                            required
+                          />
+                          <p className="text-[10px] text-amber-700/90">
+                            Obrigatório: especifique o serviço ou produto recebido em contrapartida.
+                          </p>
+                        </div>
+                      )}
+
+                      {paymentError && (
+                        <div className="sm:col-span-12 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
+                          {paymentError}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Lista de Pagamentos Registrados */}
+                    {payments.length > 0 && (
+                      <div className="space-y-2 pt-1">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                          Pagamentos Adicionados ({payments.length})
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {payments.map((p) => {
+                            const isBarter = p.method === 'barter' || p.method?.toLowerCase() === 'permuta';
+                            return (
+                              <div
+                                key={p.id}
+                                className={`flex items-start justify-between p-2.5 rounded-xl border ${
+                                  isBarter
+                                    ? 'bg-amber-50/70 border-amber-200 text-amber-950'
+                                    : 'bg-white border-pink-100 text-gray-700'
+                                } shadow-sm`}
+                              >
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <span
+                                      className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                                        isBarter
+                                          ? 'bg-amber-200 text-amber-900 border border-amber-300'
+                                          : 'bg-pink-100 text-pink-700'
+                                      }`}
+                                    >
+                                      {isBarter ? 'Permuta' : p.method}
+                                    </span>
+                                    <span className="font-bold text-xs">
+                                      R$ {p.amount.toFixed(2).replace('.', ',')}
+                                    </span>
+                                  </div>
+                                  {p.description && (
+                                    <p className="text-[11px] font-medium text-amber-900 pl-1 leading-snug">
+                                      {p.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemovePayment(p.id)}
+                                  className="text-gray-400 hover:text-rose-500 p-1 rounded-lg hover:bg-rose-50 transition-colors"
+                                  title="Remover pagamento"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Resumo Financeiro Claro e Real-Time */}
+                {operationType === "investment" && (
+                  <div className="bg-purple-50/90 border border-purple-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-purple-900">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-sm text-purple-950">🎁 Operação de Investimento</span>
+                        {investmentPurpose && (
+                          <span className="bg-purple-200/80 text-purple-900 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                            {investmentPurpose}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-purple-800">
+                        O valor dos produtos é considerado <strong>Valor Comercial de Referência</strong>. Não há geração de receita financeira no fluxo de caixa.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-100 border border-purple-300 text-purple-800 px-3 py-1.5 rounded-xl shrink-0 text-center">
+                      Sem receita em caixa
+                    </span>
+                  </div>
+                )}
+
                 <div className="bg-pink-50/30 border border-pink-100/40 rounded-2xl p-5 grid grid-cols-2 md:grid-cols-3 gap-6 text-xs text-gray-700">
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Subtotal</p>
                     <p className="text-sm font-bold mt-0.5">
-                      R$ {items.reduce((acc, item) => acc + (item.quantity * (item.current_price || item.retail_price || 0)), 0).toFixed(2).replace(".", ",")}
+                      R$ {subtotalItems.toFixed(2).replace(".", ",")}
                     </p>
                   </div>
 
@@ -752,23 +1072,36 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Sinal Recebido (-)</p>
+                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Total Quitado (-)</p>
                     <p className="text-sm font-bold text-emerald-600 mt-0.5">
-                      - R$ {signalValue.toFixed(2).replace(".", ",")}
+                      - R$ {totalPaidSum.toFixed(2).replace(".", ",")}
                     </p>
+                    {barterPaidSum > 0 && (
+                      <span className="text-[10px] text-amber-700 block font-semibold mt-0.5 leading-tight">
+                        (Em caixa: R$ {cashPaidSum.toFixed(2).replace(".", ",")} | Permuta: R$ {barterPaidSum.toFixed(2).replace(".", ",")})
+                      </span>
+                    )}
                   </div>
 
                   <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Saldo Restante</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      {operationType === "investment" ? "Saldo de Referência" : "Saldo Restante"}
+                    </p>
                     <p className="text-sm font-bold mt-0.5">
-                      R$ {Math.max(0, items.reduce((acc, item) => acc + (item.quantity * (item.current_price || item.retail_price || 0)), 0) - discount + shippingCost - signalValue).toFixed(2).replace(".", ",")}
+                      R$ {remainingOrderBalance.toFixed(2).replace(".", ",")}
                     </p>
                   </div>
 
-                  <div className="bg-gradient-to-b from-pink-400 to-pink-500 text-white rounded-xl p-3 text-center flex flex-col justify-center items-center col-span-2 md:col-span-1 shadow-sm">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-white/90">Total Final</p>
+                  <div className={`text-white rounded-xl p-3 text-center flex flex-col justify-center items-center col-span-2 md:col-span-1 shadow-sm ${
+                    operationType === "investment"
+                      ? "bg-gradient-to-b from-purple-600 to-purple-700"
+                      : "bg-gradient-to-b from-pink-400 to-pink-500"
+                  }`}>
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-white/90">
+                      {operationType === "investment" ? "Valor Comercial Ref." : "Total Final"}
+                    </p>
                     <p className="text-base font-black mt-0.5">
-                      R$ {Math.max(0, items.reduce((acc, item) => acc + (item.quantity * (item.current_price || item.retail_price || 0)), 0) - discount + shippingCost).toFixed(2).replace(".", ",")}
+                      R$ {finalOrderTotal.toFixed(2).replace(".", ",")}
                     </p>
                   </div>
                 </div>

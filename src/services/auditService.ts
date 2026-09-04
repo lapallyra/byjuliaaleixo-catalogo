@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { AuditLog, AuditModule, AuditActionType, CompanyId } from '../types';
+import { matchesAtelierScope } from './atelierScopePolicy';
 
 /**
  * Creates a new audit log entry.
@@ -79,21 +80,19 @@ export const subscribeToAuditLogs = (
     dateStart?: string;
     dateEnd?: string;
     resourceId?: string;
-  }
+  } | CompanyId
 ) => {
-  let q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(200));
+  const normalizedFilters = typeof filters === 'string' ? { companyId: filters } : (filters || {});
+  let q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(300));
 
-  if (filters?.module) {
-    q = query(q, where('module', '==', filters.module));
+  if (normalizedFilters.module) {
+    q = query(q, where('module', '==', normalizedFilters.module));
   }
-  if (filters?.companyId) {
-    q = query(q, where('companyId', '==', filters.companyId));
+  if (normalizedFilters.action) {
+    q = query(q, where('action', '==', normalizedFilters.action));
   }
-  if (filters?.action) {
-    q = query(q, where('action', '==', filters.action));
-  }
-  if (filters?.resourceId) {
-    q = query(q, where('resourceId', '==', filters.resourceId));
+  if (normalizedFilters.resourceId) {
+    q = query(q, where('resourceId', '==', normalizedFilters.resourceId));
   }
 
   return onSnapshot(q, (snapshot) => {
@@ -102,16 +101,23 @@ export const subscribeToAuditLogs = (
       ...doc.data() 
     } as AuditLog));
     
-    // Client-side date filtering since Firestore composite indexes are complex
     let filteredLogs = logs;
-    if (filters?.dateStart) {
-      filteredLogs = filteredLogs.filter(log => log.date >= (filters.dateStart || ''));
+
+    if (normalizedFilters.companyId && (normalizedFilters.companyId as string) !== 'all') {
+      filteredLogs = filteredLogs.filter(log => matchesAtelierScope(log, normalizedFilters.companyId as CompanyId, 'auditoria'));
     }
-    if (filters?.dateEnd) {
-      filteredLogs = filteredLogs.filter(log => log.date <= (filters.dateEnd || ''));
+
+    // Client-side date filtering since Firestore composite indexes are complex
+    if (normalizedFilters.dateStart) {
+      filteredLogs = filteredLogs.filter(log => log.date >= (normalizedFilters.dateStart || ''));
+    }
+    if (normalizedFilters.dateEnd) {
+      filteredLogs = filteredLogs.filter(log => log.date <= (normalizedFilters.dateEnd || ''));
     }
 
     callback(filteredLogs);
+  }, (error) => {
+    console.warn('subscribeToAuditLogs snapshot warning:', error);
   });
 };
 

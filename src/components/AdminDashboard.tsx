@@ -100,6 +100,7 @@ import { DeliveriesTab } from "./Admin/DeliveriesTab";
 import { GlobalSearch } from "./Admin/GlobalSearch";
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
 import { Sidebar } from "./Admin/Sidebar";
+import { AtelierSelector } from "./Admin/AtelierSelector";
 import { useAdminOrchestrator } from "./AdminOrchestratorSystem";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
 import { UsersTab } from "./Admin/UsersTab";
@@ -455,6 +456,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
           logout();
           navigate("/");
         }}
+        selectedCompanyId={selectedCompanyId}
+        onSelectCompany={setSelectedCompanyId}
       />
 
       <AnimatePresence>
@@ -474,7 +477,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               className="fixed left-0 top-0 bottom-0 w-72 bg-[#F5F5F7] z-[110] lg:hidden border-r border-[#E5E5EA] flex flex-col shadow-2xl"
             >
               <div className="p-6 flex flex-col h-full">
-                <div className="flex items-center justify-end mb-10">
+                <div className="flex items-center justify-end mb-6">
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="p-2 bg-white rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] shadow-sm transition-all"
@@ -482,6 +485,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <X size={18} />
                   </button>
                 </div>
+
+                {/* Mobile Central Atelier Selector */}
+                <AtelierSelector
+                  selectedCompanyId={selectedCompanyId}
+                  onSelectCompany={(compId) => {
+                    setSelectedCompanyId(compId);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  variant="mobile"
+                />
 
                 <nav className="flex-1 space-y-4 overflow-y-auto pr-2 scrollbar-hide">
                   {menuGroups.map((groupName) => {
@@ -634,13 +647,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               </button>
             </div>
 
-            {/* Lado Direito - Notificações */}
-            <div className="flex items-center gap-4">
+            {/* Lado Direito - Ateliê Ativo & Notificações */}
+            <div className="flex items-center gap-3">
+              <AtelierSelector
+                selectedCompanyId={selectedCompanyId}
+                onSelectCompany={setSelectedCompanyId}
+                variant="header"
+              />
               <GlobalSearch 
                 orders={sales} 
                 products={products} 
                 customers={customers} 
                 insumos={insumos} 
+                companyId={selectedCompanyId}
                 onResultClick={(type, id) => {
                   if (type === 'Pedido') { setSelectedOrderId(id); handleSetTab('orders'); }
                   else if (type === 'Cliente') { setSelectedCustomerId(id); handleSetTab('clients'); }
@@ -802,7 +821,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                         if (data.id) {
                           await updateInsumo(data.id, data as any);
                         } else {
-                          await addInsumo(data as any);
+                          await addInsumo({ companyId: selectedCompanyId, ...data } as any);
                         }
                       }}
                       onDeleteComponente={async (id) => {
@@ -864,7 +883,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "collections" && (
-                    <CollectionsTab products={products} />
+                    <CollectionsTab products={products} companyId={selectedCompanyId} />
                   )}
                   {activeTab === "campaigns" && (
                     <CampaignsTab products={products} />

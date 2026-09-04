@@ -78,6 +78,7 @@ import { HorizontalScroll } from "../shared/HorizontalScroll";
 import { commemorativeDateService } from "../../services/commemorativeDateService";
 import { subscribeToCampaigns } from "../../services/firebaseService";
 import { eventBus } from "../../services/eventBus";
+import { matchesAtelierScope } from '../../services/atelierScopePolicy';
 
 interface DashboardTabProps {
   orders: Order[];
@@ -110,6 +111,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onAction,
   onOpenOrder,
 }) => {
+  const filteredOrders = useMemo(() => orders.filter(o => matchesAtelierScope(o, companyId, 'pedidos')), [orders, companyId]);
+  const filteredProducts = useMemo(() => products.filter(p => matchesAtelierScope(p, companyId, 'produtos')), [products, companyId]);
+  const filteredCustomers = useMemo(() => customers.filter(c => matchesAtelierScope(c, companyId, 'clientes')), [customers, companyId]);
+
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -119,10 +124,10 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   const [newEvent, setNewEvent] = useState({ title: '', date: '', category: 'personalizado' as 'global' | 'nacional' | 'regional' | 'personalizado' });
   const [liveEvents, setLiveEvents] = useState<any[]>([]);
 
-  // Pre-populate with recent orders when orders load
+  // Pre-populate with recent filteredOrders when filteredOrders load
   useEffect(() => {
-    if (orders.length > 0 && liveEvents.length === 0) {
-      const initial = orders.slice(0, 10).map(order => ({
+    if (filteredOrders.length > 0 && liveEvents.length === 0) {
+      const initial = filteredOrders.slice(0, 10).map(order => ({
         id: `initial-ev-${order.id}`,
         type: order.status === 'paid' || order.status === 'fully_paid' ? 'ORDER_PAID' : 'ORDER_CREATED',
         message: order.status === 'paid' || order.status === 'fully_paid' 
@@ -135,7 +140,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       }));
       setLiveEvents(initial);
     }
-  }, [orders]);
+  }, [filteredOrders]);
 
   // Subscribe to real-time eventBus events
   useEffect(() => {
@@ -337,7 +342,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     const start = startOfMonth(new Date());
     const end = endOfMonth(new Date());
     
-    const monthOrders = orders.filter(o => {
+    const monthOrders = filteredOrders.filter(o => {
       const date = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
       return isWithinInterval(date, { start, end }) && o.status !== 'cancelled';
     });
@@ -348,25 +353,25 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     const remaining = Math.max(0, goal - reached);
 
     return { reached, goal, percent, remaining };
-  }, [orders]);
+  }, [filteredOrders]);
 
   // Total Sales and Faturamento
   const totalMetrics = useMemo(() => {
-    const completedOrders = orders.filter(o => !['cancelled', 'pending'].includes(o.status));
+    const completedOrders = filteredOrders.filter(o => !['cancelled', 'pending'].includes(o.status));
     const count = completedOrders.length;
     const revenue = completedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
     return { count, revenue };
-  }, [orders]);
+  }, [filteredOrders]);
 
   const activeOrders = useMemo(() => {
-    return orders
+    return filteredOrders
       .filter(o => ['novo pedido', 'approval', 'waiting_payment', 'production', 'in_production', 'assembly', 'packaging', 'delivery'].includes(o.status))
       .sort((a, b) => {
         const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
         const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
         return dateB.getTime() - dateA.getTime();
       });
-  }, [orders]);
+  }, [filteredOrders]);
 
   const handleAddChecklistItem = async () => {
     if (!newChecklistItem.trim()) return;

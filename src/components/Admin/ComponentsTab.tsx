@@ -33,6 +33,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import { Componente, Product, ComponenteMovement, CompanyId } from "../../types";
+import { matchesAtelierScope } from "../../services/atelierScopePolicy";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { InsumoFormModal } from "./InsumoFormModal";
 import { db } from "../../lib/firebase";
@@ -143,6 +144,8 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
   // Filter components
   const filtered = useMemo(() => {
     return componentes.filter((c) => {
+      if (!matchesAtelierScope(c, companyId, 'insumos')) return false;
+
       // Search
       const matchesSearch =
         c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -188,7 +191,7 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId,
       data: { success: true, title: 'Sucesso' }
     });
       return;
@@ -209,7 +212,7 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId,
       data: { success: false, title: 'Erro' }
     });
           return;
@@ -227,7 +230,8 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
           origin: quickOrigin || "Ateliê Principal",
           cost: parseFloat(quickCost) || item.unitCost || 0,
           user: "Ateliê Admin",
-          componenteName: item.name
+          componenteName: item.name,
+          companyId
         })
       });
       const result = await res.json();
@@ -261,7 +265,7 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId,
       data: { success: false, title: 'Erro' }
     });
     }
@@ -290,7 +294,7 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId,
       data: { success: false, title: 'Erro' }
     });
     }

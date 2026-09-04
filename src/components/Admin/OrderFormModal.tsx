@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Order, Product, CompanyId } from "../../types";
+import { Order, Product, CompanyId, OrderOperationType, OrderPayment } from "../../types";
 import { formatCurrency } from "../../lib/currencyUtils";
 import { safeFormat, addBusinessDays } from "../../lib/dateUtils";
 import { formatPhone, formatCPFOrCNPJ } from "../../utils/masks";
-import { X, CheckCircle, Trash2 } from "lucide-react";
+import { X, CheckCircle, Trash2, Plus } from "lucide-react";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
@@ -29,11 +29,34 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
   const [items, setItems] = useState<any[]>(editingOrder?.items || []);
   const [shipping, setShipping] = useState(editingOrder?.shippingCost || 0);
   const [discount, setDiscount] = useState(editingOrder?.discount || 0);
-  const [signalValue, setSignalValue] = useState(editingOrder?.signalValue || 0);
-  const [paymentMethod, setPaymentMethod] = useState(editingOrder?.paymentMethod || "");
+  const [payments, setPayments] = useState<OrderPayment[]>(() => {
+    if (editingOrder?.payments && editingOrder.payments.length > 0) {
+      return [...editingOrder.payments];
+    }
+    if (editingOrder?.signalValue && editingOrder.signalValue > 0) {
+      return [{
+        id: 'initial-signal',
+        date: new Date().toISOString().split('T')[0],
+        amount: editingOrder.signalValue,
+        method: editingOrder.paymentMethod || 'Pix',
+        notes: 'Sinal'
+      }];
+    }
+    return [];
+  });
+  const [currentPaymentMethod, setCurrentPaymentMethod] = useState("Pix");
+  const [currentPaymentAmount, setCurrentPaymentAmount] = useState<number | "">("");
+  const [currentBarterDescription, setCurrentBarterDescription] = useState("");
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const [observations, setObservations] = useState(
     editingOrder?.observations || "",
+  );
+  const [operationType, setOperationType] = useState<OrderOperationType>(
+    editingOrder?.operationType || "sale",
+  );
+  const [investmentPurpose, setInvestmentPurpose] = useState(
+    editingOrder?.investmentPurpose || "",
   );
   const [selectedAtelier, setSelectedAtelier] = useState<CompanyId>(
     (editingOrder?.companyId as CompanyId) || (companyId as CompanyId),
@@ -61,13 +84,50 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
     0,
   );
   const totalWithShipping = Math.max(0, subtotal - discount + shipping);
-  const remainingValue = Math.max(0, totalWithShipping - signalValue);
+
+  const totalPaidSum = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const barterPaidSum = payments
+    .filter((p) => p.method === "barter" || p.method?.toLowerCase() === "permuta")
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+  const cashPaidSum = Math.max(0, totalPaidSum - barterPaidSum);
+  const remainingValue = Math.max(0, totalWithShipping - totalPaidSum);
+
+  const handleAddPayment = () => {
+    setPaymentError(null);
+    const amountNum = typeof currentPaymentAmount === "number" ? currentPaymentAmount : parseFloat(currentPaymentAmount || "0");
+    if (!amountNum || isNaN(amountNum) || amountNum <= 0) {
+      setPaymentError("Informe um valor de pagamento válido maior que zero.");
+      return;
+    }
+    if (currentPaymentMethod === "barter" && !currentBarterDescription.trim()) {
+      setPaymentError("A descrição do que foi recebido é obrigatória para pagamentos em Permuta.");
+      return;
+    }
+
+    const newPay: OrderPayment = {
+      id: Date.now().toString(),
+      date: new Date().toISOString().split("T")[0],
+      amount: amountNum,
+      method: currentPaymentMethod,
+      description: currentPaymentMethod === "barter" ? currentBarterDescription.trim() : undefined,
+      notes: "",
+    };
+
+    setPayments((prev) => [...prev, newPay]);
+    setCurrentPaymentAmount("");
+    setCurrentBarterDescription("");
+  };
+
+  const handleRemovePayment = (id: string) => {
+    setPayments((prev) => prev.filter((p) => p.id !== id));
+  };
 
   const companiesList = [
     { id: "pallyra", name: "La Pallyra" },
     { id: "guennita", name: "com amor, Guennita" },
     { id: "mimada", name: "Mimada Sim" },
     { id: "tuttymimo", name: "Tutty Mimo" },
+    { id: "madrinha", name: "Madrinha" },
   ];
 
   useEffect(() => {
@@ -131,8 +191,41 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
                 }
               }
 
+              let finalPayments = [...payments];
+              const pendingAmount = typeof currentPaymentAmount === "number" ? currentPaymentAmount : parseFloat(currentPaymentAmount || "0");
+              if (pendingAmount && pendingAmount > 0) {
+                if (currentPaymentMethod === "barter" && !currentBarterDescription.trim()) {
+                  setFormError("A descrição do que foi recebido é obrigatória para o pagamento em Permuta.");
+                  isSavingRef.current = false;
+                  setLoading(false);
+                  return;
+                }
+                finalPayments.push({
+                  id: Date.now().toString(),
+                  date: new Date().toISOString().split("T")[0],
+                  amount: pendingAmount,
+                  method: currentPaymentMethod,
+                  description: currentPaymentMethod === "barter" ? currentBarterDescription.trim() : undefined,
+                  notes: "",
+                });
+              }
+
+              const calculatedTotalPaid = finalPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+              const isInvestment = operationType === "investment";
+              const primaryMethod = isInvestment && finalPayments.length === 0
+                ? "Investimento"
+                : (finalPayments.length === 1
+                    ? (finalPayments[0].method === "barter" ? "Permuta" : finalPayments[0].method)
+                    : (finalPayments.length > 1 ? "Múltiplos" : "Não informado"));
+
+              const calculatedPaymentStatus = isInvestment && finalPayments.length === 0
+                ? "paid"
+                : (calculatedTotalPaid >= totalWithShipping - 0.01 ? "paid" : (calculatedTotalPaid > 0 ? "partial" : "pending"));
+
               await onSave({
                 customerName: formData.get("customerName") as string,
+                operationType: operationType,
+                investmentPurpose: isInvestment ? (investmentPurpose.trim() || "Divulgação / Parceria") : undefined,
                 contact: contact,
                 customerCpfCnpj: cpfCnpj,
                 address: formData.get("address") as string,
@@ -143,9 +236,11 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
                 shippingCost: shipping,
                 discount: discount,
                 observations: observations,
-                hasSignal: signalValue > 0,
-                signalValue: signalValue,
-                paymentMethod: paymentMethod,
+                payments: finalPayments,
+                hasSignal: calculatedTotalPaid > 0,
+                signalValue: calculatedTotalPaid,
+                paymentMethod: primaryMethod,
+                paymentStatus: calculatedPaymentStatus,
                 items,
                 isWholesale: isWholesale,
                 isEmergency: formData.get("isEmergency") === "on",
@@ -180,6 +275,101 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
           }}
           className="space-y-6"
         >
+          {/* Tipo de Operação */}
+          <div className="space-y-1">
+            <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
+              Tipo de operação
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setOperationType("sale")}
+                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center ${
+                  operationType === "sale"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white border-gray-200 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                Venda
+              </button>
+              <button
+                type="button"
+                onClick={() => setOperationType("investment")}
+                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center ${
+                  operationType === "investment"
+                    ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                    : "bg-white border-gray-200 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                🎁 Investimento
+              </button>
+              <button
+                type="button"
+                onClick={() => setOperationType("barter")}
+                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center ${
+                  operationType === "barter"
+                    ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                    : "bg-white border-gray-200 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                Permuta
+              </button>
+            </div>
+            <p className="text-[10px] text-[#8E8E93] pl-2">
+              {operationType === "sale" && "Operação comercial normal de venda."}
+              {operationType === "investment" && "Investimento em divulgação, presentes estratégicos, parcerias ou ações promocionais (sem receita em caixa)."}
+              {operationType === "barter" && "Troca de produtos ou serviços por outro produto ou serviço."}
+            </p>
+
+            {/* Bloco Dedicado de Investimento */}
+            {operationType === "investment" && (
+              <div className="bg-purple-50/80 border border-purple-200 rounded-2xl p-4 space-y-2.5 animate-in fade-in">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                    🎁 Operação de Investimento
+                  </span>
+                  <span className="text-[10px] font-bold text-purple-700 bg-purple-100/90 px-2.5 py-0.5 rounded-full border border-purple-200">
+                    Não gera receita financeira
+                  </span>
+                </div>
+                <p className="text-[11px] text-purple-800 leading-relaxed">
+                  Produtos ou materiais utilizados estrategicamente para divulgação, presentes para influenciadores, parcerias ou ações promocionais. O estoque segue a baixa normal, registrando o valor comercial como referência.
+                </p>
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-[10px] uppercase font-bold text-purple-950 block tracking-wider">
+                    Finalidade do investimento <span className="text-pink-600">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={investmentPurpose}
+                    onChange={(e) => setInvestmentPurpose(e.target.value)}
+                    placeholder="Ex: Divulgação com influenciadora, Presente estratégico, Campanha promocional..."
+                    className="w-full bg-white border border-purple-300 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-purple-500 shadow-xs"
+                  />
+                  <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                    <span className="text-[10px] text-purple-700 font-medium">Exemplos:</span>
+                    {[
+                      "Divulgação com influenciadora",
+                      "Presente estratégico",
+                      "Campanha promocional",
+                      "Parceria comercial",
+                      "Material de demonstração"
+                    ].map((example) => (
+                      <button
+                        key={example}
+                        type="button"
+                        onClick={() => setInvestmentPurpose(example)}
+                        className="text-[10px] bg-white hover:bg-purple-100 text-purple-800 font-medium px-2 py-0.5 rounded-md border border-purple-200 transition-colors"
+                      >
+                        + {example}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
@@ -545,10 +735,16 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
 
             {/* Finance Fields */}
             <div className="bg-slate-50 p-6 rounded-2xl border border-gray-100 space-y-4">
-              <h4 className="text-[10px] font-medium uppercase text-slate-800 tracking-widest pl-1 font-mono">
-                Informações Financeiras do Pedido
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <h4 className="text-[10px] font-medium uppercase text-slate-800 tracking-widest pl-1 font-mono">
+                  Informações Financeiras & Pagamentos
+                </h4>
+                <span className="text-[11px] text-gray-400">
+                  Permite pagamentos múltiplos (ex: PIX + Permuta)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
                     Desconto (R$)
@@ -563,44 +759,160 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
                     className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900"
                   />
                 </div>
+              </div>
 
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
-                    Sinal Recebido (R$)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={signalValue || ""}
-                    onChange={(e) => setSignalValue(parseFloat(e.target.value) || 0)}
-                    placeholder="0,00"
-                    className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900"
-                  />
+              {/* Registro de Pagamentos */}
+              <div className="p-4 bg-white rounded-xl border border-gray-200 space-y-3">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                  Adicionar Pagamento / Quitação
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                  <div className="sm:col-span-5 space-y-1">
+                    <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-1">
+                      Forma de Pagamento
+                    </label>
+                    <select
+                      value={currentPaymentMethod}
+                      onChange={(e) => setCurrentPaymentMethod(e.target.value)}
+                      className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none text-slate-900"
+                    >
+                      <option value="Pix">Pix</option>
+                      <option value="Dinheiro">Dinheiro</option>
+                      <option value="Cartão de Débito">Cartão de Débito</option>
+                      <option value="Cartão de Crédito">Cartão de Crédito</option>
+                      <option value="Boleto">Boleto</option>
+                      <option value="Transferência">Transferência</option>
+                      <option value="barter">Permuta</option>
+                      <option value="Outro">Outro</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-4 space-y-1">
+                    <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-1">
+                      {currentPaymentMethod === "barter" ? "Valor da Permuta (R$)" : "Valor Pago (R$)"}
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={currentPaymentAmount}
+                      onChange={(e) => {
+                        setCurrentPaymentAmount(e.target.value === "" ? "" : parseFloat(e.target.value) || 0);
+                        setPaymentError(null);
+                      }}
+                      placeholder="0,00"
+                      className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold outline-none text-slate-900"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-3 flex items-end">
+                    <button
+                      type="button"
+                      onClick={handleAddPayment}
+                      className="w-full py-2.5 px-3 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1"
+                    >
+                      <Plus size={14} /> Adicionar
+                    </button>
+                  </div>
+
+                  {currentPaymentMethod === "barter" && (
+                    <div className="sm:col-span-12 space-y-1 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                      <label className="text-[11px] font-bold text-amber-900 block">
+                        Descrição do que foi recebido <span className="text-pink-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ex: Divulgação no Instagram, Ensaio fotográfico, Produto em troca..."
+                        value={currentBarterDescription}
+                        onChange={(e) => {
+                          setCurrentBarterDescription(e.target.value);
+                          setPaymentError(null);
+                        }}
+                        className="w-full bg-white border border-amber-300 rounded-lg px-3 py-2 text-xs font-medium text-gray-800 outline-none focus:border-amber-500"
+                        required
+                      />
+                      <p className="text-[10px] text-amber-700">
+                        Obrigatório: especifique o serviço ou produto recebido em contrapartida à permuta.
+                      </p>
+                    </div>
+                  )}
+
+                  {paymentError && (
+                    <div className="sm:col-span-12 text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
+                      {paymentError}
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-widest pl-2">
-                    Forma de Pagamento
-                  </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3 text-[11px] font-bold outline-none text-slate-900"
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="Pix">Pix</option>
-                    <option value="Dinheiro">Dinheiro</option>
-                    <option value="Cartão de Débito">Cartão de Débito</option>
-                    <option value="Cartão de Crédito">Cartão de Crédito</option>
-                    <option value="Boleto">Boleto</option>
-                    <option value="Transferência">Transferência</option>
-                    <option value="Outro">Outro</option>
-                  </select>
-                </div>
+                {payments.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-gray-100">
+                    <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider block">
+                      Pagamentos Registrados ({payments.length})
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {payments.map((p) => {
+                        const isBarter = p.method === "barter" || p.method?.toLowerCase() === "permuta";
+                        return (
+                          <div
+                            key={p.id}
+                            className={`flex items-start justify-between p-2.5 rounded-xl border ${
+                              isBarter
+                                ? "bg-amber-50/80 border-amber-200 text-amber-950"
+                                : "bg-slate-50 border-gray-200 text-slate-800"
+                            }`}
+                          >
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <span
+                                  className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                                    isBarter
+                                      ? "bg-amber-200 text-amber-900 border border-amber-300"
+                                      : "bg-slate-200 text-slate-700"
+                                  }`}
+                                >
+                                  {isBarter ? "Permuta" : p.method}
+                                </span>
+                                <span className="font-bold text-xs">
+                                  {formatCurrency(p.amount)}
+                                </span>
+                              </div>
+                              {p.description && (
+                                <p className="text-[11px] font-medium text-amber-900 pl-1 leading-snug">
+                                  {p.description}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePayment(p.id)}
+                              className="text-gray-400 hover:text-rose-500 p-1 rounded-lg hover:bg-rose-50 transition-colors"
+                              title="Remover pagamento"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Financial Summary Display */}
+              {operationType === "investment" && (
+                <div className="mt-4 p-3.5 rounded-xl border border-purple-200 bg-purple-50/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-purple-900">
+                  <div>
+                    <span className="font-bold text-sm block">🎁 Operação de Investimento</span>
+                    <span className="text-[11px] text-purple-800">
+                      Valor comercial de referência para controle. Não gera lançamento de receita financeira em caixa.
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-100 border border-purple-300 text-purple-800 px-2.5 py-1 rounded-lg shrink-0 text-center">
+                    Sem receita em caixa
+                  </span>
+                </div>
+              )}
+
               <div className="mt-4 p-4 rounded-xl border border-gray-200 bg-white grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
                 <div>
                   <p className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-wider">Subtotal</p>
@@ -615,15 +927,26 @@ export const OrderFormModal: React.FC<OrderFormModalProps> = ({
                   <p className="text-sm font-mono font-bold text-slate-800">{formatCurrency(shipping)}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase font-medium text-emerald-600 tracking-wider">Sinal Recebido (-)</p>
-                  <p className="text-sm font-mono font-bold text-emerald-600">-{formatCurrency(signalValue)}</p>
+                  <p className="text-[9px] uppercase font-medium text-emerald-600 tracking-wider">Total Quitado (-)</p>
+                  <p className="text-sm font-mono font-bold text-emerald-600">-{formatCurrency(totalPaidSum)}</p>
+                  {barterPaidSum > 0 && (
+                    <span className="text-[10px] text-amber-700 block font-semibold mt-0.5 leading-tight">
+                      (Em caixa: {formatCurrency(cashPaidSum)} | Permuta: {formatCurrency(barterPaidSum)})
+                    </span>
+                  )}
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-wider">Saldo Restante</p>
+                  <p className="text-[9px] uppercase font-medium text-[#8E8E93] tracking-wider">
+                    {operationType === "investment" ? "Saldo de Referência" : "Saldo Restante"}
+                  </p>
                   <p className="text-sm font-mono font-bold text-slate-800">{formatCurrency(remainingValue)}</p>
                 </div>
-                <div className="bg-black text-white p-2 rounded-lg text-center flex flex-col justify-center items-center col-span-2 md:col-span-1">
-                  <p className="text-[8px] uppercase font-medium text-slate-400 tracking-wider">Total Final</p>
+                <div className={`p-2 rounded-lg text-center flex flex-col justify-center items-center col-span-2 md:col-span-1 text-white ${
+                  operationType === "investment" ? "bg-purple-700" : "bg-black"
+                }`}>
+                  <p className="text-[8px] uppercase font-medium text-purple-200 tracking-wider">
+                    {operationType === "investment" ? "Valor Comercial Ref." : "Total Final"}
+                  </p>
                   <p className="text-sm font-mono font-bold text-white">{formatCurrency(totalWithShipping)}</p>
                 </div>
               </div>

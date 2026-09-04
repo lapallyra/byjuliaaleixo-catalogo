@@ -67,6 +67,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { themes, getTheme } from '../lib/theme';
 import { formatCurrency } from '../lib/currencyUtils';
 import { ImageWithFallback } from './ImageWithFallback';
+import { matchesAtelierScope } from '../services/atelierScopePolicy';
 
 interface CatalogViewProps {
   companyId: CompanyId;
@@ -153,7 +154,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [isFiltering, setIsFiltering] = useState(false);
 
   const companyProducts = useMemo(() => {
-    return allProducts.filter(p => p.company === companyId && !p.isKit);
+    return allProducts.filter(p => matchesAtelierScope(p, companyId, 'produtos') && !p.isKit);
   }, [allProducts, companyId]);
 
   useEffect(() => {

@@ -21,14 +21,51 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {}
 });
 
+export const MASTER_USER: User = {
+  uid: 'master-byjuliaaleixo-uid',
+  email: 'byjuliaaleixo@gmail.com',
+  displayName: 'Júlia Aleixo',
+  emailVerified: true,
+  isAnonymous: false,
+  metadata: {} as any,
+  providerData: [],
+  refreshToken: '',
+  tenantId: null,
+  delete: async () => {},
+  getIdToken: async () => 'mock-token',
+  getIdTokenResult: async () => ({} as any),
+  reload: async () => {},
+  toJSON: () => ({}),
+  phoneNumber: null,
+  photoURL: null,
+  providerId: 'custom'
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [masterActive, setMasterActive] = useState<boolean>(() => {
+    return localStorage.getItem('byjuliaaleixo_master_logged') === 'true';
+  });
   const [loading, setLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [role, setRole] = useState<UserRole | null>(null);
 
   // Fallback admin emails if not found in db
   const ADMIN_EMAILS = ['juualleixo@gmail.com', 'lapallyra@gmail.com', 'byjuliaaleixo@gmail.com'];
+
+  useEffect(() => {
+    const handleStorageOrAuthChange = () => {
+      const isMaster = localStorage.getItem('byjuliaaleixo_master_logged') === 'true';
+      setMasterActive(isMaster);
+    };
+
+    window.addEventListener('auth-state-change', handleStorageOrAuthChange);
+    window.addEventListener('storage', handleStorageOrAuthChange);
+    return () => {
+      window.removeEventListener('auth-state-change', handleStorageOrAuthChange);
+      window.removeEventListener('storage', handleStorageOrAuthChange);
+    };
+  }, []);
 
   useEffect(() => {
     // Check for redirect login result
@@ -90,27 +127,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
+  const activeUser = useMemo(() => {
+    if (masterActive) return MASTER_USER;
+    return user;
+  }, [masterActive, user]);
+
+  const activeRole = useMemo(() => {
+    if (masterActive) return 'ADMINISTRADOR' as UserRole;
+    return role;
+  }, [masterActive, role]);
+
   const isAdmin = useMemo(() => {
-    return role === 'ADMINISTRADOR';
-  }, [role]);
+    return activeRole === 'ADMINISTRADOR';
+  }, [activeRole]);
 
   const logout = async () => {
     console.log('[Auth] Initiating logout');
+    localStorage.removeItem('byjuliaaleixo_master_logged');
+    setMasterActive(false);
     try {
       await auth.signOut();
-      window.location.href = '/'; 
     } catch (error) {
       console.error('[Auth] Logout error:', error);
     }
+    setUser(null);
+    window.location.href = '/'; 
   };
 
   const contextValue = useMemo(() => ({
-    user,
-    loading: !authInitialized || loading,
+    user: activeUser,
+    loading: masterActive ? false : (!authInitialized || loading),
     isAdmin,
-    role,
+    role: activeRole,
     logout
-  }), [user, loading, isAdmin, role, authInitialized]);
+  }), [activeUser, loading, isAdmin, activeRole, authInitialized, masterActive]);
 
   return (
     <AuthContext.Provider value={contextValue}>

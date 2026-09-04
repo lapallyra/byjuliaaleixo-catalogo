@@ -131,6 +131,7 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
         dimensions: formData.dimensions,
         code,
         company: companyId,
+        companyId: companyId,
         type: formData.type,
         insumos: formData.insumos.map(i => ({ insumoId: i.insumoId, quantity: i.quantity }))
       });

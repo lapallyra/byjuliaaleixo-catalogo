@@ -57,6 +57,12 @@ export const OrderPrintA6Modal: React.FC<OrderPrintA6ModalProps> = ({ order, onC
 
           <div className="mb-4 text-[10px]">
             <p className="font-bold">Pedido: #{order.code}</p>
+            {order.operationType === "investment" && (
+              <p className="font-bold text-purple-700">Operação: 🎁 Investimento</p>
+            )}
+            {order.operationType === "investment" && order.investmentPurpose && (
+              <p className="italic">Finalidade: {order.investmentPurpose}</p>
+            )}
             <p>Data: {order.createdAt ? safeFormatISO(order.createdAt, "dd/MM/yyyy HH:mm") : "--"}</p>
             <p>Cliente: {order.customerName}</p>
           </div>
@@ -82,7 +88,7 @@ export const OrderPrintA6Modal: React.FC<OrderPrintA6ModalProps> = ({ order, onC
           {/* RESUMO */}
           <div className="mb-4 text-[10px] space-y-0.5">
              <div className="flex justify-between font-bold text-[11px]">
-               <span>TOTAL</span>
+               <span>{order.operationType === "investment" ? "VALOR REF. COMERCIAL" : "TOTAL"}</span>
                <span>{formatCurrency(Number(order.total) || 0)}</span>
              </div>
              <div className="flex justify-between">

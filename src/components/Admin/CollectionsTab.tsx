@@ -21,7 +21,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Product } from "../../types";
+import { Product, CompanyId } from "../../types";
 import {
   subscribeToCollections,
   saveCollection,
@@ -30,12 +30,16 @@ import {
 } from "../../services/firebaseService";
 import { ImageUpload } from "./ImageUpload";
 import { ImageWithFallback } from "../ImageWithFallback";
+import { matchesAtelierScope } from "../../services/atelierScopePolicy";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
-interface CollectionsTabProps { products: Product[]; }
+interface CollectionsTabProps {
+  products: Product[];
+  companyId?: CompanyId;
+}
 
-export const CollectionsTab: React.FC<CollectionsTabProps> = React.memo(({ products }) => {
+export const CollectionsTab: React.FC<CollectionsTabProps> = React.memo(({ products, companyId }) => {
   const orchestrator = useAdminOrchestrator();
   const [collections, setCollections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -256,9 +260,12 @@ export const CollectionsTab: React.FC<CollectionsTabProps> = React.memo(({ produ
 
   // Available products for selection (not already added)
   const availableProducts = products.filter((p) => {
+    if (companyId && !matchesAtelierScope(p, companyId, 'produtos')) {
+      return false;
+    }
     const isAlreadyInCollection = editingCollection?.productIds?.includes(p.id);
-    const matchesSearch = p.product_name.toLowerCase().includes(prodSearchQuery.toLowerCase()) ||
-      p.category.toLowerCase().includes(prodSearchQuery.toLowerCase());
+    const matchesSearch = (p.product_name || "").toLowerCase().includes(prodSearchQuery.toLowerCase()) ||
+      (p.category || "").toLowerCase().includes(prodSearchQuery.toLowerCase());
     return !isAlreadyInCollection && matchesSearch;
   });
 

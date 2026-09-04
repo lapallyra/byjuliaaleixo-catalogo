@@ -129,6 +129,7 @@ export const exportOrderReceiptPDF = (order: Order, settings: Partial<SiteSettin
     guennita: "com amor, Guennita",
     mimada: "Mimada Sim",
     tuttymimo: "Tutty Mimo",
+    madrinha: "Madrinha",
   };
   const studioName = settings.store_name || atelierNames[order.companyId] || "Ateliê";
 

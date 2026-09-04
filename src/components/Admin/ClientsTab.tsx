@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { CSVHandler } from "./CSVHandler";
 import { Customer, CompanyId, Order, CustomerContact, CustomerAddress, CustomerTag, CustomerNote } from "../../types";
+import { getAtelierDisplayName, matchesAtelierScope } from "../../services/atelierScopePolicy";
 import {
   deleteCustomer,
   updateCustomer,
@@ -386,6 +387,8 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
 
     return preprocessedCustomers
       .filter(({ customer: c, normName, normEmail, normCity, normCode, cleanContact, cleanCpfCnpj }) => {
+        if (!matchesAtelierScope(c, companyId, 'clientes')) return false;
+
         const matchesSearch =
           normName.includes(normSearch) ||
           normEmail.includes(normSearch) ||
@@ -812,7 +815,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId,
       data: { success: false, title: 'Erro' }
     });
     } finally {
@@ -1630,7 +1633,12 @@ Histórico de Compras:
                             className="bg-white p-4 rounded-xl border border-[#E5E5EA] shadow-3xs flex flex-col justify-between space-y-3"
                           >
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-[#cca062]">#{order.code || "---"}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-[#cca062]">#{order.code || "---"}</span>
+                                <span className="text-[9px] font-semibold text-[#8E8E93] bg-[#F2F2F7] px-2 py-0.5 rounded">
+                                  {getAtelierDisplayName(order.companyId || 'pallyra')}
+                                </span>
+                              </div>
                               <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-wider border ${
                                 order.status === "paid" || order.status === "fully_paid"
                                   ? "bg-emerald-50 text-emerald-700 border-emerald-200"

@@ -1,17 +1,19 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, X, Box, ShoppingBag, User, Gift, Package } from 'lucide-react';
-import { Order, Product, Insumo, Componente, Customer } from '../../types';
+import { Order, Product, Insumo, Componente, Customer, CompanyId } from '../../types';
+import { matchesAtelierScope } from '../../services/atelierScopePolicy';
 
 interface GlobalSearchProps {
   orders: Order[];
   products: Product[];
   customers: Customer[];
   insumos: Insumo[];
+  companyId: CompanyId;
   onResultClick: (type: string, id: string) => void;
 }
 
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({ 
-  orders, products, customers, insumos, onResultClick 
+  orders, products, customers, insumos, companyId, onResultClick 
 }) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -38,13 +40,18 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
     if (!query) return [];
     const q = query.toLowerCase();
     
-    const orderResults = orders.filter(o => o.code?.toLowerCase().includes(q) || o.customerName?.toLowerCase().includes(q)).map(o => ({ type: 'Pedido', id: o.id!, title: `Pedido ${o.code}`, info: o.customerName || 'Sem cliente', icon: ShoppingBag }));
-    const customerResults = customers.filter(c => c.name?.toLowerCase().includes(q) || c.contact?.toLowerCase().includes(q)).map(c => ({ type: 'Cliente', id: c.id!, title: c.name || 'Sem nome', info: c.contact || 'Sem telefone', icon: User }));
-    const productResults = products.filter(p => p.product_name?.toLowerCase().includes(q) || p.code?.toLowerCase().includes(q)).map(p => ({ type: 'Produto', id: p.id!, title: p.product_name || 'Sem nome', info: p.code || 'Sem código', icon: Box }));
-    const insumoResults = insumos.filter(i => i.name?.toLowerCase().includes(q)).map(i => ({ type: 'Componente', id: i.id!, title: i.name || 'Sem nome', info: 'Componente', icon: Package }));
+    const filteredOrders = orders.filter(o => matchesAtelierScope(o, companyId, 'pedidos') && (o.code?.toLowerCase().includes(q) || o.customerName?.toLowerCase().includes(q)));
+    const filteredCustomers = customers.filter(c => matchesAtelierScope(c, companyId, 'clientes') && (c.name?.toLowerCase().includes(q) || c.contact?.toLowerCase().includes(q)));
+    const filteredProducts = products.filter(p => matchesAtelierScope(p, companyId, 'produtos') && (p.product_name?.toLowerCase().includes(q) || p.code?.toLowerCase().includes(q)));
+    const filteredInsumos = insumos.filter(i => matchesAtelierScope(i, companyId, 'insumos') && (i.name?.toLowerCase().includes(q)));
+    
+    const orderResults = filteredOrders.map(o => ({ type: 'Pedido', id: o.id!, title: `Pedido ${o.code}`, info: o.customerName || 'Sem cliente', icon: ShoppingBag }));
+    const customerResults = filteredCustomers.map(c => ({ type: 'Cliente', id: c.id!, title: c.name || 'Sem nome', info: c.contact || 'Sem telefone', icon: User }));
+    const productResults = filteredProducts.map(p => ({ type: 'Produto', id: p.id!, title: p.product_name || 'Sem nome', info: p.code || 'Sem código', icon: Box }));
+    const insumoResults = filteredInsumos.map(i => ({ type: 'Componente', id: i.id!, title: i.name || 'Sem nome', info: 'Componente', icon: Package }));
 
     return [...orderResults, ...customerResults, ...productResults, ...insumoResults].slice(0, 5);
-  }, [query, orders, customers, products, insumos]);
+  }, [query, orders, customers, products, insumos, companyId]);
 
   return (
     <div className="relative">

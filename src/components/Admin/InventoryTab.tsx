@@ -36,6 +36,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import { Order, Product, Insumo, ProductionBatch, Componente, CompanyId } from "../../types";
+import { matchesAtelierScope } from "../../services/atelierScopePolicy";
 import { calculateOrderPriority, getPriorityStyles, PriorityResult } from "../../utils/priorityUtils";
 import { createProductionBatch, updateProductionBatch, subscribeToProductionBatches } from "../../services/firebaseService";
 import { suggestBatches, consolidateBatchInsumos } from "../../utils/batchUtils";
@@ -148,18 +149,20 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
     }
   }, [selectedItem]);
 
-  // Priority and score calculation on all orders
+  // Priority and score calculation on all orders (scoped by atelier)
   const ordersWithCalculatedPriority = useMemo(() => {
-    return orders.map((o) => {
-      const priorityInfo = calculateOrderPriority(o);
-      // Ensure compatible structure for assembly/conferencing stage mapping
-      let status: Order['status'] = o.status;
-      if (o.status === 'assembly') {
-        status = 'conferencing';
-      }
-      return { ...o, status, priorityInfo };
-    }) as (Order & { priorityInfo: PriorityResult })[];
-  }, [orders]);
+    return orders
+      .filter((o) => matchesAtelierScope(o, companyId, 'pedidos'))
+      .map((o) => {
+        const priorityInfo = calculateOrderPriority(o);
+        // Ensure compatible structure for assembly/conferencing stage mapping
+        let status: Order['status'] = o.status;
+        if (o.status === 'assembly') {
+          status = 'conferencing';
+        }
+        return { ...o, status, priorityInfo };
+      }) as (Order & { priorityInfo: PriorityResult })[];
+  }, [orders, companyId]);
 
   // Get list of components/insumos consumed by a given order
   const getOrderComponents = (order: Order) => {
@@ -505,7 +508,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
 
     const newBatch: Omit<ProductionBatch, 'id'> = {
       code,
-      companyId: batchOrders[0].companyId,
+      companyId: batchOrders[0]?.companyId || companyId,
       orderIds,
       productIds: pIds,
       productNames: pNames,

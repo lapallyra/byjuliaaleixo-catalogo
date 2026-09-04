@@ -51,12 +51,13 @@ export const AuditTimelineTab: React.FC<{ companyId: CompanyId, auditLogs: Audit
     }, {
       module: moduleFilter,
       action: actionFilter,
+      companyId: companyId,
       dateStart,
       dateEnd
     });
 
     return () => unsubscribe();
-  }, [moduleFilter, actionFilter, dateStart, dateEnd]);
+  }, [moduleFilter, actionFilter, dateStart, dateEnd, companyId]);
 
   const filteredLogs = useMemo(() => {
     if (!searchTerm) return logs;
