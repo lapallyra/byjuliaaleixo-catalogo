@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Search, Plus, X, Calendar, Loader2, Save, User, Minus, Trash2, ShoppingCart, Truck } from "lucide-react";
+import { Search, Plus, X, Calendar, Loader2, Save, User, Minus, Trash2, ShoppingCart, Truck, ArrowLeft } from "lucide-react";
 import { Product, Customer, Order, CompanyId, CartItem, OrderOperationType, OrderPayment } from "../../types";
 import { addCustomer } from "../../services/firebaseService";
 import { safeFormatISO, addBusinessDays } from "../../lib/dateUtils";
@@ -9,10 +9,11 @@ import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 interface OrderWizardModalProps {
   products: Product[];
   customers: Customer[];
-  companyId: CompanyId;
+  companyId?: CompanyId;
   onClose: () => void;
   onSave: (orderData: Partial<Order>) => Promise<any>;
   initialCustomerId?: string;
+  isPage?: boolean;
 }
 
 export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
@@ -22,8 +23,10 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   onClose,
   onSave,
   initialCustomerId,
+  isPage = false,
 }) => {
   const orchestrator = useAdminOrchestrator();
+  const [selectedAtelier, setSelectedAtelier] = useState<CompanyId>(companyId || "pallyra");
   // --- Form State ---
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(initialCustomerId || null);
   const [customerSearch, setCustomerSearch] = useState("");
@@ -38,6 +41,15 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
   const [customOrigins, setCustomOrigins] = useState<string[]>([]);
   const [isAddingOrigin, setIsAddingOrigin] = useState(false);
   const [newOrigin, setNewOrigin] = useState("");
+
+  const handleAddOrigin = () => {
+    if (newOrigin.trim() && !customOrigins.includes(newOrigin.trim())) {
+      setCustomOrigins(prev => [...prev, newOrigin.trim()]);
+      setOrigin(newOrigin.trim());
+      setNewOrigin("");
+      setIsAddingOrigin(false);
+    }
+  };
 
   const [productionDate, setProductionDate] = useState("");
   const [deliveryDate, setDeliveryDate] = useState(() => addBusinessDays(new Date(), 10));
@@ -154,7 +166,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
     try {
       const customerId = await addCustomer({
         ...newCustomer,
-        companyId,
+        companyId: selectedAtelier,
         status: "Ativo",
         totalSpent: 0,
         ordersCount: 0,
@@ -286,7 +298,7 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
         : (calculatedTotalPaid >= total - 0.01 ? 'paid' : (calculatedTotalPaid > 0 ? 'partial' : 'pending'));
 
       const orderData: Partial<Order> = {
-        companyId,
+        companyId: selectedAtelier,
         operationType,
         investmentPurpose: isInvestment ? (investmentPurpose.trim() || "Divulgação / Parceria") : undefined,
         customerName: selectedCustomer?.name || "",
@@ -334,6 +346,585 @@ export const OrderWizardModal: React.FC<OrderWizardModalProps> = ({
       setIsSaving(false);
     }
   };
+
+  if (isPage) {
+    return (
+      <div className="w-full max-w-[1500px] mx-auto pb-12 animate-in fade-in duration-200 px-2 sm:px-3">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm flex flex-col overflow-hidden relative">
+          {/* Header */}
+          <div className="bg-white border-b border-slate-100 p-4 md:p-6 shrink-0 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-all border border-slate-200 flex items-center gap-1.5 text-xs font-bold"
+                title="Voltar para Pedidos"
+              >
+                <ArrowLeft size={16} />
+                <span>Voltar</span>
+              </button>
+              <div>
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-pink-500">
+                  <span>Pedidos</span>
+                  <span>/</span>
+                  <span>Novo Pedido</span>
+                </div>
+                <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">
+                  Novo Pedido
+                </h2>
+                <p className="text-xs font-medium text-slate-500 mt-0.5">
+                  Cadastre um novo pedido para iniciar o fluxo de produção.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all border border-slate-200"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Content */}
+          <form id="new-order-form" onSubmit={handleSave} className="p-4 md:p-8 space-y-6">
+            {/* Section: Dados do Pedido */}
+            <div className="bg-slate-50/70 border border-slate-200/80 rounded-[20px] p-5 md:p-6 shadow-xs">
+              <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest block border-b border-slate-200/80 pb-2 mb-6">
+                Dados do Pedido
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Cliente */}
+                <div className="space-y-1 relative" ref={dropdownRef}>
+                  <label className="text-[11px] font-bold text-slate-600 block">
+                    Cliente <span className="text-pink-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                      <input
+                        type="text"
+                        placeholder="Digite para buscar..."
+                        className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500/20 transition-all text-slate-800 font-medium"
+                        value={customerSearch}
+                        onChange={(e) => {
+                          setCustomerSearch(e.target.value);
+                          setSelectedCustomerId(null);
+                          setIsDropdownOpen(true);
+                        }}
+                        onFocus={() => setIsDropdownOpen(true)}
+                        required={!selectedCustomerId}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsNewCustomerModalOpen(true)}
+                      className="p-3 bg-pink-50 hover:bg-pink-100 text-pink-600 rounded-xl border border-pink-200 transition-all shadow-xs"
+                      title="Cadastrar Novo Cliente"
+                    >
+                      <Plus size={18} />
+                    </button>
+                  </div>
+
+                  {/* Dropdown Results */}
+                  {isDropdownOpen && customerSearch.trim() && (
+                    <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 max-h-60 overflow-y-auto">
+                      {filteredCustomers.length > 0 ? (
+                        filteredCustomers.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCustomerId(c.id);
+                              setCustomerSearch(c.name);
+                              setIsDropdownOpen(false);
+                            }}
+                            className="w-full px-4 py-3 text-left hover:bg-pink-50/50 flex flex-col gap-0.5 border-b border-slate-50 last:border-0"
+                          >
+                            <span className="font-bold text-xs text-slate-800">{c.name}</span>
+                            <span className="text-[10px] text-slate-400">{c.contact || c.email || "Sem contato"}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center">
+                          <p className="text-xs text-slate-500 mb-2">Nenhum cliente encontrado.</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsDropdownOpen(false);
+                              setNewCustomer((prev) => ({ ...prev, name: customerSearch }));
+                              setIsNewCustomerModalOpen(true);
+                            }}
+                            className="text-xs font-bold text-pink-600 hover:underline"
+                          >
+                            + Cadastrar "{customerSearch}"
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {selectedCustomerId && (
+                    <p className="text-[10px] text-emerald-600 font-bold mt-1">✓ Cliente selecionado</p>
+                  )}
+                </div>
+
+                {/* Data do Pedido */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 block">Data do Pedido</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                      type="date"
+                      className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:border-pink-500 transition-all text-slate-800 font-medium"
+                      value={orderDate}
+                      onChange={(e) => setOrderDate(e.target.value)}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400">Altere apenas se o pedido for retroativo.</p>
+                </div>
+
+                {/* Status Inicial */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 block">
+                    Status Inicial <span className="text-pink-500">*</span>
+                  </label>
+                  <select
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-pink-500 transition-all text-slate-800 font-medium"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as any)}
+                  >
+                    <option value="quote">Orçamento</option>
+                    <option value="pending">Aguardando Pagamento</option>
+                    <option value="paid">Confirmado / Pago</option>
+                    <option value="production">Em Produção</option>
+                  </select>
+                </div>
+
+                {/* Origem do Pedido */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 block">
+                    Origem do Pedido <span className="text-pink-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-pink-500 transition-all text-slate-800 font-medium"
+                      value={origin}
+                      onChange={(e) => setOrigin(e.target.value)}
+                    >
+                      <option value="Vitrine">🟠 Vitrine</option>
+                      <option value="WhatsApp">🟢 WhatsApp</option>
+                      <option value="Instagram">🟣 Instagram</option>
+                      <option value="Presencial">🔵 Presencial / Loja</option>
+                      <option value="Indicação">🟡 Indicação</option>
+                      {customOrigins.map((co) => (
+                        <option key={co} value={co}>
+                          ⚪ {co}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingOrigin(true)}
+                      className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all"
+                      title="Adicionar Origem Personalizada"
+                    >
+                      <Plus size={18} />
+                    </button>
+                  </div>
+                  {isAddingOrigin && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <input
+                        type="text"
+                        placeholder="Nome da nova origem..."
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs outline-none focus:border-pink-500 text-slate-800"
+                        value={newOrigin}
+                        onChange={(e) => setNewOrigin(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddOrigin}
+                        className="px-3 py-1.5 bg-pink-500 text-white rounded-xl text-xs font-bold"
+                      >
+                        Salvar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingOrigin(false)}
+                        className="p-1.5 text-slate-400 hover:text-slate-600 text-xs"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Ateliê / Marca do Pedido */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 block">
+                    Ateliê Responsável <span className="text-pink-500">*</span>
+                  </label>
+                  <select
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-pink-500 transition-all text-slate-800 font-medium"
+                    value={selectedAtelier}
+                    onChange={(e) => setSelectedAtelier(e.target.value as CompanyId)}
+                  >
+                    <option value="pallyra">Pallyra</option>
+                    <option value="guennita">Guennita</option>
+                    <option value="mimada">Mimada</option>
+                    <option value="tuttymimo">Tuttymimo</option>
+                    <option value="madrinha">Madrinha</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Tipo de Operação */}
+              <div className="mt-6 pt-6 border-t border-slate-200/80">
+                <label className="text-[11px] font-bold text-slate-600 block mb-3">
+                  Tipo de Operação <span className="text-pink-500">*</span>
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { id: "sale", label: "Venda", desc: "Operação comercial normal de venda." },
+                    { id: "investment", label: "🎁 Investimento", desc: "Brindes, parcerias, marketing." },
+                    { id: "permuta", label: "Permuta", desc: "Troca de produtos ou serviços." },
+                  ].map((op) => (
+                    <button
+                      key={op.id}
+                      type="button"
+                      onClick={() => setOperationType(op.id as any)}
+                      className={`p-3.5 rounded-xl border text-left transition-all ${
+                        operationType === op.id
+                          ? "bg-slate-900 border-slate-900 text-white shadow-sm"
+                          : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="font-bold text-xs">{op.label}</div>
+                      <div className={`text-[10px] mt-0.5 line-clamp-1 ${operationType === op.id ? "text-slate-300" : "text-slate-400"}`}>
+                        {op.desc}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {operationType === "investment" && (
+                  <div className="mt-4 space-y-1 animate-in fade-in duration-200">
+                    <label className="text-[11px] font-bold text-slate-600 block">
+                      Finalidade do Investimento <span className="text-pink-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Parceria com influencer, degustação para noiva..."
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-pink-500 text-slate-800"
+                      value={investmentPurpose}
+                      onChange={(e) => setInvestmentPurpose(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Responsável */}
+              <div className="mt-6 space-y-1">
+                <label className="text-[11px] font-bold text-slate-600 block">Responsável</label>
+                <div className="relative">
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Nome do responsável..."
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs outline-none focus:border-pink-500 text-slate-800 font-medium"
+                    value={responsible}
+                    onChange={(e) => setResponsible(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Personalização */}
+            <div className="bg-slate-50/70 border border-slate-200/80 rounded-[20px] p-5 md:p-6 shadow-xs">
+              <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest block border-b border-slate-200/80 pb-2 mb-6">
+                Personalização
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 block">Nome para Personalização</label>
+                  <input
+                    type="text"
+                    placeholder="Nome do aniversariante, casal, etc."
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-pink-500 text-slate-800"
+                    value={customizationName}
+                    onChange={(e) => setCustomizationName(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 block">Tema</label>
+                  <input
+                    type="text"
+                    placeholder="Tema da festa ou evento..."
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-pink-500 text-slate-800"
+                    value={customizationTheme}
+                    onChange={(e) => setCustomizationTheme(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 block">Cores Principais</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Rosa seco, dourado e branco"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-pink-500 text-slate-800"
+                    value={customizationColors}
+                    onChange={(e) => setCustomizationColors(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 block">Data do Evento</label>
+                  <input
+                    type="date"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-pink-500 text-slate-800"
+                    value={customizationEventDate}
+                    onChange={(e) => setCustomizationEventDate(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-1">
+                <label className="text-[11px] font-bold text-slate-600 block">Texto / Frase da Arte</label>
+                <textarea
+                  rows={2}
+                  placeholder="Frase ou texto que irá na arte..."
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs outline-none focus:border-pink-500 text-slate-800"
+                  value={customizationArtText}
+                  onChange={(e) => setCustomizationArtText(e.target.value)}
+                />
+              </div>
+
+              <div className="mt-4 space-y-1">
+                <label className="text-[11px] font-bold text-slate-600 block">Observações Gerais</label>
+                <textarea
+                  rows={2}
+                  placeholder="Informações adicionais relevantes para a produção..."
+                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs outline-none focus:border-pink-500 text-slate-800"
+                  value={customizationNotes}
+                  onChange={(e) => setCustomizationNotes(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Section: Produtos e Itens */}
+            <div className="bg-slate-50/70 border border-slate-200/80 rounded-[20px] p-5 md:p-6 shadow-xs">
+              <div className="flex items-center justify-between border-b border-slate-200/80 pb-2 mb-6">
+                <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest block">
+                  Produtos / Itens do Pedido
+                </h3>
+                <span className="text-xs font-bold text-pink-600">
+                  Total Itens: {items.reduce((acc, i) => acc + i.quantity, 0)}
+                </span>
+              </div>
+
+              {/* Product selector */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {products.filter(p => !selectedAtelier || p.companyId === selectedAtelier).slice(0, 8).map((product) => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => handleAddProduct(product)}
+                    className="p-3 bg-white border border-slate-200 hover:border-pink-400 rounded-xl text-left flex items-center justify-between group transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center text-pink-500 font-bold text-xs shrink-0">
+                        📦
+                      </div>
+                      <div>
+                        <p className="font-bold text-xs text-slate-800 group-hover:text-pink-600 transition-colors">
+                          {product.product_name}
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                          R$ {((product.current_price || product.retail_price || product.price || 0) as number).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                    <Plus size={16} className="text-slate-400 group-hover:text-pink-500" />
+                  </button>
+                ))}
+              </div>
+
+              {/* Cart Items List */}
+              {items.length > 0 ? (
+                <div className="space-y-3">
+                  {items.map((item, idx) => {
+                    const price = item.current_price || item.retail_price || item.price || 0;
+                    return (
+                      <div
+                        key={`${item.id}-${idx}`}
+                        className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between gap-4"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-xs text-slate-800 truncate">{item.product_name}</p>
+                          <p className="text-[10px] text-slate-400">
+                            Unitário: R$ {price.toFixed(2)}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateItemQuantity(item.id, -1)}
+                            className="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center justify-center text-slate-600"
+                          >
+                            <Minus size={12} />
+                          </button>
+                          <span className="w-8 text-center font-bold text-xs text-slate-800">{item.quantity}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateItemQuantity(item.id, 1)}
+                            className="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center justify-center text-slate-600"
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </div>
+
+                        <div className="w-24 text-right">
+                          <p className="font-bold text-xs text-slate-900">
+                            R$ {(price * item.quantity).toFixed(2)}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem(item.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-8 text-center bg-white rounded-xl border border-dashed border-slate-200">
+                  <ShoppingCart size={28} className="mx-auto text-slate-300 mb-2" />
+                  <p className="text-xs text-slate-500">Nenhum produto adicionado ao pedido.</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Selecione os produtos acima para compor o pedido.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Section: Valores e Totais */}
+            <div className="bg-slate-50/70 border border-slate-200/80 rounded-[20px] p-5 md:p-6 shadow-xs">
+              <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest block border-b border-slate-200/80 pb-2 mb-6">
+                Valores e Pagamento
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 block">Frete (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0,00"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-pink-500 text-slate-800 font-bold"
+                    value={shippingCost || ""}
+                    onChange={(e) => setShippingCost(parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 block">Desconto (R$)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0,00"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-pink-500 text-slate-800 font-bold"
+                    value={discount || ""}
+                    onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+
+                <div className="p-4 bg-white rounded-xl border border-slate-200 flex flex-col justify-center">
+                  <span className="text-[10px] uppercase font-bold text-slate-400">Total do Pedido</span>
+                  <span className="text-xl font-black text-slate-900 mt-1">
+                    R$ {finalOrderTotal.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          {/* Footer */}
+          <div className="bg-white border-t border-slate-100 p-4 md:p-6 shrink-0 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-xs"
+            >
+              Cancelar
+            </button>
+            <button
+              form="new-order-form"
+              type="submit"
+              disabled={isSaving}
+              className="flex items-center gap-2 px-8 py-3 bg-gradient-to-b from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md transition-all disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              Salvar Pedido
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Add Customer Modal */}
+        {isNewCustomerModalOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/35 backdrop-blur-sm animate-in fade-in duration-150">
+             <form onSubmit={handleCreateCustomer} className="bg-white border border-slate-200 w-full max-w-md rounded-[24px] p-6 shadow-2xl animate-in zoom-in-95 duration-150">
+                <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-2">
+                  <h3 className="text-base font-bold text-slate-800">Novo Cliente Rápido</h3>
+                  <button type="button" onClick={() => setIsNewCustomerModalOpen(false)} className="text-gray-400 hover:text-slate-600">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                   <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-600 block">Nome *</label>
+                      <input 
+                        required
+                        type="text"
+                        value={newCustomer.name}
+                        onChange={e => setNewCustomer({...newCustomer, name: e.target.value})}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:bg-white focus:border-pink-500 transition-all text-slate-800"
+                      />
+                   </div>
+                   <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-600 block">Telefone (Opcional)</label>
+                      <input 
+                        type="text"
+                        value={newCustomer.contact}
+                        onChange={e => setNewCustomer({...newCustomer, contact: e.target.value})}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:bg-white focus:border-pink-500 transition-all text-slate-800"
+                      />
+                   </div>
+                </div>
+
+                <div className="mt-6 flex justify-end gap-3">
+                   <button type="button" onClick={() => setIsNewCustomerModalOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors">
+                     Cancelar
+                   </button>
+                   <button type="submit" disabled={isRegisteringCustomer} className="px-6 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-xl text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2">
+                     {isRegisteringCustomer && <Loader2 size={14} className="animate-spin" />}
+                     Salvar
+                   </button>
+                </div>
+             </form>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/35 backdrop-blur-sm">

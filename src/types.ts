@@ -107,6 +107,7 @@ export interface Componente {
   id: string;
   code?: string;
   name: string;
+  companyId?: CompanyId;
   category: string;
   supplier?: string;
   brand?: string;
@@ -365,7 +366,7 @@ export interface Customer {
   ordersCount: number;
   pendingBalance?: number;
   createdAt: any;
-  companyId: CompanyId;
+  companyId?: CompanyId;
   status?: 'Ativo' | 'Inativo' | 'Cadastro Incompleto';
   notes?: string; // Legacy field
   avatarUrl?: string;
@@ -724,7 +725,7 @@ export interface Supplier {
   address?: string;
   rating?: number;
   tags?: string[];
-  companyId: CompanyId;
+  companyId?: CompanyId;
   createdAt: any;
 }
 
@@ -740,7 +741,7 @@ export interface PurchaseItem {
 export interface PurchaseOrder {
   id: string;
   code: string;
-  companyId: CompanyId;
+  companyId?: CompanyId | 'shared' | 'all';
   supplierId: string;
   supplierName: string;
   items: PurchaseItem[];

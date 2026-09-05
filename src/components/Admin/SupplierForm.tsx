@@ -7,7 +7,7 @@ import { collection, addDoc, updateDoc, doc, serverTimestamp } from "firebase/fi
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface SupplierFormProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
   editingSupplier?: Supplier | null;
   onClose: () => void;
 }
@@ -47,10 +47,10 @@ export const SupplierForm: React.FC<SupplierFormProps> = ({
 
     setLoading(true);
     try {
-      const data = {
+      const data: any = {
         ...formData,
         tags: formData.tags.split(",").map(t => t.trim()).filter(t => t),
-        companyId,
+        ...(companyId ? { companyId } : {}),
         updatedAt: serverTimestamp()
       };
 

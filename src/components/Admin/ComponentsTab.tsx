@@ -45,11 +45,12 @@ import {
 } from "firebase/firestore";
 
 interface ComponentsTabProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
   products: Product[];
   componentes: Componente[];
   onSaveComponente: (componente: Partial<Componente>) => Promise<void>;
   onDeleteComponente: (id: string) => Promise<void>;
+  onNavigateNewItem?: () => void;
 }
 
 export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
@@ -58,9 +59,11 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
   componentes,
   onSaveComponente,
   onDeleteComponente,
+  onNavigateNewItem,
 }) => {
   const orchestrator = useAdminOrchestrator();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterAtelier, setFilterAtelier] = useState<string>(companyId || "all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingComponente, setEditingComponente] = useState<Partial<Componente> | null>(null);
   
@@ -144,7 +147,7 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
   // Filter components
   const filtered = useMemo(() => {
     return componentes.filter((c) => {
-      if (!matchesAtelierScope(c, companyId, 'insumos')) return false;
+      if (filterAtelier !== 'all' && !matchesAtelierScope(c, filterAtelier as any, 'insumos')) return false;
 
       // Search
       const matchesSearch =
@@ -175,7 +178,7 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
           return true; // show all (including inactive)
       }
     });
-  }, [componentes, searchTerm, filterType]);
+  }, [componentes, searchTerm, filterType, filterAtelier]);
 
   // Handle Quick Entry or Exit
   const handleQuickActionSubmit = async (e: React.FormEvent) => {
@@ -396,21 +399,42 @@ export const ComponentsTab: React.FC<ComponentsTabProps> = React.memo(({
       {/* SEARCH, ADD & QUICK FILTERS */}
       <div className="bg-white/75 backdrop-blur-md p-6 rounded-[22px] border border-white/80 shadow-sm flex flex-col gap-5">
         
-        {/* Top bar with search input and Novo Item button */}
+        {/* Top bar with search input, atelier filter and Novo Item button */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-lg">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input
-              type="text"
-              placeholder="Pesquisar por nome, código interno ou categoria..."
-              className="w-full pl-12 pr-4 py-3.5 bg-pink-50/10 border border-pink-100/20 rounded-2xl text-xs font-semibold focus:border-pink-300 focus:bg-white focus:ring-4 focus:ring-pink-300/10 outline-none transition-all text-[#1C1C1E]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+            <div className="relative flex-1 max-w-lg">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Pesquisar por nome, código interno ou categoria..."
+                className="w-full pl-12 pr-4 py-3.5 bg-pink-50/10 border border-pink-100/20 rounded-2xl text-xs font-semibold focus:border-pink-300 focus:bg-white focus:ring-4 focus:ring-pink-300/10 outline-none transition-all text-[#1C1C1E]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <select
+              value={filterAtelier}
+              onChange={(e) => setFilterAtelier(e.target.value)}
+              className="px-4 py-3.5 bg-white border border-pink-100/40 rounded-2xl text-xs font-bold text-[#1C1C1E] outline-none cursor-pointer shadow-xs"
+            >
+              <option value="all">Ateliê: Todos (Consolidado)</option>
+              <option value="pallyra">Pallyra</option>
+              <option value="guennita">Guennita</option>
+              <option value="mimada">Mimada</option>
+              <option value="tuttymimo">Tuttymimo</option>
+              <option value="madrinha">Madrinha</option>
+            </select>
           </div>
           
           <button
-            onClick={() => { setEditingComponente({}); setIsModalOpen(true); }}
+            onClick={() => { 
+              if (onNavigateNewItem) {
+                onNavigateNewItem();
+              } else {
+                setEditingComponente({}); 
+                setIsModalOpen(true); 
+              }
+            }}
             className="flex items-center justify-center gap-2 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white px-6 py-4 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all active:scale-[0.98] shadow-md shadow-pink-500/10 shrink-0"
           >
             <Plus size={16} /> Novo Item de Estoque

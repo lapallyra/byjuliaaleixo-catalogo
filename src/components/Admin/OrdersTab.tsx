@@ -16,12 +16,13 @@ interface OrdersTabProps {
   products: Product[];
   insumos: Insumo[];
   customers: Customer[];
-  companyId: CompanyId;
+  companyId?: CompanyId;
   onUpdateStatus: (id: string, status: Order["status"]) => void;
   onSaveOrder: (order: Partial<Order>) => Promise<string | void>;
   onDeleteOrder: (id: string) => void;
   initialOrderId?: string | null;
   initialCustomerId?: string | null;
+  onNavigateNewOrder?: () => void;
 }
 
 export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
@@ -35,6 +36,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
   onDeleteOrder,
   initialOrderId,
   initialCustomerId,
+  onNavigateNewOrder,
 }) => {
   const orchestrator = useAdminOrchestrator();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
@@ -48,6 +50,7 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
   const [sortOption, setSortOption] = useState("newest");
   const [filterResponsible, setFilterResponsible] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
+  const [filterAtelier, setFilterAtelier] = useState<string>("all");
   
   // Modal States
   const [isWizardOpen, setIsWizardOpen] = useState(!!initialCustomerId);
@@ -57,7 +60,10 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
   const [receiptType, setReceiptType] = useState<"coupon" | "receipt">("coupon");
   
   useEffect(() => {
-    const handleNewOrder = () => setIsWizardOpen(true);
+    const handleNewOrder = () => {
+      if (onNavigateNewOrder) onNavigateNewOrder();
+      else setIsWizardOpen(true);
+    };
     const handleClose = () => {
         setIsWizardOpen(false);
         setIsFormModalOpen(false);
@@ -161,6 +167,11 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
       if (filterPriority !== "all") {
         const prio = (o.priority || o.productionPriority || "normal").toLowerCase().trim();
         if (prio !== filterPriority.toLowerCase().trim()) return false;
+      }
+
+      // Filter by Atelier (optional local filter)
+      if (filterAtelier !== "all" && o.companyId !== filterAtelier) {
+        return false;
       }
 
       const time = o.createdAt?.toMillis?.() || (o.createdAt as any)?.seconds * 1000 || new Date(o.createdAt).getTime() || Date.now();
@@ -354,19 +365,19 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
 
   // Otherwise, render the main Orders operational center
   return (
-    <div className="flex flex-col h-full bg-[#F5F5F7] animate-in fade-in duration-300 relative z-0 overflow-hidden">
+    <div className="w-full flex flex-col space-y-3 sm:space-y-4 animate-in fade-in duration-300 relative z-0">
       
       {/* Top Header & Stats */}
-      <div className="px-6 pt-6 pb-6 glass-3d border-b border-[#E5E5EA]/50 z-10 shrink-0 mx-6 mt-6 rounded-[2.5rem] shadow-3d-soft">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-              <input type="checkbox" checked={selectedOrderIds.length === filteredOrders.length && filteredOrders.length > 0} onChange={toggleSelectAll} className="w-4 h-4 rounded border-gray-300" />
+      <div className="p-4 sm:p-5 bg-white border border-slate-200/80 z-10 shrink-0 rounded-2xl shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+          <div className="flex items-center gap-3">
+              <input type="checkbox" checked={selectedOrderIds.length === filteredOrders.length && filteredOrders.length > 0} onChange={toggleSelectAll} className="w-4 h-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500 cursor-pointer" />
               <div>
-                <h1 className="text-2xl font-black text-[#1C1C1E] tracking-tight uppercase">Centro de Pedidos</h1>
-                <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest mt-1">Gestão Completa do Fluxo Comercial</p>
+                <h1 className="text-xl sm:text-2xl font-black text-[#1C1C1E] tracking-tight uppercase">Centro de Pedidos</h1>
+                <p className="text-[10px] font-bold text-[#8E8E93] uppercase tracking-widest mt-0.5">Gestão Completa do Fluxo Comercial</p>
               </div>
             </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="flex flex-col">
               <button
                 onClick={() => setIsScanning(!isScanning)}
@@ -404,16 +415,19 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
                 );
                 exportActiveOrdersVerificationPDF(active, companyId);
               }}
-              className="clean-3d-button w-full md:w-auto bg-[#cca062] hover:bg-[#b28950] text-white flex items-center justify-center gap-2"
+              className="clean-3d-button w-full sm:w-auto bg-[#cca062] hover:bg-[#b28950] text-white flex items-center justify-center gap-2"
               title="Gerar PDF de Conferência de Pedidos Ativos"
             >
-              <Printer size={18} /> Conferência de Ativos
+              <Printer size={16} /> Conferência de Ativos
             </button>
             <button
-              onClick={() => setIsWizardOpen(true)}
-              className="clean-3d-button w-full md:w-auto"
+              onClick={() => {
+                if (onNavigateNewOrder) onNavigateNewOrder();
+                else setIsWizardOpen(true);
+              }}
+              className="clean-3d-button w-full sm:w-auto"
             >
-              <Plus size={18} strokeWidth={3} /> Novo Pedido
+              <Plus size={16} strokeWidth={3} /> Novo Pedido
             </button>
           </div>
         </div>
@@ -426,32 +440,101 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
         )}
 
         {/* Top Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="clean-3d-card p-6 flex flex-col justify-between border-slate-100 transition-all group">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 transition-colors">Pedidos Hoje</span>
-            <span className="text-3xl font-black text-slate-900 tracking-tighter">{todayCount}</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="clean-3d-card p-3.5 sm:p-4 flex flex-col justify-between border-slate-100 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 transition-colors">Pedidos Hoje</span>
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter">{todayCount}</span>
           </div>
-          <div className="clean-3d-card p-6 flex flex-col justify-between border-slate-100 transition-all group">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 transition-colors">Em Produção</span>
-            <span className="text-3xl font-black text-slate-900 tracking-tighter">{productionCount}</span>
+          <div className="clean-3d-card p-3.5 sm:p-4 flex flex-col justify-between border-slate-100 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 transition-colors">Em Produção</span>
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter">{productionCount}</span>
           </div>
-          <div className="clean-3d-card p-6 flex flex-col justify-between border-slate-100 transition-all group">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 transition-colors">Aguardando Pgto</span>
-            <span className="text-3xl font-black text-slate-900 tracking-tighter">{pendingPaymentCount}</span>
+          <div className="clean-3d-card p-3.5 sm:p-4 flex flex-col justify-between border-slate-100 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 transition-colors">Aguardando Pgto</span>
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter">{pendingPaymentCount}</span>
           </div>
-          <div className="clean-3d-card p-6 flex flex-col justify-between border-slate-100 transition-all group">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 transition-colors">Enviados</span>
-            <span className="text-3xl font-black text-slate-900 tracking-tighter">{shippedCount}</span>
+          <div className="clean-3d-card p-3.5 sm:p-4 flex flex-col justify-between border-slate-100 transition-all group">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 transition-colors">Enviados</span>
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tighter">{shippedCount}</span>
           </div>
         </div>
       </div>
 
-      {/* Filters and Search Bar */}
-      <div className="glass-3d border-b border-[#E5E5EA]/30 px-6 py-4 flex flex-col md:flex-row gap-6 items-center justify-between z-10 shrink-0 mx-6 mt-6 rounded-[2rem] shadow-3d-soft">
+      {/* Filters and Search Bar Card */}
+      <div className="bg-white border border-slate-200/80 p-3 sm:p-4 flex flex-col gap-3 z-10 shrink-0 rounded-2xl shadow-sm">
         
-        {/* Quick Filters */}
-        <div className="w-full md:w-auto">
-          <HorizontalScroll className="gap-4 pb-3 md:pb-0">
+        {/* Linha 1: Campo de Busca e Dropdowns de Filtro */}
+        <div className="flex flex-wrap items-center justify-between gap-3 w-full">
+          <div className="relative flex-1 min-w-[220px] max-w-md group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-800 transition-colors" size={15} />
+            <input
+              type="text"
+              placeholder="Pesquisar pedido por código, cliente, produto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:border-slate-400 transition-all text-slate-800 placeholder:text-slate-400"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-slate-400 transition-all cursor-pointer"
+            >
+              <option value="newest">Mais recente</option>
+              <option value="oldest">Mais antigo</option>
+              <option value="highest_value">Maior valor</option>
+              <option value="lowest_value">Menor valor</option>
+              <option value="deadline">Prazo de entrega</option>
+            </select>
+
+            {/* Filtro de Responsável */}
+            <select
+              value={filterResponsible}
+              onChange={(e) => setFilterResponsible(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-slate-400 transition-all cursor-pointer"
+            >
+              <option value="all">Responsável: Todos</option>
+              {uniqueResponsibles.map((resp) => (
+                <option key={resp} value={resp}>
+                  {resp}
+                </option>
+              ))}
+            </select>
+
+            {/* Filtro de Ateliê */}
+            <select
+              value={filterAtelier}
+              onChange={(e) => setFilterAtelier(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-slate-400 transition-all cursor-pointer"
+            >
+              <option value="all">Ateliê: Todos (Consolidado)</option>
+              <option value="pallyra">Pallyra</option>
+              <option value="guennita">Guennita</option>
+              <option value="mimada">Mimada</option>
+              <option value="tuttymimo">Tuttymimo</option>
+              <option value="madrinha">Madrinha</option>
+            </select>
+
+            {/* Filtro de Prioridade */}
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:bg-white focus:border-slate-400 transition-all cursor-pointer"
+            >
+              <option value="all">Prioridade: Todas</option>
+              <option value="baixa">Baixa</option>
+              <option value="normal">Normal</option>
+              <option value="alta">Alta</option>
+              <option value="urgente">Urgente</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Linha 2: Abas de Status com Scroll Horizontal Limpo e sem Sobreposição */}
+        <div className="w-full min-w-0 overflow-x-auto pb-1 pt-0.5 scrollbar-thin scrollbar-thumb-slate-200">
+          <div className="flex items-center gap-1.5 min-w-max">
             {[
               { id: "all", label: "Todos" },
               { id: "quote", label: "Orçamentos" },
@@ -462,74 +545,26 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
               { id: "pending_payment", label: "Pgto Pendente" },
               { id: "shipped", label: "Enviado" },
               { id: "completed", label: "Concluído" },
-              { id: "cancelled", label: "Cancelado" },
+              { id: "cancelled", label: "Cancelados" },
             ].map(f => (
               <button
                 key={f.id}
                 onClick={() => setSelectedFilter(f.id)}
-                className={`px-8 py-3.5 text-xs font-black uppercase tracking-widest rounded-xl whitespace-nowrap transition-all elevated-3d ${selectedFilter === f.id ? 'bg-[#1C1C1E] text-white shadow-3d-soft' : 'text-[#8E8E93] bg-white/60'}`}
+                className={`px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider rounded-xl whitespace-nowrap transition-all shrink-0 ${
+                  selectedFilter === f.id
+                    ? 'bg-[#1C1C1E] text-white shadow-sm'
+                    : 'text-slate-600 bg-slate-100 hover:bg-slate-200/80 hover:text-slate-900'
+                }`}
               >
                 {f.label}
               </button>
             ))}
-          </HorizontalScroll>
-        </div>
-
-        {/* Search & Sort */}
-        <div className="flex items-center gap-4 w-full md:w-auto flex-wrap">
-          <div className="relative flex-1 md:w-72 group min-w-[200px]">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E8E93] group-focus-within:text-[#1C1C1E] transition-colors" size={14} />
-            <input
-              type="text"
-              placeholder="Pesquisar pedido..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-xs outline-none focus:bg-white focus:border-[#1C1C1E]/20 transition-all text-[#1C1C1E] placeholder:text-[#AEAEB2] shadow-inner"
-            />
           </div>
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="px-4 py-2.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-xs font-bold text-[#1C1C1E] outline-none focus:bg-white transition-all shadow-inner cursor-pointer"
-          >
-            <option value="newest">Mais recente</option>
-            <option value="oldest">Mais antigo</option>
-            <option value="highest_value">Maior valor</option>
-            <option value="lowest_value">Menor valor</option>
-            <option value="deadline">Prazo de entrega</option>
-          </select>
-
-          {/* Filtro de Responsável */}
-          <select
-            value={filterResponsible}
-            onChange={(e) => setFilterResponsible(e.target.value)}
-            className="px-4 py-2.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-xs font-bold text-[#1C1C1E] outline-none focus:bg-white transition-all shadow-inner cursor-pointer"
-          >
-            <option value="all">Responsável: Todos</option>
-            {uniqueResponsibles.map((resp) => (
-              <option key={resp} value={resp}>
-                {resp}
-              </option>
-            ))}
-          </select>
-
-          {/* Filtro de Prioridade */}
-          <select
-            value={filterPriority}
-            onChange={(e) => setFilterPriority(e.target.value)}
-            className="px-4 py-2.5 bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl text-xs font-bold text-[#1C1C1E] outline-none focus:bg-white transition-all shadow-inner cursor-pointer"
-          >
-            <option value="all">Prioridade: Todas</option>
-            <option value="baixa">Baixa</option>
-            <option value="normal">Normal</option>
-            <option value="alta">Alta</option>
-            <option value="urgente">Urgente</option>
-          </select>
         </div>
       </div>
 
-        {/* Orders List Area */}
-      <div className="flex-1 overflow-y-auto p-6 md:p-10 relative z-0 scrollbar-hide">
+      {/* Orders List Area */}
+      <div className="w-full py-1 relative z-0">
         {filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-[#AEAEB2] space-y-6 py-20 animate-in fade-in zoom-in duration-500">
             <div className="w-24 h-24 rounded-[2.5rem] bg-white border border-[#E5E5EA] flex items-center justify-center shadow-3d-soft elevated-3d">
@@ -541,8 +576,8 @@ export const OrdersTab: React.FC<OrdersTabProps> = React.memo(({
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-8 max-w-[1400px] mx-auto pb-20">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="flex flex-col gap-4 w-full pb-20">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               {paginatedOrders.map(order => (
                 <OrderCard
                   key={order.id}

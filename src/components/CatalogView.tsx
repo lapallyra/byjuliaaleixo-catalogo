@@ -853,7 +853,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
 
               {!selectedCategory && !searchQuery && highlights.length > 0 && (
                 <div ref={highlightsScrollRef} className="border-b border-[#e8dcc8]/10 pb-4">
-                  <div className="max-w-[1850px] mx-auto px-4 pt-6 pb-2 text-left">
+                  <div className="max-w-[1850px] mx-auto px-3 pt-6 pb-2 text-left">
                     <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
                       Lançamentos
                     </span>
@@ -880,7 +880,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   if (campaignProducts.length === 0) return null;
                   return (
                     <div key={camp.id} className="border-b border-[#e8dcc8]/10 pb-4 mt-4">
-                      <div className="max-w-[1850px] mx-auto px-4 pt-6 pb-2 text-left">
+                      <div className="max-w-[1850px] mx-auto px-3 pt-6 pb-2 text-left">
                         <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
                           {camp.subtitle || "Seleção Exclusiva"}
                         </span>
@@ -910,7 +910,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   const highlightProd = companyProducts.find(p => p.id === camp.highlightProductId);
                   if (!highlightProd) return null;
                   return (
-                    <div key={camp.id} className="max-w-[1850px] mx-auto px-4 py-8 border-b border-[#e8dcc8]/10">
+                    <div key={camp.id} className="max-w-[1850px] mx-auto px-3 py-8 border-b border-[#e8dcc8]/10">
                       <div className="bg-white rounded-3xl p-6 md:p-12 border border-[#e8dcc8]/35 shadow-xs flex flex-col md:flex-row items-center gap-8 md:gap-16">
                         <div className="w-full md:w-1/2 aspect-square rounded-2xl overflow-hidden bg-neutral-50 border border-neutral-100">
                           <img src={highlightProd.image} className="w-full h-full object-cover hover:scale-103 transition-transform duration-500" referrerPolicy="no-referrer" />
@@ -940,13 +940,13 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           <div className="flex gap-4 pt-2">
                             <button 
                               onClick={() => setSelectedProduct(highlightProd)}
-                              className="px-6 py-3 bg-[#3A312D] text-white rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-[#52443e] transition-all shadow-sm cursor-pointer"
+                              className="px-3 py-3 bg-[#3A312D] text-white rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-[#52443e] transition-all shadow-sm cursor-pointer"
                             >
                               Ver Detalhes
                             </button>
                             <button 
                               onClick={() => onAddToCart(highlightProd, 1)}
-                              className="px-6 py-3 bg-white border border-[#e8dcc8]/60 text-neutral-700 rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-neutral-50 transition-all shadow-sm cursor-pointer"
+                              className="px-3 py-3 bg-white border border-[#e8dcc8]/60 text-neutral-700 rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-neutral-50 transition-all shadow-sm cursor-pointer"
                             >
                               Adicionar à Sacola
                             </button>
@@ -1006,7 +1006,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     {/* Grid - Premium Vertical Cards Showcase */}
                     {filteredProducts.length > 0 ? (
                       <>
-                      <div id="catalog-grid" className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 pb-20 px-4 md:px-0">
+                      <div id="catalog-grid" className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 pb-20 px-3 md:px-0">
                         {paginatedProducts.map((product, idx) => (
                             <ProductCard 
                               key={`prod-${product.id}-${idx}`}
@@ -1050,7 +1050,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                       )}
                       </>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-16 px-6 text-center max-w-3xl mx-auto">
+                      <div className="flex flex-col items-center justify-center py-16 px-3 text-center max-w-3xl mx-auto">
                         <div className="w-16 h-16 bg-white border border-[#e8dcc8]/40 rounded-full flex items-center justify-center mb-6 text-[#cca062] shadow-sm animate-pulse">
                           <Search size={28} strokeWidth={1.5} />
                         </div>
@@ -1115,7 +1115,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     </div>
 
     {/* Footer Legal & Copyright - Slim & Compact */}
-    <footer className={`flex-shrink-0 w-full py-4 sm:py-5 border-t ${theme.borderLine} text-center px-4 sm:px-6 bg-white/70 backdrop-blur-md relative z-10`}>
+    <footer className={`flex-shrink-0 w-full py-4 sm:py-5 border-t ${theme.borderLine} text-center px-3 sm:px-3 bg-white/70 backdrop-blur-md relative z-10`}>
         <div className="max-w-[1850px] mx-auto">
           <p className="text-[8px] font-sans font-black tracking-[0.25em] mb-1.5 uppercase text-neutral-600 opacity-70 text-center">
             Avisos Legais, Direitos e Produção
@@ -1200,7 +1200,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 value={listSearchCode}
                 onChange={(e) => setListSearchCode(e.target.value.toUpperCase())}
                 placeholder="Ex: LUISA"
-                className="w-full text-center tracking-[0.15em] font-semibold text-sm uppercase px-4 py-2.5 bg-white border border-[#e8dcc8]/40 rounded-xl focus:outline-none focus:border-[#cca062] mb-4 text-[#3A312D] font-poppins"
+                className="w-full text-center tracking-[0.15em] font-semibold text-sm uppercase px-3 py-2.5 bg-white border border-[#e8dcc8]/40 rounded-xl focus:outline-none focus:border-[#cca062] mb-4 text-[#3A312D] font-poppins"
               />
 
               <div className="flex gap-3">

@@ -2408,9 +2408,11 @@ export const subscribeToApprovedFeedbacks = (callback: (feedbacks: any[]) => voi
   });
 };
 
-export const subscribeToAddons = (callback: (addons: any[]) => void, companyId: CompanyId) => {
+export const subscribeToAddons = (callback: (addons: any[]) => void, companyId?: CompanyId) => {
   const path = 'addons';
-  const q = query(collection(db, path), where('companyId', '==', companyId));
+  const q = companyId && companyId !== ('all' as any)
+    ? query(collection(db, path), where('companyId', '==', companyId))
+    : collection(db, path);
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));
@@ -2457,9 +2459,11 @@ export const deleteAddon = async (id: string) => {
   }
 };
 
-export const subscribeToPrizes = (callback: (prizes: any[]) => void, companyId: CompanyId) => {
+export const subscribeToPrizes = (callback: (prizes: any[]) => void, companyId?: CompanyId) => {
   const path = 'prizes';
-  const q = query(collection(db, path), where('companyId', '==', companyId));
+  const q = companyId && companyId !== ('all' as any)
+    ? query(collection(db, path), where('companyId', '==', companyId))
+    : collection(db, path);
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   }, (error) => handleFirestoreError(error, OperationType.LIST, path, false));

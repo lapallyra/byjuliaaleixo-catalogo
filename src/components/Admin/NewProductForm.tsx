@@ -28,7 +28,7 @@ import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 import { ImageUpload } from "./ImageUpload";
 
 interface NewProductFormProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
   components: Componente[];
   onSave: (productData: any) => Promise<void>;
   onClose: () => void;
@@ -46,6 +46,9 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
 }) => {
   const orchestrator = useAdminOrchestrator();
   const [activeSection, setActiveSection] = useState<number>(1);
+  const [selectedCompany, setSelectedCompany] = useState<CompanyId>(
+    (editingProduct?.companyId || (editingProduct as any)?.company || companyId || 'pallyra') as CompanyId
+  );
   const [formData, setFormData] = useState({
     name: editingProduct?.product_name || "",
     code: editingProduct?.code || "",
@@ -130,8 +133,8 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
         weight: formData.weight,
         dimensions: formData.dimensions,
         code,
-        company: companyId,
-        companyId: companyId,
+        company: selectedCompany,
+        companyId: selectedCompany,
         type: formData.type,
         insumos: formData.insumos.map(i => ({ insumoId: i.insumoId, quantity: i.quantity }))
       });
@@ -263,11 +266,25 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
                       <label className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest ml-1">Imagem do Produto</label>
                       <ImageUpload 
                         label="Upload de Imagem"
-                        path={`products/${companyId}`}
+                        path={`products/${selectedCompany}`}
                         currentUrl={formData.image}
                         onUploadComplete={(url) => setFormData({...formData, image: url})}
                         onRemove={() => setFormData({...formData, image: ""})}
                       />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <label className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest ml-1">Ateliê Responsável *</label>
+                      <select
+                        value={selectedCompany}
+                        onChange={(e) => setSelectedCompany(e.target.value as CompanyId)}
+                        className="w-full bg-white border border-[#E5E5EA] rounded-2xl p-4 text-xs font-bold text-[#1C1C1E] outline-none focus:border-[#1C1C1E]/20 shadow-inner transition-all cursor-pointer"
+                      >
+                        <option value="pallyra">La Pallyra</option>
+                        <option value="guennita">com amor, Guennita</option>
+                        <option value="mimada">Mimada Sim</option>
+                        <option value="tuttymimo">Tutty Mimo</option>
+                        <option value="madrinha">Madrinha</option>
+                      </select>
                     </div>
                     <div className="col-span-2 space-y-2">
                       <label className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest ml-1">Nome do Produto *</label>

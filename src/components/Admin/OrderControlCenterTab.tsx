@@ -35,7 +35,7 @@ import { ptBR } from "date-fns/locale";
 import { calculateOrderPriority, getPriorityStyles, PriorityResult } from "../../utils/priorityUtils";
 
 interface OrderControlCenterTabProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
   onOpenOrder: (order: Order) => void;
 }
 
@@ -62,16 +62,22 @@ const STATUS_FLOW: Record<string, string> = {
 };
 
 export const OrderControlCenterTab: React.FC<OrderControlCenterTabProps> = React.memo(({ companyId, onOpenOrder }) => {
+  const [filterAtelier, setFilterAtelier] = useState<string>(companyId || 'all');
   const [orders, setOrders] = useState<(Order & { priorityInfo: PriorityResult })[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(
-      collection(db, "orders"), 
-      where("companyId", "==", companyId),
-      where("status", "not-in", ["delivered", "cancelled"])
-    );
+    const q = (filterAtelier && filterAtelier !== 'all')
+      ? query(
+          collection(db, "orders"), 
+          where("companyId", "==", filterAtelier),
+          where("status", "not-in", ["delivered", "cancelled"])
+        )
+      : query(
+          collection(db, "orders"),
+          where("status", "not-in", ["delivered", "cancelled"])
+        );
     
     const unsub = onSnapshot(q, (snap) => {
       const ordersData = snap.docs.map(doc => {
@@ -86,7 +92,7 @@ export const OrderControlCenterTab: React.FC<OrderControlCenterTabProps> = React
     });
 
     return () => unsub();
-  }, [companyId]);
+  }, [filterAtelier]);
 
   const handleMoveStatus = async (order: Order) => {
     const nextStatus = STATUS_FLOW[order.status];
@@ -141,6 +147,19 @@ export const OrderControlCenterTab: React.FC<OrderControlCenterTabProps> = React
         </div>
         
         <div className="flex items-center gap-4">
+           <select
+             value={filterAtelier}
+             onChange={(e) => setFilterAtelier(e.target.value)}
+             className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none shadow-sm cursor-pointer hover:border-slate-300 transition-colors"
+           >
+             <option value="all">Todos os Ateliês</option>
+             <option value="pallyra">Pallyra</option>
+             <option value="guennita">Guennita</option>
+             <option value="mimada">Mimada</option>
+             <option value="tuttymimo">Tuttymimo</option>
+             <option value="madrinha">Madrinha</option>
+           </select>
+
            <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 

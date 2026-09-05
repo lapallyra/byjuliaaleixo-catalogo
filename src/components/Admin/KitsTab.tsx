@@ -13,15 +13,17 @@ import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 interface KitsTabProps {
   products: Product[];
   insumos: Insumo[];
-  companyId: CompanyId;
+  companyId?: CompanyId;
 }
 
 export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }) => {
   const orchestrator = useAdminOrchestrator();
+  const [filterAtelier, setFilterAtelier] = useState<string>("all");
   const [addons, setAddons] = useState<CheckoutAddon[]>([]);
-  const kits = products.filter(p => matchesAtelierScope(p, companyId, 'kits') && p.isKit);
-  const normalProducts = products.filter(p => !p.isKit && matchesAtelierScope(p, companyId, 'produtos'));
-  const companyInsumos = insumos.filter(i => !i.category || true); // Assuming all insumos or company specific if possible
+  const [selectedAtelierForKit, setSelectedAtelierForKit] = useState<CompanyId>("pallyra");
+  const kits = products.filter(p => (filterAtelier === 'all' || matchesAtelierScope(p, filterAtelier as any, 'kits')) && p.isKit);
+  const normalProducts = products.filter(p => !p.isKit && (filterAtelier === 'all' || matchesAtelierScope(p, filterAtelier as any, 'produtos')));
+  const companyInsumos = insumos;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -46,8 +48,8 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
 
   useEffect(() => {
     // fetch addons
-    getAddons(companyId).then(setAddons);
-  }, [companyId]);
+    getAddons(selectedAtelierForKit).then(setAddons);
+  }, [selectedAtelierForKit]);
 
   const handleSave = async () => {
     if (!formData.product_name || formData.product_name.length < 3) return orchestrator.dispatchEvent({
@@ -101,10 +103,12 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
       const discount = (totalRawValue * (formData.kitDiscountPercentage || 0)) / 100;
       const finalPrice = totalRawValue - discount;
 
+      const targetCompany = selectedAtelierForKit || (formData.companyId as CompanyId) || (formData as any)?.company || 'pallyra';
+
       const kitData = {
         ...formData,
-        company: companyId,
-        companyId: companyId,
+        company: targetCompany,
+        companyId: targetCompany,
         isKit: true,
         current_price: finalPrice,
         retail_price: finalPrice,
@@ -128,7 +132,7 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId: selectedAtelierForKit as any,
       data: { success: false, title: 'Erro' }
     });
     } finally {
@@ -138,10 +142,12 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
 
   const handleEdit = (kit: Product) => {
     setFormData({ ...kit });
+    setSelectedAtelierForKit((kit.companyId as CompanyId) || (kit.company as CompanyId) || 'pallyra');
     setIsModalOpen(true);
   };
 
   const openNew = () => {
+    setSelectedAtelierForKit(filterAtelier !== 'all' ? (filterAtelier as CompanyId) : 'pallyra');
     setFormData({
       product_name: "",
       description: "",
@@ -208,7 +214,7 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
 
   return (
     <div className="space-y-8 animate-in fade-in">
-      <header className="flex justify-between items-center bg-white p-6 rounded-2xl border border-[#E5E5EA]">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-[#E5E5EA]">
         <div>
           <h2 className="text-xl font-medium text-slate-800 uppercase tracking-tighter flex items-center gap-3">
             <Layers className="text-[#1C1C1E]" /> Gestão de Kits
@@ -217,12 +223,29 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
             Crie kits promocionais com estoque dinâmico
           </p>
         </div>
-        <button
-          onClick={openNew}
-          className="flex items-center gap-2 bg-[#1C1C1E] text-white px-6 py-4 rounded-2xl text-[10px] font-medium tracking-normal shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          <Plus size={16} /> Novo Kit
-        </button>
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-2xl">
+            <span className="text-[10px] font-bold text-slate-500 uppercase">Ateliê:</span>
+            <select
+              value={filterAtelier}
+              onChange={(e) => setFilterAtelier(e.target.value)}
+              className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
+            >
+              <option value="all">Todos os Ateliês</option>
+              <option value="pallyra">La Pallyra</option>
+              <option value="guennita">Guennita</option>
+              <option value="mimada">Mimada</option>
+              <option value="tuttymimo">Tutty Mimo</option>
+              <option value="madrinha">Madrinha</option>
+            </select>
+          </div>
+          <button
+            onClick={openNew}
+            className="flex items-center gap-2 bg-[#1C1C1E] text-white px-6 py-2.5 rounded-2xl text-[10px] font-medium tracking-normal shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+          >
+            <Plus size={16} /> Novo Kit
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -325,6 +348,21 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
                     <div className="space-y-4">
                       
                       <div className="space-y-2">
+                        <label className="text-[10px] font-medium uppercase text-slate-400 tracking-widest ml-1">Ateliê de Destino</label>
+                        <select
+                          value={selectedAtelierForKit}
+                          onChange={(e) => setSelectedAtelierForKit(e.target.value as CompanyId)}
+                          className="w-full bg-[#F5F5F7] border border-[#E5E5EA] rounded-2xl px-6 py-4 text-sm font-bold focus:border-[#1C1C1E] outline-none transition-all"
+                        >
+                          <option value="pallyra">La Pallyra</option>
+                          <option value="guennita">Guennita</option>
+                          <option value="mimada">Mimada</option>
+                          <option value="tuttymimo">Tutty Mimo</option>
+                          <option value="madrinha">Madrinha</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
                         <label className="text-[10px] font-medium uppercase text-slate-400 tracking-widest ml-1">Tipo de Kit</label>
                         <div className="p-3 bg-slate-100 rounded-xl text-xs font-bold text-slate-800 flex items-center gap-2">
                           <CheckCircle2 size={16} className="text-emerald-600" />
@@ -335,7 +373,7 @@ export const KitsTab: React.FC<KitsTabProps> = ({ products, insumos, companyId }
                       <div className="space-y-2">
                         <label className="text-[10px] font-medium uppercase text-slate-400 tracking-widest ml-1">Foto Principal</label>
                         <ImageUpload
-                          path={`kits/${companyId}`}
+                          path={`kits/${selectedAtelierForKit}`}
                           currentUrl={formData.image || ""}
                           onUploadComplete={(url) => setFormData({ ...formData, image: url })}
                           onRemove={() => setFormData({ ...formData, image: "" })}

@@ -40,13 +40,13 @@ import {
 import { format, isAfter, isBefore, parseISO } from "date-fns";
 
 interface CouponsTabProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
   orders: Order[];
   products: Product[];
 }
 
 export const CouponsTab: React.FC<CouponsTabProps> = React.memo(({
-  companyId,
+  companyId: propCompanyId,
   orders,
   products
 }) => {
@@ -57,6 +57,7 @@ export const CouponsTab: React.FC<CouponsTabProps> = React.memo(({
 
   // Filters & State
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterAtelier, setFilterAtelier] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<"all" | "active" | "inactive" | "archived" | "expired">("all");
   const [selectedType, setSelectedType] = useState<"all" | "percentage" | "fixed">("all");
   const [selectedScope, setSelectedScope] = useState<"all" | "products" | "categories" | "collections">("all");
@@ -74,12 +75,7 @@ export const CouponsTab: React.FC<CouponsTabProps> = React.memo(({
   useEffect(() => {
     setLoading(true);
     const unsubCoupons = subscribeToCoupons((data) => {
-      // Filter by companyId if not "all"
-      if ((companyId as string) === "all") {
-        setCoupons(data);
-      } else {
-        setCoupons(data.filter(c => c.companyId === companyId));
-      }
+      setCoupons(data);
       setLoading(false);
     });
 
@@ -91,7 +87,7 @@ export const CouponsTab: React.FC<CouponsTabProps> = React.memo(({
       unsubCoupons();
       unsubCol();
     };
-  }, [companyId]);
+  }, []);
 
   // Extract unique categories from products
   const uniqueCategories = useMemo(() => {
@@ -242,12 +238,17 @@ export const CouponsTab: React.FC<CouponsTabProps> = React.memo(({
       // 3. Discount Type Filter
       if (selectedType !== "all" && c.discountType !== selectedType) return false;
 
+      // 0. Atelier filter
+      if (filterAtelier !== "all") {
+        if (c.companyId && (c.companyId as string) !== "all" && c.companyId !== filterAtelier) return false;
+      }
+
       // 4. Scope Filter
       if (selectedScope !== "all" && c.scope !== selectedScope) return false;
 
       return true;
     });
-  }, [coupons, searchTerm, selectedStatus, selectedType, selectedScope]);
+  }, [coupons, searchTerm, filterAtelier, selectedStatus, selectedType, selectedScope]);
 
   // Automatic Indicators
   const indicators = useMemo(() => {
@@ -289,7 +290,7 @@ export const CouponsTab: React.FC<CouponsTabProps> = React.memo(({
   // Actions
   const handleOpenCreateForm = () => {
     setEditingCoupon({
-      companyId: (companyId as string) === "all" ? "mimada" : companyId,
+      companyId: filterAtelier !== "all" ? (filterAtelier as CompanyId) : ("mimada" as CompanyId),
       status: "active",
       discountType: "percentage",
       discountValue: 10,
@@ -478,8 +479,25 @@ export const CouponsTab: React.FC<CouponsTabProps> = React.memo(({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white border border-[#E5E5EA] rounded-2xl p-6 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               
+              {/* Ateliê */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">Ateliê / Loja</label>
+                <select
+                  value={filterAtelier}
+                  onChange={(e) => setFilterAtelier(e.target.value)}
+                  className="bg-[#F2F2F7] border border-transparent rounded-xl px-3 py-2.5 text-xs font-semibold text-[#1C1C1E] outline-none focus:border-indigo-500 focus:bg-white transition-all cursor-pointer"
+                >
+                  <option value="all">Todas as Lojas</option>
+                  <option value="pallyra">La Pallyra</option>
+                  <option value="guennita">Guennita</option>
+                  <option value="mimada">Mimada</option>
+                  <option value="tuttymimo">Tutty Mimo</option>
+                  <option value="madrinha">Madrinha</option>
+                </select>
+              </div>
+
               {/* Status */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">Status</label>
@@ -1134,6 +1152,22 @@ export const CouponsTab: React.FC<CouponsTabProps> = React.memo(({
               {/* Form Scroll Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
                 
+                {/* Ateliê / Loja de Destino */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#8E8E93]">Ateliê / Loja de Aplicação *</label>
+                  <select
+                    value={editingCoupon.companyId || "mimada"}
+                    onChange={(e) => setEditingCoupon({ ...editingCoupon, companyId: e.target.value as any })}
+                    className="bg-[#F2F2F7] border border-transparent rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-inner"
+                  >
+                    <option value="pallyra">La Pallyra</option>
+                    <option value="guennita">Guennita</option>
+                    <option value="mimada">Mimada</option>
+                    <option value="tuttymimo">Tutty Mimo</option>
+                    <option value="madrinha">Madrinha</option>
+                  </select>
+                </div>
+
                 {/* 1. Nome Interno & Código */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">

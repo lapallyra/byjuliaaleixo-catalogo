@@ -62,7 +62,7 @@ interface FinanceTabProps {
   orders: Order[];
   products: Product[];
   componentes: Componente[];
-  companyId: CompanyId;
+  companyId?: CompanyId;
 }
 
 export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
@@ -76,6 +76,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
   const [financeEntries, setFinanceEntries] = useState<FinanceEntry[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(initialAuditLogs);
   const [loadingEntries, setLoadingEntries] = useState(true);
+  const [filterAtelier, setFilterAtelier] = useState<string>(companyId || "all");
 
   // Filter States
   const [dateFilter, setDateFilter] = useState<string>("month"); // default to this month
@@ -127,17 +128,17 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
     const unsubFinance = subscribeToFinance((entries) => {
       setFinanceEntries(entries);
       setLoadingEntries(false);
-    }, companyId);
+    }, filterAtelier !== 'all' ? (filterAtelier as CompanyId) : undefined);
 
     const unsubAudit = subscribeToAuditLogs((logs) => {
       setAuditLogs(logs);
-    }, companyId);
+    }, filterAtelier !== 'all' ? (filterAtelier as CompanyId) : undefined);
 
     return () => {
       unsubFinance();
       unsubAudit();
     };
-  }, [companyId]);
+  }, [filterAtelier]);
 
   // Unified Transaction List (Real database entries only)
   const unifiedTransactions = useMemo(() => {
@@ -236,7 +237,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
       if (o.status === "cancelled") return false;
-      if (!matchesAtelierScope(o, companyId, 'pedidos')) return false;
+      if (filterAtelier !== 'all' && !matchesAtelierScope(o, filterAtelier as any, 'pedidos')) return false;
       const dateObj = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt);
       const dateStr = dateObj instanceof Date && !isNaN(dateObj.getTime())
         ? dateObj.toISOString().split("T")[0]
@@ -246,7 +247,7 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
       }
       return true;
     });
-  }, [orders, companyId, dateFilter, customStartDate, customEndDate]);
+  }, [orders, filterAtelier, dateFilter, customStartDate, customEndDate]);
 
   // Consolidated Financial Calculations
   const calculations = useMemo(() => {
@@ -712,6 +713,18 @@ export const FinanceTab: React.FC<FinanceTabProps> = React.memo(({
         </div>
 
         <div className="flex items-center gap-3">
+          <select
+            value={filterAtelier}
+            onChange={(e) => setFilterAtelier(e.target.value)}
+            className="px-4 py-2.5 bg-white border border-pink-100 rounded-xl text-xs font-bold text-gray-700 outline-none cursor-pointer shadow-xs"
+          >
+            <option value="all">Ateliê: Todos (Consolidado)</option>
+            <option value="pallyra">Pallyra</option>
+            <option value="guennita">Guennita</option>
+            <option value="mimada">Mimada</option>
+            <option value="tuttymimo">Tuttymimo</option>
+            <option value="madrinha">Madrinha</option>
+          </select>
           <button
             onClick={() => setIsNewEntryOpen(true)}
             className="flex items-center gap-2.5 px-5 py-3 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white font-extrabold rounded-xl text-xs shadow-md hover:-translate-y-0.5 active:translate-y-0 cursor-pointer transition-all duration-150"

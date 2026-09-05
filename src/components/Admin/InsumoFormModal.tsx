@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { X, Save, DollarSign, Package, Percent, ChevronRight, ChevronLeft, MapPin, Tag, Box, Info } from "lucide-react";
+import { X, Save, DollarSign, Package, Percent, ChevronRight, ChevronLeft, MapPin, Tag, Box, Info, ArrowLeft } from "lucide-react";
 import { Componente, CompanyId } from "../../types";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface InsumoFormModalProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
   editing: Partial<Componente> | null;
   onClose: () => void;
   onSave: (data: Partial<Componente>) => Promise<void>;
+  isPage?: boolean;
 }
 
 export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
@@ -16,6 +17,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
   editing,
   onClose,
   onSave,
+  isPage = false,
 }) => {
   const orchestrator = useAdminOrchestrator();
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -32,6 +34,7 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
     unitCost: 0,
     location: "",
     supplier: "",
+    companyId: editing?.companyId || companyId || undefined,
     ...editing,
   });
 
@@ -106,6 +109,328 @@ export const InsumoFormModal: React.FC<InsumoFormModalProps> = ({
     }
     onSave(formData);
   };
+
+  if (isPage) {
+    return (
+      <div className="w-full max-w-[1500px] mx-auto pb-12 animate-in fade-in duration-200 px-2 sm:px-3">
+        <div 
+          className="bg-white rounded-2xl w-full shadow-sm overflow-hidden flex flex-col border border-slate-200"
+          id="insumo-form-page"
+        >
+          {/* Header */}
+          <div className="bg-white border-b border-slate-100 p-4 md:p-6 text-slate-900 flex justify-between items-center shrink-0">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-all border border-slate-200 flex items-center gap-1.5 text-xs font-bold"
+                title="Voltar para Estoque"
+              >
+                <ArrowLeft size={16} />
+                <span>Voltar</span>
+              </button>
+              <div>
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                  <span>Estoque</span>
+                  <span>/</span>
+                  <span>Novo Item</span>
+                </div>
+                <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <Package size={22} className="text-amber-500" />
+                  {editing?.id ? "Editar Item de Estoque" : "Novo Item de Estoque"}
+                </h2>
+                <p className="text-slate-500 text-xs mt-0.5">
+                  Cadastro unificado de insumos consumíveis e componentes de produtos.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-all border border-slate-200"
+              id="close-page-btn"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Steps Progress Indicator */}
+          <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center shrink-0">
+            <div className="flex items-center gap-2 w-full">
+              {[1, 2, 3].map((s) => (
+                <React.Fragment key={s}>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                        step === s
+                          ? "bg-amber-500 text-white shadow-xs"
+                          : step > s
+                          ? "bg-emerald-500 text-white"
+                          : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {step > s ? "✓" : s}
+                    </div>
+                    <span className={`text-xs font-bold ${step === s ? "text-slate-900" : "text-slate-400"}`}>
+                      {s === 1 ? "Identificação" : s === 2 ? "Estoque & Custos" : "Armazenamento"}
+                    </span>
+                  </div>
+                  {s < 3 && <div className="flex-1 h-[2px] bg-slate-200 mx-2" />}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          {/* Form Content */}
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col p-6 space-y-6">
+            {/* Step 1 */}
+            {step === 1 && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Ateliê / Destinação <span className="text-slate-400 font-normal lowercase">(opcional - padrão: compartilhado)</span>
+                    </label>
+                    <select
+                      value={formData.companyId || ""}
+                      onChange={(e) => setFormData({ ...formData, companyId: e.target.value ? (e.target.value as CompanyId) : undefined })}
+                      className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-amber-500 transition-all text-slate-800 font-medium cursor-pointer"
+                    >
+                      <option value="">Geral / Compartilhado (Toda a Empresa)</option>
+                      <option value="pallyra">La Pallyra</option>
+                      <option value="guennita">Guennita</option>
+                      <option value="mimada">Mimada</option>
+                      <option value="tuttymimo">Tuttymimo</option>
+                      <option value="madrinha">Madrinha</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Nome do Item *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Papel Offset 180g, Fita de Cetim..."
+                      value={formData.name || ""}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-amber-500 transition-all text-slate-800 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Código / SKU
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: INS-001"
+                      value={formData.code || ""}
+                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                      className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-amber-500 transition-all text-slate-800 font-medium"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Categoria
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Papéis, Embalagens..."
+                      value={formData.category || ""}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-amber-500 transition-all text-slate-800 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                    Classificação
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, classification: "insumo" })}
+                      className={`p-3 rounded-xl border text-left font-bold text-xs transition-all ${
+                        formData.classification === "insumo"
+                          ? "bg-slate-900 border-slate-900 text-white"
+                          : "bg-slate-50 border-slate-200 text-slate-600"
+                      }`}
+                    >
+                      Insumo / Matéria-prima
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, classification: "componente" })}
+                      className={`p-3 rounded-xl border text-left font-bold text-xs transition-all ${
+                        formData.classification === "componente"
+                          ? "bg-slate-900 border-slate-900 text-white"
+                          : "bg-slate-50 border-slate-200 text-slate-600"
+                      }`}
+                    >
+                      Componente de Montagem
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2 */}
+            {step === 2 && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Quantidade Inicial
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.quantity ?? 0}
+                      onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-amber-500 transition-all text-slate-800 font-bold"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Qtd. Mínima
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.minQuantity ?? 0}
+                      onChange={(e) => setFormData({ ...formData, minQuantity: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-amber-500 transition-all text-slate-800 font-bold"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Unidade
+                    </label>
+                    <select
+                      value={formData.unit || "unid"}
+                      onChange={(e) => setFormData({ ...formData, unit: e.target.value as any })}
+                      className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-amber-500 transition-all text-slate-800 font-medium"
+                    >
+                      <option value="unid">Unidade (un)</option>
+                      <option value="kg">Quilograma (kg)</option>
+                      <option value="g">Grama (g)</option>
+                      <option value="m">Metro (m)</option>
+                      <option value="cm">Centímetro (cm)</option>
+                      <option value="l">Litro (l)</option>
+                      <option value="ml">Mililitro (ml)</option>
+                      <option value="pct">Pacote (pct)</option>
+                      <option value="cx">Caixa (cx)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Custo Unitário (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      min="0"
+                      value={formData.unitCost ?? 0}
+                      onChange={(e) => setFormData({ ...formData, unitCost: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-amber-500 transition-all text-slate-800 font-bold"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                      Total em Estoque (R$)
+                    </label>
+                    <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 font-black">
+                      R$ {((formData.quantity || 0) * (formData.unitCost || 0)).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3 */}
+            {step === 3 && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                    Localização no Estoque
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Prateleira B, Gaveta 3..."
+                    value={formData.location || ""}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-amber-500 transition-all text-slate-800 font-medium"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                    Fornecedor Principal
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Distribuidora Papelaria Sul..."
+                    value={formData.supplier || ""}
+                    onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                    className="w-full bg-slate-50/60 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:bg-white focus:border-amber-500 transition-all text-slate-800 font-medium"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="border-t border-slate-100 pt-6 flex items-center justify-between gap-4">
+              {step > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => (s - 1) as any)}
+                  className="px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                >
+                  <ChevronLeft size={16} /> Voltar
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                >
+                  Cancelar
+                </button>
+              )}
+
+              {step < 3 ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm"
+                >
+                  Avançar <ChevronRight size={16} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md"
+                >
+                  <Save size={16} /> Salvar Item
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm transition-all animate-fade-in">

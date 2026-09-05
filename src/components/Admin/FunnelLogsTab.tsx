@@ -4,16 +4,18 @@ import { CompanyId } from '../../types';
 
 interface FunnelLogsTabProps {
   events: any[];
-  selectedCompanyId: CompanyId;
+  selectedCompanyId?: CompanyId;
 }
 
 export const FunnelLogsTab: React.FC<FunnelLogsTabProps> = ({ events = [], selectedCompanyId }) => {
   const [filterStep, setFilterStep] = useState<string>('all');
+  const [filterAtelier, setFilterAtelier] = useState<string>(selectedCompanyId || 'all');
 
-  // Filter events specific to current company
+  // Filter events (consolidated by default or local atelier)
   const filteredCompanyEvents = useMemo(() => {
-    return events.filter(e => e.companyId === selectedCompanyId);
-  }, [events, selectedCompanyId]);
+    if (filterAtelier === 'all') return events;
+    return events.filter(e => e.companyId === filterAtelier);
+  }, [events, filterAtelier]);
 
   // Calculations for funnel
   const funnelStats = useMemo(() => {
@@ -225,6 +227,18 @@ export const FunnelLogsTab: React.FC<FunnelLogsTabProps> = ({ events = [], selec
           {/* Filter options inside terminal */}
           <div className="flex items-center gap-2">
             <Filter size={12} className="text-slate-500" />
+            <select 
+              value={filterAtelier}
+              onChange={(e) => setFilterAtelier(e.target.value)}
+              className="bg-slate-850 hover:bg-slate-800 border-0 outline-none text-[10px] uppercase font-black text-slate-400 tracking-wider py-1.5 px-3 rounded-lg cursor-pointer"
+            >
+              <option value="all">TODOS ATELIÊS (CONSOLIDADO)</option>
+              <option value="pallyra">PALLYRA</option>
+              <option value="guennita">GUENNITA</option>
+              <option value="mimada">MIMADA SIM</option>
+              <option value="tuttymimo">TUTTY MIMO</option>
+              <option value="madrinha">MADRINHA</option>
+            </select>
             <select 
               value={filterStep}
               onChange={(e) => setFilterStep(e.target.value)}

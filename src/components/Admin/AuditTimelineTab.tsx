@@ -31,10 +31,11 @@ import { subscribeToAuditLogs } from '../../services/auditService';
 import { safeFormat } from '../../lib/dateUtils';
 import { formatCurrency } from '../../lib/currencyUtils';
 
-export const AuditTimelineTab: React.FC<{ companyId: CompanyId, auditLogs: AuditLog[] }> = React.memo(({ companyId, auditLogs }) => {
+export const AuditTimelineTab: React.FC<{ companyId?: CompanyId, auditLogs: AuditLog[] }> = React.memo(({ companyId, auditLogs }) => {
   const [logs, setLogs] = useState<AuditLog[]>(auditLogs);
   const [loading, setLoading] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [filterAtelier, setFilterAtelier] = useState<string>(companyId || 'all');
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,13 +52,13 @@ export const AuditTimelineTab: React.FC<{ companyId: CompanyId, auditLogs: Audit
     }, {
       module: moduleFilter,
       action: actionFilter,
-      companyId: companyId,
+      companyId: filterAtelier !== 'all' ? (filterAtelier as CompanyId) : undefined,
       dateStart,
       dateEnd
     });
 
     return () => unsubscribe();
-  }, [moduleFilter, actionFilter, dateStart, dateEnd, companyId]);
+  }, [moduleFilter, actionFilter, dateStart, dateEnd, filterAtelier]);
 
   const filteredLogs = useMemo(() => {
     if (!searchTerm) return logs;
@@ -140,6 +141,19 @@ export const AuditTimelineTab: React.FC<{ companyId: CompanyId, auditLogs: Audit
             />
           </div>
           
+          <select 
+            value={filterAtelier}
+            onChange={(e) => setFilterAtelier(e.target.value)}
+            className="bg-white border border-[#E5E5EA] rounded-2xl px-5 py-3.5 text-xs font-bold text-[#1C1C1E] outline-none shadow-3d-soft elevated-3d cursor-pointer"
+          >
+            <option value="all">Todos os Ateliês</option>
+            <option value="pallyra">Pallyra</option>
+            <option value="guennita">Guennita</option>
+            <option value="mimada">Mimada</option>
+            <option value="tuttymimo">Tuttymimo</option>
+            <option value="madrinha">Madrinha</option>
+          </select>
+
           <select 
             value={moduleFilter}
             onChange={(e) => setModuleFilter(e.target.value as any)}

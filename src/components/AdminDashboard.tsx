@@ -100,12 +100,15 @@ import { DeliveriesTab } from "./Admin/DeliveriesTab";
 import { GlobalSearch } from "./Admin/GlobalSearch";
 import { AdminNotificationPortal } from "./AdminNotificationPortal";
 import { Sidebar } from "./Admin/Sidebar";
-import { AtelierSelector } from "./Admin/AtelierSelector";
 import { useAdminOrchestrator } from "./AdminOrchestratorSystem";
 import { OrderReceiptModal } from "./Admin/OrderReceiptModal";
 import { UsersTab } from "./Admin/UsersTab";
 import { BackupTab } from "./Admin/BackupTab";
 import { MigrationTab } from "./Admin/MigrationTab";
+import { OrderWizardModal } from "./Admin/OrderWizardModal";
+import { CustomerFormPage } from "./Admin/CustomerFormPage";
+import { InsumoFormModal } from "./Admin/InsumoFormModal";
+import { PurchaseOrderForm } from "./Admin/PurchaseOrderForm";
 import { safeFormatISO } from "../lib/dateUtils";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { ImageWithFallback } from "./ImageWithFallback";
@@ -142,7 +145,11 @@ type TabType =
   | "coupons"
   | "users"
   | "backup"
-  | "migration";
+  | "migration"
+  | "novo-pedido"
+  | "novo-cliente"
+  | "novo-insumo"
+  | "nova-compra";
 
 interface AdminDashboardProps {
   onGoBack: () => void;
@@ -182,7 +189,11 @@ const TAB_TO_PATH: Record<TabType, string> = {
   coupons: "/cupons",
   users: "/usuarios",
   backup: "/backup",
-  migration: "/migracao"
+  migration: "/migracao",
+  "novo-pedido": "/pedidos/novo",
+  "novo-cliente": "/clientes/novo",
+  "novo-insumo": "/estoque/novo",
+  "nova-compra": "/compras/novo"
 };
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
@@ -192,36 +203,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
   const orchestrator = useAdminOrchestrator();
   const isAdminDomain = checkIsAdminDomain();
   
-  // Initialize activeTab from URL
-  const [activeTab, setActiveTab] = useState<TabType>(() => {
-    const path = location.pathname.replace(/^\/admin/, "");
+  // Helper to map pathname to TabType
+  const getTabFromPath = (pathname: string): TabType => {
+    const path = pathname.replace(/^\/admin/, "").replace(/\/$/, "");
+    if (path === "/pedidos/novo" || path === "/novo-pedido" || path === "/novo/pedido") return "novo-pedido";
+    if (path === "/clientes/novo" || path === "/novo-cliente" || path === "/novo/cliente") return "novo-cliente";
+    if (path === "/estoque/novo" || path === "/componentes/novo" || path === "/insumos/novo" || path === "/novo-insumo") return "novo-insumo";
+    if (path === "/compras/novo" || path === "/nova-compra" || path === "/pedidos-compra/novo") return "nova-compra";
+
     const foundTab = (Object.entries(TAB_TO_PATH) as [TabType, string][]).find(
       ([_, tabPath]) => tabPath === (path || "/")
     );
     return foundTab ? foundTab[0] : "dashboard";
+  };
+  
+  // Initialize activeTab from URL
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    return getTabFromPath(location.pathname);
   });
 
   // Sync activeTab when URL changes
   useEffect(() => {
-    const path = location.pathname.replace(/^\/admin/, "");
-    const foundTab = (Object.entries(TAB_TO_PATH) as [TabType, string][]).find(
-      ([_, tabPath]) => tabPath === (path || "/")
-    );
-    if (foundTab && foundTab[0] !== activeTab) {
-      setActiveTab(foundTab[0]);
+    const currentPathTab = getTabFromPath(location.pathname);
+    if (currentPathTab !== activeTab) {
+      setActiveTab(currentPathTab);
     }
   }, [location.pathname, activeTab]);
 
   // Update URL when activeTab changes (e.g. via sidebar click)
   const handleSetTab = (tab: TabType) => {
-    if (tab === activeTab) return;
     setActiveTab(tab);
     const path = TAB_TO_PATH[tab];
     const fullPath = isAdminDomain ? path : `/admin${path === "/" ? "" : path}`;
     navigate(fullPath);
   };
-  const [selectedCompanyId, setSelectedCompanyId] =
-    useState<CompanyId>("pallyra"); // Default to first
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [tabError, setTabError] = useState<string | null>(null);
@@ -281,6 +296,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Listen to trigger-new-order to navigate to /pedidos/novo
+  useEffect(() => {
+    const handleNewOrder = () => handleSetTab("novo-pedido");
+    window.addEventListener('trigger-new-order', handleNewOrder);
+    return () => window.removeEventListener('trigger-new-order', handleNewOrder);
   }, []);
 
   // Sync expanded group to local storage
@@ -456,8 +478,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
           logout();
           navigate("/");
         }}
-        selectedCompanyId={selectedCompanyId}
-        onSelectCompany={setSelectedCompanyId}
       />
 
       <AnimatePresence>
@@ -474,10 +494,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
-              className="fixed left-0 top-0 bottom-0 w-72 bg-[#F5F5F7] z-[110] lg:hidden border-r border-[#E5E5EA] flex flex-col shadow-2xl"
+              className="fixed left-0 top-0 bottom-0 w-72 bg-white z-[110] lg:hidden border-r border-slate-200/50 flex flex-col shadow-2xl"
             >
-              <div className="p-6 flex flex-col h-full">
-                <div className="flex items-center justify-end mb-6">
+              <div className="p-4 flex flex-col h-full">
+                <div className="flex items-center justify-end mb-4">
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="p-2 bg-white rounded-xl text-[#8E8E93] hover:text-[#1C1C1E] shadow-sm transition-all"
@@ -485,16 +505,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <X size={18} />
                   </button>
                 </div>
-
-                {/* Mobile Central Atelier Selector */}
-                <AtelierSelector
-                  selectedCompanyId={selectedCompanyId}
-                  onSelectCompany={(compId) => {
-                    setSelectedCompanyId(compId);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  variant="mobile"
-                />
 
                 <nav className="flex-1 space-y-4 overflow-y-auto pr-2 scrollbar-hide">
                   {menuGroups.map((groupName) => {
@@ -608,7 +618,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative z-10 bg-slate-50">
         {/* Top Header Bar */}
         {activeTab === "dashboard" ? (
-          <header className="h-14 bg-white border-b border-slate-200/80 px-6 lg:px-10 flex items-center justify-between z-40 flex-shrink-0 shadow-sm">
+          <header className="h-12 bg-white border-b border-slate-200/80 px-4 lg:px-6 flex items-center justify-between z-40 flex-shrink-0 shadow-sm">
             {/* Lado Esquerdo - Mobile Menu Toggle */}
             <div className="flex items-center gap-4 lg:hidden">
               <button
@@ -620,46 +630,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
             </div>
 
             {/* CENTRAL - Quick Action Buttons */}
-            <div className="hidden md:flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+            <div className="hidden md:flex items-center gap-2 bg-slate-50 p-1 rounded-xl border border-slate-100">
               <button 
-                onClick={() => handleSetTab("orders")}
-                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-all shadow-sm border border-slate-100 active:scale-95"
+                onClick={() => handleSetTab("novo-pedido")}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-lg text-[10px] font-black uppercase tracking-widest hover:text-pink-500 transition-all shadow-sm border border-slate-100 active:scale-95"
               >
                 <ShoppingBag size={14} className="text-pink-500" /> Novo Pedido
               </button>
               <button 
-                onClick={() => handleSetTab("clients")}
-                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-emerald-500 transition-all shadow-sm border border-slate-100 active:scale-95"
+                onClick={() => handleSetTab("novo-cliente")}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-lg text-[10px] font-black uppercase tracking-widest hover:text-emerald-500 transition-all shadow-sm border border-slate-100 active:scale-95"
               >
                 <User size={14} className="text-emerald-500" /> Novo Cliente
               </button>
               <button 
-                onClick={() => handleSetTab("inventory")}
-                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-amber-500 transition-all shadow-sm border border-slate-100 active:scale-95"
+                onClick={() => handleSetTab("novo-insumo")}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-lg text-[10px] font-black uppercase tracking-widest hover:text-amber-500 transition-all shadow-sm border border-slate-100 active:scale-95"
               >
                 <Package size={14} className="text-amber-500" /> Novo Insumo
               </button>
               <button 
-                onClick={() => handleSetTab("products")}
-                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-sky-500 transition-all shadow-sm border border-slate-100 active:scale-95"
+                onClick={() => handleSetTab("nova-compra")}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-lg text-[10px] font-black uppercase tracking-widest hover:text-indigo-500 transition-all shadow-sm border border-slate-100 active:scale-95"
               >
-                <Box size={14} className="text-sky-500" /> Novo Produto
+                <ShoppingBag size={14} className="text-indigo-500" /> Nova Compra
               </button>
             </div>
 
             {/* Lado Direito - Ateliê Ativo & Notificações */}
             <div className="flex items-center gap-3">
-              <AtelierSelector
-                selectedCompanyId={selectedCompanyId}
-                onSelectCompany={setSelectedCompanyId}
-                variant="header"
-              />
               <GlobalSearch 
                 orders={sales} 
                 products={products} 
                 customers={customers} 
                 insumos={insumos} 
-                companyId={selectedCompanyId}
                 onResultClick={(type, id) => {
                   if (type === 'Pedido') { setSelectedOrderId(id); handleSetTab('orders'); }
                   else if (type === 'Cliente') { setSelectedCustomerId(id); handleSetTab('clients'); }
@@ -697,7 +701,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
         )}
 
         {/* Content Tabs Container */}
-        <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto w-full max-w-[1600px] mx-auto px-2 sm:px-3 lg:px-4 py-4 lg:py-6 scrollbar-hide scroll-smooth">
+        <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-y-auto w-full max-w-[1600px] mx-auto px-2 sm:px-3 lg:px-4 py-2 lg:py-3 scrollbar-hide scroll-smooth">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -705,7 +709,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="pb-6 lg:pb-4"
+              className="pb-2"
             >
               <React.Suspense fallback={<TabLoader />}>
                 <ErrorBoundary
@@ -735,11 +739,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       orders={sales}
                       products={products}
                       customers={customers}
-                      companyId={selectedCompanyId}
                       onAction={(action: any) => {
-                        if (action === "new_order" || action === "orders") handleSetTab("orders");
-                        else if (action === "new_client" || action === "clients") handleSetTab("clients");
-                        else if (action === "new_insumo" || action === "inventory") handleSetTab("inventory");
+                        if (action === "new_order") handleSetTab("novo-pedido");
+                        else if (action === "orders") handleSetTab("orders");
+                        else if (action === "new_client") handleSetTab("novo-cliente");
+                        else if (action === "clients") handleSetTab("clients");
+                        else if (action === "new_insumo") handleSetTab("novo-insumo");
+                        else if (action === "inventory") handleSetTab("inventory");
                         else if (action === "products") handleSetTab("products");
                         else if (action === "campaigns") handleSetTab("campaigns");
                         else if (action === "coupons") handleSetTab("coupons");
@@ -767,7 +773,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       products={products}
                       insumos={insumos}
                       customers={customers}
-                      companyId={selectedCompanyId}
+                      onNavigateNewOrder={() => handleSetTab("novo-pedido")}
                       onUpdateStatus={async (id, status) => {
                         if (status === 'production') {
                            const order = sales.find(o => o.id === id);
@@ -814,14 +820,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   )}
                   {activeTab === "componentes" && (
                     <ComponentsTab
-                      companyId={selectedCompanyId}
                       products={products}
                       componentes={insumos}
+                      onNavigateNewItem={() => handleSetTab("novo-insumo")}
                       onSaveComponente={async (data) => {
                         if (data.id) {
                           await updateInsumo(data.id, data as any);
                         } else {
-                          await addInsumo({ companyId: selectedCompanyId, ...data } as any);
+                          await addInsumo(data as any);
                         }
                       }}
                       onDeleteComponente={async (id) => {
@@ -830,7 +836,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "purchases" && (
-                    <PurchasesTab companyId={selectedCompanyId} orders={sales} />
+                    <PurchasesTab 
+                      orders={sales} 
+                      onNavigateNewInsumo={() => handleSetTab("novo-insumo")}
+                      onNavigateNewPurchase={() => handleSetTab("nova-compra")}
+                    />
+                  )}
+                  {activeTab === "novo-pedido" && (
+                    <OrderWizardModal
+                      isPage={true}
+                      products={products}
+                      customers={customers}
+                      initialCustomerId={selectedCustomerId || undefined}
+                      onClose={() => handleSetTab("orders")}
+                      onSave={async (data) => {
+                        const orderCode = await saveSale(data);
+                        playSuccessSound();
+                        if (orderCode) {
+                          const order = await getOrderByCode(orderCode);
+                          if (order) {
+                            setAutoPrint(true);
+                            setPrintingOrder(order);
+                          }
+                        }
+                        handleSetTab("orders");
+                        return orderCode;
+                      }}
+                    />
+                  )}
+                  {activeTab === "novo-cliente" && (
+                    <CustomerFormPage
+                      onClose={() => handleSetTab("clients")}
+                    />
+                  )}
+                  {activeTab === "novo-insumo" && (
+                    <InsumoFormModal
+                      isPage={true}
+                      editing={null}
+                      onClose={() => handleSetTab("componentes")}
+                      onSave={async (data) => {
+                        await addInsumo(data as any);
+                        handleSetTab("componentes");
+                      }}
+                    />
+                  )}
+                  {activeTab === "nova-compra" && (
+                    <PurchaseOrderForm
+                      isPage={true}
+                      onClose={() => handleSetTab("purchases")}
+                    />
                   )}
                   {activeTab === "financeiro" && (
                     <FinanceTab
@@ -838,12 +892,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       orders={sales}
                       products={products}
                       componentes={insumos}
-                      companyId={selectedCompanyId}
                     />
                   )}
                   {activeTab === "inventory" && (
                     <InventoryTab
-                      companyId={selectedCompanyId}
                       orders={sales}
                       products={products}
                       insumos={insumos}
@@ -856,12 +908,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <OperationalEfficiencyTab
                       orders={sales}
                       products={products}
-                      companyId={selectedCompanyId}
                     />
                   )}
                   {activeTab === "control_center" && (
                     <OrderControlCenterTab
-                      companyId={selectedCompanyId}
                       onOpenOrder={(order) => setPrintingOrder(order)}
                     />
                   )}
@@ -871,7 +921,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                       insumos={insumos}
                       orders={sales}
                       auditLogs={auditLogs}
-                      companyId={selectedCompanyId}
                       onSaveProduct={async (p) => {
                         if (p.id) {
                           await updateProduct(p.id, p);
@@ -883,14 +932,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     />
                   )}
                   {activeTab === "collections" && (
-                    <CollectionsTab products={products} companyId={selectedCompanyId} />
+                    <CollectionsTab products={products} />
                   )}
                   {activeTab === "campaigns" && (
                     <CampaignsTab products={products} />
                   )}
                   {activeTab === "coupons" && (
                     <CouponsTab
-                      companyId={selectedCompanyId}
                       orders={sales}
                       products={products}
                     />
@@ -902,21 +950,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <KitsTab
                       products={products}
                       insumos={insumos}
-                      companyId={selectedCompanyId}
                     />
                   )}
                   {activeTab === "clients" && (
                     <ClientsTab
-                      companyId={selectedCompanyId}
+                      orders={sales}
                       customers={customers}
+                      onNavigateNewCustomer={() => handleSetTab("novo-cliente")}
                       onNewOrder={(customerId) => {
                         setSelectedCustomerId(customerId);
-                        handleSetTab("orders");
+                        handleSetTab("novo-pedido");
                       }}
                     />
                   )}
                   {activeTab === "gift-lists" && (
-                    <GiftListsTab companyId={selectedCompanyId} products={products} />
+                    <GiftListsTab products={products} />
                   )}
                   {activeTab === "commemorative-dates" && (
                     <CommemorativeDatesTab />
@@ -926,7 +974,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   )}
                   {activeTab === "reports" && (
                     <ReportsTab
-                      companyId={selectedCompanyId}
                       orders={sales}
                       products={products}
                       customers={customers}
@@ -935,7 +982,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   )}
                   { activeTab === "auditoria" && (
                     <AuditoriaTab
-                      companyId={selectedCompanyId}
                       orders={sales}
                       products={products}
                       insumos={insumos}
@@ -943,12 +989,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                   )}
                   {activeTab === "deliveries" && (
                     <DeliveriesTab
-                      companyId={selectedCompanyId}
                       orders={sales}
                     />
                   )}
                   {activeTab === "settings" && (
-                    <SettingsTab companyId={selectedCompanyId} />
+                    <SettingsTab />
                   )}
                   {activeTab === "users" && (
                     <UsersTab />
@@ -960,16 +1005,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <MigrationTab />
                   )}
                   {activeTab === "addons" && (
-                    <AddonsTab companyId={selectedCompanyId} />
+                    <AddonsTab />
                   )}
                   {activeTab === "prizes" && (
-                    <PrizesTab companyId={selectedCompanyId} />
+                    <PrizesTab />
                   )}
                   {activeTab === "feedbacks" && (
                     <FeedbacksTab feedbacks={feedbacks} />
                   )}
                   {activeTab === "funnel" && (
-                    <FunnelLogsTab events={checkoutEvents} selectedCompanyId={selectedCompanyId} />
+                    <FunnelLogsTab events={checkoutEvents} />
                   )}
                   {activeTab === "integrations" && (
                     <IntegrationsTab />
@@ -978,7 +1023,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onGoBack }) => {
                     <NotificationsTab />
                   )}
                   {activeTab === "activity-logs" && (
-                    <AuditTimelineTab companyId={selectedCompanyId} auditLogs={auditLogs} />
+                    <AuditTimelineTab auditLogs={auditLogs} />
                   )}
                 </ErrorBoundary>
               </React.Suspense>

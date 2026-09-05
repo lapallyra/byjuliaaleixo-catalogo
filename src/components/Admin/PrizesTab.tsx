@@ -32,10 +32,11 @@ interface Prize {
   companyId: string;
 }
 
-export const PrizesTab: React.FC<{ companyId: CompanyId }> = React.memo(({
-  companyId,
+export const PrizesTab: React.FC<{ companyId?: CompanyId }> = React.memo(({
+  companyId: propCompanyId,
 }) => {
   const orchestrator = useAdminOrchestrator();
+  const [selectedAtelier, setSelectedAtelier] = useState<CompanyId>(propCompanyId || "pallyra");
   const [prizes, setPrizes] = useState<Prize[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,10 +44,10 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = React.memo(({
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const unsub = subscribeToPrizes(setPrizes, companyId);
+    const unsub = subscribeToPrizes(setPrizes, selectedAtelier);
     setLoading(false);
     return () => unsub();
-  }, [companyId]);
+  }, [selectedAtelier]);
 
   const handleSave = async () => {
     if (
@@ -61,7 +62,7 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = React.memo(({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId: selectedAtelier as any,
       data: { success: true, title: 'Sucesso' }
     });
       } else {
@@ -71,7 +72,7 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = React.memo(({
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId: selectedAtelier as any,
       data: { success: false, title: 'Aviso' }
     });
       }
@@ -82,7 +83,7 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = React.memo(({
     try {
       await savePrize({
         ...editingPrize,
-        companyId,
+        companyId: selectedAtelier,
         weight: editingPrize.weight || 1,
         image: editingPrize.image || "🎁",
       });
@@ -121,28 +122,45 @@ export const PrizesTab: React.FC<{ companyId: CompanyId }> = React.memo(({
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            if (prizes.length >= 7) {
-              orchestrator.dispatchEvent({
-      type: 'FEEDBACK',
-      message: "O sistema permite no máximo 7 brindes para a roleta.",
-      priority: 'HIGH',
-      customerName: '',
-      productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
-      data: { success: true, title: 'Sucesso' }
-    });
-              return;
-            }
-            setEditingPrize({ type: "special", weight: 1 });
-            setIsModalOpen(true);
-          }}
-          disabled={prizes.length >= 7}
-          className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${prizes.length >= 7 ? "bg-slate-100 text-[#A09898] cursor-not-allowed" : "bg-black text-white hover:scale-105 active:scale-95 shadow-xl shadow-black/10"}`}
-        >
-          <Plus size={16} /> Novo Brinde ({prizes.length}/7)
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2 rounded-2xl shadow-sm">
+            <span className="text-[10px] font-bold text-slate-500 uppercase">Ateliê / Loja:</span>
+            <select
+              value={selectedAtelier}
+              onChange={(e) => setSelectedAtelier(e.target.value as CompanyId)}
+              className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
+            >
+              <option value="pallyra">La Pallyra</option>
+              <option value="guennita">Guennita</option>
+              <option value="mimada">Mimada</option>
+              <option value="tuttymimo">Tutty Mimo</option>
+              <option value="madrinha">Madrinha</option>
+            </select>
+          </div>
+
+          <button
+            onClick={() => {
+              if (prizes.length >= 7) {
+                orchestrator.dispatchEvent({
+        type: 'FEEDBACK',
+        message: "O sistema permite no máximo 7 brindes para a roleta.",
+        priority: 'HIGH',
+        customerName: '',
+        productName: '',
+        companyId: selectedAtelier as any,
+        data: { success: true, title: 'Sucesso' }
+      });
+                return;
+              }
+              setEditingPrize({ type: "special", weight: 1 });
+              setIsModalOpen(true);
+            }}
+            disabled={prizes.length >= 7}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-2xl font-black uppercase text-[10px] tracking-widest transition-all ${prizes.length >= 7 ? "bg-slate-100 text-[#A09898] cursor-not-allowed" : "bg-black text-white hover:scale-105 active:scale-95 shadow-xl shadow-black/10"}`}
+          >
+            <Plus size={16} /> Novo Brinde ({prizes.length}/7)
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

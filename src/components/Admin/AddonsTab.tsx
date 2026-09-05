@@ -24,11 +24,12 @@ import { formatCurrency } from "../../lib/currencyUtils";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface AddonsTabProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
 }
 
-export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId }) => {
+export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId: propCompanyId }) => {
   const orchestrator = useAdminOrchestrator();
+  const [selectedAtelier, setSelectedAtelier] = useState<CompanyId>(propCompanyId || "pallyra");
   const [addons, setAddons] = useState<CheckoutAddon[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,9 +42,9 @@ export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId }) =>
     const unsub = subscribeToAddons((data) => {
       setAddons(data as CheckoutAddon[]);
       setLoading(false);
-    }, companyId);
+    }, selectedAtelier);
     return () => unsub();
-  }, [companyId]);
+  }, [selectedAtelier]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +53,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId }) =>
     try {
       await saveAddon({
         ...editingAddon,
-        companyId,
+        companyId: selectedAtelier,
         active: editingAddon.active ?? true,
       });
       setIsModalOpen(false);
@@ -65,7 +66,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId }) =>
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId: selectedAtelier as any,
       data: { success: false, title: 'Erro' }
     });
     } finally {
@@ -84,7 +85,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId }) =>
       priority: 'HIGH',
       customerName: '',
       productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
+      companyId: selectedAtelier as any,
       data: { success: false, title: 'Erro' }
     });
     }
@@ -105,7 +106,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId }) =>
     ];
 
     for (const item of defaults) {
-      await saveAddon({ ...item, companyId, active: true });
+      await saveAddon({ ...item, companyId: selectedAtelier, active: true });
     }
   };
 
@@ -121,16 +122,31 @@ export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId }) =>
               Toque Final
             </h3>
             <p className="text-[10px] text-lilac font-bold uppercase tracking-[0.2em] mt-1">
-              Gestão de Adicionais Premium
+              Gestão de Adicionais de Checkout
             </p>
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2 rounded-2xl shadow-sm">
+            <span className="text-[10px] font-bold text-slate-500 uppercase">Ateliê / Loja:</span>
+            <select
+              value={selectedAtelier}
+              onChange={(e) => setSelectedAtelier(e.target.value as CompanyId)}
+              className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
+            >
+              <option value="pallyra">La Pallyra</option>
+              <option value="guennita">Guennita</option>
+              <option value="mimada">Mimada</option>
+              <option value="tuttymimo">Tutty Mimo</option>
+              <option value="madrinha">Madrinha</option>
+            </select>
+          </div>
+
           {addons.length === 0 && (
             <button
               onClick={createDefaultAddons}
-              className="px-6 py-4 bg-white border border-lilac/30 text-lilac rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-lilac/5 transition-all"
+              className="px-5 py-2.5 bg-white border border-lilac/30 text-lilac rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-lilac/5 transition-all"
             >
               Criar Padrões
             </button>
@@ -140,7 +156,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId }) =>
               setEditingAddon({ name: "", price: 0, image: "", active: true });
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-3 px-8 py-4 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-black/10"
+            className="flex items-center gap-2 px-6 py-2.5 bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-black/10"
           >
             <Plus size={16} /> Novo Adicional
           </button>
@@ -276,7 +292,7 @@ export const AddonsTab: React.FC<AddonsTabProps> = React.memo(({ companyId }) =>
               <form onSubmit={handleSave} className="space-y-6">
                 <ImageUpload
                   label="Foto ou Ícone"
-                  path={`addons/${companyId}`}
+                  path={`addons/${editingAddon?.companyId || selectedAtelier}`}
                   currentUrl={editingAddon?.image}
                   onUploadComplete={(url) =>
                     setEditingAddon((prev) => ({ ...prev, image: url }))

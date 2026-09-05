@@ -37,7 +37,7 @@ import { filterByAtelierScope, matchesAtelierScope } from '../../services/atelie
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface AuditoriaTabProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
   orders: Order[];
   products: Product[];
   insumos: Insumo[];

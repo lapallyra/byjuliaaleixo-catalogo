@@ -41,7 +41,7 @@ import { safeRandomUUID } from "../../lib/utils";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface GiftListsTabProps {
-  companyId: string;
+  companyId?: string;
   products: Product[];
 }
 

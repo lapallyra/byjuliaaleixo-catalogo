@@ -41,6 +41,7 @@ import {
 import { CSVHandler } from "./CSVHandler";
 import { Customer, CompanyId, Order, CustomerContact, CustomerAddress, CustomerTag, CustomerNote } from "../../types";
 import { getAtelierDisplayName, matchesAtelierScope } from "../../services/atelierScopePolicy";
+import { AtelierBadge } from "./AtelierBadge";
 import {
   deleteCustomer,
   updateCustomer,
@@ -91,9 +92,10 @@ import { normalizePhone, isOrderFromCustomer } from "../../utils/customerUtils";
 
 interface ClientsTabProps {
   orders?: Order[];
-  companyId: CompanyId;
+  companyId?: CompanyId;
   customers: Customer[];
   onNewOrder?: (customerId: string) => void;
+  onNavigateNewCustomer?: () => void;
 }
 
 export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
@@ -101,10 +103,12 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
   companyId,
   customers,
   onNewOrder,
+  onNavigateNewCustomer,
 }) => {
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState("");
   const [isFetchingAddress, setIsFetchingAddress] = useState(false);
+  const [filterAtelier, setFilterAtelier] = useState<string>("all");
   const [quickFilter, setQuickFilter] = useState<"Todos" | "PF" | "PJ" | "ComPedidos" | "SemPedidos" | "Recorrentes" | "Aniversariantes" | "VIP" | "Inativos" | "Novos" | "MaiorLTV" | "MaiorFreq" | "Oportunidade" | "AltoValor" | "SemCompra" | "Prioritarios">("Todos");
   const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"name_asc" | "name_desc" | "newest" | "oldest" | "revenue" | "orders">("newest");
@@ -273,6 +277,7 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
       lastPurchaseDate: Date | null;
       isRecurrent: boolean;
       topProducts: string[];
+      purchasedAteliers: CompanyId[];
       metrics: any;
     }>();
 
@@ -354,12 +359,14 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
         .map((entry) => entry[0]);
 
       const metrics = calculateCustomerMetrics(c, cSales);
+      const purchasedAteliers = Array.from(new Set(cSales.map((o: any) => o.companyId).filter(Boolean))) as CompanyId[];
 
       map.set(c.id, {
         activeOrders: activeCount,
         lastPurchaseDate: lastDate,
         isRecurrent: cSales.length > 1,
         topProducts,
+        purchasedAteliers,
         metrics
       });
     });
@@ -387,7 +394,12 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
 
     return preprocessedCustomers
       .filter(({ customer: c, normName, normEmail, normCity, normCode, cleanContact, cleanCpfCnpj }) => {
-        if (!matchesAtelierScope(c, companyId, 'clientes')) return false;
+        if (filterAtelier !== "all") {
+          const cMetrics = customerMetricsMap.get(c.id);
+          const hasOrderInAtelier = cMetrics?.purchasedAteliers?.includes(filterAtelier as CompanyId);
+          const hasOriginAtelier = c.companyId === filterAtelier;
+          if (!hasOrderInAtelier && !hasOriginAtelier) return false;
+        }
 
         const matchesSearch =
           normName.includes(normSearch) ||
@@ -667,6 +679,10 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
 
   // Form handlers
   const handleOpenNewForm = () => {
+    if (onNavigateNewCustomer) {
+      onNavigateNewCustomer();
+      return;
+    }
     setSelectedCustomer(null);
     setFormData({
       name: "",
@@ -772,23 +788,23 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
         await updateCustomer(activeCustomer.id, {
           ...formData,
           status: finalStatus,
-          companyId,
+          ...(companyId || activeCustomer?.companyId ? { companyId: companyId || activeCustomer?.companyId } : {}),
           contacts: formData.contacts,
           addresses: formData.addresses
         });
         orchestrator.dispatchEvent({
           type: 'FEEDBACK',
-          message: 'Cliente atualizado!',
+          message: 'Cliente atualizado na base central!',
           priority: 'HIGH',
           customerName: '',
           productName: '',
-          companyId,
+          companyId: (companyId || activeCustomer?.companyId) as any,
           data: { success: true, title: 'Sucesso' }
         });
       } else {
         await addCustomer({
           ...formData,
-          companyId,
+          ...(companyId ? { companyId } : {}),
           totalSpent: 0,
           ordersCount: 0,
           contacts: formData.contacts,
@@ -796,11 +812,11 @@ export const ClientsTab: React.FC<ClientsTabProps> = React.memo(({
         });
         orchestrator.dispatchEvent({
           type: 'FEEDBACK',
-          message: 'Cliente cadastrado com sucesso!',
+          message: 'Cliente cadastrado na base central com sucesso!',
           priority: 'HIGH',
           customerName: '',
           productName: '',
-          companyId,
+          companyId: (companyId || undefined) as any,
           data: { success: true, title: 'Sucesso' }
         });
       }
@@ -1065,6 +1081,23 @@ Histórico de Compras:
           </div>
 
           <div className="flex items-center gap-3 w-full lg:w-auto shrink-0">
+            {/* Atelier Filter selection */}
+            <div className="flex items-center gap-2 border border-[#E5E5EA] rounded-xl px-3 py-2 bg-white">
+              <span className="text-[10px] font-bold text-[#8E8E93] uppercase">ATELIÊ:</span>
+              <select
+                className="text-xs font-bold bg-transparent outline-none text-[#1C1C1E] uppercase cursor-pointer"
+                value={filterAtelier}
+                onChange={(e) => setFilterAtelier(e.target.value)}
+              >
+                <option value="all">Todos (Consolidado)</option>
+                <option value="pallyra">Pallyra</option>
+                <option value="guennita">Guennita</option>
+                <option value="mimada">Mimada</option>
+                <option value="tuttymimo">Tuttymimo</option>
+                <option value="madrinha">Madrinha</option>
+              </select>
+            </div>
+
             {/* Sort selection */}
             <div className="flex items-center gap-2 border border-[#E5E5EA] rounded-xl px-3 py-2 bg-white">
               <span className="text-[10px] font-bold text-[#8E8E93] uppercase">ORDENAR POR:</span>
@@ -1160,10 +1193,23 @@ Histórico de Compras:
                       ) : null}
                     </div>
                     <div className="flex flex-col items-start">
-                      <span className="text-[10px] font-bold text-[#cca062] uppercase tracking-wider">
-                        #{c.code || "----"}
-                      </span>
-                      <h3 className="text-sm font-bold text-[#1C1C1E] uppercase group-hover:text-[#cca062] transition-colors line-clamp-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-[#cca062] uppercase tracking-wider">
+                          #{c.code || "----"}
+                        </span>
+                        {metrics?.purchasedAteliers && metrics.purchasedAteliers.length > 0 ? (
+                          metrics.purchasedAteliers.map((atId: CompanyId) => (
+                            <AtelierBadge key={atId} companyId={atId} size="xs" />
+                          ))
+                        ) : c.companyId ? (
+                          <AtelierBadge companyId={c.companyId} size="xs" />
+                        ) : (
+                          <span className="text-[9px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                            Cliente Central
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-sm font-bold text-[#1C1C1E] uppercase group-hover:text-[#cca062] transition-colors line-clamp-1 mt-0.5">
                         {c.name}
                       </h3>
                       {metrics?.isRecurrent && (
@@ -1345,6 +1391,19 @@ Histórico de Compras:
                     <p className="text-[10px] text-[#cca062] font-bold uppercase tracking-widest mt-1">
                       Código do Cliente: #{activeCustomer.code || "---"}
                     </p>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                      {customerMetricsMap.get(activeCustomer.id)?.purchasedAteliers && (customerMetricsMap.get(activeCustomer.id)?.purchasedAteliers?.length || 0) > 0 ? (
+                        customerMetricsMap.get(activeCustomer.id)!.purchasedAteliers.map((atId: CompanyId) => (
+                          <AtelierBadge key={atId} companyId={atId} size="xs" />
+                        ))
+                      ) : activeCustomer.companyId ? (
+                        <AtelierBadge companyId={activeCustomer.companyId} size="xs" />
+                      ) : (
+                        <span className="text-[9px] font-semibold text-slate-500 bg-slate-200/70 px-2 py-0.5 rounded-md">
+                          Base Central Compartilhada
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

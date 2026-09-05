@@ -5,6 +5,7 @@ import { safeFormatISO } from "../../lib/dateUtils";
 import { formatPhone } from "../../utils/masks";
 import { Box, MoreVertical, Printer, Copy, MessageSquare, Tag, Eye, RefreshCw, Calendar, Trash2, CreditCard, Edit } from "lucide-react";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
+import { AtelierBadge } from "./AtelierBadge";
 
 interface OrderCardProps {
   order: Order;
@@ -89,7 +90,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
       
       {/* Faixa LED Lateral - Apenas se não estiver cancelado */}
       {!["cancelled", "cancelado"].includes((order.status || "").toLowerCase()) && (
-        <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-[28px] ${statusInfo.color} z-20`} style={{ boxShadow: '-6px 0 20px 2px ' + statusInfo.color.replace('bg-[', '').replace(']', '') + '80' }} />
+        <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${statusInfo.color} z-20`} style={{ boxShadow: '0 0 12px 1px ' + statusInfo.color.replace('bg-[', '').replace(']', '') + '60' }} />
       )}
       
       <div className="flex flex-col md:flex-row gap-5 items-start md:items-center justify-between w-full">
@@ -98,6 +99,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
           <div className="flex-1 min-w-0 pr-2">
             <div className="mb-0.5 flex items-center gap-2 flex-wrap">
               <span className="text-[10px] text-[#8E8E93] font-mono bg-[#F5F5F7] px-1.5 py-0.5 rounded inline-block">#{order.code}</span>
+              <AtelierBadge companyId={order.companyId} size="xs" />
               {order.operationType === "investment" && (
                 <>
                   <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0 bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
@@ -156,7 +158,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({
 
         {/* Right Section: Status and Actions */}
         <div className="flex items-center justify-start md:justify-end gap-3 shrink-0 flex-wrap md:flex-nowrap">
-          <span className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full shadow-xs border border-white/20 ${statusInfo.bgLight} ${statusInfo.text} truncate max-w-[100px]`}>
+          <span className={`px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full shadow-xs border border-white/20 ${statusInfo.bgLight} ${statusInfo.text} whitespace-nowrap shrink-0`}>
             {statusInfo.label}
           </span>
           

@@ -37,13 +37,14 @@ import { calculateProductCost } from "../../lib/finance";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 import { matchesAtelierScope } from "../../services/atelierScopePolicy";
+import { AtelierBadge } from "./AtelierBadge";
 
 interface ProductsTabProps {
   products: Product[];
   insumos: Insumo[];
   orders: Order[];
   auditLogs: AuditLog[];
-  companyId: CompanyId;
+  companyId?: CompanyId;
   onSaveProduct: (product: Partial<Product>) => Promise<void>;
   onDeleteProduct: (id: string) => Promise<void>;
 }
@@ -60,6 +61,7 @@ export const ProductsTab: React.FC<ProductsTabProps> = React.memo(({
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("all"); // all, fabricado, revenda, kit
   const [filterStatus, setFilterStatus] = useState<string>("all"); // all, active, inactive
+  const [filterAtelier, setFilterAtelier] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name"); // name, date, price, margin, best_sellers, last_update
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [currentPage, setCurrentPage] = useState(1);
@@ -73,8 +75,8 @@ export const ProductsTab: React.FC<ProductsTabProps> = React.memo(({
 
   const { filteredProducts, paginatedProducts, totalPages } = useMemo(() => {
     let result = products.filter(p => {
-      // Atelier scope filter
-      if (!matchesAtelierScope(p, companyId, 'produtos')) {
+      // Optional local atelier filter
+      if (filterAtelier !== "all" && !matchesAtelierScope(p, filterAtelier as CompanyId, 'produtos')) {
         return false;
       }
 
@@ -238,6 +240,24 @@ export const ProductsTab: React.FC<ProductsTabProps> = React.memo(({
 
           <div className="relative group">
             <div className="flex items-center gap-2 bg-white border border-[#E5E5EA] px-4 py-2.5 rounded-2xl shadow-sm cursor-pointer hover:border-[#1C1C1E]/20 transition-all">
+              <select 
+                value={filterAtelier} 
+                onChange={(e) => setFilterAtelier(e.target.value)}
+                className="bg-transparent text-[9px] font-black uppercase tracking-widest outline-none cursor-pointer appearance-none pr-6"
+              >
+                <option value="all">Ateliê: Todos (Consolidado)</option>
+                <option value="pallyra">Pallyra</option>
+                <option value="guennita">Guennita</option>
+                <option value="mimada">Mimada</option>
+                <option value="tuttymimo">Tuttymimo</option>
+                <option value="madrinha">Madrinha</option>
+              </select>
+              <ChevronDown size={14} className="absolute right-4 text-[#8E8E93]" />
+            </div>
+          </div>
+
+          <div className="relative group">
+            <div className="flex items-center gap-2 bg-white border border-[#E5E5EA] px-4 py-2.5 rounded-2xl shadow-sm cursor-pointer hover:border-[#1C1C1E]/20 transition-all">
               <ArrowUpDown size={14} className="text-[#8E8E93]" />
               <select 
                 value={sortBy} 
@@ -284,6 +304,10 @@ export const ProductsTab: React.FC<ProductsTabProps> = React.memo(({
                        <span className="px-3 py-1 rounded-full bg-white/90 backdrop-blur-md border border-[#E5E5EA] text-[8px] font-black text-[#1C1C1E] uppercase tracking-[0.2em] shadow-sm elevated-3d">
                         {product.type || 'fabricado'}
                        </span>
+                    </div>
+
+                    <div className="absolute top-6 right-6 z-10">
+                       <AtelierBadge companyId={product.companyId || (product as any).company} size="xs" />
                     </div>
 
                     {/* Image Section */}
@@ -389,7 +413,10 @@ export const ProductsTab: React.FC<ProductsTabProps> = React.memo(({
                               <ImageWithFallback src={product.main_image} alt={product.product_name} className="w-full h-full object-cover" />
                             </div>
                             <div>
-                              <p className="text-[10px] font-mono text-[#AEAEB2] uppercase tracking-widest mb-0.5">#{product.code}</p>
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <p className="text-[10px] font-mono text-[#AEAEB2] uppercase tracking-widest">#{product.code}</p>
+                                <AtelierBadge companyId={product.companyId || (product as any).company} size="xs" />
+                              </div>
                               <p className="text-xs font-black text-[#1C1C1E] uppercase">{product.product_name}</p>
                             </div>
                           </div>

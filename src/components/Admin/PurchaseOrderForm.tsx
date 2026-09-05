@@ -1,31 +1,60 @@
-import React, { useState } from "react";
-import { X, Save, Plus, Trash2, Search, ShoppingBag } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Save, Plus, Trash2, Search, ShoppingBag, ArrowLeft } from "lucide-react";
 import { CompanyId, Supplier, Componente, PurchaseItem } from "../../types";
 import { db } from "../../lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 import { formatCurrency } from "../../lib/currencyUtils";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface PurchaseOrderFormProps {
-  companyId: CompanyId;
-  suppliers: Supplier[];
-  insumos: Componente[];
+  companyId?: CompanyId;
+  suppliers?: Supplier[];
+  insumos?: Componente[];
   onClose: () => void;
+  onSave?: (data: any) => Promise<any>;
+  isPage?: boolean;
 }
 
 export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({ 
   companyId, 
-  suppliers, 
-  insumos,
-  onClose 
+  suppliers = [], 
+  insumos = [],
+  onClose,
+  onSave,
+  isPage = false,
 }) => {
   const orchestrator = useAdminOrchestrator();
+  const [selectedAtelier, setSelectedAtelier] = useState<string>(companyId || "");
+  const [internalSuppliers, setInternalSuppliers] = useState<Supplier[]>(suppliers);
+  const [internalInsumos, setInternalInsumos] = useState<Componente[]>(insumos);
   const [selectedSupplierId, setSelectedSupplierId] = useState("");
   const [items, setItems] = useState<PurchaseItem[]>([]);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    if (!suppliers || suppliers.length === 0) {
+      const qSuppliers = query(collection(db, "suppliers"));
+      getDocs(qSuppliers).then(snap => {
+        setInternalSuppliers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier)));
+      }).catch(console.error);
+    } else {
+      setInternalSuppliers(suppliers);
+    }
+  }, [suppliers]);
+
+  useEffect(() => {
+    if (!insumos || insumos.length === 0) {
+      const qInsumos = query(collection(db, "componentes"));
+      getDocs(qInsumos).then(snap => {
+        setInternalInsumos(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Componente)));
+      }).catch(console.error);
+    } else {
+      setInternalInsumos(insumos);
+    }
+  }, [insumos]);
 
   const addItem = (insumo: Componente) => {
     const existing = items.find(i => i.insumoId === insumo.id);
@@ -98,11 +127,11 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
 
     setLoading(true);
     try {
-      const supplier = suppliers.find(s => s.id === selectedSupplierId);
+      const supplier = internalSuppliers.find(s => s.id === selectedSupplierId);
       
-      const purchaseData = {
+      const purchaseData: any = {
         code: `COMP-${Math.floor(1000 + Math.random() * 9000)}`,
-        companyId,
+        ...(selectedAtelier ? { companyId: selectedAtelier } : {}),
         supplierId: selectedSupplierId,
         supplierName: supplier?.name || "Desconhecido",
         items,
@@ -119,23 +148,207 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
     } catch (error) {
       console.error("Error saving purchase order:", error);
       orchestrator.dispatchEvent({
-      type: 'FEEDBACK',
-      message: "Erro ao salvar pedido de compra.",
-      priority: 'HIGH',
-      customerName: '',
-      productName: '',
-      companyId: ((typeof window !== 'undefined' && (window as any).companyId) || 'company_1') as any,
-      data: { success: false, title: 'Erro' }
-    });
+        type: 'FEEDBACK',
+        message: "Erro ao salvar pedido de compra.",
+        priority: 'HIGH',
+        customerName: '',
+        productName: '',
+        companyId: (selectedAtelier || undefined) as any,
+        data: { success: false, title: 'Erro' }
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredInsumos = insumos.filter(i => 
+  const filteredInsumos = internalInsumos.filter(i => 
     i.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     i.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const totalAmount = items.reduce((acc, i) => acc + i.totalPrice, 0);
+
+  if (isPage) {
+    return (
+      <div className="w-full max-w-[1500px] mx-auto pb-12 animate-in fade-in duration-200 px-2 sm:px-3">
+        <div className="bg-white rounded-2xl w-full shadow-sm overflow-hidden flex flex-col border border-slate-200">
+          <div className="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-all border border-slate-200 flex items-center gap-1.5 text-xs font-bold"
+                title="Voltar para Compras"
+              >
+                <ArrowLeft size={16} />
+                <span>Voltar</span>
+              </button>
+              <div>
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+                  <span>Compras</span>
+                  <span>/</span>
+                  <span>Novo Pedido de Compra</span>
+                </div>
+                <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                  <ShoppingBag size={22} className="text-indigo-600" />
+                  Novo Pedido de Compra
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">Gerencie a reposição de insumos do estoque</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all border border-slate-200">
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="flex-1 flex flex-col md:flex-row min-h-[500px]">
+            {/* Items Selection */}
+            <div className="flex-1 flex flex-col border-r border-slate-100 bg-slate-50/50 p-4 md:p-6">
+              <div className="relative mb-4">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar insumos para repor..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-indigo-500 transition-all"
+                />
+              </div>
+
+              <div className="flex-1 overflow-y-auto space-y-2 max-h-[500px] pr-1">
+                {filteredInsumos.map((insumo) => (
+                  <div key={insumo.id} className="p-3 bg-white border border-slate-200/80 rounded-xl flex items-center justify-between hover:border-indigo-200 transition-all shadow-2xs">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">{insumo.name}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-slate-500">Estoque atual: <strong>{insumo.quantity} {insumo.unit}</strong></span>
+                        <span className="text-[10px] text-slate-500">• Custo ref: <strong>{formatCurrency(insumo.unitCost || 0)}</strong></span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => addItem(insumo)}
+                      className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-all"
+                      title="Adicionar ao pedido"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Order Summary */}
+            <div className="w-full md:w-[420px] flex flex-col bg-white p-4 md:p-6">
+              <div className="space-y-4 flex-1">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                    Ateliê de Destino <span className="text-slate-400 font-normal lowercase">(opcional - padrão: compartilhado)</span>
+                  </label>
+                  <select
+                    value={selectedAtelier}
+                    onChange={(e) => setSelectedAtelier(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="">Compra Geral / Compartilhada (Empresa)</option>
+                    <option value="pallyra">La Pallyra</option>
+                    <option value="guennita">Guennita</option>
+                    <option value="mimada">Mimada</option>
+                    <option value="tuttymimo">Tuttymimo</option>
+                    <option value="madrinha">Madrinha</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Fornecedor *</label>
+                  <select
+                    value={selectedSupplierId}
+                    onChange={(e) => setSelectedSupplierId(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+                  >
+                    <option value="">Selecione um fornecedor...</option>
+                    {internalSuppliers.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Itens Selecionados ({items.length})</label>
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {items.map((item, idx) => (
+                      <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate">{item.name}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <input
+                              type="number"
+                              min="1"
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const newQty = Math.max(1, Number(e.target.value));
+                                setItems(items.map(i => i.insumoId === item.insumoId ? { ...i, quantity: newQty, totalPrice: newQty * i.unitPrice } : i));
+                              }}
+                              className="w-16 p-1 bg-white border border-slate-200 rounded-lg text-center text-xs font-bold"
+                            />
+                            <span className="text-[10px] text-slate-400">x {formatCurrency(item.unitPrice)}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs font-black text-slate-900">{formatCurrency(item.totalPrice)}</p>
+                          <button
+                            onClick={() => setItems(items.filter(i => i.insumoId !== item.insumoId))}
+                            className="text-rose-500 hover:text-rose-700 p-1 text-[10px] font-bold"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Observações</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Instruções de entrega, prazos combinados..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-slate-100 pt-4 mt-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500 font-bold uppercase">Total Estimado</span>
+                  <span className="text-lg font-black text-slate-900">{formatCurrency(totalAmount)}</span>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-50 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading || items.length === 0 || !selectedSupplierId}
+                    onClick={handleSubmit}
+                    className="flex-2 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md disabled:opacity-50"
+                  >
+                    <Save size={16} /> Confirmar Pedido
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4 backdrop-blur-sm">
@@ -198,6 +411,24 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
             <form onSubmit={handleSubmit} className="flex flex-col h-full">
               <div className="p-6 space-y-6 flex-1 overflow-y-auto">
                 <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">
+                    Ateliê de Destino <span className="text-slate-400 font-normal lowercase">(opcional - padrão: compartilhado)</span>
+                  </label>
+                  <select 
+                    value={selectedAtelier}
+                    onChange={e => setSelectedAtelier(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-sm outline-none focus:border-slate-400 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="">Compra Geral / Compartilhada (Empresa)</option>
+                    <option value="pallyra">La Pallyra</option>
+                    <option value="guennita">Guennita</option>
+                    <option value="mimada">Mimada</option>
+                    <option value="tuttymimo">Tuttymimo</option>
+                    <option value="madrinha">Madrinha</option>
+                  </select>
+                </div>
+
+                <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Fornecedor *</label>
                   <select 
                     required
@@ -206,7 +437,7 @@ export const PurchaseOrderForm: React.FC<PurchaseOrderFormProps> = ({
                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-sm outline-none focus:border-slate-400 transition-all appearance-none"
                   >
                     <option value="">Selecione um fornecedor</option>
-                    {suppliers.map(s => (
+                    {internalSuppliers.map(s => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                   </select>

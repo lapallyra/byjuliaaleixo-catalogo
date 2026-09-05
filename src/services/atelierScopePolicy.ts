@@ -54,9 +54,9 @@ export const ATELIER_SCOPE_REGISTRY: Record<string, ResourceScopeInfo> = {
   },
   clientes: {
     resource: 'clientes',
-    classification: 'exclusive',
-    identifierField: 'companyId',
-    description: 'Carteira de clientes e histórico comercial vinculados ao ateliê ativo.'
+    classification: 'shared',
+    identifierField: 'companyId (opcional)',
+    description: 'Base única e compartilhada de clientes por toda a empresa. O vínculo comercial é identificado através dos pedidos realizados.',
   },
   pedidos: {
     resource: 'pedidos',
@@ -90,9 +90,15 @@ export const ATELIER_SCOPE_REGISTRY: Record<string, ResourceScopeInfo> = {
   },
   fornecedores: {
     resource: 'fornecedores',
-    classification: 'exclusive',
-    identifierField: 'companyId',
-    description: 'Fornecedores e ordens de compra por ateliê, com fallback de visibilidade para registros legados da base comum.'
+    classification: 'unscoped',
+    identifierField: 'companyId (opcional)',
+    description: 'Fornecedores cadastrados centralizados e disponíveis para toda a empresa.'
+  },
+  compras: {
+    resource: 'compras',
+    classification: 'shared',
+    identifierField: 'companyId (opcional / centro de custo)',
+    description: 'Compras compartilhadas gerais da empresa ou destinadas a ateliês específicos.'
   },
   produção: {
     resource: 'produção',
@@ -135,8 +141,8 @@ export function matchesAtelierScope<T>(
     return false;
   }
 
-  // Se o recurso for explicitamente sem escopo (ex.: insumos, coleções), permite leitura comum
-  if (resourceName && (resourceName === 'insumos' || resourceName === 'coleções')) {
+  // Se o recurso for explicitamente sem escopo ou compartilhado em toda a empresa, permite leitura comum
+  if (resourceName && (resourceName === 'insumos' || resourceName === 'coleções' || resourceName === 'fornecedores')) {
     return true;
   }
 
@@ -144,8 +150,18 @@ export function matchesAtelierScope<T>(
   const companyId = record.companyId;
   const company = record.company;
 
-  // Se o item tem companyId 'all' (como campanhas ou itens globais), é acessível a todos
-  if (companyId === 'all') {
+  // Se o item tem companyId 'all' ou 'shared' (como campanhas ou compras globais), é acessível a todos
+  if (companyId === 'all' || companyId === 'shared' || company === 'all' || company === 'shared') {
+    return true;
+  }
+
+  // Clientes pertencem à base única da empresa; leitura é compartilhada
+  if (resourceName === 'clientes') {
+    return true;
+  }
+
+  // Compras sem ateliê especificado são compras compartilhadas da empresa
+  if (resourceName === 'compras' && !companyId && !company) {
     return true;
   }
 
@@ -161,11 +177,7 @@ export function matchesAtelierScope<T>(
 
   // Regra de preservação de histórico para registros sem identificador (legado pré-multi-empresa)
   if (!companyId && !company) {
-    // Fornecedores legados podem ser aproveitados como base comum de fornecedores
-    if (resourceName === 'fornecedores') {
-      return true;
-    }
-    // Para produtos, pedidos, clientes e financeiro: o ateliê original é pallyra
+    // Para produtos, pedidos e financeiro: o ateliê original é pallyra
     return targetAtelier === LEGACY_DEFAULT_ATELIER;
   }
 

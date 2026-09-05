@@ -51,15 +51,24 @@ import { PurchaseOrderForm } from "./PurchaseOrderForm";
 import { addInsumo, updateInsumo, deleteInsumo } from "../../services/firebaseService";
 import { InsumoFormModal } from "./InsumoFormModal";
 import { ComponentsTab } from "./ComponentsTab";
+import { matchesAtelierScope } from "../../services/atelierScopePolicy";
+import { AtelierBadge } from "./AtelierBadge";
 
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface PurchasesTabProps {
   orders: Order[];
-  companyId: CompanyId;
+  companyId?: CompanyId;
+  onNavigateNewInsumo?: () => void;
+  onNavigateNewPurchase?: () => void;
 }
 
-export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId, orders }) => {
+export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({
+  companyId,
+  orders,
+  onNavigateNewInsumo,
+  onNavigateNewPurchase,
+}) => {
   const orchestrator = useAdminOrchestrator();
   const [activeTab, setActiveTab] = useState<'items' | 'suggestions' | 'manual' | 'history' | 'suppliers'>('items');
   const [insumos, setInsumos] = useState<Componente[]>([]);
@@ -83,17 +92,24 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
       setInsumos(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Componente)));
     });
 
-    const qProducts = query(collection(db, "products"), where("company", "==", companyId));
+    const qProducts = companyId && companyId !== ('all' as any)
+      ? query(collection(db, "products"), where("company", "==", companyId))
+      : query(collection(db, "products"));
     const unsubProducts = onSnapshot(qProducts, (snap) => {
       setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
     });
 
-    const qPurchases = query(collection(db, "purchase_orders"), where("companyId", "==", companyId));
+    const qPurchases = query(collection(db, "purchase_orders"));
     const unsubPurchases = onSnapshot(qPurchases, (snap) => {
-      setPurchaseOrders(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PurchaseOrder)));
+      const allPurchases = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PurchaseOrder));
+      if (companyId && companyId !== ('all' as any)) {
+        setPurchaseOrders(allPurchases.filter(p => matchesAtelierScope(p, companyId, 'compras')));
+      } else {
+        setPurchaseOrders(allPurchases);
+      }
     });
 
-    const qSuppliers = query(collection(db, "suppliers"), where("companyId", "==", companyId));
+    const qSuppliers = query(collection(db, "suppliers"));
     const unsubSuppliers = onSnapshot(qSuppliers, (snap) => {
       setSuppliers(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Supplier)));
     });
@@ -202,13 +218,19 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
         </div>
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => setIsInsumoModalOpen(true)}
+            onClick={() => {
+              if (onNavigateNewInsumo) onNavigateNewInsumo();
+              else setIsInsumoModalOpen(true);
+            }}
             className="flex items-center gap-2 bg-gradient-to-b from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-md"
           >
             <Plus size={18} /> + (NOVO) Insumo
           </button>
           <button 
-            onClick={() => setIsPurchaseModalOpen(true)}
+            onClick={() => {
+              if (onNavigateNewPurchase) onNavigateNewPurchase();
+              else setIsPurchaseModalOpen(true);
+            }}
             className="flex items-center gap-2 bg-slate-950 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-slate-800 transition-all text-sm"
           >
             <Plus size={18} /> Novo Pedido de Compra
@@ -435,6 +457,7 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-100">
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Pedido</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Destino</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Fornecedor</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Data</th>
                     <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Valor</th>
@@ -450,6 +473,15 @@ export const PurchasesTab: React.FC<PurchasesTabProps> = React.memo(({ companyId
                           <FileText size={16} className="text-slate-400" />
                           <span className="text-sm font-bold text-slate-900">{order.code}</span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {order.companyId ? (
+                          <AtelierBadge companyId={order.companyId} size="xs" />
+                        ) : (
+                          <span className="text-[9px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md whitespace-nowrap">
+                            Geral Empresa
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-700">{order.supplierName}</td>
                       <td className="px-6 py-4 text-sm text-slate-500">

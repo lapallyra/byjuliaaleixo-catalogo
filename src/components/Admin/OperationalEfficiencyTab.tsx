@@ -49,7 +49,7 @@ import { calculateOrderPriority } from "../../utils/priorityUtils";
 interface OperationalEfficiencyTabProps {
   orders: Order[];
   products: Product[];
-  companyId: CompanyId;
+  companyId?: CompanyId;
 }
 
 type TimePeriod = 'today' | '7d' | '30d' | 'thisMonth' | 'lastMonth';
@@ -59,6 +59,7 @@ export const OperationalEfficiencyTab: React.FC<OperationalEfficiencyTabProps> =
   products = [],
   companyId
 }) => {
+  const [filterAtelier, setFilterAtelier] = useState<string>(companyId || 'all');
   const [period, setPeriod] = useState<TimePeriod>('30d');
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -90,11 +91,14 @@ export const OperationalEfficiencyTab: React.FC<OperationalEfficiencyTabProps> =
     }
 
     return orders.filter(o => {
+      if (filterAtelier && filterAtelier !== 'all' && o.companyId !== filterAtelier) {
+        return false;
+      }
       const orderDate = o.createdAt?.toDate ? o.createdAt.toDate() : (o.createdAt ? new Date(o.createdAt) : null);
       if (!orderDate) return false;
       return isWithinInterval(orderDate, { start, end }) && o.status !== 'cancelled';
     });
-  }, [orders, period]);
+  }, [orders, period, filterAtelier]);
 
   // Efficiency Calculations
   const stats = useMemo(() => {
@@ -238,20 +242,34 @@ export const OperationalEfficiencyTab: React.FC<OperationalEfficiencyTabProps> =
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Eficiência Operacional</h1>
           <p className="text-slate-500 font-medium text-sm">Análise técnica de fluxo, produtividade e gargalos</p>
         </div>
-        <div className="flex items-center gap-2 bg-white border border-slate-200 p-1 rounded-2xl shadow-sm">
-          {(['today', '7d', '30d', 'thisMonth', 'lastMonth'] as TimePeriod[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                period === p 
-                  ? 'bg-slate-900 text-white shadow-md' 
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              {p === 'today' ? 'Hoje' : p === '7d' ? '7 Dias' : p === '30d' ? '30 Dias' : p === 'thisMonth' ? 'Mês Atual' : 'Mês Anterior'}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={filterAtelier}
+            onChange={(e) => setFilterAtelier(e.target.value)}
+            className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none shadow-sm cursor-pointer hover:border-slate-300 transition-colors"
+          >
+            <option value="all">Todos os Ateliês</option>
+            <option value="pallyra">Pallyra</option>
+            <option value="guennita">Guennita</option>
+            <option value="mimada">Mimada</option>
+            <option value="tuttymimo">Tuttymimo</option>
+            <option value="madrinha">Madrinha</option>
+          </select>
+          <div className="flex items-center gap-2 bg-white border border-slate-200 p-1 rounded-2xl shadow-sm">
+            {(['today', '7d', '30d', 'thisMonth', 'lastMonth'] as TimePeriod[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  period === p 
+                    ? 'bg-slate-900 text-white shadow-md' 
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                {p === 'today' ? 'Hoje' : p === '7d' ? '7 Dias' : p === '30d' ? '30 Dias' : p === 'thisMonth' ? 'Mês Atual' : 'Mês Anterior'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

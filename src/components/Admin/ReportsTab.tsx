@@ -42,7 +42,7 @@ import { ptBR } from "date-fns/locale";
 import { ImageWithFallback } from "../ImageWithFallback";
 
 interface ReportsTabProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
   orders: Order[];
   products: Product[];
   customers: Customer[];

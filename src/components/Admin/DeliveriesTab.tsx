@@ -40,7 +40,7 @@ import { safeFormat } from '../../lib/dateUtils';
 import { updateOrder } from '../../services/firebaseService';
 
 interface DeliveriesTabProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
   orders: Order[];
 }
 
@@ -55,6 +55,7 @@ const STAGES: { id: DeliveryStage; label: string; color: string; icon: any }[] =
 
 export const DeliveriesTab: React.FC<DeliveriesTabProps> = ({ companyId, orders }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterAtelier, setFilterAtelier] = useState<string>(companyId || 'all');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [showChecklist, setShowChecklist] = useState<string | null>(null);
   const [showRating, setShowRating] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export const DeliveriesTab: React.FC<DeliveriesTabProps> = ({ companyId, orders 
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
-      if (order.companyId !== companyId && companyId !== 'all' as any) return false;
+      if (filterAtelier !== 'all' && order.companyId !== filterAtelier) return false;
       
       const relevantStatuses: Order['status'][] = ['ready', 'packaging', 'delivery', 'delivered', 'finalized'];
       if (!relevantStatuses.includes(order.status)) return false;
@@ -180,7 +181,7 @@ export const DeliveriesTab: React.FC<DeliveriesTabProps> = ({ companyId, orders 
 
   const alerts = useMemo(() => {
     const now = new Date();
-    return orders.filter(o => o.companyId === companyId || companyId === 'all' as any).map(o => {
+    return orders.filter(o => filterAtelier === 'all' || o.companyId === filterAtelier).map(o => {
       const alertsList = [];
       const updatedAt = o.updatedAt?.toDate?.() || new Date(o.updatedAt || 0);
       const diffHours = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
@@ -197,7 +198,7 @@ export const DeliveriesTab: React.FC<DeliveriesTabProps> = ({ companyId, orders 
       
       return { orderId: o.id, code: o.code, customerName: o.customerName, alerts: alertsList };
     }).filter(a => a.alerts.length > 0);
-  }, [orders, companyId]);
+  }, [orders, filterAtelier]);
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] animate-in fade-in duration-500 overflow-hidden">
@@ -211,6 +212,18 @@ export const DeliveriesTab: React.FC<DeliveriesTabProps> = ({ companyId, orders 
         </div>
         
         <div className="flex items-center gap-4">
+           <select 
+             value={filterAtelier}
+             onChange={(e) => setFilterAtelier(e.target.value)}
+             className="bg-slate-100 border-none rounded-xl py-2 px-3 text-xs font-bold text-slate-700 outline-none cursor-pointer"
+           >
+             <option value="all">Ateliê: Todos (Consolidado)</option>
+             <option value="pallyra">Pallyra</option>
+             <option value="guennita">Guennita</option>
+             <option value="mimada">Mimada</option>
+             <option value="tuttymimo">Tuttymimo</option>
+             <option value="madrinha">Madrinha</option>
+           </select>
            <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
               <input 

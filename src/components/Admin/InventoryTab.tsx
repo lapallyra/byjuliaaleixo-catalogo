@@ -49,7 +49,7 @@ import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 import { useAuth } from "../AuthProvider";
 
 interface InventoryTabProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
   orders: Order[];
   products: Product[];
   insumos: Insumo[];
@@ -130,7 +130,7 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
 
   // Subscribe to production batches
   useEffect(() => {
-    return subscribeToProductionBatches(companyId, (data) => {
+    return subscribeToProductionBatches((companyId || 'all') as any, (data) => {
       setBatches(data);
     });
   }, [companyId]);
@@ -149,10 +149,10 @@ export const InventoryTab: React.FC<InventoryTabProps> = React.memo(({
     }
   }, [selectedItem]);
 
-  // Priority and score calculation on all orders (scoped by atelier)
+  // Priority and score calculation on all orders (scoped by atelier or consolidated)
   const ordersWithCalculatedPriority = useMemo(() => {
     return orders
-      .filter((o) => matchesAtelierScope(o, companyId, 'pedidos'))
+      .filter((o) => !companyId || companyId === ('all' as any) || matchesAtelierScope(o, companyId, 'pedidos'))
       .map((o) => {
         const priorityInfo = calculateOrderPriority(o);
         // Ensure compatible structure for assembly/conferencing stage mapping

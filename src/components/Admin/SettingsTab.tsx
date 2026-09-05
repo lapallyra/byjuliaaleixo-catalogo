@@ -58,7 +58,7 @@ import { resendTelegramNotification } from "../../services/telegramService";
 import { useAdminOrchestrator } from "../AdminOrchestratorSystem";
 
 interface SettingsTabProps {
-  companyId: CompanyId;
+  companyId?: CompanyId;
 }
 
 interface BrandSettings {
@@ -70,6 +70,7 @@ interface BrandSettings {
 
 export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }) => {
   const orchestrator = useAdminOrchestrator();
+  const [selectedAtelier, setSelectedAtelier] = useState<CompanyId>(companyId || "pallyra");
   const [activeSubTab, setActiveSubTab] = useState<
     | "brand"
     | "about"
@@ -158,7 +159,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
 
   useEffect(() => {
     const load = async () => {
-      const data = await getSiteSettings(companyId);
+      const data = await getSiteSettings(selectedAtelier);
       const globalData = await getGlobalSettings();
       if (data) {
          setSettings({ ...data, ...globalData });
@@ -196,7 +197,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
     return () => {
       unsubscribeTelegramLogs();
     };
-  }, [companyId]);
+  }, [selectedAtelier]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -227,27 +228,27 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
           await saveAppConfig(configUpdate);
         }
         await saveGlobalSettings(settings);
-        await saveSiteSettings(companyId, settings);
+        await saveSiteSettings(selectedAtelier, settings);
       } else if (activeSubTab === "pricing") {
         // Save pricing and shipping globally
         await saveGlobalSettings(settings);
       } else if (['pix', 'receipt', 'roulette', 'notifications'].includes(activeSubTab)) {
         await saveGlobalSettings(settings);
       } else {
-        await saveSiteSettings(companyId, settings);
+        await saveSiteSettings(selectedAtelier, settings);
 
         // Sync relevant global config fields
         const configUpdate: any = {};
         if (settings.store_logo) {
-          if (companyId === "pallyra")
+          if (selectedAtelier === "pallyra")
             configUpdate.company_1_logo = settings.store_logo;
-          if (companyId === "guennita")
+          if (selectedAtelier === "guennita")
             configUpdate.company_2_logo = settings.store_logo;
-          if (companyId === "mimada")
+          if (selectedAtelier === "mimada")
             configUpdate.company_3_logo = settings.store_logo;
-          if (companyId === "tuttymimo")
+          if (selectedAtelier === "tuttymimo")
             configUpdate.company_4_logo = settings.store_logo;
-          if (companyId === "madrinha")
+          if (selectedAtelier === "madrinha")
             configUpdate.company_5_logo = settings.store_logo;
         }
         if (settings.store_qrcode)
@@ -353,6 +354,25 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-top-4 duration-500 pb-6 w-full">
+      {/* Atelier selector banner for brand-specific settings */}
+      <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-lilac/10 shadow-sm">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Ateliê Ativo para Edição:</span>
+          <select
+            value={selectedAtelier}
+            onChange={(e) => setSelectedAtelier(e.target.value as CompanyId)}
+            className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none cursor-pointer focus:border-pink-500"
+          >
+            <option value="pallyra">Pallyra</option>
+            <option value="guennita">Guennita</option>
+            <option value="mimada">Mimada</option>
+            <option value="tuttymimo">Tuttymimo</option>
+            <option value="madrinha">Madrinha</option>
+          </select>
+        </div>
+        <p className="text-[11px] text-slate-400">As configurações de marca, PIX e comprovantes serão salvas para este ateliê.</p>
+      </div>
+
       {/* Horizontal Nav */}
       <div className="w-full bg-white p-3 rounded-2xl border border-lilac/10 shadow-sm flex flex-wrap gap-2.5 items-center justify-start">
         {[
@@ -389,7 +409,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = React.memo(({ companyId }
 
       {/* Content Area */}
       <div className="w-full p-8 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-200/50 min-h-0">
-        {activeSubTab === "clients" && <ClientSettings companyId={companyId} />}
+        {activeSubTab === "clients" && <ClientSettings companyId={selectedAtelier} />}
         {activeSubTab === "products" && <ProductSettings />}
         {activeSubTab === "payments" && <PaymentSettings />}
         {activeSubTab === "approval" && <ApprovalSettings />}

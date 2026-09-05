@@ -36,7 +36,7 @@ export const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children, cl
   };
 
   return (
-    <div className="relative group/hscroll w-full flex items-center">
+    <div className="relative group/hscroll w-full flex items-center min-w-0">
       {showLeft && (
         <button
           onClick={(e) => {
@@ -44,10 +44,10 @@ export const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children, cl
             e.stopPropagation();
             scroll('left');
           }}
-          className="absolute left-0 z-20 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-full shadow-lg text-slate-700 hover:text-black hover:bg-white hover:scale-105 transition-all opacity-0 group-hover/hscroll:opacity-100 disabled:opacity-0"
-          style={{ transform: 'translateX(-50%)' }}
+          className="absolute left-1 z-20 w-8 h-8 flex items-center justify-center bg-white/95 backdrop-blur-sm border border-slate-300 rounded-full shadow-md text-slate-700 hover:text-black hover:bg-white hover:scale-105 transition-all opacity-0 group-hover/hscroll:opacity-100"
+          aria-label="Rolar para a esquerda"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={18} />
         </button>
       )}
       
@@ -68,10 +68,10 @@ export const HorizontalScroll: React.FC<HorizontalScrollProps> = ({ children, cl
             e.stopPropagation();
             scroll('right');
           }}
-          className="absolute right-0 z-20 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-white/80 backdrop-blur-sm border border-slate-200/50 rounded-full shadow-lg text-slate-700 hover:text-black hover:bg-white hover:scale-105 transition-all opacity-0 group-hover/hscroll:opacity-100 disabled:opacity-0"
-          style={{ transform: 'translateX(50%)' }}
+          className="absolute right-1 z-20 w-8 h-8 flex items-center justify-center bg-white/95 backdrop-blur-sm border border-slate-300 rounded-full shadow-md text-slate-700 hover:text-black hover:bg-white hover:scale-105 transition-all opacity-0 group-hover/hscroll:opacity-100"
+          aria-label="Rolar para a direita"
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={18} />
         </button>
       )}
     </div>

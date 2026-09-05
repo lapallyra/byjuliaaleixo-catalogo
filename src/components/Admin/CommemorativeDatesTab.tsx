@@ -410,10 +410,10 @@ export function CommemorativeDatesTab() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <HorizontalScroll className="items-center gap-4 pb-4">
+        <HorizontalScroll className="flex items-center gap-4 pb-4">
           <button
             onClick={() => setSelectedCategory("all")}
-            className={`px-8 py-4 rounded-full text-sm font-bold tracking-normal whitespace-nowrap transition-all border ${selectedCategory === "all" ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-[#E5E5EA] text-slate-500"}`}
+            className={`px-8 py-4 rounded-full text-sm font-bold tracking-normal whitespace-nowrap transition-all border shrink-0 ${selectedCategory === "all" ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-[#E5E5EA] text-slate-500"}`}
           >
             Todos
           </button>

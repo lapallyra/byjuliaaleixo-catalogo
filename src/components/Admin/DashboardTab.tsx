@@ -79,12 +79,13 @@ import { commemorativeDateService } from "../../services/commemorativeDateServic
 import { subscribeToCampaigns } from "../../services/firebaseService";
 import { eventBus } from "../../services/eventBus";
 import { matchesAtelierScope } from '../../services/atelierScopePolicy';
+import { AtelierBadge } from './AtelierBadge';
 
 interface DashboardTabProps {
   orders: Order[];
   products: Product[];
   customers: Customer[];
-  companyId: CompanyId;
+  companyId?: CompanyId;
   onAction: (action: any) => void;
   onOpenOrder: (order: Order) => void;
 }
@@ -111,9 +112,9 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
   onAction,
   onOpenOrder,
 }) => {
-  const filteredOrders = useMemo(() => orders.filter(o => matchesAtelierScope(o, companyId, 'pedidos')), [orders, companyId]);
-  const filteredProducts = useMemo(() => products.filter(p => matchesAtelierScope(p, companyId, 'produtos')), [products, companyId]);
-  const filteredCustomers = useMemo(() => customers.filter(c => matchesAtelierScope(c, companyId, 'clientes')), [customers, companyId]);
+  const filteredOrders = useMemo(() => companyId && companyId !== 'all' as any ? orders.filter(o => matchesAtelierScope(o, companyId, 'pedidos')) : orders, [orders, companyId]);
+  const filteredProducts = useMemo(() => companyId && companyId !== 'all' as any ? products.filter(p => matchesAtelierScope(p, companyId, 'produtos')) : products, [products, companyId]);
+  const filteredCustomers = useMemo(() => companyId && companyId !== 'all' as any ? customers.filter(c => matchesAtelierScope(c, companyId, 'clientes')) : customers, [customers, companyId]);
 
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -218,8 +219,9 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
   // Fetch Checklist
   useEffect(() => {
-    if (!companyId) return;
-    const q = query(collection(db, "checklist"), where("companyId", "==", companyId));
+    const q = companyId 
+      ? query(collection(db, "checklist"), where("companyId", "==", companyId))
+      : query(collection(db, "checklist"));
     const unsub = onSnapshot(q, (snap) => {
       setChecklist(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChecklistItem)));
     });
@@ -234,8 +236,6 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
   // Fetch Events (Mocked base + custom from Firestore + commemorative dates)
   useEffect(() => {
-    if (!companyId) return;
-
     let systemCommemorativeDates: any[] = [];
     
     // Subscribe to commemorative dates
@@ -246,7 +246,9 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
     let customEvents: EventItem[] = [];
 
-    const q = query(collection(db, "events"), where("companyId", "==", companyId));
+    const q = companyId 
+      ? query(collection(db, "events"), where("companyId", "==", companyId))
+      : query(collection(db, "events"));
     const unsubEvents = onSnapshot(q, (snap) => {
       customEvents = snap.docs.map(doc => ({ 
         id: doc.id, 
@@ -363,6 +365,25 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     return { count, revenue };
   }, [filteredOrders]);
 
+  
+  const atelierMetrics = useMemo(() => {
+    const completedOrders = filteredOrders.filter(o => !['cancelled', 'pending'].includes(o.status));
+    const companies = [
+      { id: 'pallyra', name: 'La Pallyra' },
+      { id: 'guennita', name: 'com amor, Guennita' },
+      { id: 'mimada', name: 'Mimada Sim' },
+      { id: 'tuttymimo', name: 'Tutty Mimo' },
+      { id: 'madrinha', name: 'Madrinha' }
+    ];
+
+    return companies.map(company => {
+      const companyOrders = completedOrders.filter(o => o.companyId === company.id);
+      const count = companyOrders.length;
+      const revenue = companyOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+      return { ...company, count, revenue };
+    });
+  }, [filteredOrders]);
+
   const activeOrders = useMemo(() => {
     return filteredOrders
       .filter(o => ['novo pedido', 'approval', 'waiting_payment', 'production', 'in_production', 'assembly', 'packaging', 'delivery'].includes(o.status))
@@ -378,7 +399,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
     await addDoc(collection(db, "checklist"), {
       text: newChecklistItem,
       completed: false,
-      companyId,
+      companyId: companyId || 'empresa',
       createdAt: serverTimestamp()
     });
     setNewChecklistItem("");
@@ -400,7 +421,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       title: newEvent.title,
       date: new Date(newEvent.date),
       category: newEvent.category,
-      companyId,
+      companyId: companyId || 'empresa',
       createdAt: serverTimestamp()
     });
     setNewEvent({ title: '', date: '', category: 'personalizado' });
@@ -413,7 +434,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       
       {/* BLOCO 01: META DO MÊS */}
       <section>
-        <div className="clean-3d-card p-8 flex flex-col justify-between relative overflow-hidden group border border-slate-100">
+        <div className="clean-3d-card p-5 flex flex-col justify-between relative overflow-hidden group border border-slate-100">
           <div className="absolute top-0 right-0 w-64 h-64 bg-pink-50/30 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none group-hover:bg-pink-100/30 transition-colors" />
           
           <div className="relative z-10">
@@ -465,7 +486,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
       {/* BLOCO 02: CHECK LIST DIÁRIO */}
       <section>
-        <div className="clean-3d-card p-8 flex flex-col h-[400px] border border-slate-100">
+        <div className="clean-3d-card p-5 flex flex-col h-[400px] border border-slate-100">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center border border-pink-200/50 shadow-sm">
@@ -531,7 +552,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
       {/* BLOCO 03: LISTA DE PEDIDOS ATIVOS (CARROSSEL) */}
       <section>
-        <div className="clean-3d-card p-8 border border-slate-100">
+        <div className="clean-3d-card p-5 border border-slate-100">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-pink-500 text-white flex items-center justify-center shadow-3d-deep">
@@ -555,17 +576,29 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     onClick={() => onOpenOrder(order)}
                     className="relative clean-3d-card bg-white p-4 pl-10 border border-slate-50 group cursor-pointer hover:shadow-lg transition-all"
                   >
-                    <div className={`led-strip rounded-l-[28px] ${
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl z-20 ${
                       ['em produção', 'production', 'in_production'].includes(order.status?.toLowerCase()) ? 'bg-[#FFD100]' :
                       ['montagem', 'assembly'].includes(order.status?.toLowerCase()) ? 'bg-[#BD02FC]' :
                       ['aguardando sinal', 'waiting_payment', 'waiting_deposit', 'pending'].includes(order.status?.toLowerCase()) ? 'bg-[#0080FF]' :
                       ['enviado', 'delivery'].includes(order.status?.toLowerCase()) ? 'bg-[#FFFFFF]' :
                       ['novo pedido'].includes(order.status?.toLowerCase()) ? 'bg-[#37FD12]' :
                       'bg-[#7FFF00]'
-                    }`} />
+                    }`} style={{ 
+                      boxShadow: `0 0 12px 1px ${
+                        ['em produção', 'production', 'in_production'].includes(order.status?.toLowerCase()) ? '#FFD10060' :
+                        ['montagem', 'assembly'].includes(order.status?.toLowerCase()) ? '#BD02FC60' :
+                        ['aguardando sinal', 'waiting_payment', 'waiting_deposit', 'pending'].includes(order.status?.toLowerCase()) ? '#0080FF60' :
+                        ['enviado', 'delivery'].includes(order.status?.toLowerCase()) ? '#FFFFFF60' :
+                        ['novo pedido'].includes(order.status?.toLowerCase()) ? '#37FD1260' :
+                        '#7FFF0060'
+                      }`
+                    }} />
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] text-slate-400 font-mono">#{order.code}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-slate-400 font-mono">#{order.code}</span>
+                          {order.companyId && <AtelierBadge companyId={order.companyId} size="xs" />}
+                        </div>
                         <h4 className="text-sm font-black text-slate-900 line-clamp-1">{order.customerName}</h4>
                       </div>
                       <p className="text-sm font-black text-slate-900">{formatCurrency(order.total)}</p>
@@ -587,17 +620,29 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                     onClick={() => onOpenOrder(order)}
                     className="relative clean-3d-card bg-white p-4 pl-10 border border-slate-50 group cursor-pointer hover:shadow-lg transition-all"
                   >
-                    <div className={`led-strip rounded-l-[28px] ${
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl z-20 ${
                       ['em produção', 'production', 'in_production'].includes(order.status?.toLowerCase()) ? 'bg-[#FFD100]' :
                       ['montagem', 'assembly'].includes(order.status?.toLowerCase()) ? 'bg-[#BD02FC]' :
                       ['aguardando sinal', 'waiting_payment', 'waiting_deposit', 'pending'].includes(order.status?.toLowerCase()) ? 'bg-[#0080FF]' :
                       ['enviado', 'delivery'].includes(order.status?.toLowerCase()) ? 'bg-[#FFFFFF]' :
                       ['novo pedido'].includes(order.status?.toLowerCase()) ? 'bg-[#37FD12]' :
                       'bg-[#7FFF00]'
-                    }`} />
+                    }`} style={{ 
+                      boxShadow: `0 0 12px 1px ${
+                        ['em produção', 'production', 'in_production'].includes(order.status?.toLowerCase()) ? '#FFD10060' :
+                        ['montagem', 'assembly'].includes(order.status?.toLowerCase()) ? '#BD02FC60' :
+                        ['aguardando sinal', 'waiting_payment', 'waiting_deposit', 'pending'].includes(order.status?.toLowerCase()) ? '#0080FF60' :
+                        ['enviado', 'delivery'].includes(order.status?.toLowerCase()) ? '#FFFFFF60' :
+                        ['novo pedido'].includes(order.status?.toLowerCase()) ? '#37FD1260' :
+                        '#7FFF0060'
+                      }`
+                    }} />
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] text-slate-400 font-mono">#{order.code}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-slate-400 font-mono">#{order.code}</span>
+                          {order.companyId && <AtelierBadge companyId={order.companyId} size="xs" />}
+                        </div>
                         <h4 className="text-sm font-black text-slate-900 line-clamp-1">{order.customerName}</h4>
                       </div>
                       <p className="text-sm font-black text-slate-900">{formatCurrency(order.total)}</p>
@@ -617,7 +662,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
       {/* BLOCO 04: MINI CARDS CAMPANHAS */}
       <section>
-        <div className="clean-3d-card p-8 border border-slate-100">
+        <div className="clean-3d-card p-5 border border-slate-100">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center shadow-3d-deep">
@@ -652,7 +697,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
 
       {/* BLOCO 05: MINI CARDS EVENTOS */}
       <section>
-        <div className="clean-3d-card p-8 border border-slate-100">
+        <div className="clean-3d-card p-5 border border-slate-100">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-3d-deep">
@@ -684,7 +729,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
       {/* BLOCO 06: FATURAMENTO & PEDIDOS CONCLUÍDOS */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* LADO ESQUERDO: FATURAMENTO */}
-        <div className="clean-3d-card p-10 flex flex-col items-center justify-center border border-slate-100 group">
+        <div className="clean-3d-card p-6 flex flex-col items-center justify-center border border-slate-100 group">
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-12">Faturamento Total</h3>
           <div className="flex items-center gap-2">
             <span className="text-3xl font-black text-slate-300 mr-2">R$</span>
@@ -695,7 +740,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
         </div>
 
         {/* DIREITA: PEDIDOS CONCLUÍDOS */}
-        <div className="clean-3d-card p-10 flex flex-col items-center justify-center border border-slate-100 group">
+        <div className="clean-3d-card p-6 flex flex-col items-center justify-center border border-slate-100 group">
           <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-12">Pedidos Concluídos</h3>
           <div className="flex items-center gap-2">
             {totalMetrics.count.toString().padStart(4, '0').split('').map((digit, i) => (
@@ -703,6 +748,33 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
             ))}
           </div>
         </div>
+      </section>
+
+      {/* BLOCO 07: FATURAMENTO & PEDIDOS POR ATELIÊ */}
+      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {atelierMetrics.map(atelier => (
+          <div key={atelier.id} className="clean-3d-card p-4 flex flex-col justify-between border border-slate-100/50 relative overflow-hidden group">
+            {/* Soft decorative background glow */}
+            <div className="absolute -right-4 -top-4 w-16 h-16 bg-slate-50 rounded-full blur-2xl opacity-50 pointer-events-none" />
+            
+            <div className="mb-4">
+              <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-tight truncate">{atelier.name}</h4>
+              <div className="w-6 h-[2px] bg-slate-200 mt-2 rounded-full" />
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Pedidos</p>
+                <p className="text-sm font-black text-slate-700">{atelier.count.toString().padStart(2, '0')}</p>
+              </div>
+              
+              <div>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Faturamento</p>
+                <p className="text-sm font-black text-slate-700">{formatCurrency(atelier.revenue)}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </section>
 
       {/* EVENT MODAL */}
