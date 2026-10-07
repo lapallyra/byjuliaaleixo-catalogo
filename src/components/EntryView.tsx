@@ -3,11 +3,9 @@ import { AppConfig, Product } from '../types';
 import { useHomeData } from './Home/useHomeData';
 import { OpeningCurtain } from './Home/OpeningCurtain';
 import { HomeCommemorativeBanner } from './Home/HomeCommemorativeBanner';
-import { HomeAteliersFlipGrid } from './Home/HomeAteliersFlipGrid';
+import { HomeAtelierDividers, StoreDividerId } from './Home/HomeAtelierDividers';
 import { HomeCuratedProducts } from './Home/HomeCuratedProducts';
-import { HomeKitsSplitSection } from './Home/HomeKitsSplitSection';
-import { HomeHowItWorksSection } from './Home/HomeHowItWorksSection';
-import { HomeBehindTheCraft } from './Home/HomeBehindTheCraft';
+import { HomeCompanyLanding } from './Home/HomeCompanyLanding';
 import { HomeFAQSection } from './Home/HomeFAQSection';
 import { HomeFooterSignature } from './Home/HomeFooterSignature';
 
@@ -19,65 +17,79 @@ interface EntryViewProps {
 
 /**
  * EntryView — Ponto de Entrada Oficial da Home (Rota `/`)
- * Direção Visual: Luxo Silencioso (Silent Luxury)
- * Abertura: Cortina dramática em preto profundo e dourado
- * Sequência Refinada: Abertura -> Faixa de Avisos -> Banner Comemorativo -> 4 Ateliês (Hover Flip) -> Criações -> Kits -> Como Funciona -> Por Trás -> FAQ -> Rodapé
+ * Estrutura:
+ * - Aba "HOME": Landing page ultra elegante com faixas institucionais e explicativas para cada tema da empresa
+ *   (Banner Comemorativo, Os 4 Ateliês, Monte seu Kit, Personalize, Sobre Nós, Feedbacks, Lista de Presentes, FAQ e Rodapé).
+ * - Outras Abas ("Loja Completa", "La Pallyra", "Mimada Sim", "com amor, Guennita", "Tutty Mimo"): Vitrines exclusivas dos produtos com filtros, busca e ordenação.
  */
 export const EntryView: React.FC<EntryViewProps> = ({ config, allProducts = [], onOpenSearch }) => {
   const {
     customSettings,
     realFeedbacks,
     activeCampaigns,
-    commemorativeDates,
-    kits
+    commemorativeDates
   } = useHomeData(allProducts);
 
   const [curtainKey, setCurtainKey] = useState<number>(0);
+  // Default fixado na aba 'home'
+  const [activeDivider, setActiveDivider] = useState<StoreDividerId>('home');
 
   const handleReopenCurtain = () => {
     sessionStorage.removeItem('seen_opening_curtain_v1');
     setCurtainKey((prev) => prev + 1);
   };
 
+  const isHomeView = activeDivider === 'home';
+
   return (
     <div
       id="home-entry-view"
       className="home-root bg-[#FDFCFA] min-h-[100dvh] w-full relative text-[#2C1810] selection:bg-[#FAF0DC] selection:text-[#2C1810] overflow-x-hidden antialiased"
     >
-      {/* 1. Dramatic Opening Curtain in Deep Black & Gold */}
+      {/* 1. Cortina dramática de abertura */}
       <OpeningCurtain
         key={curtainKey}
-        siteName={config.site_name || config.site_title || "by Júlia Aleixo"}
+        siteName={config.site_name || config.site_title || "Madrinha"}
       />
 
-      {/* 2. Commemorative Seasonal Banner */}
-      <HomeCommemorativeBanner 
-        activeCampaigns={activeCampaigns} 
-        commemorativeDates={commemorativeDates}
+      {/* 
+        2. DIVISÓRIAS ESTILO FICHÁRIO (NO TOPO)
+        Abas: Home / Loja Completa / La Pallyra / Mimada Sim / com amor, Guennita / Tutty Mimo
+      */}
+      <HomeAtelierDividers 
+        activeTab={activeDivider}
+        onSelectTab={setActiveDivider}
       />
 
-      {/* 4. The 4 Ateliers Rectangular Cards with Hover Flip & Isotype */}
-      <HomeAteliersFlipGrid customSettings={customSettings} />
+      {/* SE ESTIVER NA ABA "HOME": Exibe a landing page explicativa e elegante sobre a empresa */}
+      {isHomeView ? (
+        <>
+          {/* Banner Comemorativo Sazonal */}
+          <HomeCommemorativeBanner 
+            activeCampaigns={activeCampaigns} 
+            commemorativeDates={commemorativeDates}
+          />
 
-      {/* 5. Curated Products Selection & [ VER LOJA ] CTA */}
-      <HomeCuratedProducts allProducts={allProducts} />
+          {/* Faixas Editoriais Explicativas (Ateliês, Monte seu Kit, Personalize, Sobre Nós, Feedbacks, Lista de Presentes) */}
+          <HomeCompanyLanding customSettings={customSettings} />
 
-      {/* 6. Kit Pronto | Monte Seu Kit Split Section */}
-      <HomeKitsSplitSection kits={kits} />
+          {/* FAQ / Perguntas Frequentes */}
+          <HomeFAQSection />
 
-      {/* 7. Como Funciona (4 Steps with ◇ markers) */}
-      <HomeHowItWorksSection />
-
-      {/* 8. Por Trás dos Detalhes / Essência Artesanal */}
-      <HomeBehindTheCraft customSettings={customSettings} />
-
-      {/* 9. FAQ / Perguntas Frequentes */}
-      <HomeFAQSection />
-
-      {/* 10. Footer Signature & Reopen Curtain Trigger */}
-      <HomeFooterSignature onReopenCurtain={handleReopenCurtain} />
+          {/* Rodapé & Gatilho da Cortina */}
+          <HomeFooterSignature onReopenCurtain={handleReopenCurtain} />
+        </>
+      ) : (
+        /* SE ESTIVER EM OUTRA DIVISÓRIA: Exibe EXCLUSIVAMENTE a vitrine dos produtos daquela marca com logotipo */
+        <div className="min-h-[70vh] flex flex-col justify-between">
+          <HomeCuratedProducts 
+            allProducts={allProducts} 
+            activeDivider={activeDivider}
+            customSettings={customSettings}
+          />
+          <HomeFooterSignature onReopenCurtain={handleReopenCurtain} />
+        </div>
+      )}
     </div>
   );
 };
-
-

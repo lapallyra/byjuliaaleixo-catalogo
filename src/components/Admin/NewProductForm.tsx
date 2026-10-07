@@ -58,6 +58,7 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
     original_price: editingProduct?.original_price || 0,
     isVisible: editingProduct?.isVisible ?? true,
     image: editingProduct?.image || "",
+    tags: (editingProduct?.tags && editingProduct.tags.length > 0) ? editingProduct.tags.join(", ") : "",
     description: editingProduct?.description || "",
     productionTime: editingProduct?.productionTime || 5,
     weight: editingProduct?.weight || 0,
@@ -120,6 +121,23 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
     setLoading(true);
     try {
       const code = generateCode(formData.category);
+
+      // Parse tags e inclui a tag oficial do ateliê para garantir consistência nas divisórias fichário
+      const parsedTags = formData.tags
+        .split(",")
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+
+      const atelierDefaultTag = 
+        selectedCompany === 'pallyra' ? 'LA PALLYRA' :
+        selectedCompany === 'mimada' ? 'MIMADA SIM' :
+        selectedCompany === 'guennita' ? 'com amor, Guennita' :
+        selectedCompany === 'tuttymimo' ? 'TUTTY MIMO' : 'Madrinha';
+
+      if (!parsedTags.some(t => t.toLowerCase() === atelierDefaultTag.toLowerCase())) {
+        parsedTags.unshift(atelierDefaultTag);
+      }
+
       await onSave({
         ...editingProduct,
         product_name: formData.name,
@@ -135,6 +153,7 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
         code,
         company: selectedCompany,
         companyId: selectedCompany,
+        tags: parsedTags,
         type: formData.type,
         insumos: formData.insumos.map(i => ({ insumoId: i.insumoId, quantity: i.quantity }))
       });
@@ -297,6 +316,18 @@ export const NewProductForm: React.FC<NewProductFormProps> = ({
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest ml-1">Categoria *</label>
                       <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} placeholder="Ex: Papelaria" className="w-full bg-white border border-[#E5E5EA] rounded-2xl p-4 text-xs font-bold text-[#1C1C1E] outline-none focus:border-[#1C1C1E]/20 shadow-inner transition-all"/>
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <label className="text-[9px] font-black text-[#8E8E93] uppercase tracking-widest ml-1">Tags do Produto (separadas por vírgula)</label>
+                      <input 
+                        value={formData.tags} 
+                        onChange={e => setFormData({...formData, tags: e.target.value})} 
+                        placeholder={`Ex: ${selectedCompany === 'pallyra' ? 'LA PALLYRA, luxo, papelaria' : selectedCompany === 'mimada' ? 'MIMADA SIM, mimos, lembranças' : selectedCompany === 'guennita' ? 'com amor, Guennita, cartonagem' : selectedCompany === 'tuttymimo' ? 'TUTTY MIMO, maternidade' : 'Madrinha, presentes'}`} 
+                        className="w-full bg-white border border-[#E5E5EA] rounded-2xl p-4 text-xs font-bold text-[#1C1C1E] outline-none focus:border-[#1C1C1E]/20 shadow-inner transition-all"
+                      />
+                      <span className="text-[9px] text-[#8E8E93] font-medium block ml-1">
+                        A tag do ateliê é associada automaticamente para alimentar as divisórias fichário da loja.
+                      </span>
                     </div>
                   </div>
                 </motion.div>

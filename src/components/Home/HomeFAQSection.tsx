@@ -50,17 +50,10 @@ export const HomeFAQSection: React.FC = () => {
     <section className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
       
       {/* Section Title */}
-      <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
-        <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-[#8C6D37] font-medium">
-          <HelpCircle size={12} strokeWidth={1.5} />
-          <span>Dúvidas Frequentes</span>
-        </div>
+      <div className="text-center max-w-2xl mx-auto mb-10">
         <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#2C1810] tracking-tight">
           Perguntas & Respostas
         </h2>
-        <p className="text-xs sm:text-sm text-[#593E32] font-light">
-          Tudo o que você precisa saber sobre prazos, personalização e pedidos.
-        </p>
       </div>
 
       {/* Accordion List */}

@@ -92,7 +92,7 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
   return (
     <section 
       id="home-commemorative-banner"
-      className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4 select-none"
+      className="w-full max-w-[1850px] mx-auto px-2 sm:px-3 md:px-4 pt-3 pb-4 select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -130,8 +130,8 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
                   </span>
 
                   {/* Countdown Pill (Faltam XX dias) */}
-                  <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#2C1810] text-[#E5C388] text-[10px] font-bold tracking-widest uppercase border border-[#D4AF37]/50 shadow-xs">
-                    <Clock size={10} className="text-[#E5C388] animate-pulse" />
+                  <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white text-[#8C6D37] text-[10px] font-bold tracking-widest uppercase border border-[#D4AF37]/50 shadow-2xs">
+                    <Clock size={10} className="text-[#B38F4D] animate-pulse" />
                     <span>
                       {activeDate.isToday
                         ? 'É Hoje!'
@@ -151,15 +151,7 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
                   >
                     {activeDate.name}
                   </h2>
-                  <p className="text-sm sm:text-base font-serif text-[#3D261C] italic max-w-3xl font-light">
-                    "{activeDate.marketing_phrase || activeDate.description}"
-                  </p>
                 </div>
-
-                {/* Subtitle / Atelier Customization Note */}
-                <p className="text-xs sm:text-sm text-[#735A4A] font-light leading-relaxed max-w-3xl">
-                  {activeDate.description} Personalize com nomes, fotos e gravações exclusivas com até 60 dias de antecedência para garantir acabamento artesanal perfeito.
-                </p>
 
               </div>
 

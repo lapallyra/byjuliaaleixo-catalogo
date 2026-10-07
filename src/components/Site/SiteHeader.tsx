@@ -7,143 +7,87 @@ interface SiteHeaderProps {
   onOpenSearch?: () => void;
 }
 
-export const SiteHeader: React.FC<SiteHeaderProps> = ({ onOpenSearch }) => {
+/**
+ * SiteHeader:
+ * Header superior nobre e clean com escrita cursiva dourada neon "MADRINHA".
+ * A Faixa Link foi removida do topo e transformada em faixas editoriais explicativas na Home.
+ */
+export const SiteHeader: React.FC<SiteHeaderProps> = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchCode, setSearchCode] = useState('');
 
   return (
-    <div className="w-full border-b border-[#E8DFC8]/40 bg-[#FDFCFA]/95 backdrop-blur-md sticky top-0 z-50 shadow-xs">
-      <div className="w-full mx-auto px-2 sm:px-3 md:px-4 py-2.5 flex flex-col lg:flex-row justify-between items-center gap-3 md:gap-4">
-        
-        {/* Centered navigation links */}
-        <nav className="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 gap-y-1.5 text-[#1F1F1F] tracking-[0.08em] font-medium text-[11px] sm:text-[12px] select-none font-poppins">
-          <button 
-            onClick={() => navigate('/')} 
-            className="px-2.5 py-1 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out font-medium cursor-pointer"
-          >
-            Início
-          </button>
-          
-          {/* Ateliers Dropdown */}
-          <div className="relative group">
-            <button 
-              onClick={() => navigate('/atelies')} 
-              className="px-2.5 py-1 rounded-full text-[#666666] group-hover:text-[#1F1F1F] group-hover:bg-[#F2ECE1]/50 transition-all duration-150 ease-in-out font-medium cursor-pointer flex items-center gap-1"
+    <header className="w-full relative z-30 select-none">
+      {/* HEADER SUPERIOR NOBRE EM AZUL PROFUNDO */}
+      <div className="w-full bg-[#081220] border-b border-[#1A3150] py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 relative overflow-hidden">
+        {/* Glow de fundo sutil */}
+        <div className="absolute inset-0 bg-radial from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none" />
+
+        <div className="w-full max-w-[1850px] mx-auto flex items-center justify-between gap-3 relative z-10">
+          {/* Busca Rápida no Topo (Esquerda no Desktop / Compacta) */}
+          <div className="flex items-center sm:w-72 shrink-0">
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (searchCode.trim()) {
+                  navigate(`/document?code=${searchCode.trim().toUpperCase()}`);
+                } else {
+                  navigate('/document');
+                }
+              }}
+              className="flex items-center gap-2 bg-[#0F2038] border border-[#23456F] rounded-full px-3.5 py-1.5 text-xs text-[#E5C388] shadow-inner hover:border-[#D4AF37]/60 transition-all duration-200 w-full max-w-[240px]"
             >
-              <span>Ateliês</span>
-              <span className="text-[9px] opacity-60">▼</span>
-            </button>
-            <div className="absolute top-full left-0 mt-1 w-52 bg-[#FAF7F2] border border-[#E8DFC8] rounded-xl shadow-lg py-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-              <button
-                onClick={() => navigate('/lapallyra')}
-                className="w-full px-4 py-2 text-left text-xs text-[#3A312D] hover:bg-[#EFE8DC] transition-colors flex items-center justify-between"
-              >
-                <span className="font-medium">La Pallyra</span>
-                <span className="text-[10px] text-[#8C6D37]">Papelaria</span>
-              </button>
-              <button
-                onClick={() => navigate('/mimadasim')}
-                className="w-full px-4 py-2 text-left text-xs text-[#3A312D] hover:bg-[#EFE8DC] transition-colors flex items-center justify-between"
-              >
-                <span className="font-medium">Mimada Sim</span>
-                <span className="text-[10px] text-[#8C6D37]">Lembranças</span>
-              </button>
-              <button
-                onClick={() => navigate('/tuttymimo')}
-                className="w-full px-4 py-2 text-left text-xs text-[#3A312D] hover:bg-[#EFE8DC] transition-colors flex items-center justify-between"
-              >
-                <span className="font-medium">Tutty Mimo</span>
-                <span className="text-[10px] text-[#8C6D37]">Maternidade</span>
-              </button>
-              <button
-                onClick={() => navigate('/comamorguennita')}
-                className="w-full px-4 py-2 text-left text-xs text-[#3A312D] hover:bg-[#EFE8DC] transition-colors flex items-center justify-between"
-              >
-                <span className="font-medium">com amor, Guennita</span>
-                <span className="text-[10px] text-[#8C6D37]">Cartonagem</span>
-              </button>
-              <div className="border-t border-[#E8DFC8]/60 mt-1 pt-1">
-                <button
-                  onClick={() => navigate('/atelies')}
-                  className="w-full px-4 py-1.5 text-left text-[11px] text-[#8C6D37] hover:bg-[#EFE8DC] transition-colors font-semibold"
-                >
-                  Conhecer todos os Ateliês →
-                </button>
-              </div>
-            </div>
+              <Search size={13} strokeWidth={2} className="text-[#D4AF37] shrink-0" />
+              <input 
+                type="text" 
+                value={searchCode}
+                onChange={(e) => setSearchCode(e.target.value)}
+                placeholder="Rastrear pedido..." 
+                className="bg-transparent focus:outline-none w-full text-[#FAF8F5] placeholder-[#8EA4C7]/80 font-medium text-[11px] border-none p-0 tracking-[0.03em]" 
+              />
+            </form>
           </div>
-          
-          <button 
-            onClick={() => navigate('/comomontar')} 
-            className="px-2.5 py-1 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out cursor-pointer outline-none font-semibold text-[11px] sm:text-[12px]"
-          >
-            Monte seu kit
-          </button>
 
-          <button 
-            onClick={() => navigate('/personalize')} 
-            className="px-2.5 py-1 rounded-full text-[#8C6D37] hover:text-[#2C1810] font-semibold hover:bg-[#FAF0E6] transition-all duration-150 ease-in-out cursor-pointer outline-none text-[11px] sm:text-[12px]"
+          {/* Logotipo / Escrita Dourada Neon Cursiva: "MADRINHA" */}
+          <div 
+            onClick={() => navigate('/')}
+            className="flex-1 flex flex-col items-center justify-center cursor-pointer group py-0.5"
+            role="button"
+            aria-label="Ir para a página inicial Madrinha"
           >
-            Personalize
-          </button>
-          
-          <button 
-            onClick={() => navigate('/sobrenos')} 
-            className="px-2.5 py-1 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out font-medium cursor-pointer"
-          >
-            Sobre nós
-          </button>
-          
-          <button 
-            onClick={() => navigate('/feedclientes')} 
-            className="px-2.5 py-1 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out font-medium cursor-pointer"
-          >
-            Feedback
-          </button>
-          
-          <button 
-            onClick={() => navigate('/listadepresentes')} 
-            className="px-2.5 py-1 rounded-full text-[#666666] hover:text-[#1F1F1F] transition-all duration-150 ease-in-out cursor-pointer outline-none font-semibold text-[11px] sm:text-[12px]"
-          >
-            Lista de presentes
-          </button>
-        </nav>
+            <span
+              className="font-meaculpa text-4xl sm:text-5xl md:text-6xl text-[#FBF3D5] leading-none tracking-wide text-center transition-all duration-300 group-hover:scale-105"
+              style={{
+                fontFamily: "'Mea Culpa', cursive",
+                color: '#FFF6D6',
+                textShadow: `
+                  0 0 7px rgba(255, 235, 170, 0.95),
+                  0 0 15px rgba(245, 206, 110, 0.85),
+                  0 0 28px rgba(212, 175, 55, 0.75),
+                  0 0 45px rgba(184, 134, 11, 0.6),
+                  0 0 70px rgba(160, 115, 10, 0.35)
+                `,
+                filter: 'drop-shadow(0 2px 8px rgba(212, 175, 55, 0.4))'
+              }}
+            >
+              Madrinha
+            </span>
+          </div>
 
-        {/* Right Action: Busto (Profile Icon) + Order Search Capsule */}
-        <div className="flex items-center gap-2.5 w-full lg:w-auto justify-end">
-          {/* Busto (Ícone de Perfil/Login sem texto escrito) */}
-          <button
-            onClick={() => navigate('/minha-experiencia')}
-            className="w-9 h-9 rounded-full bg-[#FAF6F0] hover:bg-[#2C1810] text-[#8C6D37] hover:text-white border border-[#E8DFC8] flex items-center justify-center transition-all duration-200 shrink-0 shadow-2xs group cursor-pointer"
-            title={user ? (user.displayName || 'Minha Conta') : 'Área do Cliente'}
-            aria-label="Área do Cliente"
-          >
-            <UserIcon size={17} strokeWidth={2} className="transition-transform group-hover:scale-110" />
-          </button>
-
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (searchCode.trim()) {
-                navigate(`/document?code=${searchCode.trim().toUpperCase()}`);
-              } else {
-                navigate('/document');
-              }
-            }}
-            className="flex items-center gap-2.5 bg-white border border-[#EAE4DC] rounded-full px-4 py-2 text-xs text-[#555555] shadow-[0_2px_6px_rgba(0,0,0,0.02)] hover:border-[#C2B7A8] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 w-full sm:w-64 md:w-72"
-          >
-            <Search size={14} strokeWidth={2} className="text-[#8C7864]/80 shrink-0" />
-            <input 
-              type="text" 
-              value={searchCode}
-              onChange={(e) => setSearchCode(e.target.value)}
-              placeholder="Encontre seu pedido aqui..." 
-              className="bg-transparent focus:outline-none w-full text-[#1F1F1F] placeholder-[#8C7864]/60 font-medium text-[13px] border-none p-0 tracking-[0.03em]" 
-            />
-          </form>
+          {/* Ações Rápidas no Topo (Direita) */}
+          <div className="flex items-center gap-2 sm:w-72 justify-end shrink-0">
+            <button
+              onClick={() => navigate('/minha-experiencia')}
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0F2038] hover:bg-[#162F52] text-[#E5C388] border border-[#23456F] flex items-center justify-center transition-all duration-200 shadow-2xs group cursor-pointer"
+              title={user ? (user.displayName || 'Minha Conta') : 'Área do Cliente'}
+              aria-label="Área do Cliente"
+            >
+              <UserIcon size={16} strokeWidth={2} className="transition-transform group-hover:scale-110" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
