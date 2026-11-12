@@ -3,8 +3,6 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2 } from 'lucide-react';
 import { EntryView } from '../EntryView';
-import { VitrinePage } from '../VitrinePage';
-import { AteliersPresentationView } from '../AteliersPresentationView';
 import { HowToBuildKitView } from '../HowToBuildKitView';
 import { GiftListHowItWorksView } from '../GiftListHowItWorksView';
 import { CustomerFeedbackView } from '../CustomerFeedbackView';
@@ -20,7 +18,6 @@ import { TrackingView } from '../TrackingView';
 import { MinhaExperienciaPage } from '../cliente/MinhaExperienciaPage';
 import { DocumentSearch } from '../DocumentSearch';
 import { StudioPage } from '../../studiomockup/pages/StudioPage';
-import { TopAnnouncementBar } from '../TopAnnouncementBar';
 import { Footer } from '../Footer';
 import { BotaoVoltar } from '../BotaoVoltar';
 import { SiteHeader } from './SiteHeader';
@@ -46,20 +43,12 @@ export function SiteApp() {
 
   const isHomeOrCatalog = useMemo(() => {
     const path = location.pathname;
-    if (path === '/') return true;
-    const catalogs = ['/lapallyra', '/pallyra', '/comamorguennita', '/guennita', '/mimadasim', '/mimada', '/tuttymimo', '/tutty'];
-    return catalogs.some(c => path.startsWith(c));
+    return path === '/' || path.startsWith('/loja') || path.startsWith('/kits') || path.startsWith('/monte-seu-kit');
   }, [location.pathname]);
 
   const currentCompany = useMemo(() => {
-    const path = location.pathname;
-    if (path.startsWith('/lapallyra') || path.startsWith('/pallyra')) return 'pallyra' as CompanyId;
-    if (path.startsWith('/comamorguennita') || path.startsWith('/guennita')) return 'guennita' as CompanyId;
-    if (path.startsWith('/mimadasim') || path.startsWith('/mimada')) return 'mimada' as CompanyId;
-    if (path.startsWith('/tuttymimo') || path.startsWith('/tutty')) return 'tuttymimo' as CompanyId;
-    if (path === '/') return 'pallyra' as CompanyId;
-    return null;
-  }, [location.pathname]);
+    return 'madrinha' as CompanyId;
+  }, []);
 
   useEffect(() => {
     const unsubConfig = subscribeToAppConfig((newConfig) => {
@@ -158,9 +147,9 @@ export function SiteApp() {
     return () => window.removeEventListener('giftlist-updated', handleGiftListUpdate);
   }, []);
 
-  const isExcludedHeaderRoute = [
-    '/lapallyra', '/comamorguennita', '/mimadasim', '/tuttymimo', '/mimada', '/guennita', '/pallyra'
-  ].includes(location.pathname);
+  const totalCartCount = useMemo(() => {
+    return unifiedCart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  }, [unifiedCart]);
 
   const isCustomerPortalRoute = [
     '/minha-experiencia', '/cliente', '/login', '/cadastro', '/perfil'
@@ -187,58 +176,84 @@ export function SiteApp() {
 
   return (
     <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen bg-[#FDFCFA]">
-      <TopAnnouncementBar />
-      {!isExcludedHeaderRoute && (
-        <SiteHeader onOpenSearch={() => setIsGlobalSearchOpen(true)} />
-      )}
+      <SiteHeader 
+        onOpenSearch={() => setIsGlobalSearchOpen(true)} 
+        cartCount={totalCartCount}
+      />
       
       <div className="flex-grow flex flex-col relative">
-        {location.pathname !== '/' && !isExcludedHeaderRoute && (
+        {location.pathname !== '/' && !location.pathname.startsWith('/loja') && (
           <div className="block">
             <BotaoVoltar variant="dark" />
           </div>
         )}
         
         <Routes>
+          {/* 1. LANDINGPAGE (Entrada institucional / comercial permanente) */}
           <Route path="/" element={<EntryView config={effectiveConfig} allProducts={allProducts} onOpenSearch={() => setIsGlobalSearchOpen(true)} />} />
-          <Route path="/comemorativas/:slug" element={<CommemorativeCampaignPage allProducts={allProducts} />} />
-          <Route path="/promocao/:slug" element={<PromotionalCampaignPage allProducts={allProducts} />} />
-          <Route path="/vitrine" element={<VitrinePage />} />
-          <Route path="/atelies" element={<AteliersPresentationView />} />
-          <Route path="/comomontar" element={<HowToBuildKitView />} />
-          <Route path="/comofunciona-lp" element={<GiftListHowItWorksView />} />
-          <Route path="/feedclientes" element={<CustomerFeedbackView />} />
-          <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />
-          <Route path="/personalize" element={<PersonalizePage />} />
-          <Route path="/kits" element={<KitsView allProducts={allProducts} setCarts={setUnifiedCart} />} />
-          <Route path="/kit-meukit" element={<KitConstructor allProducts={allProducts} setCarts={setUnifiedCart} />} />
-          <Route path="/sobrenos" element={<AboutMeView />} />
+          
+          {/* 2. LOJA (Catálogo completo de produtos disponíveis) */}
+          <Route path="/loja" element={
+            <CompanyCatalogWrapper 
+              allProducts={allProducts} 
+              companyId="madrinha" 
+              config={effectiveConfig} 
+              cart={unifiedCart} 
+              setCart={setUnifiedCart} 
+              giftList={unifiedGiftList} 
+              setGiftList={setUnifiedGiftList} 
+              favorites={unifiedFavorites} 
+              setFavorites={setUnifiedFavorites} 
+              onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)} 
+            />
+          } />
+          
+          {/* 3. LISTA DE PRESENTES (Área própria mantida e preservada) */}
           <Route path="/listadepresentes" element={<GiftListInfoView />} />
           <Route path="/consulta/:code" element={<GiftListView setCarts={setUnifiedCart} config={effectiveConfig} />} />
-          
-          <Route path="/lapallyra" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="pallyra" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)} />} />
-          <Route path="/comamorguennita" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="guennita" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)} />} />
-          <Route path="/mimadasim" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="mimada" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)} />} />
-          <Route path="/tuttymimo" element={<CompanyCatalogWrapper allProducts={allProducts} companyId="tuttymimo" config={effectiveConfig} cart={unifiedCart} setCart={setUnifiedCart} giftList={unifiedGiftList} setGiftList={setUnifiedGiftList} favorites={unifiedFavorites} setFavorites={setUnifiedFavorites} onOpenGlobalSearch={() => setIsGlobalSearchOpen(true)} />} />
-          
-          <Route path="/mimada" element={<Navigate to="/mimadasim" replace />} />
-          <Route path="/guennita" element={<Navigate to="/comamorguennita" replace />} />
-          <Route path="/pallyra" element={<Navigate to="/lapallyra" replace />} />
-          <Route path="/tutty" element={<Navigate to="/tuttymimo" replace />} />
-          
+          <Route path="/comofunciona-lp" element={<GiftListHowItWorksView />} />
+
+          {/* 4. MONTE SEU KIT (Área própria mantida e preservada) */}
+          <Route path="/monte-seu-kit" element={<KitConstructor allProducts={allProducts} setCarts={setUnifiedCart} />} />
+          <Route path="/kit-meukit" element={<Navigate to="/monte-seu-kit" replace />} />
+          <Route path="/comomontar" element={<HowToBuildKitView />} />
+
+          {/* 5. KIT PRONTO (Área própria mantida e preservada) */}
+          <Route path="/kits" element={<KitsView allProducts={allProducts} setCarts={setUnifiedCart} />} />
+          <Route path="/kits-prontos" element={<Navigate to="/kits" replace />} />
+
+          {/* 6. CHECKOUT (Etapa final da compra preservada e funcional) */}
+          <Route path="/checkout" element={<CheckoutPage config={effectiveConfig} />} />
           <Route path="/checkout/:id" element={<CheckoutPage config={effectiveConfig} />} />
           <Route path="/ped-:code" element={<CheckoutPage config={effectiveConfig} />} />
           <Route path="/checkoutdois/:code" element={<CheckoutPage config={effectiveConfig} />} />
-          <Route path="/approval/:code" element={<OrderApprovalPage />} />
           <Route path="/client-checkout/:code" element={<CheckoutPage config={effectiveConfig} />} />
+          <Route path="/approval/:code" element={<OrderApprovalPage />} />
+
+          {/* Páginas Institucionais & Campanhas */}
+          <Route path="/comemorativas/:slug" element={<CommemorativeCampaignPage allProducts={allProducts} />} />
+          <Route path="/promocao/:slug" element={<PromotionalCampaignPage allProducts={allProducts} />} />
+          <Route path="/feedclientes" element={<CustomerFeedbackView />} />
+          <Route path="/colecoes" element={<ColecoesView allProducts={allProducts} />} />
+          <Route path="/personalize" element={<PersonalizePage />} />
+          <Route path="/sobrenos" element={<AboutMeView />} />
           <Route path="/rastreamento" element={<TrackingView onBack={() => window.history.back()} />} />
-          <Route path="/minha-experiencia/*" element={<MinhaExperienciaPage />} />
-          <Route path="/cliente/*" element={<MinhaExperienciaPage />} />
-          <Route path="/login" element={<MinhaExperienciaPage />} />
-          <Route path="/cadastro" element={<MinhaExperienciaPage />} />
-          <Route path="/perfil" element={<MinhaExperienciaPage />} />
           <Route path="/document" element={<DocumentSearch onGoBack={() => window.history.back()} />} />
           <Route path="/studiomockup" element={<StudioPage />} />
+
+          {/* Aliases e Redirecionamentos Suaves de Compatibilidade da Antiga Arquitetura */}
+          <Route path="/vitrine" element={<Navigate to="/loja" replace />} />
+          <Route path="/produtos" element={<Navigate to="/loja" replace />} />
+          <Route path="/atelies" element={<Navigate to="/loja" replace />} />
+          <Route path="/lapallyra" element={<Navigate to="/loja" replace />} />
+          <Route path="/pallyra" element={<Navigate to="/loja" replace />} />
+          <Route path="/comamorguennita" element={<Navigate to="/loja" replace />} />
+          <Route path="/guennita" element={<Navigate to="/loja" replace />} />
+          <Route path="/mimadasim" element={<Navigate to="/loja" replace />} />
+          <Route path="/mimada" element={<Navigate to="/loja" replace />} />
+          <Route path="/tuttymimo" element={<Navigate to="/loja" replace />} />
+          <Route path="/tutty" element={<Navigate to="/loja" replace />} />
+          
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

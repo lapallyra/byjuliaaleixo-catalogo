@@ -81,7 +81,7 @@ export const CatalogHeader: React.FC<{
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <span className="text-4xl sm:text-5xl">{companyId === 'pallyra' ? '📓' : '💅'}</span>
+              <span className="text-3xl sm:text-4xl">✨</span>
             )}
           </div>
           <div className="flex flex-col">

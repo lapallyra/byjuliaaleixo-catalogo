@@ -37,27 +37,20 @@ import {
 } from 'lucide-react';
 import { CompanyId, AppConfig, Product, CartItem, SiteSettings, Campaign } from '../types';
 import { CartSidebar } from './CartSidebar';
-import { CheckoutModal } from './CheckoutModal';
 import { PrizeRouletteModal } from './PrizeRouletteModal';
 import { GiftListSidebar } from './GiftListSidebar';
 import { SuggestionBox } from './SuggestionBox';
 import { ProductDetailPage } from './ProductDetailPage';
 import { ColecoesView } from './ColecoesView';
 import { CategoryPillMenu } from './Catalog/CategoryPillMenu';
-import { FestiveBanner, BubbleHearts } from './Catalog/FestiveBanner';
-import { SeasonalBanner } from './Catalog/SeasonalBanner';
 import { ProductCard } from './ui/ProductCard';
 
 
 import { CatalogHeader } from './Catalog/CatalogHeader';
 import { FloatingMenu } from './Catalog/FloatingMenu';
 import { CatalogInfoBar } from './Catalog/CatalogInfoBar';
-import { DateHighlights } from './Catalog/DateHighlights';
 import { FeaturedProductsCarousel } from './Catalog/FeaturedProductsCarousel';
-import { PriceDisplay } from './ui/PriceDisplay';
-import { saveSale, subscribeToProducts, addProduct, getSiteSettings, getGlobalSettings, getGiftList, updateOrderStatus, subscribeToCampaigns } from '../services/firebaseService';
-import { validateProductStock } from '../utils/stockValidation';
-import { playSuccessSound } from '../utils/audio';
+import { subscribeToProducts, addProduct, getSiteSettings, getGlobalSettings, getGiftList, subscribeToCampaigns } from '../services/firebaseService';
 import { functions } from '../lib/firebase';
 import { httpsCallable } from 'firebase/functions';
 import { PRODUCTS, INITIAL_CONFIG } from '../constants';
@@ -153,9 +146,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [suggestions, setSuggestions] = useState<{ label: string, type: 'product' | 'category' }[]>([]);
   const [isFiltering, setIsFiltering] = useState(false);
 
+  const isLoja = !companyId || companyId === 'madrinha' || (companyId as string) === 'all';
+
   const companyProducts = useMemo(() => {
+    if (isLoja) {
+      return allProducts.filter(p => !p.isKit);
+    }
     return allProducts.filter(p => matchesAtelierScope(p, companyId, 'produtos') && !p.isKit);
-  }, [allProducts, companyId]);
+  }, [allProducts, companyId, isLoja]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -216,12 +214,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isReadOnlyProduct, setIsReadOnlyProduct] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isDirectCheckoutLoading, setIsDirectCheckoutLoading] = useState(false);
 
   // Surprise Cards State
   const [showSurpriseCards, setShowSurpriseCards] = useState(false);
-  const [pendingCheckoutData, setPendingCheckoutData] = useState<any>(null);
   const [wonPrize, setWonPrize] = useState<string | null>(null);
 
   useEffect(() => {
@@ -253,243 +248,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       }
     }
   }, [selectedProduct]);
-
-  const handleOpenCheckout = () => {
-    setIsCheckoutOpen(true);
-  };
-
-  const handleDirectCheckout = async (checkoutData: any = {}) => {
-    if (cart.length === 0) return;
-
-    // Calculate total to check for prize
-    const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
-    const total = checkoutData?.total ?? subtotal;
-
-    // Trigger Surprise Cards BEFORE payment if total >= 300 and no prize won yet
-    if (total >= 300 && !wonPrize && !showSurpriseCards && !checkoutData.wonPrize) {
-      setPendingCheckoutData(checkoutData);
-      setShowSurpriseCards(true);
-      return;
-    }
-
-    setIsDirectCheckoutLoading(true);
-    
-    try {
-      // Validate complete cart
-      for (const item of cart) {
-         const p = companyProducts.find(cp => cp.id === item.id) || item;
-         const validation = await validateProductStock(p, item.quantity);
-         if (!validation.valid) {
-            setToast({ message: `Item indisponível: ${validation.reason}`, type: 'success' });
-            setIsDirectCheckoutLoading(false);
-            return;
-         }
-      }
-
-      const subtotal = cart.reduce((sum, item) => sum + (item.retail_price * item.quantity), 0);
-      let dscto = 0;
-      if (checkoutData?.cupom === 'GANHEI10') {
-        dscto = subtotal * 0.1;
-      }
-      const total = checkoutData?.total ?? (subtotal - dscto);
-      
-      const isFullPayment = checkoutData?.isFullPayment ?? true;
-      const amountToPay = checkoutData?.amountToPay ?? total;
-
-      console.log("Saving initial sale...");
-      
-      const pers = checkoutData?.personalization || {};
-      const cli = checkoutData?.client || {};
-      const addr = checkoutData?.address || {};
-
-      let combinedObs = pers.persObs ? `Observações:\n${pers.persObs}` : "Pagamento via MP Direto";
-      if (!isFullPayment) {
-        combinedObs += `\n\nPAGAMENTO: Cliente optou por pagar SINAL DE 50% (R$ ${amountToPay.toFixed(2)}). Falta receber os outros 50%.`;
-        if (checkoutData?.plannedMethod === 'digital_booklet') {
-          combinedObs += `\n>> Forma escolhida para o restante: CARNÊ DIGITAL`;
-          combinedObs += `\n>> Condição de parcelamento: ${checkoutData.remainingInstallments}x de R$ ${Number(checkoutData.remainingInstallmentValue).toFixed(2)}`;
-          if (checkoutData?.bookletPayDay) {
-            combinedObs += `\n>> Vencimento: Dia ${checkoutData.bookletPayDay}`;
-          }
-        }
-      }
-      
-      if (pers.persName || pers.persAge || pers.persTheme || pers.persColors) {
-         combinedObs += `\n\nPersonalização solicitada:`;
-         if (pers.persName) combinedObs += `\nNome: ${pers.persName}`;
-         if (pers.persAge) combinedObs += `\nIdade/Frase: ${pers.persAge}`;
-         if (pers.persTheme) combinedObs += `\nTema: ${pers.persTheme}`;
-         if (pers.persColors) combinedObs += `\nCores: ${pers.persColors}`;
-      }
-
-      if (checkoutData.wonPrize || wonPrize) {
-        combinedObs += `\n\nBRINDE CONQUISTADO (CARD SURPRESA): ${checkoutData.wonPrize || wonPrize}`;
-      }
-
-      let addressString = "";
-      if (addr.rua) {
-         addressString = `${addr.rua}, ${addr.numero} - ${addr.bairro} - ${addr.cidade}/${addr.estado} CEP: ${addr.cep}. Ref: ${addr.ref}`;
-      }
-
-      const docId = await saveSale({
-        customerName: cli.clientName || "Cliente",
-        customerEmail: cli.clientEmail || "",
-        customerCpfCnpj: cli.clientCpf || "",
-        contact: cli.clientContact || "",
-        total,
-        companyId,
-        items: cart.map(item => ({
-          ...item,
-          productId: item.id || '',
-          product_name: item.product_name || '',
-          quantity: item.quantity || 1,
-          retail_price: item.retail_price || 0,
-          insumos: item.insumos || []
-        })),
-        isWholesale: false,
-        deliveryType: checkoutData.deliveryType,
-        deliveryDate: "Agendar",
-        isEmergency: false,
-        paymentMethod: 'mercadopago',
-        paymentMode: checkoutData?.paymentMode || 'full',
-        plannedMethod: checkoutData?.plannedMethod || null,
-        remainingInstallments: checkoutData?.remainingInstallments || null,
-        remainingAmount: checkoutData?.remainingAmount || 0,
-        remainingFee: checkoutData?.remainingFee || 0,
-        remainingInstallmentValue: checkoutData?.remainingInstallmentValue || 0,
-        source: 'catalog',
-        observations: combinedObs,
-        address: addressString
-      });
-
-      const savedOrderCode = docId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9));
-      
-      if (checkoutData?.isSimulated) {
-        console.log('[MODO TESTE] Simulando pagamento aprovado...');
-        await updateOrderStatus(savedOrderCode, 'paid');
-        playSuccessSound();
-
-        localStorage.setItem('mp_pending_order', JSON.stringify({
-            orderId: savedOrderCode,
-            cart: cart,
-            total: total,
-            companyName: companyName || companyId,
-            config: {
-               ...siteSettings,
-               roulette_prizes: globalSettings?.roulette_prizes || (siteSettings as any)?.roulette_prizes || []
-            },
-            formData: {
-              name: cli.clientName || "Cliente de Teste",
-              contact: cli.clientContact || "",
-              cpfCnpj: cli.clientCpf || "",
-              deliveryType: checkoutData.deliveryType,
-              address: addressString,
-              city: addr.cidade || "",
-              state: addr.estado || "",
-              zipCode: addr.cep || "",
-              paymentMethod: 'Modo Teste',
-              observations: combinedObs,
-              wonPrize: ''
-            }
-        }));
-
-        window.dispatchEvent(new CustomEvent('clear-cart'));
-        navigate(`${location.pathname}?payment_status=approved&order_id=${savedOrderCode}`);
-        return;
-      }
-      
-      console.log('Calling createPreference');
-      const finalMpItems = [{
-        title: !isFullPayment ? `Sinal (50%) - Pedido no Ateliê` : `Pedido no Ateliê`,
-        quantity: 1,
-        unit_price: amountToPay,
-        currency_id: 'BRL'
-      }];
-
-       const preferencePayload = {
-        orderId: savedOrderCode,
-        companyId: companyId,
-        items: finalMpItems,
-        payer: {
-          name: cli.clientName || "Cliente",
-          email: cli.clientEmail || "cliente@loja.com" 
-        },
-        back_urls: {
-          success: `${window.location.origin}${window.location.pathname}?payment_status=approved&order_id=${savedOrderCode}`,
-          failure: `${window.location.origin}${window.location.pathname}?payment_status=failed&order_id=${savedOrderCode}`,
-          pending: `${window.location.origin}${window.location.pathname}?payment_status=pending&order_id=${savedOrderCode}`
-        },
-        accessToken: globalSettings?.mercadopago_token || siteSettings?.mercadopago_token,
-        auto_return: "approved"
-      };
-
-      console.log('Fetching /api/createPreference...');
-      const response = await fetch('/api/createPreference', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(preferencePayload)
-      });
-      
-      if (!response.ok) {
-        const textResponse = await response.text();
-        let errorData;
-        try {
-           errorData = JSON.parse(textResponse);
-        } catch(e) {
-           errorData = { error: textResponse };
-        }
-        throw new Error(errorData?.error || response.statusText);
-      }
-
-      const data = await response.json();
-      let initPoint = data?.init_point || 
-                        data?.url || 
-                        data?.body?.init_point || 
-                        data?.response?.init_point ||
-                        (typeof data === 'string' && data.startsWith('http') ? data : null);
-      
-      const preferenceId = data?.id || null;
-      if (!initPoint && preferenceId) {
-         initPoint = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preferenceId}`;
-      }
-
-      if (initPoint) {
-         console.log('Redirecting to Mercado Pago:', initPoint);
-         
-         localStorage.setItem('mp_pending_order', JSON.stringify({
-            orderId: savedOrderCode,
-            cart,
-            total,
-            companyName,
-            config: {
-               ...siteSettings,
-               roulette_prizes: globalSettings?.roulette_prizes || (siteSettings as any)?.roulette_prizes || []
-            },
-            formData: {
-              name: cli.clientName || "Cliente",
-              contact: cli.clientContact || "",
-              cpfCnpj: cli.clientCpf || "",
-              deliveryType: checkoutData.deliveryType,
-              address: addressString,
-              city: addr.cidade || "",
-              state: addr.estado || "",
-              zipCode: addr.cep || "",
-              paymentMethod: 'mercadopago',
-              observations: combinedObs
-            }
-         }));
-         
-         window.dispatchEvent(new CustomEvent('clear-cart'));
-         window.location.href = initPoint;
-      } else {
-         throw new Error("init_point não retornado pelo MP.");
-      }
-    } catch (e: any) {
-      console.error("Checkout Error:", e);
-      setToast({ message: `Falha ao ir para o pagamento: ${e.message || "Erro desconhecido"}`, type: 'success' });
-      setIsDirectCheckoutLoading(false);
-    }
-  };
 
   const [isSeeding, setIsSeeding] = useState(false);
   const [adminClickCount, setAdminClickCount] = useState(0);
@@ -713,7 +471,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     }, 400);
   };
 
-  const companyName = companyId === 'pallyra' ? config.company_1_name : companyId === 'guennita' ? config.company_2_name : companyId === 'mimada' ? config.company_3_name : config.company_4_name;
+  const companyName = isLoja 
+    ? (config.site_name || "Madrinha dos Personalizados") 
+    : (companyId === 'pallyra' ? config.company_1_name : companyId === 'guennita' ? config.company_2_name : companyId === 'mimada' ? config.company_3_name : config.company_4_name);
   const isotipo = siteSettings?.store_isotipo;
   
   const categories = useMemo(() => {
@@ -994,7 +754,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                         <Loader2 size={40} strokeWidth={1} />
                       </motion.div>
                     </div>
-                    <span className="text-[9px] font-sans font-bold uppercase tracking-[0.4em] text-[#3D2E24]/40">Sincronizando Ateliê</span>
+                    <span className="text-[9px] font-sans font-bold uppercase tracking-[0.4em] text-[#3D2E24]/40">Carregando Loja</span>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -1134,29 +894,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
             onRemove={onRemoveFromCart}
             onUpdateQty={onUpdateQuantity}
             onSetQty={onSetQuantity}
-            onCheckout={handleOpenCheckout}
-            isCheckoutLoading={isDirectCheckoutLoading}
             companyId={companyId}
           />
         )}
         
-        <CheckoutModal
-          isOpen={isCheckoutOpen}
-          onClose={() => setIsCheckoutOpen(false)}
-          cart={cart}
-          companyId={companyId}
-          onAddToCart={onAddToCart}
-          onCheckoutSubmit={handleDirectCheckout}
-          isSubmitting={isDirectCheckoutLoading}
-        />
-
         <PrizeRouletteModal 
           isOpen={showSurpriseCards}
           onClose={() => {
             setShowSurpriseCards(false);
-            if (pendingCheckoutData) {
-              handleDirectCheckout({ ...pendingCheckoutData, wonPrize });
-            }
           }}
           onResult={(prize) => {
             setWonPrize(prize);

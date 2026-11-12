@@ -1,26 +1,52 @@
 import React, { useState } from 'react';
-import { Search, User as UserIcon } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Search, User as UserIcon, ShoppingBag } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
 
 interface SiteHeaderProps {
   onOpenSearch?: () => void;
+  cartCount?: number;
+  onCartClick?: () => void;
 }
 
 /**
  * SiteHeader:
- * Header superior nobre e clean com escrita cursiva dourada neon "MADRINHA".
- * A Faixa Link foi removida do topo e transformada em faixas editoriais explicativas na Home.
+ * Header superior nobre e clean com escrita cursiva dourada neon "MADRINHA"
+ * e barra de navegação oficial da nova arquitetura:
+ * - LANDINGPAGE (Início)
+ * - LOJA (Catálogo Completo)
+ * - MONTE SEU KIT
+ * - KIT PRONTO
+ * - LISTA DE PRESENTES
  */
-export const SiteHeader: React.FC<SiteHeaderProps> = () => {
+export const SiteHeader: React.FC<SiteHeaderProps> = ({ cartCount = 0, onCartClick }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [searchCode, setSearchCode] = useState('');
+
+  const currentPath = location.pathname;
+
+  const navLinks = [
+    { label: 'Início', path: '/', isExact: true },
+    { label: 'Loja', path: '/loja', isExact: false, matchPrefixes: ['/loja', '/vitrine', '/produtos'] },
+    { label: 'Monte seu Kit', path: '/monte-seu-kit', isExact: false, matchPrefixes: ['/monte-seu-kit', '/kit-meukit', '/comomontar'] },
+    { label: 'Kit Pronto', path: '/kits', isExact: false, matchPrefixes: ['/kits'] },
+    { label: 'Lista de Presentes', path: '/listadepresentes', isExact: false, matchPrefixes: ['/listadepresentes', '/consulta'] },
+  ];
+
+  const isLinkActive = (link: typeof navLinks[0]) => {
+    if (link.isExact) return currentPath === link.path;
+    if (link.matchPrefixes) {
+      return link.matchPrefixes.some(p => currentPath.startsWith(p));
+    }
+    return currentPath.startsWith(link.path);
+  };
 
   return (
     <header className="w-full relative z-30 select-none">
       {/* HEADER SUPERIOR NOBRE EM AZUL PROFUNDO */}
-      <div className="w-full bg-[#081220] border-b border-[#1A3150] py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 relative overflow-hidden">
+      <div className="w-full bg-[#081220] border-b border-[#1A3150] py-2 sm:py-3 px-2 sm:px-3 md:px-4 relative overflow-hidden">
         {/* Glow de fundo sutil */}
         <div className="absolute inset-0 bg-radial from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none" />
 
@@ -54,7 +80,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
             onClick={() => navigate('/')}
             className="flex-1 flex flex-col items-center justify-center cursor-pointer group py-0.5"
             role="button"
-            aria-label="Ir para a página inicial Madrinha"
+            aria-label="Ir para a LandingPage Madrinha"
           >
             <span
               className="font-meaculpa text-4xl sm:text-5xl md:text-6xl text-[#FBF3D5] leading-none tracking-wide text-center transition-all duration-300 group-hover:scale-105"
@@ -73,10 +99,35 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
             >
               Madrinha
             </span>
+            <span className="text-[9px] uppercase tracking-[0.3em] text-[#D4AF37]/90 font-sans font-semibold -mt-1 hidden sm:block">
+              dos Personalizados
+            </span>
           </div>
 
           {/* Ações Rápidas no Topo (Direita) */}
           <div className="flex items-center gap-2 sm:w-72 justify-end shrink-0">
+            {/* Sacola de compras / Carrinho rápido */}
+            <button
+              onClick={() => {
+                if (onCartClick) {
+                  onCartClick();
+                } else {
+                  navigate('/loja?openCart=true');
+                }
+              }}
+              className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0F2038] hover:bg-[#162F52] text-[#E5C388] border border-[#23456F] flex items-center justify-center transition-all duration-200 shadow-2xs group cursor-pointer"
+              title="Sacola de Compras"
+              aria-label="Sacola de Compras"
+            >
+              <ShoppingBag size={16} strokeWidth={2} className="transition-transform group-hover:scale-110" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#D4AF37] text-[#081220] text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </button>
+
+            {/* Área do Cliente */}
             <button
               onClick={() => navigate('/minha-experiencia')}
               className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0F2038] hover:bg-[#162F52] text-[#E5C388] border border-[#23456F] flex items-center justify-center transition-all duration-200 shadow-2xs group cursor-pointer"
@@ -88,6 +139,29 @@ export const SiteHeader: React.FC<SiteHeaderProps> = () => {
           </div>
         </div>
       </div>
+
+      {/* BARRA DE NAVEGAÇÃO OFICIAL DA NOVA ARQUITETURA */}
+      <nav className="w-full bg-[#0B182B] border-b border-[#1A3150] px-2 sm:px-3 md:px-4 py-1.5 overflow-x-auto scrollbar-none">
+        <div className="w-full max-w-[1850px] mx-auto flex items-center justify-center gap-1 sm:gap-3 md:gap-6 whitespace-nowrap min-w-max">
+          {navLinks.map((link) => {
+            const active = isLinkActive(link);
+            return (
+              <button
+                key={link.path}
+                onClick={() => navigate(link.path)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
+                  active 
+                    ? 'bg-[#D4AF37]/20 text-[#FAF3DC] border border-[#D4AF37]/60 shadow-xs' 
+                    : 'text-[#9BB1D2] hover:text-[#FAF3DC] hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full transition-colors ${active ? 'bg-[#D4AF37]' : 'bg-transparent'}`} />
+                <span>{link.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </header>
   );
 };

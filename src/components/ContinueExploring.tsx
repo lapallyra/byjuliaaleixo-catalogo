@@ -12,10 +12,10 @@ interface ExploringItem {
 
 const items: ExploringItem[] = [
   {
-    id: 'atelies',
-    title: 'Ateliês',
-    description: 'Explore nossos quatro ateliês exclusivos e suas criações artesanais.',
-    path: '/atelies'
+    id: 'loja',
+    title: 'Nossa Loja',
+    description: 'Conheça o catálogo completo da Madrinha dos Personalizados',
+    path: '/loja'
   },
   {
     id: 'comomontar',

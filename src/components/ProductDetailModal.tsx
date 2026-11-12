@@ -36,7 +36,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   campaignYear
 }) => {
   const theme = getTheme(companyId);
-  const accentColor = theme.accentColor || '#000000';
+  const accentColor = '#D4AF37'; // Dourado Realeza
 
   const [quantity, setQuantity] = useState(1);
   const [imageIndex, setImageIndex] = useState(0);
@@ -139,7 +139,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         onClick={onClose}
-        className="absolute inset-0 bg-[#0a0a0a]/40 backdrop-blur-xs cursor-pointer"
+        className="absolute inset-0 bg-[#081220]/50 backdrop-blur-xs cursor-pointer"
       />
       
       {/* Drawer content sliding from right */}
@@ -148,21 +148,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "tween", duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className={`w-full sm:max-w-md md:max-w-lg lg:max-w-xl h-full shadow-2xl relative flex flex-col z-10 ${theme.bg} overflow-hidden`}
+        className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl h-full shadow-2xl relative flex flex-col z-10 bg-[#FAF8F5] overflow-hidden"
       >
         {/* Header do Drawer */}
-        <div className={`p-5 md:p-6 border-b ${theme.borderLine} flex justify-between items-center bg-white/95 backdrop-blur-md sticky top-0 z-50`}>
+        <div className="p-5 md:p-6 border-b border-[#E8E2D5] flex justify-between items-center bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-[0_2px_15px_rgba(15,44,89,0.03)]">
           <div className="flex flex-col min-w-0">
-            <span className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: accentColor }}>
-              {product.isKit ? 'Kit Pronto' : (product.category || 'Premium Collection')}
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#0F2C59]">
+              {product.isKit ? 'Kit Pronto' : (product.category || 'Coleção Exclusiva')}
             </span>
-            <h3 className={`text-base font-serif italic ${theme.textPrimary} line-clamp-1`}>
+            <h3 className="text-base font-serif italic text-[#1B2537] line-clamp-1">
               {product.product_name}
             </h3>
           </div>
           <button 
             onClick={onClose}
-            className={`p-2 rounded-full hover:bg-neutral-50 transition-colors text-neutral-400 hover:text-neutral-900 border ${theme.borderLine} bg-white shadow-xs`}
+            className="p-2 rounded-full hover:bg-[#FAF8F5] transition-colors text-neutral-400 hover:text-[#1B2537] border border-[#E8E2D5] bg-white shadow-xs cursor-pointer"
           >
             <X size={18} strokeWidth={1.5} />
           </button>
@@ -172,7 +172,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 no-scrollbar pb-36">
           {/* Main image carousel */}
           <div className="space-y-4">
-            <div className="aspect-square bg-[#fdfaf6] rounded-[2rem] overflow-hidden relative border border-neutral-100/50 shadow-xs flex items-center justify-center p-4">
+            <div className="aspect-square bg-white rounded-[2rem] overflow-hidden relative border border-[#E8E2D5] shadow-xs flex items-center justify-center p-4">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={imageIndex}
@@ -200,8 +200,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <button 
                     key={`thumb-${i}`}
                     onClick={() => setImageIndex(i)}
-                    className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
-                      i === imageIndex ? 'scale-105 shadow-md border-neutral-900' : 'opacity-40 hover:opacity-100 border-transparent'
+                    className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
+                      i === imageIndex ? 'scale-105 shadow-md border-[#0F2C59]' : 'opacity-40 hover:opacity-100 border-transparent'
                     }`}
                   >
                     <ImageWithFallback src={img || ''} alt="Thumbnail" className="w-full h-full object-cover" isThumbnail={true} />
@@ -213,63 +213,63 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {/* Product details */}
           <div className="space-y-3">
-            {/* Badges / Selos: Exclusivo e Edição AAAA */}
+            {/* Badges / Selos */}
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-[#8C7864]/70">
+              <span className="text-[10px] font-sans font-bold uppercase tracking-[0.25em] text-[#4A5568]">
                 {product.category || 'Ateliê'}
               </span>
               {(isExclusive || product.isExclusive) && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-gradient-to-r from-[#D4AF37] to-[#B38F4D] text-white shadow-xs">
                   <Sparkles size={11} className="animate-pulse" />
                   Exclusivo
                 </span>
               )}
               {(campaignYear || product.edition_year) && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-[#3A312D] text-white shadow-xs">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-[#0F2C59] text-white shadow-xs">
                   Edição {campaignYear || product.edition_year}
                 </span>
               )}
             </div>
 
-            <h2 className={`text-2xl font-serif italic ${theme.textPrimary}`}>
+            <h2 className="text-2xl font-serif italic text-[#1B2537]">
               {product.product_name}
             </h2>
             
             <div className="flex items-baseline gap-3">
-              <span className="text-xl font-bold text-neutral-900">
-                R$ {currentPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              <span className="text-2xl font-black text-[#D4AF37]">
+                {formatCurrency(currentPrice)}
               </span>
               {oldPrice > currentPrice && (
-                <span className="text-sm text-neutral-300 line-through">
-                  R$ {oldPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                <span className="text-sm text-neutral-400 line-through font-bold">
+                  {formatCurrency(oldPrice)}
                 </span>
               )}
             </div>
 
-            <p className="text-neutral-500 text-sm leading-relaxed whitespace-pre-line italic">
+            <p className="text-[#4A5568] text-xs sm:text-sm leading-relaxed whitespace-pre-line font-light italic">
               "{product.description || "Uma criação exclusiva que combina sofisticação e qualidade incomparável."}"
             </p>
           </div>
 
           {/* Kit Items */}
           {product.isKit && product.kitItems && product.kitItems.length > 0 && (
-            <div className="border-t border-neutral-100 pt-6">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-4 pb-2 border-b border-neutral-50">
+            <div className="border-t border-[#E8E2D5] pt-6">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-[#4A5568] mb-4 pb-2 border-b border-[#E8E2D5]/50">
                 Itens Inclusos no Kit
               </h4>
               <div className="space-y-3">
                 {product.kitItems.map((item: any, i: number) => {
                   const matchedProd = allProducts?.find(p => p.id === item.id);
                   return (
-                    <div key={i} className="flex items-center gap-3 bg-neutral-50 p-3 rounded-xl border border-neutral-100">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-neutral-200 bg-white">
+                    <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-[#E8E2D5]">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-[#E8E2D5] bg-[#FAF8F5]">
                         <ImageWithFallback src={matchedProd?.image || product.image} alt={matchedProd?.product_name || "Item"} className="w-full h-full object-cover" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-neutral-800 truncate">
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-xs font-bold text-[#1B2537] truncate">
                           {matchedProd?.product_name || "Produto do Kit"}
                         </p>
-                        <p className="text-[10px] text-neutral-400 uppercase font-semibold">
+                        <p className="text-[10px] text-[#4A5568] uppercase font-semibold">
                           Quantidade: {item.quantity}x
                         </p>
                       </div>
@@ -282,16 +282,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {/* Variations */}
           {product.variations && product.variations.length > 0 && (
-            <div className="border-t border-neutral-100 pt-6 space-y-6">
+            <div className="border-t border-[#E8E2D5] pt-6 space-y-6 text-left">
               {product.variations.map((v, vIdx) => (
                 <div key={`v-group-${vIdx}`} className="space-y-3">
-                  <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.textMuted}`}>{v.name}:</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F2C59]">{v.name}:</h4>
                   <div className="flex flex-wrap gap-2">
                     {v.options.map((opt, oIdx) => (
                       <button
                         key={`var-${vIdx}-${oIdx}`}
                         onClick={() => setSelectedVariations({ ...selectedVariations, [v.name]: opt.name })}
-                        className={`px-4 py-2.5 text-[11px] font-bold rounded-xl border-2 transition-all duration-150 uppercase tracking-widest ${selectedVariations[v.name] === opt.name ? `scale-[1.03] shadow-md ${theme.btnPrimary} border-transparent` : `${theme.btnSecondary}`}`}
+                        className={`px-4 py-2.5 text-[11px] font-bold rounded-xl border-2 transition-all duration-150 uppercase tracking-widest cursor-pointer ${
+                          selectedVariations[v.name] === opt.name 
+                            ? 'scale-[1.03] shadow-md bg-[#0F2C59] text-white border-transparent' 
+                            : 'bg-white border-[#E8E2D5] text-[#1B2537] hover:border-[#0F2C59]/40'
+                        }`}
                       >
                         {cleanOptionName(opt.name)} {opt.price > 0 ? `(+R$ ${opt.price.toFixed(2).replace('.', ',')})` : ''}
                       </button>
@@ -304,13 +308,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {/* Advanced Personalizations */}
           {product.personalizationSettings && product.personalizationSettings.length > 0 && (
-            <div className="border-t border-neutral-100 pt-6 space-y-6">
-              <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.textMuted}`}>Personalização:</h4>
+            <div className="border-t border-[#E8E2D5] pt-6 space-y-6 text-left">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F2C59]">Personalização:</h4>
               <div className="space-y-4">
                 {product.personalizationSettings.map((field) => (
                   <div key={field.id} className="space-y-2">
                     {field.type !== 'image' && (
-                      <label className={`text-[11px] font-bold opacity-60 ${theme.textPrimary} flex items-center gap-1`}>
+                      <label className="text-[11px] font-bold text-[#1B2537] flex items-center gap-1">
                         {field.label} {field.isRequired && <span className="text-rose-500">*</span>}
                       </label>
                     )}
@@ -321,8 +325,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         maxLength={field.charLimit}
                         value={personalizationValues[field.id] || ''}
                         onChange={(e) => setPersonalizationValues({...personalizationValues, [field.id]: e.target.value})}
-                        className={`w-full p-4 rounded-xl border border-black/10 text-sm focus:ring-2 outline-none bg-transparent ${theme.textPrimary}`}
-                        style={{ outlineColor: accentColor }}
+                        className="w-full p-4 rounded-xl border border-[#E8E2D5] text-sm focus:border-[#0F2C59] outline-none bg-white text-[#1B2537] shadow-2xs"
                       />
                     )}
                     {field.type === 'select' && field.options && (
@@ -331,10 +334,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           <button
                             key={oIdx}
                             onClick={() => setPersonalizationValues({...personalizationValues, [field.id]: opt})}
-                            className={`px-4 py-2.5 text-[11px] font-bold rounded-xl border-2 transition-all duration-150 uppercase tracking-widest ${
+                            className={`px-4 py-2.5 text-[11px] font-bold rounded-xl border-2 transition-all duration-150 uppercase tracking-widest cursor-pointer ${
                               personalizationValues[field.id] === opt 
-                                ? `scale-[1.03] shadow-md ${theme.btnPrimary} border-transparent` 
-                                : `${theme.btnSecondary}`
+                                ? 'scale-[1.03] shadow-md bg-[#0F2C59] text-white border-transparent' 
+                                : 'bg-white border-[#E8E2D5] text-[#1B2537] hover:border-[#0F2C59]/40'
                             }`}
                           >
                             {cleanOptionName(opt)}
@@ -343,12 +346,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       </div>
                     )}
                     {field.type === 'image' && (
-                      <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200 text-left">
+                      <div className="space-y-3 bg-white p-4 rounded-2xl border border-[#E8E2D5] text-left shadow-2xs">
                         <div className="flex flex-col gap-1">
-                          <span className="text-[11px] font-bold text-slate-800 flex items-center gap-1">
+                          <span className="text-[11px] font-bold text-[#1B2537] flex items-center gap-1">
                             Imagens de Referência {field.isRequired && <span className="text-rose-500">*</span>}
                           </span>
-                          <p className="text-[10px] text-slate-500 leading-relaxed font-semibold">
+                          <p className="text-[10px] text-[#4A5568] leading-relaxed font-medium">
                             Adicione até 2 imagens que servirão de inspiração.
                           </p>
                         </div>
@@ -356,7 +359,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         {((personalizationValues[field.id] || "").split(",").filter(Boolean)).length > 0 && (
                           <div className="flex flex-wrap gap-3 pt-1">
                             {(personalizationValues[field.id] || "").split(",").filter(Boolean).map((imgUrl, imgIdx) => (
-                              <div key={imgIdx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 group bg-white shadow-xs">
+                              <div key={imgIdx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-[#E8E2D5] group bg-[#FAF8F5] shadow-xs">
                                 <img src={imgUrl.trim()} alt={`Referência ${imgIdx + 1}`} className="w-full h-full object-cover" />
                                 <button
                                   type="button"
@@ -368,7 +371,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                                       [field.id]: updatedUrls.join(",")
                                     });
                                   }}
-                                  className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-lg opacity-90 hover:opacity-100 shadow-sm transition-all flex items-center justify-center"
+                                  className="absolute top-1 right-1 p-1 bg-rose-500 hover:bg-rose-600 text-white rounded-lg opacity-90 shadow-sm transition-all flex items-center justify-center cursor-pointer"
                                 >
                                   <X size={10} />
                                 </button>
@@ -423,20 +426,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                             />
                             
                             {uploadingFieldId === field.id ? (
-                              <div className="flex flex-col items-center justify-center p-6 border border-dashed border-slate-200 bg-white rounded-xl space-y-2">
-                                <Loader2 className="animate-spin text-indigo-500" size={20} />
-                                <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500">
+                              <div className="flex flex-col items-center justify-center p-6 border border-dashed border-[#E8E2D5] bg-[#FAF8F5] rounded-xl space-y-2">
+                                <Loader2 className="animate-spin text-[#0F2C59]" size={20} />
+                                <span className="text-[10px] uppercase tracking-wider font-bold text-[#4A5568]">
                                   Enviando... {uploadProgress}%
                                 </span>
                               </div>
                             ) : (
                               <label
                                 htmlFor={`ref-upload-modal-${field.id}`}
-                                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 bg-white rounded-xl hover:border-slate-300 transition-all cursor-pointer text-slate-500 hover:text-slate-700"
+                                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#E8E2D5] bg-[#FAF8F5] rounded-xl hover:border-[#0F2C59]/40 transition-all cursor-pointer text-[#4A5568] hover:text-[#0F2C59]"
                               >
-                                <Upload size={16} className="mb-1" />
+                                <Upload size={16} className="mb-1 text-[#D4AF37]" />
                                 <span className="text-[10px] uppercase tracking-wider font-black">
-                                  Enviar Imagem
+                                  Enviar Imagem de Referência
                                 </span>
                               </label>
                             )}
@@ -452,8 +455,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {/* Addons */}
           {availableAddons.length > 0 && (
-            <div className="border-t border-neutral-100 pt-6 space-y-4">
-              <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.textMuted}`}>Serviços Adicionais:</h4>
+            <div className="border-t border-[#E8E2D5] pt-6 space-y-4 text-left">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0F2C59]">Serviços Adicionais:</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {availableAddons.map(addon => (
                   <button
@@ -465,23 +468,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         setSelectedAddons([...selectedAddons, addon.id]);
                       }
                     }}
-                    className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+                    className={`flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all cursor-pointer ${
                       selectedAddons.includes(addon.id) 
-                        ? 'border-transparent shadow-md bg-black/5' 
-                        : 'border-black/5 bg-transparent opacity-70 hover:opacity-100'
+                        ? 'border-[#0F2C59] shadow-sm bg-[#0F2C59]/5' 
+                        : 'border-[#E8E2D5] bg-white hover:border-[#0F2C59]/30'
                     }`}
-                    style={{
-                      borderColor: selectedAddons.includes(addon.id) ? accentColor : undefined
-                    }}
                   >
                     {addon.image && (
-                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-black/5 bg-white">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-[#E8E2D5] bg-[#FAF8F5]">
                         <ImageWithFallback src={addon.image} alt={addon.name} className="w-full h-full object-cover" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-bold ${theme.textPrimary} truncate`}>{addon.name}</p>
-                      {addon.price > 0 && <p className="text-[10px] text-neutral-400 font-semibold">+ R$ {addon.price.toFixed(2)}</p>}
+                      <p className="text-xs font-bold text-[#1B2537] truncate">{addon.name}</p>
+                      {addon.price > 0 && <p className="text-[10px] text-[#D4AF37] font-bold">+ R$ {addon.price.toFixed(2)}</p>}
                     </div>
                   </button>
                 ))}
@@ -491,9 +491,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         </div>
 
         {/* Sticky bottom actions */}
-        <div className={`p-5 md:p-6 border-t ${theme.borderLine} bg-white/95 backdrop-blur-md absolute bottom-0 left-0 right-0 z-50 space-y-4 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]`}>
+        <div className="p-5 md:p-6 border-t border-[#E8E2D5] bg-white/95 backdrop-blur-md absolute bottom-0 left-0 right-0 z-50 space-y-4 shadow-[0_-10px_30px_rgba(15,44,89,0.04)]">
           {product.isWholesaleEnabled && product.wholesale_price > 0 && (
-            <div className="text-[10px] uppercase font-black tracking-wider text-amber-600 flex items-center gap-1.5 bg-amber-50/50 p-2 rounded-xl border border-amber-500/10 justify-center">
+            <div className="text-[10px] uppercase font-black tracking-wider text-amber-700 flex items-center gap-1.5 bg-amber-50 p-2.5 rounded-xl border border-amber-500/20 justify-center">
               {isWholesaleActive 
                 ? 'Atacado Ativado! Desconto Aplicado' 
                 : `Adicione ${wholesaleMinQty} un. para Preço de Atacado`}
@@ -502,18 +502,18 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           {!product.isKit && (
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Quantidade</span>
-              <div className="flex items-center bg-neutral-50 rounded-xl p-1 border border-neutral-100">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#4A5568]">Quantidade</span>
+              <div className="flex items-center bg-[#FAF8F5] rounded-xl p-1 border border-[#E8E2D5]">
                 <button
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                  className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-900 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center text-[#4A5568] hover:text-[#1B2537] transition-colors cursor-pointer"
                 >
                   <Minus size={14} />
                 </button>
-                <span className="w-10 text-center font-bold text-sm text-neutral-800">{quantity}</span>
+                <span className="w-10 text-center font-bold text-sm text-[#1B2537]">{quantity}</span>
                 <button
                   onClick={() => setQuantity(q => q + 1)}
-                  className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-900 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center text-[#4A5568] hover:text-[#1B2537] transition-colors cursor-pointer"
                 >
                   <Plus size={14} />
                 </button>
@@ -529,9 +529,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
           <div className="flex items-center justify-between gap-4 pt-1">
             <div>
-              <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">Valor Total</p>
-              <p className="text-xl font-bold text-neutral-900">
-                R$ {(currentPrice * quantity).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              <p className="text-[9px] font-bold uppercase tracking-widest text-[#4A5568]">Valor Total</p>
+              <p className="text-xl font-black text-[#D4AF37]">
+                {formatCurrency(currentPrice * quantity)}
               </p>
             </div>
 
@@ -560,9 +560,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 onAddToCart(packedProduct, quantity);
                 onClose();
               }}
-              className={`flex-grow px-6 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${theme.btnPrimary}`}
+              className="flex-grow px-6 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 bg-[#0F2C59] hover:bg-[#081220] text-white cursor-pointer"
             >
-              <ShoppingCart size={14} />
+              <ShoppingCart size={15} className="text-[#D4AF37]" />
               {isKitConstructor ? 'Adicionar ao Kit' : 'Adicionar à Sacola'}
             </button>
           </div>
@@ -574,7 +574,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="absolute bottom-28 left-1/2 -translate-x-1/2 px-6 py-3 bg-black text-white text-[10px] uppercase tracking-[0.2em] font-black rounded-xl shadow-lg z-[100] border border-white/10"
+              className="absolute bottom-28 left-1/2 -translate-x-1/2 px-6 py-3 bg-[#0F2C59] text-white text-[10px] uppercase tracking-[0.2em] font-black rounded-xl shadow-lg z-[100] border border-white/10"
             >
               Link copiado!
             </motion.div>

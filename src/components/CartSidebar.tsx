@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingCart, Trash2, Plus, Minus, Tag, ChevronLeft, ChevronRight, Package } from 'lucide-react';
-import { SafeImage } from './ui/SafeImage';
 import { CartItem, CompanyId } from '../types';
 import { formatCurrency } from '../lib/currencyUtils';
 import { ImageWithFallback } from './ImageWithFallback';
@@ -14,7 +14,6 @@ interface CartSidebarProps {
   onRemove: (id: string) => void;
   onUpdateQty: (id: string, delta: number) => void;
   onSetQty: (id: string, quantity: number) => void;
-  onCheckout: () => void;
   isCheckoutLoading?: boolean;
   companyId: CompanyId;
 }
@@ -56,10 +55,10 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   onRemove,
   onUpdateQty,
   onSetQty,
-  onCheckout,
   isCheckoutLoading,
   companyId
 }) => {
+  const navigate = useNavigate();
   const theme = getTheme(companyId);
   const isMimada = companyId === 'mimada';
 
@@ -172,6 +171,47 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
 
     // All validation passed
     setAppliedCoupon(realCoupon);
+  };
+
+  const handleProceedToCheckout = () => {
+    if (!cart || cart.length === 0) return;
+
+    try {
+      // 1. Preservar todos os CartItem[] com company/companyId/atelier, variações, personalizações, addons, imagens, etc.
+      const preservedItems = cart.map(item => ({
+        ...item,
+        companyId: item.companyId || companyId,
+        company: item.company || item.companyId || companyId,
+        atelier: item.atelier || item.companyId || companyId
+      }));
+
+      const couponCode = appliedCoupon?.code || (coupon.trim() ? coupon.trim().toUpperCase() : undefined);
+
+      // 2. Montar o payload completo para o sessionStorage
+      const payload = {
+        items: preservedItems,
+        companyId: companyId,
+        company: companyId,
+        atelier: companyId,
+        coupon: couponCode,
+        couponCode: couponCode,
+        cupom: couponCode,
+        discount: discountAmount,
+        appliedCoupon: appliedCoupon || null
+      };
+
+      // 3. Salvar no sessionStorage
+      sessionStorage.setItem('pending_checkout_cart', JSON.stringify(payload));
+
+      // 4. Fechar o painel lateral do carrinho
+      onClose();
+
+      // 5. Navegação interna via React Router para /checkout?mode=new
+      navigate('/checkout?mode=new');
+    } catch (err) {
+      console.error('Falha ao preparar novo checkout via sessionStorage:', err);
+      alert('Não foi possível carregar o checkout no momento. Por favor, tente novamente.');
+    }
   };
 
   return (
@@ -391,7 +431,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                 </div>
 
                 <button 
-                  onClick={() => onCheckout()}
+                  onClick={handleProceedToCheckout}
                   disabled={isCheckoutLoading}
                   className={`w-full py-5 rounded-xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-700 active:scale-95 ${theme.btnPrimary} disabled:opacity-50 flex items-center justify-center gap-2`}
                 >
@@ -405,7 +445,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                   R$ {total >= 1000 ? (total/1000).toFixed(1)+'k' : total.toLocaleString('pt-BR')}
                 </div>
                 <button 
-                  onClick={() => onCheckout()}
+                  onClick={handleProceedToCheckout}
                   disabled={isCheckoutLoading}
                   className={`w-12 h-12 ${theme.btnPrimary} rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-90 transition-all disabled:opacity-50`}
                   title="Finalizar"

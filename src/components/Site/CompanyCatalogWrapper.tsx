@@ -5,9 +5,6 @@ import { CatalogView } from '../CatalogView';
 import { SuccessOverlay } from '../SuccessOverlay';
 import { checkIsAdminDomain } from '../../lib/utils';
 import { PrizeRouletteModal } from '../PrizeRouletteModal';
-import { playSuccessSound } from '../../utils/audio';
-import { sendNotifications } from '../../services/notificationService';
-import { updateOrder } from '../../services/firebaseService';
 
 export function CompanyCatalogWrapper({ 
   companyId, 
@@ -45,31 +42,13 @@ export function CompanyCatalogWrapper({
     const params = new URLSearchParams(location.search);
     const paymentStatus = params.get('collection_status') || params.get('payment_status') || params.get('status');
     const urlOrderId = params.get('order_id');
-    const pendingOrderStr = localStorage.getItem('mp_pending_order');
     
     if (paymentStatus === 'approved') {
       if (urlOrderId) setOrderCode(urlOrderId);
-      
-      if (pendingOrderStr) {
-        try {
-          const pendingOrder = JSON.parse(pendingOrderStr);
-          if (pendingOrder && pendingOrder.companyName) {
-            handleClearCart();
-            if (pendingOrder.orderId) setOrderCode(pendingOrder.orderId);
-            playSuccessSound();
-            localStorage.removeItem('mp_pending_order');
-            navigate(location.pathname, { replace: true });
-          }
-        } catch(e) {
-          console.error("Error parsing mp_pending_order", e);
-        }
-      } else {
-        // Just show success if no pending order but approved in URL
-        setShowSuccess(true);
-        navigate(location.pathname, { replace: true });
-      }
+      setShowSuccess(true);
+      navigate(location.pathname, { replace: true });
     }
-  }, [location.search, config, navigate, location.pathname, handleClearCart]);
+  }, [location.search, config, navigate, location.pathname]);
   
   const handleAddToCart = (product: Product, quantity: number = 1) => {
     // Generate a unique ID for different configurations of variations or personalizations

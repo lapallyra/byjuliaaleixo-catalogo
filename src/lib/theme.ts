@@ -299,11 +299,43 @@ export const themes: Record<string, Theme> = {
     cartIcon: 'text-[#FFD700]',
     neonBorder: 'border-[#FFD700]/40',
     neonPulse: 'shadow-none'
+  },
+  madrinha: {
+    bg: 'bg-[#FAF8F5]',
+    primaryColor: '#0F2C59',
+    accentColor: '#D4AF37',
+    accentGlow: 'rgba(212, 175, 55, 0.25)',
+    textPrimary: 'text-[#1B2537]',
+    textSecondary: 'text-[#1B2537]/75',
+    textMuted: 'text-[#1B2537]/45',
+    textVeryMuted: 'text-[#1B2537]/25',
+    borderLine: 'border-[#E8E2D5]',
+    cardBg: 'bg-white',
+    cardHover: 'hover:border-[#D4AF37]/60 hover:shadow-xl',
+    searchBg: 'bg-[#FAF6F0]',
+    inputPlaceholder: 'placeholder:text-[#1B2537]/40',
+    sidebarBg: 'bg-white',
+    btnPrimary: 'bg-[#0F2C59] text-[#FAF8F5] hover:bg-[#081220]',
+    btnSecondary: 'bg-white border-[#E8E2D5] text-[#1B2537] hover:bg-[#FAF6F0]',
+    btnSecondaryText: 'text-[#4A5568] hover:text-[#1B2537]',
+    categoryActive: 'text-white bg-[#0F2C59] border-none shadow-sm',
+    categoryInactive: 'text-[#4A5568] hover:text-[#0F2C59] hover:bg-[#0F2C59]/5',
+    specialText: 'text-[#D4AF37]',
+    specialHighlight: 'text-[#D4AF37]',
+    specialBg: 'bg-[#0F2C59]/5',
+    specialBorder: 'border-[#0F2C59]/20',
+    specialBtn: 'bg-[#0F2C59] text-white hover:bg-[#081220]',
+    specialAddBtn: 'bg-[#D4AF37] text-[#0F2C59] hover:bg-[#D4AF37]/90',
+    cartBadge: 'bg-[#0F2C59] text-white',
+    gradientText: 'text-[#0F2C59]',
+    cartBtn: 'bg-[#0F2C59] text-white shadow-lg',
+    cartIcon: 'text-white',
+    neonBorder: 'border-[#0F2C59]/30',
+    neonPulse: 'shadow-none'
   }
-
 };
 
 export const getTheme = (companyId?: string): Theme => {
-  if (!companyId) return themes.pallyra;
-  return themes[companyId] || themes.pallyra;
+  if (!companyId || companyId === 'madrinha' || companyId === 'all') return themes.madrinha;
+  return themes[companyId] || themes.madrinha;
 };

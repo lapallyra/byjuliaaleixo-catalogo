@@ -125,18 +125,64 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
 
         let currentOrder: Partial<Order> | null = null;
 
-        if (urlId === "new") {
+        const queryParams = new URLSearchParams(window.location.search);
+        const isNewCheckout = urlId === "new" || queryParams.get('mode') === 'new' || (!urlId && !urlCode);
+
+        if (isNewCheckout) {
+          let loadedItems: CartItem[] = [];
+          let loadedCompanyId: CompanyId = "pallyra";
+          let loadedDiscount = 0;
+          let loadedCouponCode = "";
+          
+          try {
+            const rawCart = sessionStorage.getItem('pending_checkout_cart');
+            if (rawCart) {
+              const parsed = JSON.parse(rawCart);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                loadedItems = parsed;
+                if (parsed[0]?.companyId || parsed[0]?.company) {
+                  loadedCompanyId = parsed[0].companyId || parsed[0].company;
+                }
+              } else if (parsed && typeof parsed === 'object') {
+                if (Array.isArray(parsed.items) && parsed.items.length > 0) {
+                  loadedItems = parsed.items;
+                }
+                if (parsed.companyId || parsed.company) {
+                  loadedCompanyId = parsed.companyId || parsed.company;
+                } else if (loadedItems[0]?.companyId || loadedItems[0]?.company) {
+                  loadedCompanyId = loadedItems[0].companyId || loadedItems[0].company;
+                }
+                if (parsed.coupon || parsed.couponCode || parsed.cupom) {
+                  loadedCouponCode = parsed.coupon || parsed.couponCode || parsed.cupom || "";
+                }
+                if (typeof parsed.discount === 'number' && parsed.discount > 0) {
+                  loadedDiscount = parsed.discount;
+                }
+              }
+            }
+          } catch (e) {
+            console.error("Error reading pending_checkout_cart from sessionStorage:", e);
+          }
+
+          if (loadedDiscount > 0) {
+            setDiscount(loadedDiscount);
+          }
+
+          const calculatedSubtotal = loadedItems.reduce((acc, item) => acc + (item.retail_price || item.current_price || 0) * (item.quantity || 1), 0);
+
           currentOrder = {
             id: "",
             code: "",
             status: "pending",
-            items: [],
-            total: 0,
-            companyId: "pallyra",
+            items: loadedItems,
+            total: Math.max(0, calculatedSubtotal - loadedDiscount),
+            companyId: loadedCompanyId,
             isEmergency: false,
-            observations: ""
+            observations: loadedCouponCode ? `Cupom aplicado: ${loadedCouponCode}` : ""
           };
+          setItems(loadedItems);
           setStep(1);
+          // O sessionStorage é preservado aqui para garantir que o carrinho não se perca em caso de F5/refresh antes de salvar o pedido.
         } else {
           const code = (urlCode || urlId)?.toUpperCase();
           if (code) {
@@ -450,6 +496,7 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           customerName: customerForm.nome,
           contact: customerForm.contato,
           customerCpfCnpj: customerForm.cpfCnpj,
+          customerEmail: customerForm.email || "",
           address: `${customerForm.endereco}, ${customerForm.numero} ${customerForm.complemento} - ${customerForm.cidade}/${customerForm.estado}`,
           observations: `${observations}\nOBS CLIENTE: ${customerForm.observacoes}`,
           status: "waiting_payment"
@@ -471,14 +518,109 @@ export const CheckoutPage: React.FC<CheckoutPageProps> = ({ config }) => {
           state: customerForm.estado,
           zipCode: customerForm.cep,
           number: customerForm.numero,
-          neighborhood: customerForm.complemento // Using complemento as neighborhood fallback if needed or just skip
+          neighborhood: customerForm.complemento
         });
 
         setOrder(prev => ({ ...prev, ...updatedData }));
         setStep(3);
+      } else {
+        // Novo Checkout vindo do carrinho (Cliente comum ou sem pedido pré-existente)
+        const formattedAddress = customerForm.endereco
+          ? `${customerForm.endereco}, ${customerForm.numero} ${customerForm.complemento} - ${customerForm.cidade}/${customerForm.estado}`
+          : "";
+
+        const effectiveCompanyId: CompanyId = order?.companyId || items[0]?.companyId || items[0]?.company || "pallyra";
+        const combinedObservations = `${observations || ""}${customerForm.observacoes ? `\nOBS CLIENTE: ${customerForm.observacoes}` : ""}`.trim();
+
+        const newOrderPayload = {
+          companyId: effectiveCompanyId,
+          customerName: customerForm.nome,
+          customerCpfCnpj: customerForm.cpfCnpj,
+          contact: customerForm.contato,
+          customerEmail: customerForm.email || "",
+          items: items.map(item => ({
+            ...item,
+            productId: item.productId || item.id,
+            product_name: item.product_name,
+            retail_price: item.retail_price || item.current_price,
+            current_price: item.current_price || item.retail_price,
+            quantity: item.quantity || 1,
+            insumos: item.insumos || []
+          })),
+          deliveryType: customerForm.entrega || "delivery",
+          shippingCost: freight || 0,
+          address: formattedAddress,
+          isEmergency: order?.isEmergency || false,
+          isWholesale: items.some(item => (item.quantity || 0) >= (item.wholesale_min_qty || 5)),
+          observations: combinedObservations,
+          source: "catalog"
+        };
+
+        const response = await fetch('/api/checkout/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newOrderPayload)
+        });
+
+        const result = await response.json();
+        if (result.success && result.orderId) {
+          const createdOrderId = result.orderId;
+          const createdCode = result.code || createdOrderId;
+
+          const createdOrderState: Partial<Order> = {
+            ...order,
+            id: createdOrderId,
+            code: createdCode,
+            companyId: effectiveCompanyId,
+            customerName: customerForm.nome,
+            contact: customerForm.contato,
+            customerCpfCnpj: customerForm.cpfCnpj,
+            customerEmail: customerForm.email || "",
+            address: formattedAddress,
+            shippingCost: freight || 0,
+            total: result.total || total,
+            status: "waiting_payment",
+            items,
+            observations: combinedObservations,
+            deliveryDate: deliveryDate || ""
+          };
+
+          setOrder(createdOrderState);
+
+          // Sincroniza / cria registro do cliente
+          try {
+            await syncCustomerFromCheckout(effectiveCompanyId, {
+              name: customerForm.nome,
+              contact: customerForm.contato,
+              cpfCnpj: customerForm.cpfCnpj,
+              email: customerForm.email,
+              address: customerForm.endereco,
+              city: customerForm.cidade,
+              state: customerForm.estado,
+              zipCode: customerForm.cep,
+              number: customerForm.numero,
+              neighborhood: customerForm.complemento
+            });
+          } catch (syncErr) {
+            console.error("Erro ao sincronizar cliente:", syncErr);
+          }
+
+          // Agora que o pedido está persistido no Firestore, é seguro limpar o sessionStorage
+          try {
+            sessionStorage.removeItem('pending_checkout_cart');
+          } catch (e) {}
+
+          // Atualiza a URL do navegador para incluir o ID do pedido sem recarregar a página
+          window.history.replaceState(null, '', `/checkout/${createdOrderId}`);
+
+          setStep(3);
+        } else {
+          throw new Error(result.error || "Falha ao criar pedido no Firestore.");
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save step 2 error:", error);
+      alert(error?.message || "Erro ao salvar dados do pedido. Tente novamente.");
     } finally {
       setSaving(false);
     }

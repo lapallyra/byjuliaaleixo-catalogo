@@ -388,17 +388,6 @@ export interface Memory {
   createdAt: any; // Firestore Timestamp
 }
 
-export interface Review {
-  id: string;
-  productId: string;
-  userId: string;
-  userName: string;
-  rating: number;
-  comment: string;
-  adminReply?: string;
-  createdAt: any;
-}
-
 export interface FinanceEntry {
   id: string;
   type: 'revenue' | 'expense';
@@ -523,6 +512,7 @@ export interface CartItem extends Product {
   productionStatus?: 'nao_iniciado' | 'em_producao' | 'concluido';
   productionStartedAt?: any;
   productionFinishedAt?: any;
+  atelier?: string;
 }
 
 export interface AppConfig {

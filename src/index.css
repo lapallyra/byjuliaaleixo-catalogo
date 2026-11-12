@@ -3,11 +3,11 @@
 
 html {
   scroll-behavior: smooth;
-  background-color: #FDFCFA;
+  background-color: #FAF8F5;
 }
 
 body {
-  @apply bg-[#FDFCFA] text-[#2C1810] font-sans antialiased;
+  @apply bg-[#FAF8F5] text-[#1B2537] font-sans antialiased;
   margin: 0;
   padding: 0;
   font-family: var(--font-sans);
@@ -34,32 +34,34 @@ body {
   --font-bowlby: "Poppins", sans-serif;
   --font-number: "Poppins", sans-serif;
   --font-tahoma: "Poppins", sans-serif;
-  --color-brand-background: #FDFCFA;
+  --color-brand-background: #FAF8F5;
   --color-brand-surface: #FFFFFF;
-  --color-brand-surface-alt: #F8F5EE;
-  --color-brand-text: #2C1810;
-  --color-brand-muted: #593E32;
-  --color-brand-muted-light: #8C6D37;
-  --color-brand-border: #E8DFC8;
+  --color-brand-surface-alt: #F5EFEE;
+  --color-brand-text: #1B2537;
+  --color-brand-muted: #4A5568;
+  --color-brand-muted-light: #C5A869;
+  --color-brand-border: #E8E2D5;
   --color-brand-border-light: #D4AF37;
-  --color-brand-accent: #B38F4D;
+  --color-brand-accent: #0F2C59;
   --color-brand-accent-light: #D4AF37;
   --color-gold: #D4AF37;
   --color-gold-deep: #B38F4D;
-  --color-charcoal: #2C1810;
-  --color-soft-white: #FDFCFA;
+  --color-royal-blue: #0F2C59;
+  --color-royal-blue-deep: #081220;
+  --color-charcoal: #1B2537;
+  --color-soft-white: #FAF8F5;
   --color-lilac: #E9D5FF;
   --color-lilac-baby: #F5EBFF;
   --color-deep-black: #0A0A0A;
-  --color-off-white: #FDFCFA;
-  --color-cream: #FDFCFA;
+  --color-off-white: #FAF8F5;
+  --color-cream: #FAF8F5;
   --color-white: #FFFFFF;
-  --color-neutral-50: #FDFCFA;
-  --color-neutral-100: #F8F5EE;
-  --color-gray-50: #FDFCFA;
-  --color-gray-100: #F8F5EE;
-  --color-slate-50: #FDFCFA;
-  --color-slate-100: #F8F5EE;
+  --color-neutral-50: #FAF8F5;
+  --color-neutral-100: #F5EFEE;
+  --color-gray-50: #FAF8F5;
+  --color-gray-100: #F5EFEE;
+  --color-slate-50: #FAF8F5;
+  --color-slate-100: #F5EFEE;
 }
 
 @layer utilities {

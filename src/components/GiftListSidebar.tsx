@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Gift, Trash2, Share2, Copy, Save, Loader2 } from 'lucide-react';
-import { SafeImage } from './ui/SafeImage';
 import { Product } from '../types';
 import { saveGiftList } from '../services/firebaseService';
 import { ImageWithFallback } from './ImageWithFallback';

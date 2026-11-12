@@ -47,31 +47,26 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
            </ul>
         </div>
         
-        {/* Col 3: Ateliês */}
+        {/* Col 3: Áreas Principais */}
         <div>
-           <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-3 font-poppins">Ateliês</h4>
+           <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-3 font-poppins">Loja & Criação</h4>
            <ul className="space-y-2 text-[11px] font-light text-[#6d5443]/80 font-tahoma">
-             {ATELIERS.map((a) => (
-               <li key={a.id}>
-                 <button 
-                   onClick={() => navigate(a.route)} 
-                   className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left"
-                 >
-                   {a.name}
-                 </button>
-               </li>
-             ))}
+             <li><button onClick={() => navigate('/')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Início (LandingPage)</button></li>
+             <li><button onClick={() => navigate('/loja')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Loja (Catálogo)</button></li>
+             <li><button onClick={() => navigate('/monte-seu-kit')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Monte seu Kit</button></li>
+             <li><button onClick={() => navigate('/kits')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Kits Prontos</button></li>
+             <li><button onClick={() => navigate('/listadepresentes')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Lista de Presentes</button></li>
            </ul>
         </div>
 
-        {/* Col 4: Navegação */}
+        {/* Col 4: Institucional */}
         <div>
-           <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-3 font-poppins">Navegação</h4>
+           <h4 className="text-[9.5px] font-bold tracking-[0.2em] text-[#3A312D] uppercase mb-3 font-poppins">Institucional</h4>
            <ul className="space-y-2 text-[11px] font-light text-[#6d5443]/80 font-tahoma">
-             <li><a href="/#kits" className="hover:text-[#cca062] transition-colors">Kits Prontos</a></li>
-             <li><button onClick={() => navigate('/kit-meukit')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Monte seu Kit</button></li>
+             <li><button onClick={() => navigate('/sobrenos')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Sobre a Madrinha</button></li>
+             <li><button onClick={() => navigate('/personalize')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Personalização</button></li>
+             <li><button onClick={() => navigate('/feedclientes')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Depoimentos</button></li>
              <li><button onClick={() => navigate('/colecoes')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Coleções</button></li>
-             <li><button onClick={() => navigate('/listadepresentes')} className="hover:text-[#cca062] transition-colors outline-none cursor-pointer text-left">Lista de Presentes</button></li>
            </ul>
         </div>
 
