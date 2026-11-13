@@ -96,18 +96,18 @@ export const PersonalizePage: React.FC = () => {
   const currentItem = BEFORE_AFTER_ITEMS[selectedItemIndex];
 
   return (
-    <div className="min-h-screen bg-[#FDFCFA] text-[#2C1810] font-sans pb-20">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#1B2537] font-sans pb-20">
       
       {/* HERO BANNER */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#FAF6F0] via-[#FDFCFA] to-[#FDFCFA] pt-10 pb-12 px-4 sm:px-6 lg:px-8 border-b border-[#E8DFC8]/40">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#F3ECDF]/60 via-[#FAF8F5] to-[#FAF8F5] pt-10 pb-12 px-3 sm:px-4 border-b border-[#D4AF37]/25">
+        <div className="max-w-5xl mx-auto text-center">
           
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FAF0E6] border border-[#E8DFC8] text-[#8C6D37] text-xs font-bold uppercase tracking-[0.2em] mb-4 shadow-xs"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#D4AF37]/40 text-[#0F2C59] text-xs font-bold uppercase tracking-[0.2em] mb-4 shadow-xs"
           >
-            <Sparkles size={14} className="text-[#B38F4D]" />
+            <Sparkles size={14} className="text-[#D4AF37]" />
             <span>Transforme o Comum em Inesquecível</span>
           </motion.div>
 
@@ -115,7 +115,7 @@ export const PersonalizePage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="font-mea-culpa text-5xl sm:text-6xl md:text-7xl text-[#2C1810] leading-tight mb-4"
+            className="whitespace-nowrap font-mea-culpa text-[clamp(1.85rem,4.5vw,3.8rem)] text-[#0F2C59] leading-[1.15] mb-4"
           >
             A Magia da Personalização
           </motion.h1>
@@ -124,10 +124,10 @@ export const PersonalizePage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-sm sm:text-base md:text-lg text-[#593E32] font-light max-w-2xl mx-auto leading-relaxed mb-6"
+            className="text-sm sm:text-base md:text-lg text-[#1B2537]/75 font-light max-w-2xl mx-auto leading-relaxed mb-6"
           >
             Nenhum presente fala tão alto ao coração quanto aquele pensado exclusivamente para quem você ama. 
-            Veja como uma simples <span className="font-semibold text-[#8C6D37]">caneca de porcelana branca</span> ganha vida e se transforma em uma peça única e inesquecível.
+            Veja como uma simples <span className="font-semibold text-[#0F2C59]">caneca de porcelana branca</span> ganha vida e se transforma em uma peça única e inesquecível.
           </motion.p>
 
           {/* Key Value Badges */}
@@ -135,18 +135,18 @@ export const PersonalizePage: React.FC = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-[#6D5443]"
+            className="flex flex-wrap items-center justify-center gap-3 text-xs font-medium text-[#0F2C59]"
           >
-            <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-[#E8DFC8] shadow-xs">
-              <CheckCircle2 size={15} className="text-[#B38F4D]" />
+            <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-[#D4AF37]/40 shadow-xs">
+              <CheckCircle2 size={15} className="text-[#D4AF37]" />
               <span>Aprovação Prévia da Arte</span>
             </div>
-            <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-[#E8DFC8] shadow-xs">
-              <CheckCircle2 size={15} className="text-[#B38F4D]" />
+            <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-[#D4AF37]/40 shadow-xs">
+              <CheckCircle2 size={15} className="text-[#D4AF37]" />
               <span>Porcelana Nobre de Alta Alvura</span>
             </div>
-            <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-[#E8DFC8] shadow-xs">
-              <CheckCircle2 size={15} className="text-[#B38F4D]" />
+            <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-[#D4AF37]/40 shadow-xs">
+              <CheckCircle2 size={15} className="text-[#D4AF37]" />
               <span>Embalagem Perfumada Pronta</span>
             </div>
           </motion.div>
@@ -155,18 +155,18 @@ export const PersonalizePage: React.FC = () => {
       </section>
 
       {/* DEMONSTRATION SECTION: BEFORE & AFTER SLIDER ONLY */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+      <section className="max-w-5xl mx-auto px-3 sm:px-4 py-10">
         
         {/* Section Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 text-[#CCA062] font-bold text-xs uppercase tracking-[0.25em] mb-2">
+          <div className="inline-flex items-center gap-2 text-[#D4AF37] font-bold text-xs uppercase tracking-[0.25em] mb-2">
             <Wand2 size={14} />
-            <span>Barra Interativa Antes & Depois</span>
+            <span>Barra Interativa Antes &amp; Depois</span>
           </div>
-          <h2 className="font-mea-culpa text-4xl sm:text-5xl text-[#2C1810]">
+          <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.65rem,4vw,3rem)] text-[#0F2C59] leading-[1.15]">
             Arraste para Ver a Transformação
           </h2>
-          <p className="text-xs sm:text-sm text-[#593E32] font-light max-w-md mx-auto mt-1">
+          <p className="text-xs sm:text-sm text-[#1B2537]/75 font-light max-w-md mx-auto mt-1">
             Mova o marcador central para comparar a caneca branca lisa com o modelo personalizado do ateliê.
           </p>
         </div>
@@ -184,11 +184,11 @@ export const PersonalizePage: React.FC = () => {
                 }}
                 className={`px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer flex items-center gap-2 ${
                   isSelected
-                    ? 'bg-[#2C1810] text-white shadow-md scale-105'
-                    : 'bg-white text-[#593E32] border border-[#E8DFC8] hover:border-[#B38F4D] hover:bg-[#FAF6F0]'
+                    ? 'bg-[#0F2C59] text-white shadow-md scale-105'
+                    : 'bg-white text-[#0F2C59] border border-[#D4AF37]/40 hover:border-[#D4AF37] hover:bg-[#FAF8F5]'
                 }`}
               >
-                <Sparkles size={13} className={isSelected ? 'text-[#CCA062]' : 'text-[#8C6D37]'} />
+                <Sparkles size={13} className="text-[#D4AF37]" />
                 <span>{item.title}</span>
               </button>
             );
@@ -196,13 +196,13 @@ export const PersonalizePage: React.FC = () => {
         </div>
 
         {/* Item Info Header */}
-        <div className="flex items-center justify-between mb-3 bg-white px-4 py-2.5 rounded-xl border border-[#E8DFC8] max-w-2xl mx-auto">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#6D5443]">
-            <span className="px-2 py-0.5 rounded-md bg-[#FAF0E6] text-[#8C6D37] text-[11px]">
+        <div className="flex items-center justify-between mb-3 bg-white px-4 py-2.5 rounded-xl border border-[#D4AF37]/30 max-w-2xl mx-auto">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#0F2C59]">
+            <span className="px-2 py-0.5 rounded-md bg-[#FAF8F5] border border-[#D4AF37]/30 text-[#0F2C59] text-[11px]">
               Ateliê {currentItem.atelier}
             </span>
             <span>•</span>
-            <span className="text-xs text-[#593E32] font-normal">{currentItem.subtitle}</span>
+            <span className="text-xs text-[#1B2537]/80 font-normal">{currentItem.subtitle}</span>
           </div>
         </div>
 
@@ -266,27 +266,27 @@ export const PersonalizePage: React.FC = () => {
         </div>
 
         {/* DETAILS OF PERSONALIZATION FOR THIS ITEM */}
-        <div className="mt-6 max-w-2xl mx-auto bg-white rounded-2xl p-5 sm:p-6 border border-[#E8DFC8] shadow-xs">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-[#E8DFC8]">
+        <div className="mt-6 max-w-2xl mx-auto bg-white rounded-2xl p-5 sm:p-6 border border-[#D4AF37]/30 shadow-xs">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-[#D4AF37]/20">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-[#8C6D37]">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[#D4AF37]">
                 {currentItem.category}
               </span>
-              <h3 className="font-mea-culpa text-2xl sm:text-3xl text-[#2C1810] mt-0.5">
+              <h3 className="font-mea-culpa text-2xl sm:text-3xl text-[#0F2C59] mt-0.5">
                 {currentItem.title}
               </h3>
             </div>
             
             <button
               onClick={() => navigate('/comomontar')}
-              className="px-5 py-2.5 rounded-full bg-[#2C1810] hover:bg-[#8C6D37] text-white text-[11px] font-bold uppercase tracking-widest transition-all shadow-xs flex items-center gap-2 cursor-pointer shrink-0"
+              className="px-5 py-2.5 rounded-full bg-[#0F2C59] hover:bg-[#1B3F7A] text-white text-[11px] font-bold uppercase tracking-widest transition-all shadow-xs flex items-center gap-2 cursor-pointer shrink-0 border border-[#D4AF37]/30"
             >
               <span>Personalizar Minha Caneca</span>
-              <ArrowRight size={13} />
+              <ArrowRight size={13} className="text-[#D4AF37]" />
             </button>
           </div>
 
-          <h4 className="text-[11px] font-bold text-[#6D5443] uppercase tracking-wider mb-3">
+          <h4 className="text-[11px] font-bold text-[#0F2C59] uppercase tracking-wider mb-3">
             O que torna essa caneca especial:
           </h4>
 
@@ -294,12 +294,12 @@ export const PersonalizePage: React.FC = () => {
             {currentItem.details.map((detail, dIdx) => (
               <div 
                 key={dIdx} 
-                className="flex items-start gap-2.5 p-3 rounded-xl bg-[#FAF6F0] border border-[#E8DFC8]/70"
+                className="flex items-start gap-2.5 p-3 rounded-xl bg-[#FAF8F5] border border-[#D4AF37]/30"
               >
-                <div className="w-5 h-5 rounded-full bg-[#8C6D37] text-white flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold shadow-xs">
+                <div className="w-5 h-5 rounded-full bg-[#0F2C59] text-[#D4AF37] flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold shadow-xs">
                   ✓
                 </div>
-                <span className="text-xs text-[#3A312D] font-medium leading-snug">
+                <span className="text-xs text-[#1B2537] font-medium leading-snug">
                   {detail}
                 </span>
               </div>
@@ -310,17 +310,17 @@ export const PersonalizePage: React.FC = () => {
       </section>
 
       {/* WHY PERSONALIZE SECTION (INCENTIVES) */}
-      <section className="bg-[#FAF6F0] py-12 border-y border-[#E8DFC8]/60 mt-6">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <section className="bg-[#F3ECDF]/55 py-12 border-y border-[#D4AF37]/20 mt-6">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4">
           
           <div className="text-center mb-10">
-            <span className="text-[#8C6D37] text-xs font-bold uppercase tracking-[0.2em]">
+            <span className="text-[#D4AF37] text-xs font-bold uppercase tracking-[0.2em]">
               Por Que Escolher a Personalização?
             </span>
-            <h2 className="font-mea-culpa text-4xl sm:text-5xl text-[#2C1810] mt-1">
-              Motivos para Adoçar & Surpreender
+            <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.65rem,4vw,3rem)] text-[#0F2C59] mt-1 leading-[1.15]">
+              Motivos para Adoçar &amp; Surpreender
             </h2>
-            <p className="text-xs sm:text-sm text-[#593E32] font-light max-w-xl mx-auto mt-1">
+            <p className="text-xs sm:text-sm text-[#1B2537]/75 font-light max-w-xl mx-auto mt-1">
               Transformar uma caneca ou um mimo comum em um objeto personalizado mostra cuidado e afeto em cada detalhe.
             </p>
           </div>
@@ -328,40 +328,40 @@ export const PersonalizePage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Card 1 */}
-            <div className="bg-white rounded-2xl p-6 border border-[#E8DFC8] shadow-xs flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-[#FAF0E6] text-[#8C6D37] flex items-center justify-center mb-4 shadow-xs border border-[#E8DFC8]">
+            <div className="bg-white rounded-2xl p-6 border border-[#D4AF37]/30 shadow-xs flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-xl bg-[#FAF8F5] text-[#D4AF37] flex items-center justify-center mb-4 shadow-xs border border-[#D4AF37]/30">
                 <Heart size={22} strokeWidth={1.5} />
               </div>
-              <h3 className="font-serif text-lg text-[#2C1810] mb-2 font-semibold">
+              <h3 className="font-serif text-lg text-[#0F2C59] mb-2 font-semibold">
                 Memórias Inesquecíveis
               </h3>
-              <p className="text-xs text-[#593E32] font-light leading-relaxed">
+              <p className="text-xs text-[#1B2537]/75 font-light leading-relaxed">
                 Um item genérico é guardado na gaveta. Uma caneca personalizada com nome ou mensagem vira um momento especial a cada gole de café.
               </p>
             </div>
 
             {/* Card 2 */}
-            <div className="bg-white rounded-2xl p-6 border border-[#E8DFC8] shadow-xs flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-[#FAF0E6] text-[#8C6D37] flex items-center justify-center mb-4 shadow-xs border border-[#E8DFC8]">
+            <div className="bg-white rounded-2xl p-6 border border-[#D4AF37]/30 shadow-xs flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-xl bg-[#FAF8F5] text-[#D4AF37] flex items-center justify-center mb-4 shadow-xs border border-[#D4AF37]/30">
                 <Award size={22} strokeWidth={1.5} />
               </div>
-              <h3 className="font-serif text-lg text-[#2C1810] mb-2 font-semibold">
+              <h3 className="font-serif text-lg text-[#0F2C59] mb-2 font-semibold">
                 Acabamento Premium
               </h3>
-              <p className="text-xs text-[#593E32] font-light leading-relaxed">
+              <p className="text-xs text-[#1B2537]/75 font-light leading-relaxed">
                 Porcelana fina com estampas de alta fixação que não descascam e preservam a nitidez das cores e do brilho por anos.
               </p>
             </div>
 
             {/* Card 3 */}
-            <div className="bg-white rounded-2xl p-6 border border-[#E8DFC8] shadow-xs flex flex-col items-center text-center">
-              <div className="w-12 h-12 rounded-xl bg-[#FAF0E6] text-[#8C6D37] flex items-center justify-center mb-4 shadow-xs border border-[#E8DFC8]">
+            <div className="bg-white rounded-2xl p-6 border border-[#D4AF37]/30 shadow-xs flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-xl bg-[#FAF8F5] text-[#D4AF37] flex items-center justify-center mb-4 shadow-xs border border-[#D4AF37]/30">
                 <ShieldCheck size={22} strokeWidth={1.5} />
               </div>
-              <h3 className="font-serif text-lg text-[#2C1810] mb-2 font-semibold">
+              <h3 className="font-serif text-lg text-[#0F2C59] mb-2 font-semibold">
                 Aprovação da Arte Sem Susto
               </h3>
-              <p className="text-xs text-[#593E32] font-light leading-relaxed">
+              <p className="text-xs text-[#1B2537]/75 font-light leading-relaxed">
                 Sua produção só inicia após o envio da prévia digital no WhatsApp e sua aprovação total da tipografia e do layout.
               </p>
             </div>
@@ -372,12 +372,12 @@ export const PersonalizePage: React.FC = () => {
       </section>
 
       {/* HOW IT WORKS: STEP BY STEP */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+      <section className="max-w-5xl mx-auto px-3 sm:px-4 py-12">
         <div className="text-center mb-8">
-          <span className="text-[#8C6D37] text-xs font-bold uppercase tracking-[0.2em]">
+          <span className="text-[#D4AF37] text-xs font-bold uppercase tracking-[0.2em]">
             Passo a Passo Simples
           </span>
-          <h2 className="font-mea-culpa text-4xl sm:text-5xl text-[#2C1810] mt-1">
+          <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.65rem,4vw,3rem)] text-[#0F2C59] mt-1 leading-[1.15]">
             Como Encomendar Seu Mimo Único
           </h2>
         </div>
@@ -407,16 +407,16 @@ export const PersonalizePage: React.FC = () => {
           ].map((item, index) => (
             <div 
               key={index}
-              className="bg-white rounded-xl p-5 border border-[#E8DFC8] shadow-xs flex flex-col justify-between"
+              className="bg-white rounded-xl p-5 border border-[#D4AF37]/30 shadow-xs flex flex-col justify-between"
             >
               <div>
-                <span className="text-2xl font-mea-culpa text-[#8C6D37] block mb-1">
+                <span className="text-2xl font-mea-culpa text-[#D4AF37] block mb-1">
                   Passo {item.step}
                 </span>
-                <h3 className="font-serif text-sm font-bold text-[#2C1810] mb-1">
+                <h3 className="font-serif text-sm font-bold text-[#0F2C59] mb-1">
                   {item.title}
                 </h3>
-                <p className="text-[11px] text-[#593E32] font-light leading-relaxed">
+                <p className="text-[11px] text-[#1B2537]/75 font-light leading-relaxed">
                   {item.desc}
                 </p>
               </div>
@@ -426,17 +426,17 @@ export const PersonalizePage: React.FC = () => {
       </section>
 
       {/* CTA BANNER */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 mt-4">
-        <div className="bg-gradient-to-r from-[#2C1810] via-[#3A2A20] to-[#2C1810] rounded-2xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden border border-[#8C6D37]/40 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
+      <section className="max-w-5xl mx-auto px-3 sm:px-4 mt-4">
+        <div className="bg-gradient-to-r from-[#0F2C59] via-[#16396E] to-[#0F2C59] rounded-2xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden border border-[#D4AF37]/40 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
           
-          <div className="max-w-lg z-10">
-            <span className="text-[#CCA062] font-bold text-xs uppercase tracking-[0.2em] block mb-1">
+          <div className="max-w-lg z-10 min-w-0">
+            <span className="text-[#D4AF37] font-bold text-xs uppercase tracking-[0.2em] block mb-1">
               Pronto para encantar?
             </span>
-            <h2 className="font-mea-culpa text-4xl sm:text-5xl text-white leading-tight mb-2">
+            <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.6rem,3.4vw,2.75rem)] text-white leading-tight mb-2">
               Crie Sua Caneca Personalizada
             </h2>
-            <p className="text-xs text-amber-100/80 font-light leading-relaxed">
+            <p className="text-xs text-[#FAF8F5]/85 font-light leading-relaxed">
               Explore nossa vitrine de mimos artesanais ou monte um presente exclusivo hoje mesmo.
             </p>
           </div>
@@ -444,13 +444,13 @@ export const PersonalizePage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 z-10 w-full sm:w-auto">
             <button
               onClick={() => navigate('/vitrine')}
-              className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#CCA062] hover:bg-[#b58c4f] text-[#2C1810] text-[11px] font-bold uppercase tracking-widest transition-all shadow-md cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#D4AF37] hover:bg-[#c19c2a] text-[#0F2C59] text-[11px] font-bold uppercase tracking-widest transition-all shadow-md cursor-pointer"
             >
               Ver Produtos
             </button>
             <button
               onClick={() => navigate('/comomontar')}
-              className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold uppercase tracking-widest border border-white/20 transition-all cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold uppercase tracking-widest border border-[#D4AF37]/40 transition-all cursor-pointer"
             >
               Montar Kit
             </button>

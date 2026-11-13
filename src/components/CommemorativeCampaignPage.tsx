@@ -509,7 +509,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
               </p>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {kits.map((kit) => (
                 <ProductCard 
                   key={kit.id}
@@ -578,7 +578,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
               <p className="text-xs text-[#8C7864] font-light">Assim que novos itens exclusivos forem cadastrados com a temática de {commemorativeDate.name}, eles aparecerão aqui.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredAndSortedProducts.map((product) => (
                 <ProductCard 
                   key={product.id}

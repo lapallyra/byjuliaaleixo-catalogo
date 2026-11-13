@@ -44,14 +44,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ cartCount = 0, onCartCli
   };
 
   return (
-    <header className="w-full relative z-30 select-none">
-      {/* HEADER SUPERIOR NOBRE EM AZUL PROFUNDO */}
-      <div className="w-full bg-[#081220] border-b border-[#1A3150] py-2 sm:py-3 px-2 sm:px-3 md:px-4 relative overflow-hidden">
-        {/* Glow de fundo sutil */}
-        <div className="absolute inset-0 bg-radial from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none" />
+    <header className="w-full relative z-30 select-none bg-[linear-gradient(180deg,#F2EAE0_0%,#F7F2EA_58%,#FAF8F5_100%)]">
+      {/* Glow champanhe ultra sutil unificando todo o cabeçalho */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_50%_0%,rgba(212,175,55,0.10)_0%,rgba(250,248,245,0)_75%)] pointer-events-none" />
 
+      {/* HEADER SUPERIOR NOBRE EM TONS PRÓXIMOS AO CORPO */}
+      <div className="w-full py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 relative">
         <div className="w-full max-w-[1850px] mx-auto flex items-center justify-between gap-3 relative z-10">
-          {/* Busca Rápida no Topo (Esquerda no Desktop / Compacta) */}
+          {/* Busca Rápida no Topo (Esquerda) */}
           <div className="flex items-center sm:w-72 shrink-0">
             <form 
               onSubmit={(e) => {
@@ -62,20 +62,20 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ cartCount = 0, onCartCli
                   navigate('/document');
                 }
               }}
-              className="flex items-center gap-2 bg-[#0F2038] border border-[#23456F] rounded-full px-3.5 py-1.5 text-xs text-[#E5C388] shadow-inner hover:border-[#D4AF37]/60 transition-all duration-200 w-full max-w-[240px]"
+              className="flex items-center gap-2 bg-white/70 border border-[#D4AF37]/30 rounded-full px-3.5 py-1.5 text-xs text-[#1B2537] hover:border-[#D4AF37]/65 focus-within:border-[#D4AF37] focus-within:bg-white/95 transition-all duration-200 w-full max-w-[240px]"
             >
-              <Search size={13} strokeWidth={2} className="text-[#D4AF37] shrink-0" />
+              <Search size={13} strokeWidth={2} className="text-[#B38F4D] shrink-0" />
               <input 
                 type="text" 
                 value={searchCode}
                 onChange={(e) => setSearchCode(e.target.value)}
                 placeholder="Rastrear pedido..." 
-                className="bg-transparent focus:outline-none w-full text-[#FAF8F5] placeholder-[#8EA4C7]/80 font-medium text-[11px] border-none p-0 tracking-[0.03em]" 
+                className="bg-transparent focus:outline-none w-full text-[#1B2537] placeholder-[#1B2537]/50 font-medium text-[11px] border-none p-0 tracking-[0.03em]" 
               />
             </form>
           </div>
 
-          {/* Logotipo / Escrita Dourada Neon Cursiva: "MADRINHA" */}
+          {/* Logotipo / Escrita Cursiva Nobre: "MADRINHA" */}
           <div 
             onClick={() => navigate('/')}
             className="flex-1 flex flex-col items-center justify-center cursor-pointer group py-0.5"
@@ -83,23 +83,15 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ cartCount = 0, onCartCli
             aria-label="Ir para a LandingPage Madrinha"
           >
             <span
-              className="font-meaculpa text-4xl sm:text-5xl md:text-6xl text-[#FBF3D5] leading-none tracking-wide text-center transition-all duration-300 group-hover:scale-105"
+              className="font-meaculpa text-4xl sm:text-5xl md:text-6xl text-[#0F2C59] leading-none tracking-wide text-center transition-all duration-300 group-hover:scale-[1.03]"
               style={{
                 fontFamily: "'Mea Culpa', cursive",
-                color: '#FFF6D6',
-                textShadow: `
-                  0 0 7px rgba(255, 235, 170, 0.95),
-                  0 0 15px rgba(245, 206, 110, 0.85),
-                  0 0 28px rgba(212, 175, 55, 0.75),
-                  0 0 45px rgba(184, 134, 11, 0.6),
-                  0 0 70px rgba(160, 115, 10, 0.35)
-                `,
-                filter: 'drop-shadow(0 2px 8px rgba(212, 175, 55, 0.4))'
+                textShadow: '0 2px 18px rgba(212, 175, 55, 0.24)'
               }}
             >
               Madrinha
             </span>
-            <span className="text-[9px] uppercase tracking-[0.3em] text-[#D4AF37]/90 font-sans font-semibold -mt-1 hidden sm:block">
+            <span className="text-[9px] uppercase tracking-[0.32em] text-[#9E7B3B] font-sans font-semibold -mt-1 hidden sm:block">
               dos Personalizados
             </span>
           </div>
@@ -111,17 +103,19 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ cartCount = 0, onCartCli
               onClick={() => {
                 if (onCartClick) {
                   onCartClick();
+                } else if (currentPath.startsWith('/loja')) {
+                  window.dispatchEvent(new CustomEvent('open-cart-drawer'));
                 } else {
                   navigate('/loja?openCart=true');
                 }
               }}
-              className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0F2038] hover:bg-[#162F52] text-[#E5C388] border border-[#23456F] flex items-center justify-center transition-all duration-200 shadow-2xs group cursor-pointer"
+              className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/75 hover:bg-white text-[#0F2C59] border border-[#D4AF37]/35 hover:border-[#D4AF37] flex items-center justify-center transition-all duration-200 group cursor-pointer"
               title="Sacola de Compras"
               aria-label="Sacola de Compras"
             >
-              <ShoppingBag size={16} strokeWidth={2} className="transition-transform group-hover:scale-110" />
+              <ShoppingBag size={16} strokeWidth={1.8} className="transition-transform group-hover:scale-110" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#D4AF37] text-[#081220] text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+                <span className="absolute -top-1 -right-1 bg-[#0F2C59] text-[#FAF8F5] border border-[#D4AF37]/70 text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
@@ -130,29 +124,29 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ cartCount = 0, onCartCli
             {/* Área do Cliente */}
             <button
               onClick={() => navigate('/minha-experiencia')}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#0F2038] hover:bg-[#162F52] text-[#E5C388] border border-[#23456F] flex items-center justify-center transition-all duration-200 shadow-2xs group cursor-pointer"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/75 hover:bg-white text-[#0F2C59] border border-[#D4AF37]/35 hover:border-[#D4AF37] flex items-center justify-center transition-all duration-200 group cursor-pointer"
               title={user ? (user.displayName || 'Minha Conta') : 'Área do Cliente'}
               aria-label="Área do Cliente"
             >
-              <UserIcon size={16} strokeWidth={2} className="transition-transform group-hover:scale-110" />
+              <UserIcon size={16} strokeWidth={1.8} className="transition-transform group-hover:scale-110" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* BARRA DE NAVEGAÇÃO OFICIAL DA NOVA ARQUITETURA */}
-      <nav className="w-full bg-[#0B182B] border-b border-[#1A3150] px-2 sm:px-3 md:px-4 py-1.5 overflow-x-auto scrollbar-none">
-        <div className="w-full max-w-[1850px] mx-auto flex items-center justify-center gap-1 sm:gap-3 md:gap-6 whitespace-nowrap min-w-max">
+      {/* BARRA DE NAVEGAÇÃO INTEGRADA AO CORPO DO SITE */}
+      <nav className={`w-full ${currentPath === '/' ? 'border-b-0' : 'border-b border-[#E8E2D5]/70'} px-2 sm:px-3 md:px-4 pt-0.5 pb-2.5 overflow-x-auto scrollbar-none relative z-10`}>
+        <div className="w-full max-w-[1850px] mx-auto flex items-center justify-center gap-1 sm:gap-3 md:gap-5 whitespace-nowrap min-w-max">
           {navLinks.map((link) => {
             const active = isLinkActive(link);
             return (
               <button
                 key={link.path}
                 onClick={() => navigate(link.path)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-full text-[11px] font-medium tracking-[0.14em] uppercase transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
                   active 
-                    ? 'bg-[#D4AF37]/20 text-[#FAF3DC] border border-[#D4AF37]/60 shadow-xs' 
-                    : 'text-[#9BB1D2] hover:text-[#FAF3DC] hover:bg-white/5 border border-transparent'
+                    ? 'bg-[#D4AF37]/16 text-[#0F2C59] border border-[#D4AF37]/55 font-semibold' 
+                    : 'text-[#1B2537]/70 hover:text-[#0F2C59] hover:bg-[#D4AF37]/10 border border-transparent'
                 }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full transition-colors ${active ? 'bg-[#D4AF37]' : 'bg-transparent'}`} />

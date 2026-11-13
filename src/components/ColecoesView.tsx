@@ -159,7 +159,7 @@ const AtelierCarousel = ({
             ))
           ) : (
             products.map((prod) => (
-              <div key={prod.id} className="min-w-[280px] shrink-0">
+              <div key={prod.id} className="min-w-[345px] sm:min-w-[440px] shrink-0">
                 <ProductCard 
                   product={prod}
                   theme={getTheme(prod.company)}
@@ -192,27 +192,27 @@ export const ColecoesView: React.FC<ColecoesViewProps> = ({ allProducts = [] }) 
   const HeartDivider = ({ text }: { text?: string }) => (
     <div className="flex flex-col items-center justify-center my-8 w-full">
       <div className="flex items-center justify-center w-full max-w-sm mb-2 gap-4">
-        <div className="h-[1px] flex-1 border-t border-dashed border-[#c36266]/30"></div>
-        <Heart size={14} strokeWidth={1.5} className="text-[#c36266]" />
-        <div className="h-[1px] flex-1 border-t border-dashed border-[#c36266]/30"></div>
+        <div className="h-[1px] flex-1 border-t border-dashed border-[#D4AF37]/40"></div>
+        <Heart size={14} strokeWidth={1.5} className="text-[#D4AF37]" />
+        <div className="h-[1px] flex-1 border-t border-dashed border-[#D4AF37]/40"></div>
       </div>
-      {text && <h2 className="text-xl md:text-2xl font-serif text-[#6d5443] tracking-widest uppercase">{text}</h2>}
+      {text && <h2 className="whitespace-nowrap text-[clamp(1.15rem,2vw,1.5rem)] font-serif text-[#0F2C59] tracking-widest uppercase">{text}</h2>}
     </div>
   );
 
   return (
-    <div className="bg-[#FDFCFA] min-h-screen text-[#4A332A] font-sans selection:bg-[#E8DFC8] selection:text-[#2C1810] py-8 sm:py-12 select-none overflow-x-hidden relative">
+    <div className="bg-[#FAF8F5] min-h-screen text-[#1B2537] font-sans selection:bg-[#FAF0DC] selection:text-[#0F2C59] py-8 sm:py-12 select-none overflow-x-hidden relative">
       {/* BACKGROUND GRAPHICS */}
-      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#FAF6F0]/60 to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#F3ECDF]/60 to-transparent pointer-events-none -z-10" />
       
-      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8">
+      <div className="max-w-[1850px] mx-auto px-3 sm:px-4">
         
         {/* HEADER */}
         <div className="text-center mb-12 sm:mb-16">
-          <h1 className="font-mea-culpa text-4xl sm:text-5xl md:text-6xl text-[#6d5443] mb-3">
+          <h1 className="whitespace-nowrap font-mea-culpa text-[clamp(2rem,4.5vw,3.75rem)] text-[#0F2C59] mb-3 leading-[1.15]">
             Coleções por Ateliê
           </h1>
-          <p className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-[#cca062]">
+          <p className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-[#D4AF37]">
             Nossos mimos e trabalhos exclusivos organizados por marca
           </p>
         </div>

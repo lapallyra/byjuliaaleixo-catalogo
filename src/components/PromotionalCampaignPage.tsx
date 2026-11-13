@@ -145,7 +145,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
             </button>
           </div>
         ) : (
-          <section className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 mt-12 sm:mt-16">
+          <section className="max-w-[1850px] mx-auto px-3 sm:px-4 mt-12 sm:mt-16">
             <div className="flex items-center gap-3 mb-12">
               <ShoppingBag className="text-[#6d5443]" size={24} />
               <h2 className="text-2xl font-serif text-[#6d5443]">
@@ -154,7 +154,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
             </div>
 
             {linkedProducts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-7">
                 {linkedProducts.map((product, index) => (
                   <motion.div
                     key={product.id}

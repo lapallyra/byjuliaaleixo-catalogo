@@ -42,7 +42,6 @@ import { GiftListSidebar } from './GiftListSidebar';
 import { SuggestionBox } from './SuggestionBox';
 import { ProductDetailPage } from './ProductDetailPage';
 import { ColecoesView } from './ColecoesView';
-import { CategoryPillMenu } from './Catalog/CategoryPillMenu';
 import { ProductCard } from './ui/ProductCard';
 
 
@@ -229,7 +228,19 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         setSelectedProduct(found);
       }
     }
-  }, [location.search, allProducts]);
+    if (params.get('openCart') === 'true') {
+      setIsCartOpen(true);
+      params.delete('openCart');
+      const cleaned = params.toString();
+      navigate(cleaned ? `${location.pathname}?${cleaned}` : location.pathname, { replace: true });
+    }
+  }, [location.search, location.pathname, allProducts, navigate]);
+
+  useEffect(() => {
+    const handleOpenCart = () => setIsCartOpen(true);
+    window.addEventListener('open-cart-drawer', handleOpenCart);
+    return () => window.removeEventListener('open-cart-drawer', handleOpenCart);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -551,7 +562,16 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         onCartClick={() => setIsCartOpen(true)}
         cartCount={cart.reduce((sum, i) => sum + i.quantity, 0)}
         onSearch={handleSearch}
-        onGoBack={onGoBack}
+        onGoBack={() => {
+          if (selectedProduct) {
+            setSelectedProduct(null);
+            setIsReadOnlyProduct(false);
+          } else if (window.history.length > 1) {
+            navigate(-1);
+          } else {
+            onGoBack();
+          }
+        }}
         onGiftListClick={() => setIsSearchingList(true)}
         giftListCount={giftList.length}
         onViewAll={() => { handleCategoryClick(null); setView('catalog'); }}
@@ -603,21 +623,15 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
         ) : (
           <>
             {/* Content Area */}
-            <div className="flex-1 flex flex-col min-h-0 bg-[#FAF9F6] overflow-y-auto scrollbar-none pt-1">
+            <div className="flex-1 flex flex-col min-h-0 bg-[#FAF8F5] overflow-y-auto scrollbar-none pt-1">
               
-              <CategoryPillMenu 
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onSelectCategory={handleCategoryClick}
-              />
-
               {!selectedCategory && !searchQuery && highlights.length > 0 && (
-                <div ref={highlightsScrollRef} className="border-b border-[#e8dcc8]/10 pb-4">
+                <div ref={highlightsScrollRef} className="border-b border-[#D4AF37]/15 pb-4">
                   <div className="max-w-[1850px] mx-auto px-3 pt-6 pb-2 text-left">
-                    <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
+                    <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#D4AF37]">
                       Lançamentos
                     </span>
-                    <h2 className="text-2xl md:text-3xl font-mea-culpa text-[#3A312D] tracking-tight leading-tight mt-1">
+                    <h2 className="whitespace-nowrap text-[clamp(1.65rem,2.8vw,2.25rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-tight mt-1">
                       Novidades
                     </h2>
                   </div>
@@ -639,16 +653,16 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   const campaignProducts = companyProducts.filter(p => camp.items?.includes(p.id));
                   if (campaignProducts.length === 0) return null;
                   return (
-                    <div key={camp.id} className="border-b border-[#e8dcc8]/10 pb-4 mt-4">
+                    <div key={camp.id} className="border-b border-[#D4AF37]/15 pb-4 mt-4">
                       <div className="max-w-[1850px] mx-auto px-3 pt-6 pb-2 text-left">
-                        <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
+                        <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#D4AF37]">
                           {camp.subtitle || "Seleção Exclusiva"}
                         </span>
-                        <h2 className="text-2xl md:text-3xl font-mea-culpa text-[#3A312D] tracking-tight leading-tight mt-1">
+                        <h2 className="whitespace-nowrap overflow-hidden text-ellipsis text-[clamp(1.5rem,2.6vw,2.25rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-tight mt-1">
                           {camp.title}
                         </h2>
                         {camp.description && (
-                          <p className="text-xs text-neutral-500 font-sans tracking-wide max-w-lg mt-1">
+                          <p className="text-xs text-[#1B2537]/70 font-sans tracking-wide max-w-lg mt-1">
                             {camp.description}
                           </p>
                         )}
@@ -670,43 +684,50 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   const highlightProd = companyProducts.find(p => p.id === camp.highlightProductId);
                   if (!highlightProd) return null;
                   return (
-                    <div key={camp.id} className="max-w-[1850px] mx-auto px-3 py-8 border-b border-[#e8dcc8]/10">
-                      <div className="bg-white rounded-3xl p-6 md:p-12 border border-[#e8dcc8]/35 shadow-xs flex flex-col md:flex-row items-center gap-8 md:gap-16">
-                        <div className="w-full md:w-1/2 aspect-square rounded-2xl overflow-hidden bg-neutral-50 border border-neutral-100">
+                    <div key={camp.id} className="max-w-[1850px] mx-auto px-3 py-8 border-b border-[#D4AF37]/15">
+                      <div className="bg-white rounded-3xl p-6 md:p-12 border border-[#D4AF37]/30 shadow-xs flex flex-col md:flex-row items-center gap-8 md:gap-16">
+                        <div className="w-full md:w-1/2 aspect-square rounded-2xl overflow-hidden bg-[#FAF8F5] border border-[#E8E2D5]">
                           <img src={highlightProd.image} className="w-full h-full object-cover hover:scale-103 transition-transform duration-500" referrerPolicy="no-referrer" />
                         </div>
-                        <div className="w-full md:w-1/2 text-left space-y-4 md:space-y-6">
-                          <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#cca062]">
+                        <div className="w-full md:w-1/2 text-left space-y-4 md:space-y-6 min-w-0">
+                          <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#D4AF37]">
                             {camp.subtitle || "Destaque do Ateliê"}
                           </span>
-                          <h2 className="text-3xl md:text-4xl font-mea-culpa text-[#3A312D] tracking-tight leading-tight">
+                          <h2 className="whitespace-nowrap overflow-hidden text-ellipsis text-[clamp(1.6rem,2.8vw,2.4rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-tight">
                             {highlightProd.product_name}
                           </h2>
                           {highlightProd.description && (
-                            <p className="text-xs md:text-sm text-neutral-500 font-sans tracking-wide leading-relaxed max-w-md">
+                            <p className="text-xs md:text-sm text-[#1B2537]/75 font-sans tracking-wide leading-relaxed max-w-md">
                               {highlightProd.description}
                             </p>
                           )}
                           <div className="space-y-1">
-                            {highlightProd.original_price && highlightProd.original_price > highlightProd.current_price && (
-                              <span className="text-[11px] font-poppins font-medium tracking-tight text-[#8E8E93] line-through tabular-nums">
-                                {formatCurrency(highlightProd.original_price)}
-                              </span>
-                            )}
-                            <div className="text-2xl font-poppins font-semibold text-[#3A312D] tracking-tight tabular-nums">
-                              {formatCurrency(highlightProd.current_price)}
-                            </div>
+                            {(() => {
+                              const highlightPrice = highlightProd.retail_price || highlightProd.current_price || 0;
+                              return (
+                                <>
+                                  {highlightProd.original_price && highlightProd.original_price > highlightPrice && (
+                                    <span className="text-[11px] font-poppins font-medium tracking-tight text-[#1B2537]/50 line-through tabular-nums">
+                                      {formatCurrency(highlightProd.original_price)}
+                                    </span>
+                                  )}
+                                  <div className="text-2xl font-poppins font-semibold text-[#0F2C59] tracking-tight tabular-nums">
+                                    {formatCurrency(highlightPrice)}
+                                  </div>
+                                </>
+                              );
+                            })()}
                           </div>
                           <div className="flex gap-4 pt-2">
                             <button 
                               onClick={() => setSelectedProduct(highlightProd)}
-                              className="px-3 py-3 bg-[#3A312D] text-white rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-[#52443e] transition-all shadow-sm cursor-pointer"
+                              className="px-4 py-3 bg-[#0F2C59] text-white rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-[#1B3F7A] transition-all shadow-sm cursor-pointer"
                             >
                               Ver Detalhes
                             </button>
                             <button 
                               onClick={() => onAddToCart(highlightProd, 1)}
-                              className="px-3 py-3 bg-white border border-[#e8dcc8]/60 text-neutral-700 rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-neutral-50 transition-all shadow-sm cursor-pointer"
+                              className="px-4 py-3 bg-[#FAF8F5] border border-[#D4AF37]/60 text-[#0F2C59] rounded-full text-[10px] font-sans font-bold uppercase tracking-widest hover:bg-[#D4AF37]/15 transition-all shadow-sm cursor-pointer"
                             >
                               Adicionar à Sacola
                             </button>
@@ -766,7 +787,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     {/* Grid - Premium Vertical Cards Showcase */}
                     {filteredProducts.length > 0 ? (
                       <>
-                      <div id="catalog-grid" className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-6 pb-20 px-3 md:px-0">
+                      <div id="catalog-grid" className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 md:gap-6 pb-20 px-2 sm:px-0">
                         {paginatedProducts.map((product, idx) => (
                             <ProductCard 
                               key={`prod-${product.id}-${idx}`}

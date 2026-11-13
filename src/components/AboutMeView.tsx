@@ -33,18 +33,18 @@ export const AboutMeView: React.FC = () => {
   const photo = aboutSettings?.about_me_photo || "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?q=80&w=800&auto=format&fit=crop";
 
   return (
-    <div className="bg-[#FDFCFA] min-h-screen text-[#4A332A] font-sans selection:bg-[#E8DFC8] selection:text-[#2C1810] py-8 sm:py-12 select-none overflow-x-hidden relative">
+    <div className="bg-[#FAF8F5] min-h-screen text-[#1B2537] font-sans selection:bg-[#FAF0DC] selection:text-[#0F2C59] py-8 sm:py-12 select-none overflow-x-hidden relative">
       {/* BACKGROUND GRAPHICS */}
-      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#FAF6F0]/60 to-transparent pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#F3ECDF]/60 to-transparent pointer-events-none -z-10" />
       
-      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8">
+      <div className="max-w-[1850px] mx-auto px-3 sm:px-4">
         
         {/* HEADER */}
         <div className="text-center mb-12 sm:mb-16">
-          <h1 id="about-us-title" className="font-mea-culpa text-4xl sm:text-5xl md:text-6xl text-[#6d5443] mb-3">
+          <h1 id="about-us-title" className="whitespace-nowrap font-mea-culpa text-[clamp(2rem,4.5vw,3.75rem)] text-[#0F2C59] mb-3 leading-[1.15]">
             Quem Faz Acontecer
           </h1>
-          <p id="about-us-subtitle" className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-[#cca062] flex items-center justify-center gap-2">
+          <p id="about-us-subtitle" className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-[#D4AF37] flex items-center justify-center gap-2">
             A história por trás da marca e de nossos três ateliês
           </p>
         </div>
@@ -61,50 +61,50 @@ export const AboutMeView: React.FC = () => {
               transition={{ duration: 0.8 }}
               className="md:col-span-5 flex flex-col items-center"
             >
-              <div id="author-photo-container" className="relative group p-2.5 bg-white border border-[#e8dcc8] rounded-[2rem] shadow-xl overflow-hidden aspect-[4/5] w-full max-w-sm">
-                <div className="absolute inset-0 bg-[#e8dcc8]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 rounded-[1.75rem]" />
+              <div id="author-photo-container" className="relative group p-2.5 bg-white border border-[#D4AF37]/40 rounded-[2rem] shadow-xl overflow-hidden aspect-[4/5] w-full max-w-sm">
+                <div className="absolute inset-0 bg-[#D4AF37]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 rounded-[1.75rem]" />
                 <ImageWithFallback 
                   src={photo} 
                   alt="Julia Aleixo" 
                   className="w-full h-full object-cover rounded-[1.75rem] shadow-inner filter brightness-[0.98] contrast-[1.01]" 
                 />
               </div>
-              <div className="flex items-center gap-1.5 mt-4 text-[#cca062] text-[10px] uppercase font-bold tracking-widest">
-                <Camera size={12} /> Artesã & Criadora
+              <div className="flex items-center gap-1.5 mt-4 text-[#D4AF37] text-[10px] uppercase font-bold tracking-widest">
+                <Camera size={12} /> Artesã &amp; Criadora
               </div>
             </motion.div>
 
             {/* RIGHT: TEXT PROFILE */}
-            <div className="md:col-span-7 space-y-8 text-[#6d5443] leading-relaxed text-sm">
+            <div className="md:col-span-7 space-y-8 text-[#1B2537] leading-relaxed text-sm min-w-0">
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
                 className="space-y-6"
               >
-                <div className="flex items-center gap-3 text-[#cca062]">
-                  <Smile size={24} />
-                  <h2 id="about-me-greeting" className="font-serif text-xl sm:text-2xl text-[#6d5443] tracking-wide font-normal">
+                <div className="flex items-center gap-3 text-[#D4AF37] min-w-0">
+                  <Smile size={24} className="shrink-0" />
+                  <h2 id="about-me-greeting" className="whitespace-nowrap overflow-hidden text-ellipsis font-serif text-[clamp(1.15rem,2.2vw,1.5rem)] text-[#0F2C59] tracking-wide font-normal">
                     {title}
                   </h2>
                 </div>
                 
-                <p className="whitespace-pre-line text-gray-700 font-medium text-sm leading-relaxed">
+                <p className="whitespace-pre-line text-[#1B2537]/80 font-light text-sm leading-relaxed">
                   {bio}
                 </p>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-                  <div className="border border-[#e8dcc8]/40 rounded-2xl p-4 bg-white/60 shadow-xs">
-                    <h4 className="font-bold text-[#cca062] text-[10px] uppercase tracking-wider mb-1">La Pallyra</h4>
-                    <p className="text-[11px] text-gray-500 leading-relaxed">Encadernações e papelaria afetiva para organizar e guardar ideias.</p>
+                  <div className="border border-[#D4AF37]/30 rounded-2xl p-4 bg-white/80 shadow-xs">
+                    <h4 className="font-bold text-[#0F2C59] text-[10px] uppercase tracking-wider mb-1">La Pallyra</h4>
+                    <p className="text-[11px] text-[#1B2537]/70 leading-relaxed">Encadernações e papelaria afetiva para organizar e guardar ideias.</p>
                   </div>
-                  <div className="border border-[#e8dcc8]/40 rounded-2xl p-4 bg-white/60 shadow-xs">
-                    <h4 className="font-bold text-[#5b2122] text-[10px] uppercase tracking-wider mb-1">Guennita</h4>
-                    <p className="text-[11px] text-gray-500 leading-relaxed">Romantismo infinito em delicados buquês de cetim exclusivos.</p>
+                  <div className="border border-[#D4AF37]/30 rounded-2xl p-4 bg-white/80 shadow-xs">
+                    <h4 className="font-bold text-[#0F2C59] text-[10px] uppercase tracking-wider mb-1">Guennita</h4>
+                    <p className="text-[11px] text-[#1B2537]/70 leading-relaxed">Romantismo infinito em delicados buquês de cetim exclusivos.</p>
                   </div>
-                  <div className="border border-[#e8dcc8]/40 rounded-2xl p-4 bg-white/60 shadow-xs">
-                    <h4 className="font-bold text-[#c96b71] text-[10px] uppercase tracking-wider mb-1">Mimada Sim</h4>
-                    <p className="text-[11px] text-gray-500 leading-relaxed">Lembranças criativas e alegres para decorar suas festas de alma.</p>
+                  <div className="border border-[#D4AF37]/30 rounded-2xl p-4 bg-white/80 shadow-xs">
+                    <h4 className="font-bold text-[#0F2C59] text-[10px] uppercase tracking-wider mb-1">Mimada Sim</h4>
+                    <p className="text-[11px] text-[#1B2537]/70 leading-relaxed">Lembranças criativas e alegres para decorar suas festas de alma.</p>
                   </div>
                 </div>
               </motion.div>
@@ -113,12 +113,12 @@ export const AboutMeView: React.FC = () => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="space-y-4 pl-4 border-l-2 border-[#cca062]/30"
+                className="space-y-4 pl-4 border-l-2 border-[#D4AF37]/50"
               >
-                <h3 className="font-serif text-lg tracking-wider text-[#6d5443] flex items-center gap-2">
-                  <Award size={18} className="text-[#cca062]" /> Nosso Propósito
+                <h3 className="font-serif text-lg tracking-wider text-[#0F2C59] flex items-center gap-2">
+                  <Award size={18} className="text-[#D4AF37]" /> Nosso Propósito
                 </h3>
-                <p className="text-gray-700 leading-relaxed font-medium whitespace-pre-line text-sm">
+                <p className="text-[#1B2537]/80 leading-relaxed font-light whitespace-pre-line text-sm">
                   {purpose}
                 </p>
               </motion.div>
@@ -130,14 +130,14 @@ export const AboutMeView: React.FC = () => {
         {/* CUTE SIGNATURE FOOT */}
         <div className="text-center">
           <div className="flex items-center justify-center w-full max-w-sm mx-auto mb-6 gap-3">
-            <div className="h-[1px] flex-1 border-t border-dashed border-[#cca062]/30"></div>
-            <Heart size={14} fill="currentColor" strokeWidth={1.5} className="text-[#c36266]" />
-            <div className="h-[1px] flex-1 border-t border-dashed border-[#cca062]/30"></div>
+            <div className="h-[1px] flex-1 border-t border-dashed border-[#D4AF37]/40"></div>
+            <Heart size={14} fill="currentColor" strokeWidth={1.5} className="text-[#D4AF37]" />
+            <div className="h-[1px] flex-1 border-t border-dashed border-[#D4AF37]/40"></div>
           </div>
-          <p id="about-us-signature" className="font-cursive text-5xl text-[#6d5443] mb-2 leading-none">
+          <p id="about-us-signature" className="font-cursive text-5xl text-[#0F2C59] mb-2 leading-none">
             Julia Aleixo
           </p>
-          <span className="text-[9px] uppercase tracking-[0.25em] text-[#cca062] font-black">
+          <span className="text-[9px] uppercase tracking-[0.25em] text-[#D4AF37] font-black">
             Artesã • Idealizadora • Apaixonada por Detalhes
           </span>
         </div>

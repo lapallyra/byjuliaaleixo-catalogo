@@ -87,51 +87,45 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
   }
 
   const slug = slugify(activeDate.name);
-  const themeColor = activeDate.theme_color || '#B38F4D';
 
   return (
     <section 
       id="home-commemorative-banner"
-      className="w-full max-w-[1850px] mx-auto px-2 sm:px-3 md:px-4 pt-3 pb-4 select-none"
+      className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 pt-3 sm:pt-4 pb-6 sm:pb-8 select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Solid Nude Background (No Gradient) */}
-      <div className="relative rounded-3xl bg-[#FAF7F2] border border-[#D4AF37]/30 p-6 sm:p-8 md:p-10 shadow-[0_4px_24px_rgba(179,143,77,0.06)] overflow-hidden transition-all duration-300">
+      {/* Faixa Horizontal Ampla e Delicada em Bege com Borda Dourada Fina */}
+      <div className="relative rounded-2xl bg-gradient-to-r from-[#FAF8F5] via-white/75 to-[#FAF8F5] border border-[#D4AF37]/30 px-5 py-6 sm:px-8 sm:py-7 md:px-10 md:py-7 overflow-hidden transition-all duration-300">
         
-        {/* Subtle decorative golden corner accents */}
-        <div className="absolute top-4 left-4 w-5 h-5 border-t border-l border-[#B38F4D]/40 pointer-events-none" />
-        <div className="absolute top-4 right-4 w-5 h-5 border-t border-r border-[#B38F4D]/40 pointer-events-none" />
-        <div className="absolute bottom-4 left-4 w-5 h-5 border-b border-l border-[#B38F4D]/40 pointer-events-none" />
-        <div className="absolute bottom-4 right-4 w-5 h-5 border-b border-r border-[#B38F4D]/40 pointer-events-none" />
+        {/* Detalhes decorativos sutis em dourado nos quatro cantos */}
+        <div className="absolute top-3 left-3 w-4 h-4 border-t border-l border-[#D4AF37]/60 pointer-events-none" />
+        <div className="absolute top-3 right-3 w-4 h-4 border-t border-r border-[#D4AF37]/60 pointer-events-none" />
+        <div className="absolute bottom-3 left-3 w-4 h-4 border-b border-l border-[#D4AF37]/60 pointer-events-none" />
+        <div className="absolute bottom-3 right-3 w-4 h-4 border-b border-r border-[#D4AF37]/60 pointer-events-none" />
 
-        {/* Main Banner Content Area */}
-        <div className="relative z-10 min-h-[160px] flex flex-col justify-between">
+        {/* Conteúdo compacto e sofisticado */}
+        <div className="relative z-10 flex flex-col justify-between">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeDate.id}
-              initial={{ opacity: 0, y: 6 }}
+              initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="flex flex-col justify-between gap-6"
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="flex flex-col md:flex-row md:items-center justify-between gap-5"
             >
               
-              {/* Top / Left Column: Official Date + Countdown Pill, Title (Mea Culpa), Slogan & Description */}
-              <div className="space-y-3.5 max-w-4xl">
-                
-                {/* Badges Bar: Official Calendar Date + Countdown Pill */}
+              {/* Esquerda: Selos de Data + Contagem + Título em Dourado */}
+              <div className="space-y-2.5 max-w-3xl text-left">
                 <div className="flex flex-wrap items-center gap-2">
-                  
-                  {/* Official Calendar Date */}
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-[#EAE4DC] text-[#593E32] text-[10px] font-semibold tracking-wide shadow-2xs">
-                    <Calendar size={11} className="text-[#B38F4D]" />
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-[#E8E2D5] text-[#1B2537] text-[10px] font-semibold tracking-wide">
+                    <Calendar size={11} className="text-[#D4AF37]" />
                     <span>{activeDate.formattedDayMonth}</span>
                   </span>
 
-                  {/* Countdown Pill (Faltam XX dias) */}
-                  <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white text-[#8C6D37] text-[10px] font-bold tracking-widest uppercase border border-[#D4AF37]/50 shadow-2xs">
-                    <Clock size={10} className="text-[#B38F4D] animate-pulse" />
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 text-[#0F2C59] text-[10px] font-bold tracking-widest uppercase border border-[#D4AF37]/45">
+                    <Clock size={10} className="text-[#D4AF37]" />
                     <span>
                       {activeDate.isToday
                         ? 'É Hoje!'
@@ -140,56 +134,44 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
                         : `FALTAM ${activeDate.daysLeft} DIAS`}
                     </span>
                   </div>
-
                 </div>
 
-                {/* Main Commemorative Date Name in Noble Calligraphy / Font Mea Culpa (Single line) */}
-                <div className="space-y-1">
-                  <h2 
-                    className="font-mea-culpa text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal leading-tight select-none tracking-normal drop-shadow-xs whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
-                    style={{ color: themeColor }}
-                  >
-                    {activeDate.name}
-                  </h2>
-                </div>
-
+                <h2 className="font-mea-culpa text-3xl sm:text-4xl md:text-5xl font-normal text-[#D4AF37] leading-tight select-none tracking-normal whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+                  {activeDate.name}
+                </h2>
               </div>
 
-              {/* Bottom Right Area: Relocated Navigation Arrows + CTA with ONLY Brown Text */}
-              <div className="flex items-center justify-between sm:justify-end gap-4 pt-2 sm:pt-0">
-                
-                {/* Relocated Navigation Arrows (< >) */}
+              {/* Direita: Controles de Navegação + CTA Discreto */}
+              <div className="flex items-center justify-between md:justify-end gap-4 shrink-0">
                 {processedDates.length > 1 && (
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={handlePrev}
                       aria-label="Data anterior"
-                      className="w-7 h-7 rounded-full bg-white/90 hover:bg-white border border-[#EAE4DC] hover:border-[#B38F4D] text-[#593E32] flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+                      className="w-7 h-7 rounded-full bg-white/90 hover:bg-white border border-[#E8E2D5] hover:border-[#D4AF37] text-[#0F2C59] flex items-center justify-center transition-all cursor-pointer"
                     >
                       <ChevronLeft size={14} />
                     </button>
                     <button
                       onClick={handleNext}
                       aria-label="Próxima data"
-                      className="w-7 h-7 rounded-full bg-white/90 hover:bg-white border border-[#EAE4DC] hover:border-[#B38F4D] text-[#593E32] flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+                      className="w-7 h-7 rounded-full bg-white/90 hover:bg-white border border-[#E8E2D5] hover:border-[#D4AF37] text-[#0F2C59] flex items-center justify-center transition-all cursor-pointer"
                     >
                       <ChevronRight size={14} />
                     </button>
                   </div>
                 )}
 
-                {/* CTA with ONLY Brown Text (No dark background) */}
                 <button
                   onClick={() => navigate(`/comemorativas/${slug}`)}
-                  className="group inline-flex items-center gap-2 text-[#593E32] hover:text-[#2C1810] py-1 transition-colors cursor-pointer"
+                  className="group inline-flex items-center gap-2 text-[#0F2C59] hover:text-[#D4AF37] py-1 transition-colors cursor-pointer"
                 >
-                  <Gift size={14} strokeWidth={1.5} className="text-[#8C6D37] group-hover:scale-110 transition-transform" />
-                  <span className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-[#593E32] group-hover:text-[#2C1810] underline underline-offset-4 decoration-[#D4AF37]/50 hover:decoration-[#8C6D37]">
+                  <Gift size={14} strokeWidth={1.6} className="text-[#D4AF37] group-hover:scale-105 transition-transform" />
+                  <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase underline underline-offset-4 decoration-[#D4AF37]/50 group-hover:decoration-[#D4AF37]">
                     Garantir Encomendas com Antecedência
                   </span>
-                  <ArrowRight size={14} strokeWidth={2} className="text-[#8C6D37] group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight size={14} strokeWidth={2} className="text-[#D4AF37] group-hover:translate-x-1 transition-transform" />
                 </button>
-
               </div>
 
             </motion.div>

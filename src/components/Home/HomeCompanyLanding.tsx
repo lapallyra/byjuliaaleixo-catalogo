@@ -1,23 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowRight, 
-  Layers, 
-  PenTool, 
-  Gift, 
-  Heart, 
-  MessageSquareHeart, 
-  ShieldCheck, 
-  Star, 
-  CheckCircle2
-} from 'lucide-react';
+import { ArrowRight, Star, CheckCircle2 } from 'lucide-react';
 import { SiteSettings } from '../../types';
 
 // Imagens editoriais refinadas
-const PALLYRA_IMAGE = "/src/assets/images/pallyra_editorial_1784213505525.jpg";
-const MIMADA_IMAGE = "/src/assets/images/mimada_editorial_1784213531490.jpg";
-const TUTTY_IMAGE = "/src/assets/images/tuttymimo_editorial_1784213576844.jpg";
-const GUENNITA_IMAGE = "/src/assets/images/guennita_editorial_1784213518263.jpg";
 const JULIA_PHOTO = "/src/assets/images/julia_profile_1782445376350.jpg";
 const GIFT_LIST_IMAGE = "/src/assets/images/gift_list_experience_editorial_1784215302735.jpg";
 
@@ -27,45 +13,10 @@ interface HomeCompanyLandingProps {
 
 /**
  * Componente: HomeCompanyLanding
- * Landing page comercial contínua, limpa e editorial para a aba "HOME".
+ * Landing page comercial editorial, leve e contínua para a Home (`/`).
  */
 export const HomeCompanyLanding: React.FC<HomeCompanyLandingProps> = () => {
   const navigate = useNavigate();
-
-  const linesOfCreation = [
-    {
-      id: 'papelaria',
-      name: 'Papelaria Nobre & Encadernação',
-      route: '/loja?category=Papelaria',
-      image: PALLYRA_IMAGE,
-      description: 'Encadernação manual, álbuns de linho, agendas com gravação em hot stamping e cadernos afetivos criados para registrar histórias memoráveis.',
-      highlights: ['Hot Stamping & Monogramas', 'Papéis de Alta Gramatura', 'Costura Manual Exclusiva']
-    },
-    {
-      id: 'lembrancas',
-      name: 'Lembranças & Aromas Afetivos',
-      route: '/loja',
-      image: MIMADA_IMAGE,
-      description: 'Lembrancinhas refinadas e presentes aromáticos para casamentos, batizados, aniversários e celebrações inesquecíveis.',
-      highlights: ['Aromas Exclusivos', 'Tags Personalizadas', 'Embalagens Presenteáveis']
-    },
-    {
-      id: 'caixas',
-      name: 'Caixas Cartonadas de Luxo',
-      route: '/loja',
-      image: GUENNITA_IMAGE,
-      description: 'Caixas rígidas forradas em tecidos nobres, arranjos de flores preservadas e composições de luxo para eternizar momentos especiais.',
-      highlights: ['Caixas Rígidas Revestidas', 'Flores Preservadas', 'Fechamentos em Fita de Seda']
-    },
-    {
-      id: 'maternidade',
-      name: 'Maternidade & Primeira Infância',
-      route: '/loja',
-      image: TUTTY_IMAGE,
-      description: 'Peças delicadas para acolher a chegada de uma nova vida. Enxovais personalizados, lembranças de nascimento e álbuns do bebê.',
-      highlights: ['Tons Pastéis & Bordados', 'Itens Delicados para Bebês', 'Memórias do Primeiro Ano']
-    }
-  ];
 
   const feedbackTestimonials = [
     {
@@ -92,360 +43,292 @@ export const HomeCompanyLanding: React.FC<HomeCompanyLandingProps> = () => {
   ];
 
   return (
-    <div className="w-full text-[#1B2537] space-y-16 sm:space-y-24 py-8 sm:py-12 select-none overflow-x-hidden">
+    <div className="w-full text-[#1B2537] select-none overflow-x-hidden">
       
-      {/* 
-        ========================================================================
-        FAIXA 1: LINHAS DE CRIAÇÃO DA MADRINHA DOS PERSONALIZADOS
-        ========================================================================
-      */}
-      <section className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 md:px-6">
-        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#0F2C59] bg-[#0F2C59]/5 px-3.5 py-1 rounded-full inline-block mb-3 border border-[#0F2C59]/10">
-            Especialidades Artesanais
-          </span>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#0F2C59] tracking-tight">
-            Nossas Linhas de Criação
-          </h2>
-          <p className="text-xs sm:text-sm text-[#4A5568] mt-2 font-light">
-            Especialidades artesanais criadas para emocionar em cada detalhe
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          {linesOfCreation.map((line) => (
-            <div
-              key={line.id}
-              onClick={() => navigate(line.route)}
-              className="group flex flex-col justify-between rounded-3xl bg-white border border-[#E8E2D5] hover:border-[#D4AF37] p-6 sm:p-7 shadow-[0_4px_24px_rgba(15,44,89,0.03)] hover:shadow-[0_12px_36px_rgba(15,44,89,0.08)] transition-all duration-300 cursor-pointer"
-            >
-              <div className="space-y-4">
-                {/* Frame com foto editorial */}
-                <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden bg-[#FAF8F5] border border-[#E8E2D5] relative">
-                  <img
-                    src={line.image}
-                    alt={line.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <h3 className="text-2xl sm:text-3xl font-mea-culpa text-[#0F2C59] group-hover:text-[#D4AF37] transition-colors">
-                    {line.name}
-                  </h3>
-                  <p className="text-xs text-[#4A5568] font-light leading-relaxed">
-                    {line.description}
-                  </p>
-                </div>
-
-                {/* Destaques */}
-                <div className="pt-3 border-t border-[#E8E2D5]/60 space-y-1.5 text-left">
-                  {line.highlights.map((h, i) => (
-                    <div key={i} className="flex items-center gap-2 text-[11px] text-[#2C3E50]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] shrink-0" />
-                      <span>{h}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 pt-3 border-t border-[#E8E2D5]/60 flex items-center justify-between text-[#0F2C59] group-hover:text-[#D4AF37] font-bold text-xs uppercase tracking-wider">
-                <span>Ver na Loja</span>
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 
-        ========================================================================
-        FAIXA 2: MONTE SEU KIT (EXPERIÊNCIA INTERATIVA & CURADORIA)
-        ========================================================================
-      */}
-      <section className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 md:px-6">
-        <div className="rounded-3xl bg-gradient-to-r from-white via-[#FAF8F5] to-white border border-[#E8E2D5] text-[#1B2537] p-8 sm:p-12 md:p-16 relative overflow-hidden shadow-[0_4px_30px_rgba(15,44,89,0.03)]">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
-            
-            <div className="lg:col-span-7 space-y-5 text-left">
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#0F2C59] bg-[#0F2C59]/5 px-3.5 py-1 rounded-full inline-block border border-[#0F2C59]/10">
-                Curadoria Sob Medida
-              </span>
-
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#0F2C59] tracking-tight leading-snug">
-                Monte Seu Kit Exclusivo
-              </h2>
-
-              <p className="text-xs sm:text-sm md:text-base text-[#4A5568] font-light leading-relaxed max-w-2xl">
-                Você escolhe a caixa cartonada de luxo, combina itens de papelaria fina, lembranças perfumadas e mimos delicados da Madrinha dos Personalizados. Nossa equipe cuida de toda a harmonização visual, laços e personalização.
-              </p>
-
-              <div className="pt-2 flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => navigate('/monte-seu-kit')}
-                  className="px-8 py-4 rounded-full bg-[#0F2C59] hover:bg-[#081220] text-white font-bold text-xs uppercase tracking-widest transition-all duration-300 shadow-md hover:scale-105 cursor-pointer flex items-center gap-2.5"
-                >
-                  <span>Iniciar Montagem Interativa</span>
-                  <ArrowRight size={14} className="text-[#D4AF37]" />
-                </button>
-                <button
-                  onClick={() => navigate('/kits')}
-                  className="px-7 py-4 rounded-full bg-white hover:bg-[#FAF8F5] text-[#1B2537] border border-[#E8E2D5] text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer"
-                >
-                  Ver Kits Prontos
-                </button>
-              </div>
+      {/* 4A. SEÇÃO EDITORIAL 1 (TEXTO + IMAGEM): MONTE SEU KIT */}
+      <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(244,237,225,0.48)_50%,#FAF8F5_100%)] px-3 sm:px-4 py-12 sm:py-16">
+        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-7 lg:gap-10">
+          <div className="w-full lg:flex-1 max-w-xl space-y-5 text-left">
+            <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75">
+              <span className="w-5 h-px bg-[#D4AF37]" />
+              <span>Curadoria Sob Medida</span>
             </div>
 
-            <div className="lg:col-span-5 flex justify-center">
-              <div className="w-full max-w-[340px] aspect-square rounded-3xl border border-[#D4AF37]/40 bg-white p-3 shadow-[0_8px_30px_rgba(15,44,89,0.06)] relative group">
+            <h2 className="whitespace-nowrap text-[clamp(1.7rem,3.1vw,2.85rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+              Monte Seu Kit Exclusivo
+            </h2>
+
+            <p className="text-xs sm:text-sm md:text-base text-[#1B2537]/75 font-light leading-[1.85]">
+              Você escolhe a caixa cartonada de luxo, combina itens de papelaria fina, lembranças perfumadas e mimos delicados da Madrinha dos Personalizados. Nossa equipe cuida de toda a harmonização visual, laços e personalização.
+            </p>
+
+            <div className="pt-2 flex flex-wrap items-center gap-5">
+              <button
+                onClick={() => navigate('/monte-seu-kit')}
+                className="group px-6 py-3 rounded-full bg-[#D4AF37]/14 hover:bg-[#0F2C59] text-[#0F2C59] hover:text-[#FAF8F5] border border-[#D4AF37] font-semibold text-[10.5px] uppercase tracking-[0.22em] transition-all duration-300 cursor-pointer inline-flex items-center gap-2.5"
+              >
+                <span>Iniciar Montagem Interativa</span>
+                <ArrowRight size={13} className="text-[#D4AF37] group-hover:translate-x-0.5 transition-transform" />
+              </button>
+              <button
+                onClick={() => navigate('/kits')}
+                className="text-[10.5px] font-semibold uppercase tracking-[0.2em] text-[#0F2C59] hover:text-[#D4AF37] underline underline-offset-4 decoration-[#D4AF37]/50 transition-colors cursor-pointer"
+              >
+                Ver Kits Prontos
+              </button>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex justify-center">
+            <div className="w-[260px] sm:w-[280px] p-[1.5px] rounded-3xl bg-[linear-gradient(145deg,rgba(212,175,55,0.42)_0%,rgba(250,248,245,0.65)_50%,rgba(212,175,55,0.30)_100%)] shadow-[0_6px_22px_rgba(15,44,89,0.03)] group">
+              <div className="aspect-square w-full rounded-[22px] overflow-hidden bg-[#FAF8F5] relative">
                 <img
                   src="/src/assets/images/final_kit_celebration_1784214717534.jpg"
                   alt="Kit Personalizado Celebrativo"
-                  className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 rounded-[22px] shadow-[inset_0_0_24px_8px_rgba(250,248,245,0.75)]"
                 />
               </div>
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* 
-        ========================================================================
-        FAIXA 3: PERSONALIZE (ARTE, GRAVAÇÃO & APROVAÇÃO PRÉVIA)
-        ========================================================================
-      */}
-      <section className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 md:px-6">
-        <div className="rounded-3xl bg-white border border-[#E8E2D5] p-8 sm:p-12 md:p-16 shadow-[0_4px_30px_rgba(15,44,89,0.03)]">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
-            
-            <div className="lg:col-span-5 order-2 lg:order-1 flex justify-center">
-              <div className="w-full max-w-[340px] aspect-[4/5] rounded-3xl border border-[#D4AF37]/40 bg-[#FAF8F5] p-3 shadow-[0_8px_30px_rgba(15,44,89,0.06)] relative">
+      {/* 4B. SEÇÃO EDITORIAL 2 (IMAGEM + TEXTO): PERSONALIZAÇÃO DE ALTO PADRÃO */}
+      <section className="w-full bg-[#FAF8F5] px-3 sm:px-4 py-12 sm:py-16">
+        <div className="max-w-5xl mx-auto flex flex-col-reverse lg:flex-row items-center justify-center gap-7 lg:gap-10">
+          <div className="shrink-0 flex justify-center">
+            <div className="w-[245px] sm:w-[265px] p-[1.5px] rounded-3xl bg-[linear-gradient(145deg,rgba(212,175,55,0.42)_0%,rgba(250,248,245,0.65)_50%,rgba(212,175,55,0.30)_100%)] shadow-[0_6px_22px_rgba(15,44,89,0.03)] group">
+              <div className="aspect-[4/5] w-full rounded-[22px] overflow-hidden bg-[#FAF8F5] relative">
                 <img
                   src="/src/assets/images/mug_after_personalized_1788055350285.jpg"
                   alt="Personalização Nobre"
-                  className="w-full h-full object-cover rounded-2xl"
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 rounded-[22px] shadow-[inset_0_0_24px_8px_rgba(250,248,245,0.75)]"
                 />
               </div>
             </div>
+          </div>
 
-            <div className="lg:col-span-7 order-1 lg:order-2 space-y-5 text-left">
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#0F2C59] bg-[#0F2C59]/5 px-3.5 py-1 rounded-full inline-block border border-[#0F2C59]/10">
-                Garantia de Perfeição
-              </span>
+          <div className="w-full lg:flex-1 max-w-xl space-y-5 text-left">
+            <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75">
+              <span className="w-5 h-px bg-[#D4AF37]" />
+              <span>Garantia de Perfeição</span>
+            </div>
 
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#0F2C59] tracking-tight leading-snug">
-                Personalização de Alto Padrão
-              </h2>
+            <h2 className="whitespace-nowrap text-[clamp(1.55rem,2.75vw,2.6rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+              Personalização de Alto Padrão
+            </h2>
 
-              <p className="text-xs sm:text-sm md:text-base text-[#4A5568] font-light leading-relaxed max-w-2xl">
-                Nenhum produto sai do ateliê sem antes ser aprovado por você. Elaboramos a prova digital da arte com caligrafia artística, monogramas, florais e mensagens para garantir que tudo fique exatamente como sonhado.
-              </p>
+            <p className="text-xs sm:text-sm md:text-base text-[#1B2537]/75 font-light leading-[1.85]">
+              Nenhum produto sai do ateliê sem antes ser aprovado por você. Elaboramos a prova digital da arte com caligrafia artística, monogramas, florais e mensagens para garantir que tudo fique exatamente como sonhado.
+            </p>
 
-              <div className="space-y-3 pt-2 text-xs sm:text-sm text-[#1B2537]">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 size={16} className="text-[#D4AF37] shrink-0" />
-                  <span>Gravação a laser permanente em madeira, couro e inox</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 size={16} className="text-[#D4AF37] shrink-0" />
-                  <span>Hot Stamping dourado e prateado em papéis de alta gramatura</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 size={16} className="text-[#D4AF37] shrink-0" />
-                  <span>Envio de layout digital pelo WhatsApp antes da confecção</span>
-                </div>
+            <div className="space-y-2.5 pt-1 text-xs sm:text-sm text-[#1B2537]/85">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 size={15} className="text-[#D4AF37] shrink-0" />
+                <span>Gravação a laser permanente em madeira, couro e inox</span>
               </div>
-
-              <div className="pt-4">
-                <button
-                  onClick={() => navigate('/personalize')}
-                  className="px-8 py-4 rounded-full bg-[#FAF8F5] hover:bg-[#0F2C59] text-[#0F2C59] hover:text-white border border-[#D4AF37] text-xs font-bold uppercase tracking-widest transition-all duration-300 shadow-xs cursor-pointer inline-flex items-center gap-2.5"
-                >
-                  <span>Ver Galeria de Personalizações</span>
-                  <ArrowRight size={14} className="text-[#D4AF37]" />
-                </button>
+              <div className="flex items-center gap-3">
+                <CheckCircle2 size={15} className="text-[#D4AF37] shrink-0" />
+                <span>Hot Stamping dourado e prateado em papéis de alta gramatura</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle2 size={15} className="text-[#D4AF37] shrink-0" />
+                <span>Envio de layout digital pelo WhatsApp antes da confecção</span>
               </div>
             </div>
 
+            <div className="pt-2">
+              <button
+                onClick={() => navigate('/personalize')}
+                className="group px-6 py-3 rounded-full bg-transparent hover:bg-[#D4AF37]/12 text-[#0F2C59] border border-[#D4AF37]/60 hover:border-[#D4AF37] text-[10.5px] font-semibold uppercase tracking-[0.22em] transition-all duration-300 cursor-pointer inline-flex items-center gap-2.5"
+              >
+                <span>Ver Galeria de Personalizações</span>
+                <ArrowRight size={13} className="text-[#D4AF37] group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 
-        ========================================================================
-        FAIXA 4: SOBRE NÓS (ESSÊNCIA ARTESANAL & HISTÓRIA)
-        ========================================================================
-      */}
-      <section className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 md:px-6">
-        <div className="rounded-3xl bg-gradient-to-b from-[#FAF8F5] to-white border border-[#E8E2D5] p-8 sm:p-12 md:p-16 relative shadow-[0_4px_30px_rgba(15,44,89,0.03)]">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-14 items-center">
-            
-            <div className="md:col-span-5 flex flex-col items-center justify-center">
-              <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[4/5] rounded-3xl overflow-hidden border border-[#D4AF37]/50 bg-white p-2.5 shadow-xl group">
+      {/* 4C. SEÇÃO EDITORIAL 3 (TEXTO + IMAGEM): POR TRÁS DA MADRINHA */}
+      <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(244,237,225,0.48)_50%,#FAF8F5_100%)] px-3 sm:px-4 py-12 sm:py-16">
+        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-7 lg:gap-10">
+          <div className="w-full lg:flex-1 max-w-xl space-y-5 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75">
+              <span className="w-5 h-px bg-[#D4AF37]" />
+              <span>Nossa Essência</span>
+            </div>
+
+            <h2 className="whitespace-nowrap text-[clamp(1.75rem,3.1vw,2.85rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+              Por Trás da Madrinha
+            </h2>
+
+            <p className="text-xs sm:text-sm md:text-base text-[#1B2537]/75 font-light leading-[1.85] italic mx-auto lg:mx-0">
+              "A Madrinha nasceu do desejo de desacelerar o mundo através de peças feitas à mão, com calma, intenção e perfeição estética. Cada laço, cada fragrância e cada costura têm um único propósito: fazer quem recebe se sentir profundamente amado."
+            </p>
+
+            <div className="pt-1 flex flex-col items-center lg:items-start space-y-0.5">
+              <span className="font-meaculpa text-4xl text-[#D4AF37]" style={{ fontFamily: "'Mea Culpa', cursive" }}>
+                Júlia Aleixo
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.22em] text-[#1B2537]/65 font-semibold">
+                Fundadora &amp; Designer Criativa
+              </span>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => navigate('/sobrenos')}
+                className="group px-6 py-3 rounded-full bg-transparent hover:bg-[#D4AF37]/12 text-[#0F2C59] border border-[#D4AF37]/60 hover:border-[#D4AF37] text-[10.5px] font-semibold tracking-[0.22em] uppercase transition-all duration-300 cursor-pointer inline-flex items-center gap-2.5"
+              >
+                <span>Conhecer Nossa História</span>
+                <ArrowRight size={13} className="text-[#D4AF37] group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex justify-center">
+            <div className="w-[215px] sm:w-[225px] p-[1.5px] rounded-3xl bg-[linear-gradient(145deg,rgba(212,175,55,0.45)_0%,rgba(250,248,245,0.65)_50%,rgba(212,175,55,0.32)_100%)] shadow-[0_8px_24px_rgba(15,44,89,0.04)] group">
+              <div className="aspect-[4/5] w-full rounded-[22px] overflow-hidden bg-[#FAF8F5] relative">
                 <img
                   src={JULIA_PHOTO}
                   alt="Júlia Aleixo"
-                  className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-700"
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 rounded-[22px] shadow-[inset_0_0_22px_7px_rgba(250,248,245,0.75)]"
                 />
               </div>
             </div>
-
-            <div className="md:col-span-7 space-y-5 text-center md:text-left">
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#0F2C59] bg-[#0F2C59]/5 px-3.5 py-1 rounded-full inline-block border border-[#0F2C59]/10">
-                Nossa Essência
-              </span>
-
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#0F2C59] tracking-tight leading-snug">
-                Por Trás da Madrinha
-              </h2>
-
-              <p className="text-xs sm:text-sm md:text-base text-[#4A5568] font-light leading-relaxed italic">
-                "A Madrinha nasceu do desejo de desacelerar o mundo através de peças feitas à mão, com calma, intenção e perfeição estética. Cada laço, cada fragrância e cada costura têm um único propósito: fazer quem recebe se sentir profundamente amado."
-              </p>
-
-              <div className="pt-2 flex flex-col items-center md:items-start space-y-1">
-                <span className="font-meaculpa text-4xl sm:text-5xl text-[#D4AF37]" style={{ fontFamily: "'Mea Culpa', cursive" }}>
-                  Júlia Aleixo
-                </span>
-                <span className="text-[10px] uppercase tracking-widest text-[#4A5568] font-semibold">Fundadora & Designer Criativa</span>
-              </div>
-
-              <div className="pt-4">
-                <button
-                  onClick={() => navigate('/sobrenos')}
-                  className="px-8 py-4 rounded-full bg-white hover:bg-[#0F2C59] text-[#1B2537] hover:text-white border border-[#D4AF37]/60 text-xs font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer inline-flex items-center gap-2.5 shadow-xs"
-                >
-                  <span>Conhecer Nossa História</span>
-                  <ArrowRight size={14} className="text-[#D4AF37]" />
-                </button>
-              </div>
-            </div>
-
           </div>
         </div>
       </section>
 
-      {/* 
-        ========================================================================
-        FAIXA 5: FEEDBACK / DEPOIMENTOS (PROVA SOCIAL)
-        ========================================================================
-      */}
-      <section className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 md:px-6">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#0F2C59] bg-[#0F2C59]/5 px-3.5 py-1 rounded-full inline-block mb-3 border border-[#0F2C59]/10">
-            Experiências Reais
-          </span>
-          <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#0F2C59] tracking-tight">
+      {/* 4D. PROVA SOCIAL EDITORIAL: DEPOIMENTOS */}
+      <section className="w-full bg-[#FAF8F5] px-3 sm:px-4 py-14 sm:py-18">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75 mb-3">
+            <span className="w-5 h-px bg-[#D4AF37]" />
+            <span>Experiências Reais</span>
+            <span className="w-5 h-px bg-[#D4AF37]" />
+          </div>
+          <h2 className="whitespace-nowrap text-[clamp(1.65rem,3.8vw,3rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
             Amor em Forma de Depoimentos
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-5">
           {feedbackTestimonials.map((fb, idx) => (
             <div
               key={idx}
-              className="bg-white border border-[#E8E2D5] rounded-3xl p-6 sm:p-8 space-y-4 shadow-[0_4px_20px_rgba(15,44,89,0.02)] flex flex-col justify-between text-left"
+              className="bg-white/75 border border-[#E8E2D5]/75 rounded-2xl p-6 space-y-4 flex flex-col justify-between text-left"
             >
               <div className="space-y-3">
                 <div className="flex items-center gap-1 text-[#D4AF37]">
                   {[...Array(fb.rating)].map((_, i) => (
-                    <Star key={i} size={15} fill="#D4AF37" />
+                    <Star key={i} size={14} fill="#D4AF37" />
                   ))}
                 </div>
-                <p className="text-xs sm:text-sm text-[#4A5568] font-light italic leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#1B2537]/80 font-light italic leading-relaxed">
                   "{fb.quote}"
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-[#F5EFEE] flex flex-col">
-                <span className="text-xs font-bold text-[#1B2537]">{fb.name}</span>
-                <span className="text-[10px] text-[#4A5568] uppercase tracking-wider">{fb.occasion} • {fb.city}</span>
+              <div className="pt-3.5 border-t border-[#E8E2D5]/60 flex flex-col">
+                <span className="text-xs font-bold text-[#0F2C59]">{fb.name}</span>
+                <span className="text-[10px] text-[#1B2537]/60 uppercase tracking-wider">{fb.occasion} • {fb.city}</span>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-10 flex justify-center">
+        <div className="mt-8 flex justify-center">
           <button
             onClick={() => navigate('/feedclientes')}
-            className="px-8 py-4 rounded-full bg-white hover:bg-[#0F2C59] text-[#1B2537] hover:text-white border border-[#D4AF37]/60 text-xs font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer inline-flex items-center gap-2.5 shadow-xs"
+            className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[#0F2C59] hover:text-[#D4AF37] underline underline-offset-4 decoration-[#D4AF37]/50 transition-colors cursor-pointer inline-flex items-center gap-2"
           >
             <span>Ver Todos os Depoimentos</span>
-            <ArrowRight size={14} className="text-[#D4AF37]" />
+            <ArrowRight size={13} className="text-[#D4AF37]" />
           </button>
         </div>
       </section>
 
-      {/* 
-        ========================================================================
-        FAIXA 6: LISTA DE PRESENTES (CONSULTORIA & EVENTOS)
-        ========================================================================
-      */}
-      <section className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 md:px-6">
-        <div className="rounded-3xl bg-white border border-[#E8E2D5] p-8 sm:p-12 md:p-16 shadow-[0_4px_30px_rgba(15,44,89,0.03)]">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
-            
-            <div className="lg:col-span-7 space-y-5 text-left">
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#0F2C59] bg-[#0F2C59]/5 px-3.5 py-1 rounded-full inline-block border border-[#0F2C59]/10">
-                Eventos & Celebrações
-              </span>
-
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#0F2C59] tracking-tight leading-snug">
-                Lista de Presentes Afetiva
-              </h2>
-
-              <p className="text-xs sm:text-sm md:text-base text-[#4A5568] font-light leading-relaxed max-w-2xl">
-                Crie uma lista de presentes personalizada com itens artesanais da Madrinha dos Personalizados. Seus convidados escolhem e compram online com facilidade, e você recebe tudo embalado com elegância no conforto da sua casa.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
-                <div className="flex items-center gap-3 text-xs text-[#1B2537]">
-                  <CheckCircle2 size={16} className="text-[#D4AF37] shrink-0" />
-                  <span>100% gratuita para criar e compartilhar</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-[#1B2537]">
-                  <CheckCircle2 size={16} className="text-[#D4AF37] shrink-0" />
-                  <span>Painel de controle com mensagens dos convidados</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-[#1B2537]">
-                  <CheckCircle2 size={16} className="text-[#D4AF37] shrink-0" />
-                  <span>Entrega unificada com seguro em todo o Brasil</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-[#1B2537]">
-                  <CheckCircle2 size={16} className="text-[#D4AF37] shrink-0" />
-                  <span>Validade estendida para até 60 dias pós-evento</span>
-                </div>
-              </div>
-
-              <div className="pt-4 flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => navigate('/listadepresentes')}
-                  className="px-8 py-4 rounded-full bg-[#0F2C59] hover:bg-[#081220] text-white font-bold text-xs uppercase tracking-widest transition-all duration-300 shadow-md hover:scale-105 cursor-pointer flex items-center gap-2.5"
-                >
-                  <span>Criar ou Consultar Lista</span>
-                  <ArrowRight size={14} className="text-[#D4AF37]" />
-                </button>
-                <button
-                  onClick={() => navigate('/comofunciona-lp')}
-                  className="px-7 py-4 rounded-full bg-white hover:bg-[#FAF8F5] text-[#1B2537] border border-[#E8E2D5] text-xs font-bold uppercase tracking-widest transition-colors cursor-pointer"
-                >
-                  Como Funciona a Lista
-                </button>
-              </div>
-            </div>
-
-            <div className="lg:col-span-5 flex justify-center">
-              <div className="w-full max-w-[340px] aspect-square rounded-3xl border border-[#D4AF37]/40 bg-[#FAF8F5] p-3 shadow-[0_8px_30px_rgba(15,44,89,0.06)]">
+      {/* 4E. SEÇÃO EDITORIAL 4 (IMAGEM + TEXTO): LISTA DE PRESENTES AFETIVA */}
+      <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(244,237,225,0.48)_50%,#FAF8F5_100%)] px-3 sm:px-4 py-12 sm:py-16">
+        <div className="max-w-5xl mx-auto flex flex-col-reverse lg:flex-row items-center justify-center gap-7 lg:gap-10">
+          <div className="shrink-0 flex justify-center">
+            <div className="w-[245px] sm:w-[265px] p-[1.5px] rounded-3xl bg-[linear-gradient(145deg,rgba(212,175,55,0.42)_0%,rgba(250,248,245,0.65)_50%,rgba(212,175,55,0.30)_100%)] shadow-[0_6px_22px_rgba(15,44,89,0.03)] group">
+              <div className="aspect-square w-full rounded-[22px] overflow-hidden bg-[#FAF8F5] relative">
                 <img
                   src={GIFT_LIST_IMAGE}
                   alt="Lista de Presentes Afetiva"
-                  className="w-full h-full object-cover rounded-2xl"
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 rounded-[22px] shadow-[inset_0_0_24px_8px_rgba(250,248,245,0.75)]"
                 />
               </div>
             </div>
+          </div>
 
+          <div className="w-full lg:flex-1 max-w-xl space-y-5 text-left">
+            <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75">
+              <span className="w-5 h-px bg-[#D4AF37]" />
+              <span>Eventos &amp; Celebrações</span>
+            </div>
+
+            <h2 className="whitespace-nowrap text-[clamp(1.65rem,2.95vw,2.7rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+              Lista de Presentes Afetiva
+            </h2>
+
+            <p className="text-xs sm:text-sm md:text-base text-[#1B2537]/75 font-light leading-[1.85]">
+              Crie uma lista de presentes personalizada com itens artesanais da Madrinha dos Personalizados. Seus convidados escolhem e compram online com facilidade, e você recebe tudo embalado com elegância no conforto da sua casa.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div className="flex items-center gap-2.5 text-xs text-[#1B2537]/85">
+                <CheckCircle2 size={15} className="text-[#D4AF37] shrink-0" />
+                <span>100% gratuita para criar e compartilhar</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-[#1B2537]/85">
+                <CheckCircle2 size={15} className="text-[#D4AF37] shrink-0" />
+                <span>Painel de controle com mensagens</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-[#1B2537]/85">
+                <CheckCircle2 size={15} className="text-[#D4AF37] shrink-0" />
+                <span>Entrega unificada com seguro</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-xs text-[#1B2537]/85">
+                <CheckCircle2 size={15} className="text-[#D4AF37] shrink-0" />
+                <span>Validade de até 60 dias pós-evento</span>
+              </div>
+            </div>
+
+            <div className="pt-2 flex flex-wrap items-center gap-5">
+              <button
+                onClick={() => navigate('/listadepresentes')}
+                className="group px-6 py-3 rounded-full bg-[#D4AF37]/14 hover:bg-[#0F2C59] text-[#0F2C59] hover:text-[#FAF8F5] border border-[#D4AF37] font-semibold text-[10.5px] uppercase tracking-[0.22em] transition-all duration-300 cursor-pointer inline-flex items-center gap-2.5"
+              >
+                <span>Criar ou Consultar Lista</span>
+                <ArrowRight size={13} className="text-[#D4AF37] group-hover:translate-x-0.5 transition-transform" />
+              </button>
+              <button
+                onClick={() => navigate('/comofunciona-lp')}
+                className="text-[10.5px] font-semibold uppercase tracking-[0.2em] text-[#0F2C59] hover:text-[#D4AF37] underline underline-offset-4 decoration-[#D4AF37]/50 transition-colors cursor-pointer"
+              >
+                Como Funciona a Lista
+              </button>
+            </div>
           </div>
         </div>
       </section>

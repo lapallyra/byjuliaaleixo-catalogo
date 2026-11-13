@@ -43,7 +43,7 @@ export const CustomerFeedbackView: React.FC = () => {
   const displayFeedbacks = feedbacks.length > 0 ? feedbacks : defaultFeedbacks;
 
   return (
-    <div className="bg-[#FDFCFA] min-h-screen font-sans selection:bg-[#E8DCC8] selection:text-[#3A312D] overflow-x-hidden relative">
+    <div className="bg-[#FAF8F5] min-h-screen text-[#1B2537] font-sans selection:bg-[#FAF0DC] selection:text-[#0F2C59] overflow-x-hidden relative">
       
       {/* Hero Section */}
       <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
@@ -100,7 +100,7 @@ export const CustomerFeedbackView: React.FC = () => {
       </section>
 
       {/* Feedback Feed */}
-      <section id="feedback-feed" className="py-24 md:py-40 px-6 max-w-4xl mx-auto space-y-32">
+      <section id="feedback-feed" className="py-24 md:py-40 px-3 sm:px-4 max-w-4xl mx-auto space-y-32">
         {displayFeedbacks.map((item, index) => (
           <motion.div
             key={index}
@@ -110,16 +110,16 @@ export const CustomerFeedbackView: React.FC = () => {
             transition={{ duration: 0.8 }}
             className="text-center space-y-8"
           >
-            <Quote className="w-12 h-12 text-[#CCA062]/20 mx-auto" strokeWidth={1} />
-            <p className="text-[#3D2E24] font-serif text-2xl md:text-4xl italic leading-relaxed font-light">
+            <Quote className="w-12 h-12 text-[#D4AF37]/30 mx-auto" strokeWidth={1} />
+            <p className="text-[#0F2C59] font-serif text-2xl md:text-4xl italic leading-relaxed font-light">
               "{item.text}"
             </p>
             <div className="flex flex-col items-center gap-2">
-              <span className="text-[#3D2E24] text-[11px] font-bold uppercase tracking-[0.3em]">
+              <span className="text-[#0F2C59] text-[11px] font-bold uppercase tracking-[0.3em]">
                 {item.author}
               </span>
               {item.date && (
-                <span className="text-[#8E8E93] text-[9px] uppercase tracking-widest">
+                <span className="text-[#1B2537]/60 text-[9px] uppercase tracking-widest">
                   {item.date}
                 </span>
               )}
@@ -129,11 +129,11 @@ export const CustomerFeedbackView: React.FC = () => {
       </section>
 
       {/* Middle Section: Visual Narrative */}
-      <section className="bg-white py-32 px-6">
+      <section className="bg-white py-32 px-3 sm:px-4">
         <div className="max-w-5xl mx-auto text-center">
-          <Sparkles className="w-8 h-8 text-[#CCA062]/30 mx-auto mb-8" />
-          <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl mb-6">O afeto está nos detalhes</h2>
-          <p className="text-[#8E8E93] text-sm md:text-base font-light tracking-wide max-w-xl mx-auto leading-relaxed uppercase">
+          <Sparkles className="w-8 h-8 text-[#D4AF37]/40 mx-auto mb-8" />
+          <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.85rem,4vw,3.5rem)] mb-6 leading-[1.15]">O afeto está nos detalhes</h2>
+          <p className="text-[#1B2537]/70 text-sm md:text-base font-light tracking-wide max-w-xl mx-auto leading-relaxed uppercase">
             Cada depoimento é uma confirmação de que o trabalho manual carrega uma energia única, capaz de emocionar e criar memórias eternas.
           </p>
         </div>
@@ -143,25 +143,25 @@ export const CustomerFeedbackView: React.FC = () => {
       <ContinueExploring currentPath="/feedclientes" />
 
       {/* Final CTA */}
-      <section className="py-32 md:py-48 px-6 bg-[#FCFAF7] text-center">
+      <section className="py-32 md:py-48 px-3 sm:px-4 bg-[#FAF8F5] text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="max-w-2xl mx-auto"
         >
-          <Heart className="w-8 h-8 text-[#6D0D0D]/20 mx-auto mb-8" />
-          <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl mb-6">
+          <Heart className="w-8 h-8 text-[#D4AF37]/40 mx-auto mb-8" />
+          <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.75rem,4vw,3.5rem)] mb-6 leading-[1.15]">
             Queremos ouvir sua história
           </h2>
-          <p className="text-[#8E8E93] text-sm md:text-base font-light tracking-wide mb-12 uppercase leading-relaxed">
+          <p className="text-[#1B2537]/70 text-sm md:text-base font-light tracking-wide mb-12 uppercase leading-relaxed">
             Recebeu um mimo ou criou uma lista conosco? Conte-nos como foi sua experiência.
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/contato')}
-            className="bg-[#3D2E24] text-white px-12 py-5 rounded-full text-xs uppercase tracking-[0.3em] font-bold shadow-2xl hover:bg-black transition-all"
+            className="bg-[#0F2C59] text-white px-12 py-5 rounded-full text-xs uppercase tracking-[0.3em] font-bold shadow-2xl border border-[#D4AF37]/40 hover:bg-[#1B3F7A] transition-all cursor-pointer"
           >
             Enviar feedback
           </motion.button>
@@ -169,8 +169,8 @@ export const CustomerFeedbackView: React.FC = () => {
       </section>
 
       {/* Decorative Footer */}
-      <div className="pb-16 bg-[#FCFAF7] flex justify-center">
-        <div className="w-12 h-[1px] bg-[#CCA062]/30" />
+      <div className="pb-16 bg-[#FAF8F5] flex justify-center">
+        <div className="w-12 h-[1px] bg-[#D4AF37]/40" />
       </div>
 
     </div>

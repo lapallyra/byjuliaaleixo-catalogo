@@ -10,7 +10,6 @@ import {
   ChevronLeft, 
   ChevronRight,
   Check,
-  ArrowLeft,
   Upload,
   Loader2,
   Sparkles
@@ -155,13 +154,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const originalPrice = product.original_price;
 
   return (
-    <div className="w-full bg-[#FDFCFA] min-h-screen text-slate-900 pb-20 font-sans">
-      
-      {/* HEADER / NAVIGATION */}
-      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
-      </div>
-
-      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+    <div className="w-full bg-[#FAF8F5] min-h-screen text-[#1B2537] pb-20 font-sans pt-5 sm:pt-6">
+      <div className="max-w-[1850px] mx-auto px-3 sm:px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         
         {/* BLOCO 01 - LADO ESQUERDO: Carrossel (Tamanho Médio) */}
         <div className="lg:col-span-5 space-y-4">
@@ -235,7 +229,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 </span>
               )}
               {(campaignYear || product.edition_year) && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-[#3A312D] text-white shadow-xs">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-[#0F2C59] text-white shadow-xs">
                   Edição {campaignYear || product.edition_year}
                 </span>
               )}
@@ -249,7 +243,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   ? 'bg-neutral-100 border-neutral-100 text-neutral-300 cursor-not-allowed opacity-50' 
                   : isWholesaleActive 
                     ? 'bg-green-600 border-green-600 text-white shadow-md active:bg-green-700' 
-                    : 'bg-[#3A312D] border-[#3A312D] text-white hover:bg-neutral-800'
+                    : 'bg-[#0F2C59] border-[#0F2C59] text-white hover:bg-[#1B3F7A]'
               }`}
               disabled={!hasWholesale}
             >
@@ -257,12 +251,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             </button>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-serif text-neutral-900 mb-6 italic leading-tight">
+          <h1 className="whitespace-nowrap overflow-hidden text-ellipsis text-[clamp(1.65rem,2.8vw,2.75rem)] font-serif text-[#0F2C59] mb-6 italic leading-tight">
             {product.product_name}
           </h1>
 
           <div className="flex items-baseline gap-4 mb-8">
-            <span className="text-3xl font-sans font-bold text-neutral-900">
+            <span className="text-3xl font-sans font-bold text-[#0F2C59]">
               R$ {currentPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </span>
             {originalPrice > currentPrice && (

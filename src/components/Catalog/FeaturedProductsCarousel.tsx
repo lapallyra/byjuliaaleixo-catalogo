@@ -32,7 +32,7 @@ export const FeaturedProductsCarousel: React.FC<FeaturedProductsCarouselProps> =
       
       <HorizontalScroll className="flex gap-6 pb-10 snap-x" itemWidth={360}>
         {products.map((product, idx) => (
-          <div key={`featured-${product.id}-${idx}`} className="flex-shrink-0 w-[300px] sm:w-[340px] snap-start">
+          <div key={`featured-${product.id}-${idx}`} className="flex-shrink-0 w-[345px] sm:w-[440px] snap-start">
             <ProductCard 
               product={product}
               theme={theme}

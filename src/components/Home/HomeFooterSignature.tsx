@@ -3,13 +3,13 @@ import { Heart } from 'lucide-react';
 
 export const HomeFooterSignature: React.FC = () => {
   return (
-    <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-[#E8E2D5] text-center select-none">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#4A5568]">
+    <div className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 py-8 border-t border-[#E8E2D5] text-center select-none">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#1B2537]/75">
         
         {/* Left: Brand motto */}
         <div className="flex items-center gap-2">
           <Heart size={12} strokeWidth={1.5} className="text-[#D4AF37]" />
-          <span className="font-light text-[#4A5568]">Feito à mão com afeto e dedicação aos detalhes.</span>
+          <span className="font-light text-[#1B2537]/75">Feito à mão com afeto e dedicação aos detalhes.</span>
         </div>
 
         {/* Center: Signature mark */}

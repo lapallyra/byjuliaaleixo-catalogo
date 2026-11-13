@@ -42,12 +42,12 @@ export const ContinueExploring: React.FC<{ currentPath: string }> = ({ currentPa
   const filteredItems = items.filter(item => item.path !== currentPath);
 
   return (
-    <section className="py-24 px-6 bg-white border-t border-[#E8DCC8]/20">
+    <section className="py-24 px-3 sm:px-4 bg-white border-t border-[#D4AF37]/20">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-16">
-          <span className="text-[#CCA062] text-[10px] font-bold uppercase tracking-[0.4em] mb-4 block">Navegação Editorial</span>
-          <h2 className="text-[#3D2E24] font-mea-culpa text-3xl sm:text-4xl md:text-5xl mb-3">Continue explorando</h2>
-          <div className="w-12 h-[1px] bg-[#CCA062]/30 mx-auto" />
+          <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.4em] mb-4 block">Navegação Editorial</span>
+          <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.85rem,4vw,3rem)] mb-3 leading-[1.15]">Continue explorando</h2>
+          <div className="w-12 h-[1px] bg-[#D4AF37]/40 mx-auto" />
         </div>
 
         <div className="grid md:grid-cols-3 gap-12">
@@ -59,16 +59,16 @@ export const ContinueExploring: React.FC<{ currentPath: string }> = ({ currentPa
               viewport={{ once: true }}
               className="group"
             >
-              <h4 className="text-[#3D2E24] font-serif text-lg uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h4 className="text-[#0F2C59] font-serif text-lg uppercase tracking-widest mb-3 flex items-center gap-2">
                 {item.title}
-                <span className="h-[1px] flex-1 bg-[#E8DCC8]/30 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
+                <span className="h-[1px] flex-1 bg-[#D4AF37]/30 scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-500" />
               </h4>
-              <p className="text-[#8E8E93] text-xs leading-relaxed mb-6 font-light">
+              <p className="text-[#1B2537]/70 text-xs leading-relaxed mb-6 font-light">
                 {item.description}
               </p>
               <button
                 onClick={() => navigate(item.path)}
-                className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#CCA062] hover:text-[#3D2E24] transition-colors group/btn"
+                className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#D4AF37] hover:text-[#0F2C59] transition-colors group/btn cursor-pointer"
               >
                 Conhecer
                 <ArrowRight size={12} className="group-hover/btn:translate-x-1 transition-transform" />

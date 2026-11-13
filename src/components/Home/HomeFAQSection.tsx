@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, HelpCircle, Sparkles } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 interface FAQItem {
   question: string;
@@ -47,12 +47,16 @@ export const HomeFAQSection: React.FC = () => {
   };
 
   return (
-    <section className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-14">
-      
+    <section className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 py-14 sm:py-16">
       {/* Section Title */}
       <div className="text-center max-w-2xl mx-auto mb-10">
-        <h2 className="text-4xl sm:text-5xl md:text-6xl font-mea-culpa text-[#2C1810] tracking-tight">
-          Perguntas & Respostas
+        <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75 mb-3">
+          <span className="w-5 h-px bg-[#D4AF37]" />
+          <span>Dúvidas Frequentes</span>
+          <span className="w-5 h-px bg-[#D4AF37]" />
+        </div>
+        <h2 className="whitespace-nowrap text-[clamp(1.85rem,4vw,3rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+          Perguntas &amp; Respostas
         </h2>
       </div>
 
@@ -66,8 +70,8 @@ export const HomeFAQSection: React.FC = () => {
               key={idx}
               className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
                 isOpen
-                  ? 'border-[#B38F4D]/60 bg-[#FFFFFF] shadow-[0_4px_16px_rgba(179,143,77,0.06)]'
-                  : 'border-[#E8DFC8] bg-[#FAF7F2]/60 hover:bg-[#FFFFFF] hover:border-[#D4AF37]/40'
+                  ? 'border-[#D4AF37]/60 bg-white shadow-[0_2px_14px_rgba(15,44,89,0.03)]'
+                  : 'border-[#E8E2D5]/80 bg-white/60 hover:bg-white hover:border-[#D4AF37]/45'
               }`}
             >
               <button
@@ -75,20 +79,20 @@ export const HomeFAQSection: React.FC = () => {
                 onClick={() => toggleAccordion(idx)}
                 className="w-full flex items-center justify-between p-5 text-left cursor-pointer gap-4 select-none"
               >
-                <span className="text-sm sm:text-base font-medium text-[#2C1810] leading-snug">
+                <span className="text-sm sm:text-base font-medium text-[#1B2537] leading-snug">
                   {faq.question}
                 </span>
                 <span
-                  className={`p-1.5 rounded-full border border-[#D4AF37]/30 text-[#8C6D37] shrink-0 transition-transform duration-300 ${
-                    isOpen ? 'rotate-180 bg-[#FAF7F2]' : 'bg-[#FFFFFF]'
+                  className={`p-1.5 rounded-full border border-[#D4AF37]/35 text-[#0F2C59] shrink-0 transition-transform duration-300 ${
+                    isOpen ? 'rotate-180 bg-[#FAF8F5]' : 'bg-white'
                   }`}
                 >
-                  <ChevronDown size={14} strokeWidth={1.5} />
+                  <ChevronDown size={14} strokeWidth={1.6} />
                 </span>
               </button>
 
               {isOpen && (
-                <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#593E32] font-light leading-relaxed border-t border-[#F0EBE1]">
+                <div className="px-5 pb-5 pt-2 text-xs sm:text-sm text-[#1B2537]/75 font-light leading-relaxed border-t border-[#E8E2D5]/50">
                   <p>{faq.answer}</p>
                 </div>
               )}

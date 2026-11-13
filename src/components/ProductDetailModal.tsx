@@ -104,7 +104,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const isWholesaleActive = product.isWholesaleEnabled && quantity >= wholesaleMinQty && product.wholesale_price > 0;
   
   // Base price
-  let currentPrice = isWholesaleActive ? product.wholesale_price : product.retail_price;
+  let currentPrice = isWholesaleActive ? (product.wholesale_price || product.retail_price || product.current_price || 0) : (product.retail_price || product.current_price || 0);
   
   // Add variation price if selected
   Object.entries(selectedVariations).forEach(([varName, optName]) => {

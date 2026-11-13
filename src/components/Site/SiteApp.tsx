@@ -175,7 +175,7 @@ export function SiteApp() {
   }
 
   return (
-    <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen bg-[#FDFCFA]">
+    <div className="app-wrapper w-full flex flex-col items-stretch min-h-screen bg-[#FAF8F5]">
       <SiteHeader 
         onOpenSearch={() => setIsGlobalSearchOpen(true)} 
         cartCount={totalCartCount}

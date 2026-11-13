@@ -164,12 +164,12 @@ export const GiftListHowItWorksView: React.FC = () => {
       </section>
 
       {/* 2. COMO FUNCIONA - JORNADA VISUAL */}
-      <section className="py-16 md:py-28 px-4 sm:px-6 md:px-8 max-w-[1850px] mx-auto">
+      <section className="py-16 md:py-28 px-3 sm:px-4 max-w-[1850px] mx-auto bg-[#FAF8F5]">
         <div className="text-center mb-24 md:mb-32">
-          <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl mb-6">
+          <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.75rem,4vw,3.5rem)] mb-6 leading-[1.15]">
             Sua lista em quatro atos
           </h2>
-          <div className="w-16 h-[1px] bg-[#CCA062] mx-auto" />
+          <div className="w-16 h-[1px] bg-[#D4AF37] mx-auto" />
         </div>
 
         <div className="relative">
@@ -209,7 +209,7 @@ export const GiftListHowItWorksView: React.FC = () => {
       </section>
 
       {/* 3. EXPERIÊNCIA DA LISTA */}
-      <section className="bg-white py-24 md:py-36 px-4 sm:px-6 md:px-8 overflow-hidden">
+      <section className="bg-white py-24 md:py-36 px-3 sm:px-4 overflow-hidden">
         <div className="max-w-[1850px] mx-auto space-y-24 md:space-y-36">
           
           {/* Block 1 */}
@@ -228,11 +228,11 @@ export const GiftListHowItWorksView: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="w-full md:w-1/2 space-y-8"
+              className="w-full md:w-1/2 space-y-8 min-w-0"
             >
-              <span className="text-[#CCA062] text-[10px] font-bold uppercase tracking-[0.5em]">Curadoria Digital</span>
-              <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl leading-tight">Organize seus desejos com elegância</h2>
-              <p className="text-[#8E8E93] text-lg font-light leading-relaxed max-w-lg">
+              <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.5em]">Curadoria Digital</span>
+              <h2 className="whitespace-nowrap overflow-hidden text-ellipsis text-[#0F2C59] font-mea-culpa text-[clamp(1.5rem,2.9vw,2.75rem)] leading-tight">Organize seus desejos com elegância</h2>
+              <p className="text-[#1B2537]/75 text-lg font-light leading-relaxed max-w-lg">
                 Nossa interface foi pensada para ser tão bela quanto os produtos que você escolhe. Visualize sua lista, organize por prioridade e veja o carinho dos seus convidados se transformar em mimos reais.
               </p>
             </motion.div>
@@ -254,11 +254,11 @@ export const GiftListHowItWorksView: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="w-full md:w-1/2 space-y-8 text-center md:text-left"
+              className="w-full md:w-1/2 space-y-8 text-center md:text-left min-w-0"
             >
-              <span className="text-[#CCA062] text-[10px] font-bold uppercase tracking-[0.5em]">Conexão Real</span>
-              <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl leading-tight">Compartilhe a alegria de presentear</h2>
-              <p className="text-[#8E8E93] text-lg font-light leading-relaxed max-w-lg mx-auto md:mx-0">
+              <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.5em]">Conexão Real</span>
+              <h2 className="whitespace-nowrap overflow-hidden text-ellipsis text-[#0F2C59] font-mea-culpa text-[clamp(1.5rem,2.9vw,2.75rem)] leading-tight">Compartilhe a alegria de presentear</h2>
+              <p className="text-[#1B2537]/75 text-lg font-light leading-relaxed max-w-lg mx-auto md:mx-0">
                 Facilite a escolha de quem te ama. Seus convidados acessam uma página exclusiva, escolhem os produtos e podem até deixar mensagens personalizadas. Uma ponte de afeto em cada presente.
               </p>
             </motion.div>
@@ -268,11 +268,11 @@ export const GiftListHowItWorksView: React.FC = () => {
       </section>
 
       {/* 4. PERGUNTAS FREQUENTES (FAQ) */}
-      <section className="py-32 md:py-48 px-6 bg-[#FCFAF7]">
+      <section className="py-32 md:py-48 px-3 sm:px-4 bg-[#FAF8F5]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-24">
-            <Sparkles className="w-10 h-10 text-[#CCA062]/30 mx-auto mb-8" />
-            <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl tracking-tight">
+            <Sparkles className="w-10 h-10 text-[#D4AF37]/40 mx-auto mb-8" />
+            <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.85rem,4vw,3.5rem)] tracking-tight leading-[1.15]">
               Dúvidas Frequentes
             </h2>
           </div>
@@ -289,27 +289,27 @@ export const GiftListHowItWorksView: React.FC = () => {
       <ContinueExploring currentPath="/comofunciona-lp" />
 
       {/* 5. CTA FINAL */}
-      <section className="py-32 md:py-48 px-6 bg-white text-center relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#E8DCC8]/20 rounded-full blur-[120px] -z-10" />
+      <section className="py-32 md:py-48 px-3 sm:px-4 bg-[#FAF8F5] text-center relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#F3ECDF]/50 rounded-full blur-[120px] -z-10" />
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-2xl mx-auto"
+          className="max-w-4xl mx-auto"
         >
-          <Heart className="w-8 h-8 text-[#6D0D0D]/20 mx-auto mb-8" />
-          <h2 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl mb-8">
+          <Heart className="w-8 h-8 text-[#D4AF37]/50 mx-auto mb-8" />
+          <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.5rem,3.6vw,3.25rem)] mb-8 leading-[1.15]">
             Crie sua lista e compartilhe momentos especiais
           </h2>
-          <p className="text-[#8E8E93] text-sm md:text-base font-light tracking-[0.2em] mb-12 uppercase leading-relaxed max-w-lg mx-auto">
+          <p className="text-[#1B2537]/70 text-sm md:text-base font-light tracking-[0.2em] mb-12 uppercase leading-relaxed max-w-lg mx-auto">
             Comece agora a organizar seu evento e proporcione uma experiência única para seus convidados.
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/listapresentes')}
-            className="bg-[#3D2E24] text-white px-12 py-5 rounded-full text-[10px] uppercase tracking-[0.4em] font-bold shadow-2xl hover:bg-black transition-all"
+            className="bg-[#0F2C59] text-white px-12 py-5 rounded-full text-[10px] uppercase tracking-[0.4em] font-bold shadow-2xl border border-[#D4AF37]/40 hover:bg-[#1B3F7A] transition-all cursor-pointer"
           >
             Criar minha lista
           </motion.button>

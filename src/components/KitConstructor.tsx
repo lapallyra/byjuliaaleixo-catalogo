@@ -101,26 +101,26 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCFA] pb-32">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#1B2537] pb-32">
       {/* Header Info */}
-      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 pt-6 sm:pt-8 pb-4 text-center">
-        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#cca062]">Personalização Total</span>
-        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-mea-culpa text-[#6d5443] mt-1.5 mb-2.5">Monte seu Kit</h2>
-        <p className="text-[#8c7864] text-xs sm:text-sm font-light leading-relaxed max-w-lg mx-auto">
+      <div className="max-w-[1850px] mx-auto px-3 sm:px-4 pt-6 sm:pt-8 pb-4 text-center">
+        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">Personalização Total</span>
+        <h2 className="whitespace-nowrap text-[clamp(2rem,4.5vw,3.5rem)] font-mea-culpa text-[#0F2C59] mt-1.5 mb-2.5 leading-[1.15]">Monte seu Kit</h2>
+        <p className="text-[#1B2537]/75 text-xs sm:text-sm font-light leading-relaxed max-w-lg mx-auto">
           Selecione os itens abaixo para criar uma composição exclusiva e cheia de afeto.
         </p>
-        <div className="h-[1px] w-12 bg-[#cca062] mx-auto mt-4" />
+        <div className="h-[1px] w-12 bg-[#D4AF37] mx-auto mt-4" />
       </div>
 
       {/* CATEGORIAS COMO ABAS / FILTROS HORIZONTAIS */}
-      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 mb-6">
+      <div className="max-w-[1850px] mx-auto px-3 sm:px-4 mb-6">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 py-1">
           <button
             onClick={() => setSelectedCategory('all')}
             className={`px-4 sm:px-5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
               selectedCategory === 'all'
-                ? 'bg-[#6d5443] text-white shadow-xs scale-102'
-                : 'bg-white text-[#6d5443] hover:bg-[#FAF7F2] border border-[#E8DFC8]/60 hover:border-[#6d5443]/40'
+                ? 'bg-[#0F2C59] text-white shadow-xs scale-102'
+                : 'bg-white text-[#0F2C59] hover:bg-[#FAF8F5] border border-[#D4AF37]/35 hover:border-[#0F2C59]/40'
             }`}
           >
             Todos
@@ -131,8 +131,8 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
               onClick={() => setSelectedCategory(cat)}
               className={`px-4 sm:px-5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
                 selectedCategory === cat
-                  ? 'bg-[#6d5443] text-white shadow-xs scale-102'
-                  : 'bg-white text-[#6d5443] hover:bg-[#FAF7F2] border border-[#E8DFC8]/60 hover:border-[#6d5443]/40'
+                  ? 'bg-[#0F2C59] text-white shadow-xs scale-102'
+                  : 'bg-white text-[#0F2C59] hover:bg-[#FAF8F5] border border-[#D4AF37]/35 hover:border-[#0F2C59]/40'
               }`}
             >
               {cat}
@@ -142,7 +142,7 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
       </div>
 
       {/* GRADE FLUIDA DE PRODUTOS */}
-      <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8">
+      <div className="max-w-[1850px] mx-auto px-3 sm:px-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-5">
           {filteredProducts.map(product => {
             const selectedQty = selectedProducts[product.id]?.quantity || 0;
@@ -150,11 +150,11 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
               <div 
                 key={product.id} 
                 className={`bg-white p-2.5 sm:p-3 border rounded-xl sm:rounded-2xl flex flex-col transition-all duration-200 ${
-                  selectedQty > 0 ? 'border-[#cca062] shadow-sm ring-1 ring-[#cca062]/30' : 'border-[#e8dcc8]/50 hover:border-[#cca062]/60 hover:shadow-2xs'
+                  selectedQty > 0 ? 'border-[#D4AF37] shadow-sm ring-1 ring-[#D4AF37]/35' : 'border-[#E8E2D5] hover:border-[#D4AF37]/70 hover:shadow-2xs'
                 }`}
               >
                 <div 
-                  className="aspect-square max-h-[160px] sm:max-h-[180px] md:max-h-[200px] w-full bg-[#faf8f5] rounded-lg sm:rounded-xl overflow-hidden mb-2.5 relative cursor-pointer group/img shrink-0" 
+                  className="aspect-square max-h-[160px] sm:max-h-[180px] md:max-h-[200px] w-full bg-[#FAF8F5] rounded-lg sm:rounded-xl overflow-hidden mb-2.5 relative cursor-pointer group/img shrink-0" 
                   onClick={() => setActiveProductForDetail(product)}
                 >
                   <ImageWithFallback 
@@ -163,39 +163,39 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
                     isThumbnail={true} 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/15 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-[#6d5443] flex items-center gap-1 shadow-xs border border-[#e8dcc8]/30">
+                  <div className="absolute inset-0 bg-[#0F2C59]/15 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-[#0F2C59] flex items-center gap-1 shadow-xs border border-[#D4AF37]/30">
                       <Eye size={11} />
                       Detalhes
                     </div>
                   </div>
                   {selectedQty > 0 && (
-                    <div className="absolute top-1.5 right-1.5 bg-[#cca062] text-white w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-bold shadow-xs">
+                    <div className="absolute top-1.5 right-1.5 bg-[#0F2C59] text-white w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-bold shadow-xs border border-[#D4AF37]">
                       {selectedQty}
                     </div>
                   )}
                 </div>
                 
                 <div className="flex-1 flex flex-col items-center text-center px-0.5 mb-2 justify-center">
-                  <p className="text-[11px] sm:text-xs font-semibold text-[#5A4535] line-clamp-2 leading-snug w-full min-h-[2rem]">
+                  <p className="text-[11px] sm:text-xs font-semibold text-[#1B2537] line-clamp-2 leading-snug w-full min-h-[2rem]">
                     {product.product_name}
                   </p>
                 </div>
 
-                <div className="mt-auto pt-2 border-t border-[#e8dcc8]/30 flex justify-between items-center">
+                <div className="mt-auto pt-2 border-t border-[#E8E2D5]/60 flex justify-between items-center">
                   {selectedQty > 0 ? (
-                    <div className="flex w-full items-center justify-between bg-[#FAF7F2] rounded-full p-0.5 border border-[#E8DFC8]/50">
+                    <div className="flex w-full items-center justify-between bg-[#FAF8F5] rounded-full p-0.5 border border-[#D4AF37]/40">
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleProductSelection(product, -1); }}
-                        className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-[#6d5443] hover:bg-[#e8dcc8]/40 transition-colors shadow-2xs cursor-pointer"
+                        className="w-6 h-6 flex items-center justify-center rounded-full bg-white text-[#0F2C59] hover:bg-[#D4AF37]/15 transition-colors shadow-2xs cursor-pointer"
                         title="Diminuir"
                       >
                         <Minus size={11} strokeWidth={2.5} />
                       </button>
-                      <span className="text-[10px] sm:text-xs font-bold text-[#6d5443] px-1">{selectedQty}</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-[#0F2C59] px-1">{selectedQty}</span>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleProductSelection(product, 1); }}
-                        className="w-6 h-6 flex items-center justify-center rounded-full bg-[#cca062] text-white hover:bg-[#b88c52] transition-colors shadow-2xs cursor-pointer"
+                        className="w-6 h-6 flex items-center justify-center rounded-full bg-[#0F2C59] text-white hover:bg-[#1B3F7A] transition-colors shadow-2xs cursor-pointer"
                         title="Aumentar"
                       >
                         <Plus size={11} strokeWidth={2.5} />
@@ -204,7 +204,7 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
                   ) : (
                     <button 
                       onClick={() => handleProductSelection(product, 1)}
-                      className="w-full text-[#6d5443] hover:text-white hover:bg-[#cca062] bg-[#FAF7F2] text-[9px] sm:text-[10px] font-bold uppercase tracking-wider py-1.5 rounded-full transition-all border border-[#E8DFC8]/50 cursor-pointer"
+                      className="w-full text-[#0F2C59] hover:text-white hover:bg-[#0F2C59] bg-[#FAF8F5] text-[9px] sm:text-[10px] font-bold uppercase tracking-wider py-1.5 rounded-full transition-all border border-[#D4AF37]/40 cursor-pointer"
                     >
                       Adicionar
                     </button>
@@ -216,7 +216,7 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
         </div>
 
         {filteredProducts.length === 0 && (
-          <div className="py-16 text-center text-[#8C7864]">
+          <div className="py-16 text-center text-[#1B2537]/65">
             <p className="text-sm">Nenhum produto encontrado nesta categoria.</p>
           </div>
         )}
@@ -230,21 +230,21 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "tween", duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-[#e8dcc8]/60 shadow-[0_-10px_30px_rgba(204,160,98,0.12)] z-30 pb-safe"
+            className="fixed bottom-0 left-0 right-0 bg-[#FAF8F5]/95 backdrop-blur-md border-t border-[#D4AF37]/40 shadow-[0_-10px_30px_rgba(15,44,89,0.08)] z-30 pb-safe"
           >
-            <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 py-3.5 flex items-center justify-between gap-4">
+            <div className="max-w-[1850px] mx-auto px-3 sm:px-4 py-3.5 flex items-center justify-between gap-4">
               
               {/* LADO ESQUERDO: LISTA DE MINI IMAGENS (IMG + IMG + IMG) */}
               <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
                 {flattenedSelectedItems.map((item, idx) => (
                   <React.Fragment key={item.key}>
                     {idx > 0 && (
-                      <span className="text-[#CCA062] text-sm sm:text-base font-bold select-none px-0.5 shrink-0">
+                      <span className="text-[#D4AF37] text-sm sm:text-base font-bold select-none px-0.5 shrink-0">
                         +
                       </span>
                     )}
                     <div 
-                      className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-[#E8DFC8] bg-[#FAF7F2] shadow-2xs shrink-0 group transition-transform hover:scale-105"
+                      className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-[#D4AF37]/40 bg-white shadow-2xs shrink-0 group transition-transform hover:scale-105"
                       title={item.product.product_name}
                     >
                       <ImageWithFallback 
@@ -261,20 +261,20 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
               {/* LADO DIREITO: VALOR TOTAL EM DESTAQUE + BOTÃO CONCLUIR KIT */}
               <div className="flex items-center gap-4 sm:gap-6 justify-end shrink-0 pl-2">
                 <div className="text-right">
-                  <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#8C7864] block leading-none mb-1">
+                  <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#1B2537]/65 block leading-none mb-1">
                     Total
                   </span>
-                  <span className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-[#6D5443] tracking-tight leading-none whitespace-nowrap">
+                  <span className="text-xl sm:text-2xl md:text-3xl font-serif font-bold text-[#0F2C59] tracking-tight leading-none whitespace-nowrap">
                     {formatCurrency(total)}
                   </span>
                 </div>
 
                 <button 
                   onClick={handleFinish}
-                  className="flex items-center justify-center gap-2 px-5 sm:px-8 py-3 sm:py-3.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider transition-all bg-[#6d5443] hover:bg-[#5b4535] text-white shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
+                  className="flex items-center justify-center gap-2 px-5 sm:px-8 py-3 sm:py-3.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider transition-all bg-[#0F2C59] hover:bg-[#1B3F7A] text-white border border-[#D4AF37]/40 shadow-md active:scale-95 cursor-pointer whitespace-nowrap"
                 >
                   Concluir Kit
-                  <Check size={16} strokeWidth={2.5} />
+                  <Check size={16} strokeWidth={2.5} className="text-[#D4AF37]" />
                 </button>
               </div>
               
@@ -289,11 +289,11 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
             initial={{ opacity: 0, y: 50, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: 50, x: '-50%' }}
-            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[5000] px-6 py-4 bg-[#3A312D] text-white text-xs font-medium uppercase tracking-widest rounded-full shadow-[0_12px_30px_rgba(0,0,0,0.15)] border border-white/10 flex items-center gap-3 min-w-[280px] justify-center text-center font-poppins"
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[5000] px-6 py-4 bg-[#0F2C59] text-white text-xs font-medium uppercase tracking-widest rounded-full shadow-[0_12px_30px_rgba(15,44,89,0.2)] border border-[#D4AF37]/40 flex items-center gap-3 min-w-[280px] justify-center text-center font-poppins"
           >
-            <ShoppingCart size={14} className="text-[#cca062]" />
+            <ShoppingCart size={14} className="text-[#D4AF37]" />
             <span>{toast}</span>
-            <Sparkles size={12} className="text-[#cca062] animate-pulse" />
+            <Sparkles size={12} className="text-[#D4AF37] animate-pulse" />
           </motion.div>
         )}
       </AnimatePresence>
