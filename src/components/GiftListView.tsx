@@ -20,6 +20,7 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
 
   // Detail Modal state
   const [selectedItemForDetails, setSelectedItemForDetails] = useState<any | null>(null);
+  const [activeDetailImageIndex, setActiveDetailImageIndex] = useState(0);
 
   // Reservation Modal state
   const [selectedItemForReserve, setSelectedItemForReserve] = useState<any | null>(null);
@@ -210,13 +211,13 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
 
       {/* HEADER SECTION (ELEGANT DESIGN SYSTEM IN LINE WITH THE COZY BRANDING) */}
       <header className="bg-white/90 backdrop-blur-md border-b border-pink-100/50 sticky top-0 z-[100] shadow-xs">
-        <div className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 h-20 sm:h-24 flex items-center justify-between">
+        <div className="w-full px-2 sm:px-3 h-20 sm:h-24 flex items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="w-12 h-12 sm:w-14 sm:h-14 bg-pink-600 rounded-2xl flex items-center justify-center text-white shadow-md shadow-pink-100">
                <Gift size={24} />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-mea-culpa text-slate-900 leading-tight">{giftList.listName || "Lista de Presentes"}</h1>
+              <h1 className="whitespace-nowrap overflow-visible text-xl sm:text-2xl font-mea-culpa text-slate-900 leading-[1.42] py-0.5 px-1">{giftList.listName || "Lista de Presentes"}</h1>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{giftList.hostName}</span>
                 <span className="w-1 h-1 rounded-full bg-pink-200 hidden sm:inline" />
@@ -238,7 +239,7 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
       </header>
 
       {/* MAIN CONSULTATION */}
-      <main className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12 space-y-12 w-full flex-grow">
+      <main className="w-full px-2 sm:px-3 py-8 sm:py-12 space-y-12 flex-grow">
         
         {/* EVENT DETAILS & INFOS */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
@@ -262,7 +263,7 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
               
               <div className="space-y-1.5">
                 <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 block">Homenageado(a)</span>
-                <h2 className="text-3xl sm:text-4xl font-mea-culpa text-slate-900 leading-tight">{giftList.hostName}</h2>
+                <h2 className="whitespace-nowrap overflow-visible text-3xl sm:text-4xl font-mea-culpa text-slate-900 leading-[1.42] py-1 px-1.5">{giftList.hostName}</h2>
               </div>
             </div>
 
@@ -344,7 +345,12 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.04 }}
-                onClick={() => !isGifted && !isReserved && setSelectedItemForDetails(item)}
+                onClick={() => {
+                  if (!isGifted && !isReserved) {
+                    setActiveDetailImageIndex(0);
+                    setSelectedItemForDetails(item);
+                  }
+                }}
                 className={`group bg-white rounded-[2rem] overflow-hidden border border-pink-100/30 transition-all duration-300 shadow-xs flex flex-col ${
                   (isGifted || isReserved) ? 'grayscale-[0.5] opacity-70 cursor-default' : 'cursor-pointer hover:shadow-md hover:shadow-pink-100/30 hover:-translate-y-1'
                 }`}
@@ -458,9 +464,38 @@ export const GiftListView: React.FC<GiftListViewProps> = ({ setCarts, config }) 
                 <X size={20} />
               </button>
               
-              <div className="aspect-square w-full rounded-2xl bg-pink-50/20 mb-6 overflow-hidden border border-pink-100/20">
-                <ImageWithFallback src={selectedItemForDetails.image} alt={selectedItemForDetails.product_name} className="w-full h-full object-cover" />
-              </div>
+              {(() => {
+                const modalImages = [
+                  selectedItemForDetails.image,
+                  selectedItemForDetails.main_image,
+                  selectedItemForDetails.image_hover,
+                  ...(selectedItemForDetails.images || [])
+                ].filter((img, idx, arr) => Boolean(img) && arr.indexOf(img) === idx);
+                const activeSrc = modalImages[activeDetailImageIndex] || selectedItemForDetails.image;
+                return (
+                  <div className="mb-6 flex flex-col items-center gap-2.5">
+                    <div className="w-[15rem] h-[15rem] rounded-2xl bg-pink-50/20 overflow-hidden border border-pink-100/20 shrink-0">
+                      <ImageWithFallback src={activeSrc} alt={selectedItemForDetails.product_name} className="w-full h-full object-cover" />
+                    </div>
+                    {modalImages.length > 1 && (
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {modalImages.map((img: string, idx: number) => (
+                          <button
+                            key={`gl-thumb-${idx}`}
+                            type="button"
+                            onClick={() => setActiveDetailImageIndex(idx)}
+                            className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
+                              idx === activeDetailImageIndex ? 'border-[#0F2C59] scale-105 shadow-xs' : 'border-pink-100/60 opacity-60 hover:opacity-100'
+                            }`}
+                          >
+                            <ImageWithFallback src={img} alt={`${selectedItemForDetails.product_name} ${idx + 1}`} className="w-full h-full object-cover" isThumbnail={true} />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="space-y-1 mb-4">
                 <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-400">

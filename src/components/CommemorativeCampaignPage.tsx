@@ -323,7 +323,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
       <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#FAF6F0] via-[#FDFCFA] to-transparent pointer-events-none -z-10" />
       
       {/* Hero seguindo exatamente a identidade visual do banner da Home (versão expandida, unboxed) */}
-      <header className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 pt-16 sm:pt-20 md:pt-24 relative">
+      <header className="w-full px-2 sm:px-3 pt-10 sm:pt-14 md:pt-16 relative">
         <div className="relative w-full flex flex-col md:flex-row min-h-[380px] md:min-h-[400px] select-none items-center gap-6 py-2">
           
           {/* Lado Esquerdo: Conteúdo Editorial */}
@@ -343,9 +343,9 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
                 </span>
               </div>
 
-              {/* Nome da Campanha (1 linha elegante, sem quebra excessiva) */}
+              {/* Nome da Campanha (1 linha elegante, sem quebra e sem corte da fonte) */}
               <h1 
-                className="font-mea-culpa text-3xl sm:text-4xl md:text-5xl lg:text-[44px] xl:text-[52px] leading-tight select-none tracking-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.01)] mb-2 sm:mb-3 whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
+                className="font-mea-culpa text-[clamp(1.85rem,3.6vw,3.15rem)] leading-[1.45] py-1.5 px-1.5 select-none tracking-normal drop-shadow-[0_1px_2px_rgba(0,0,0,0.01)] mb-2 sm:mb-3 whitespace-nowrap overflow-visible"
                 style={{ color: themeColor }}
               >
                 {commemorativeDate.name}
@@ -365,7 +365,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
               </div>
 
               {/* Frase da Campanha */}
-              <p className="font-mea-culpa text-2xl sm:text-3xl text-[#8C7864] mt-2 mb-1 max-w-sm leading-tight">
+              <p className="font-mea-culpa text-2xl sm:text-3xl text-[#8C7864] mt-2 mb-1 max-w-sm leading-[1.45] py-1 px-1 overflow-visible">
                 {commemorativeDate.marketing_phrase || "O presente ideal para eternizar momentos de afeto."}
               </p>
 
@@ -491,7 +491,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
       </header>
 
       {/* Seção principal de produtos */}
-      <main className="max-w-[1850px] mx-auto px-4 sm:px-6 md:px-8 mt-4 sm:mt-6 relative z-10">
+      <main className="w-full px-2 sm:px-3 mt-4 sm:mt-6 relative z-10">
 
         {/* CASO EXISTA UM KIT RELACIONADO, DESTACÁ-LO ANTES */}
         {kits.length > 0 && (
@@ -500,7 +500,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
               <span className="text-[10px] font-bold tracking-[0.3em] uppercase text-[#8C7864] block mb-1 font-sans">
                 Edições Especiais
               </span>
-              <h2 className="text-3xl sm:text-4xl font-mea-culpa font-normal text-[#3A312D] mb-1">
+              <h2 className="whitespace-nowrap overflow-visible text-3xl sm:text-4xl font-mea-culpa font-normal text-[#3A312D] leading-[1.42] py-1 px-1.5 mb-1">
                 Kits Comemorativos
               </h2>
               <div className="h-[1px] w-12 bg-[#cca062] mx-auto sm:mx-0 mb-3"></div>
@@ -509,7 +509,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5 lg:gap-4">
               {kits.map((kit) => (
                 <ProductCard 
                   key={kit.id}
@@ -578,7 +578,7 @@ export function CommemorativeCampaignPage({ allProducts = [] }: CommemorativeCam
               <p className="text-xs text-[#8C7864] font-light">Assim que novos itens exclusivos forem cadastrados com a temática de {commemorativeDate.name}, eles aparecerão aqui.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5 lg:gap-4">
               {filteredAndSortedProducts.map((product) => (
                 <ProductCard 
                   key={product.id}

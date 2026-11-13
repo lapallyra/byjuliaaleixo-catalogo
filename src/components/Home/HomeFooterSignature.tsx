@@ -3,7 +3,7 @@ import { Heart } from 'lucide-react';
 
 export const HomeFooterSignature: React.FC = () => {
   return (
-    <div className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 py-8 border-t border-[#E8E2D5] text-center select-none">
+    <div className="w-full px-2 sm:px-3 py-8 border-t border-[#E8E2D5] text-center select-none">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#1B2537]/75">
         
         {/* Left: Brand motto */}

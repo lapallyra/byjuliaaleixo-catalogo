@@ -42,11 +42,11 @@ export const ContinueExploring: React.FC<{ currentPath: string }> = ({ currentPa
   const filteredItems = items.filter(item => item.path !== currentPath);
 
   return (
-    <section className="py-24 px-3 sm:px-4 bg-white border-t border-[#D4AF37]/20">
-      <div className="max-w-5xl mx-auto">
+    <section className="py-20 px-2 sm:px-3 bg-white border-t border-[#D4AF37]/20">
+      <div className="w-full">
         <div className="text-center mb-16">
           <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.4em] mb-4 block">Navegação Editorial</span>
-          <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.85rem,4vw,3rem)] mb-3 leading-[1.15]">Continue explorando</h2>
+          <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.85rem,4vw,3rem)] mb-3 leading-[1.42] py-1 px-1.5">Continue explorando</h2>
           <div className="w-12 h-[1px] bg-[#D4AF37]/40 mx-auto" />
         </div>
 

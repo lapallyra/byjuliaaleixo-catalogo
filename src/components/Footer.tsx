@@ -13,8 +13,8 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
   const navigate = useNavigate();
 
   return (
-    <footer className="bg-[#FDFCFA] border-t border-[#E8DFC8]/40 pt-8 pb-5 sm:pt-10 sm:pb-6 px-4 sm:px-6 md:px-8 font-sans overflow-hidden mt-auto select-none">
-      <div className="max-w-[1850px] mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 mb-6">
+    <footer className="bg-[#FAF8F5] border-t border-[#D4AF37]/25 pt-8 pb-5 sm:pt-10 sm:pb-6 px-2 sm:px-3 font-sans overflow-hidden mt-auto select-none">
+      <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 mb-6">
         
         {/* Col 1: Bio & Quick Icons */}
         <div className="col-span-2 sm:col-span-1 lg:col-span-1 flex flex-col items-start text-left">
@@ -119,7 +119,7 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
       </div>
 
       {/* FINAL LEGAL COMPACT FOOTER */}
-      <div className="max-w-[1600px] mx-auto border-t border-[#e8dcc8]/20 pt-3 mt-3 text-center select-none">
+      <div className="w-full border-t border-[#D4AF37]/20 pt-3 mt-3 text-center select-none">
         <p className="font-sans text-[11px] text-[#6d5443]/75 tracking-normal font-normal leading-tight">
           © 2025 Presentes Personalizados by Julia Aleixo. Todos os direitos reservados. CNPJ 63.348.579/0001-06
         </p>

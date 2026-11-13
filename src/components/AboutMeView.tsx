@@ -37,11 +37,11 @@ export const AboutMeView: React.FC = () => {
       {/* BACKGROUND GRAPHICS */}
       <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#F3ECDF]/60 to-transparent pointer-events-none -z-10" />
       
-      <div className="max-w-[1850px] mx-auto px-3 sm:px-4">
+      <div className="w-full px-2 sm:px-3">
         
         {/* HEADER */}
         <div className="text-center mb-12 sm:mb-16">
-          <h1 id="about-us-title" className="whitespace-nowrap font-mea-culpa text-[clamp(2rem,4.5vw,3.75rem)] text-[#0F2C59] mb-3 leading-[1.15]">
+          <h1 id="about-us-title" className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(2rem,4.5vw,3.75rem)] text-[#0F2C59] mb-3 leading-[1.42] py-1.5 px-1.5">
             Quem Faz Acontecer
           </h1>
           <p id="about-us-subtitle" className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-[#D4AF37] flex items-center justify-center gap-2">
@@ -134,7 +134,7 @@ export const AboutMeView: React.FC = () => {
             <Heart size={14} fill="currentColor" strokeWidth={1.5} className="text-[#D4AF37]" />
             <div className="h-[1px] flex-1 border-t border-dashed border-[#D4AF37]/40"></div>
           </div>
-          <p id="about-us-signature" className="font-cursive text-5xl text-[#0F2C59] mb-2 leading-none">
+          <p id="about-us-signature" className="font-cursive text-5xl text-[#0F2C59] mb-2 leading-[1.42] py-1 px-2 overflow-visible">
             Julia Aleixo
           </p>
           <span className="text-[9px] uppercase tracking-[0.25em] text-[#D4AF37] font-black">

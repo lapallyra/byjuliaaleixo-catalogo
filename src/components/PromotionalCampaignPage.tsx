@@ -95,11 +95,11 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
             </div>
           )}
 
-          <div className="relative z-10 max-w-4xl mx-auto text-white">
+          <div className="relative z-10 w-full px-2 text-white overflow-visible">
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-mea-culpa font-normal mb-4 leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
+              className="text-[clamp(2rem,5vw,4.5rem)] font-mea-culpa font-normal mb-4 leading-[1.45] py-1.5 px-2 whitespace-nowrap overflow-visible"
             >
               {campaign.name}
             </motion.h1>
@@ -145,7 +145,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
             </button>
           </div>
         ) : (
-          <section className="max-w-[1850px] mx-auto px-3 sm:px-4 mt-12 sm:mt-16">
+          <section className="w-full px-2 sm:px-3 mt-12 sm:mt-16">
             <div className="flex items-center gap-3 mb-12">
               <ShoppingBag className="text-[#6d5443]" size={24} />
               <h2 className="text-2xl font-serif text-[#6d5443]">
@@ -154,7 +154,7 @@ export function PromotionalCampaignPage({ allProducts }: PromotionalCampaignPage
             </div>
 
             {linkedProducts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-7">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5 lg:gap-4">
                 {linkedProducts.map((product, index) => (
                   <motion.div
                     key={product.id}

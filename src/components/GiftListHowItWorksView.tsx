@@ -135,7 +135,7 @@ export const GiftListHowItWorksView: React.FC = () => {
             <span className="inline-block mb-6 text-white/80 uppercase tracking-[0.4em] text-[10px] font-medium bg-black/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
               Emoção & Celebração
             </span>
-            <h1 className="text-white font-mea-culpa text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-6 tracking-tight drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+            <h1 className="text-white font-mea-culpa text-[clamp(2.25rem,5.5vw,5rem)] mb-6 tracking-tight drop-shadow-sm whitespace-nowrap overflow-visible leading-[1.42] py-1.5 px-2">
               Lista de Presentes
             </h1>
             <p className="text-white/90 text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto leading-relaxed mb-12">
@@ -164,9 +164,9 @@ export const GiftListHowItWorksView: React.FC = () => {
       </section>
 
       {/* 2. COMO FUNCIONA - JORNADA VISUAL */}
-      <section className="py-16 md:py-28 px-3 sm:px-4 max-w-[1850px] mx-auto bg-[#FAF8F5]">
+      <section className="py-16 md:py-24 px-2 sm:px-3 w-full bg-[#FAF8F5]">
         <div className="text-center mb-24 md:mb-32">
-          <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.75rem,4vw,3.5rem)] mb-6 leading-[1.15]">
+          <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.75rem,4vw,3.5rem)] mb-6 leading-[1.42] py-1 px-1.5">
             Sua lista em quatro atos
           </h2>
           <div className="w-16 h-[1px] bg-[#D4AF37] mx-auto" />
@@ -209,8 +209,8 @@ export const GiftListHowItWorksView: React.FC = () => {
       </section>
 
       {/* 3. EXPERIÊNCIA DA LISTA */}
-      <section className="bg-white py-24 md:py-36 px-3 sm:px-4 overflow-hidden">
-        <div className="max-w-[1850px] mx-auto space-y-24 md:space-y-36">
+      <section className="bg-white py-20 md:py-28 px-2 sm:px-3 overflow-hidden">
+        <div className="w-full space-y-20 md:space-y-28">
           
           {/* Block 1 */}
           <div className="flex flex-col md:flex-row items-center gap-16 md:gap-32">
@@ -231,7 +231,7 @@ export const GiftListHowItWorksView: React.FC = () => {
               className="w-full md:w-1/2 space-y-8 min-w-0"
             >
               <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.5em]">Curadoria Digital</span>
-              <h2 className="whitespace-nowrap overflow-hidden text-ellipsis text-[#0F2C59] font-mea-culpa text-[clamp(1.5rem,2.9vw,2.75rem)] leading-tight">Organize seus desejos com elegância</h2>
+              <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.45rem,2.8vw,2.7rem)] leading-[1.42] py-1 px-1.5">Organize seus desejos com elegância</h2>
               <p className="text-[#1B2537]/75 text-lg font-light leading-relaxed max-w-lg">
                 Nossa interface foi pensada para ser tão bela quanto os produtos que você escolhe. Visualize sua lista, organize por prioridade e veja o carinho dos seus convidados se transformar em mimos reais.
               </p>
@@ -257,7 +257,7 @@ export const GiftListHowItWorksView: React.FC = () => {
               className="w-full md:w-1/2 space-y-8 text-center md:text-left min-w-0"
             >
               <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.5em]">Conexão Real</span>
-              <h2 className="whitespace-nowrap overflow-hidden text-ellipsis text-[#0F2C59] font-mea-culpa text-[clamp(1.5rem,2.9vw,2.75rem)] leading-tight">Compartilhe a alegria de presentear</h2>
+              <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.45rem,2.8vw,2.7rem)] leading-[1.42] py-1 px-1.5">Compartilhe a alegria de presentear</h2>
               <p className="text-[#1B2537]/75 text-lg font-light leading-relaxed max-w-lg mx-auto md:mx-0">
                 Facilite a escolha de quem te ama. Seus convidados acessam uma página exclusiva, escolhem os produtos e podem até deixar mensagens personalizadas. Uma ponte de afeto em cada presente.
               </p>
@@ -268,11 +268,11 @@ export const GiftListHowItWorksView: React.FC = () => {
       </section>
 
       {/* 4. PERGUNTAS FREQUENTES (FAQ) */}
-      <section className="py-32 md:py-48 px-3 sm:px-4 bg-[#FAF8F5]">
-        <div className="max-w-4xl mx-auto">
+      <section className="py-24 md:py-32 px-2 sm:px-3 bg-[#FAF8F5]">
+        <div className="w-full">
           <div className="text-center mb-24">
             <Sparkles className="w-10 h-10 text-[#D4AF37]/40 mx-auto mb-8" />
-            <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.85rem,4vw,3.5rem)] tracking-tight leading-[1.15]">
+            <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.85rem,4vw,3.5rem)] tracking-tight leading-[1.42] py-1 px-1.5">
               Dúvidas Frequentes
             </h2>
           </div>
@@ -289,17 +289,17 @@ export const GiftListHowItWorksView: React.FC = () => {
       <ContinueExploring currentPath="/comofunciona-lp" />
 
       {/* 5. CTA FINAL */}
-      <section className="py-32 md:py-48 px-3 sm:px-4 bg-[#FAF8F5] text-center relative overflow-hidden">
+      <section className="py-24 md:py-32 px-2 sm:px-3 bg-[#FAF8F5] text-center relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#F3ECDF]/50 rounded-full blur-[120px] -z-10" />
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-4xl mx-auto"
+          className="w-full"
         >
           <Heart className="w-8 h-8 text-[#D4AF37]/50 mx-auto mb-8" />
-          <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.5rem,3.6vw,3.25rem)] mb-8 leading-[1.15]">
+          <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.45rem,3.4vw,3.1rem)] mb-8 leading-[1.42] py-1 px-1.5">
             Crie sua lista e compartilhe momentos especiais
           </h2>
           <p className="text-[#1B2537]/70 text-sm md:text-base font-light tracking-[0.2em] mb-12 uppercase leading-relaxed max-w-lg mx-auto">

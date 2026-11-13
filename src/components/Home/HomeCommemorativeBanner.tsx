@@ -46,11 +46,9 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
       .sort((a, b) => a.daysLeft - b.daysLeft);
   }, [commemorativeDates]);
 
-  // Filter: ONLY show dates within the 60-day window (daysLeft <= 60)
+  // Regra: exibir exclusivamente datas comemorativas com menos de 45 dias (daysLeft < 45)
   const processedDates = useMemo(() => {
-    const within60 = allCalculatedDates.filter(d => d.daysLeft <= 60);
-    // If no dates are within 60 days, fallback to the single closest upcoming date
-    return within60.length > 0 ? within60 : allCalculatedDates.slice(0, 1);
+    return allCalculatedDates.filter(d => d.daysLeft >= 0 && d.daysLeft < 45);
   }, [allCalculatedDates]);
 
   // Automatic slide transition every 3 seconds (pauses on hover)
@@ -70,7 +68,8 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
   }, [processedDates.length, isPaused]);
 
   // Ensure current index is within bounds
-  const activeDate = processedDates[currentIndex] || processedDates[0];
+  const safeIndex = processedDates.length > 0 ? currentIndex % processedDates.length : 0;
+  const activeDate = processedDates[safeIndex];
 
   const handleNext = () => {
     if (processedDates.length <= 1) return;
@@ -91,12 +90,12 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
   return (
     <section 
       id="home-commemorative-banner"
-      className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 pt-3 sm:pt-4 pb-6 sm:pb-8 select-none"
+      className="w-full px-2 sm:px-3 pt-3 sm:pt-4 pb-6 sm:pb-8 select-none"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Faixa Horizontal Ampla e Delicada em Bege com Borda Dourada Fina */}
-      <div className="relative rounded-2xl bg-gradient-to-r from-[#FAF8F5] via-white/75 to-[#FAF8F5] border border-[#D4AF37]/30 px-5 py-6 sm:px-8 sm:py-7 md:px-10 md:py-7 overflow-hidden transition-all duration-300">
+      <div className="relative rounded-2xl bg-gradient-to-r from-[#FAF8F5] via-white/75 to-[#FAF8F5] border border-[#D4AF37]/30 px-4 py-6 sm:px-7 sm:py-7 overflow-visible transition-all duration-300">
         
         {/* Detalhes decorativos sutis em dourado nos quatro cantos */}
         <div className="absolute top-3 left-3 w-4 h-4 border-t border-l border-[#D4AF37]/60 pointer-events-none" />
@@ -105,7 +104,7 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
         <div className="absolute bottom-3 right-3 w-4 h-4 border-b border-r border-[#D4AF37]/60 pointer-events-none" />
 
         {/* Conteúdo compacto e sofisticado */}
-        <div className="relative z-10 flex flex-col justify-between">
+        <div className="relative z-10 flex flex-col justify-between overflow-visible">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeDate.id}
@@ -113,17 +112,56 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="flex flex-col md:flex-row md:items-center justify-between gap-5"
+              className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 overflow-visible"
             >
               
-              {/* Esquerda: Selos de Data + Contagem + Título em Dourado */}
-              <div className="space-y-2.5 max-w-3xl text-left">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-[#E8E2D5] text-[#1B2537] text-[10px] font-semibold tracking-wide">
-                    <Calendar size={11} className="text-[#D4AF37]" />
-                    <span>{activeDate.formattedDayMonth}</span>
-                  </span>
+              {/* Esquerda: Título em Dourado livre sem corte + Selo da Data abaixo */}
+              <div className="flex-1 min-w-0 flex flex-col items-start gap-2 text-left overflow-visible">
+                <h2 className="font-mea-culpa text-[clamp(1.9rem,4vw,3.35rem)] font-normal text-[#D4AF37] leading-[1.45] py-1.5 px-1.5 select-none tracking-normal whitespace-nowrap overflow-visible">
+                  {activeDate.name}
+                </h2>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 border border-[#E8E2D5] text-[#1B2537] text-[10px] font-semibold tracking-wide">
+                  <Calendar size={11} className="text-[#D4AF37]" />
+                  <span>{activeDate.formattedDayMonth}</span>
+                </span>
+              </div>
 
+              {/* Direita: Controles de Navegação + CTA + Selo de Contagem abaixo */}
+              <div className="flex flex-col items-start md:items-end gap-2.5 shrink-0">
+                <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+                  {processedDates.length > 1 && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={handlePrev}
+                        aria-label="Data anterior"
+                        className="w-7 h-7 rounded-full bg-white/90 hover:bg-white border border-[#E8E2D5] hover:border-[#D4AF37] text-[#0F2C59] flex items-center justify-center transition-all cursor-pointer"
+                      >
+                        <ChevronLeft size={14} />
+                      </button>
+                      <button
+                        onClick={handleNext}
+                        aria-label="Próxima data"
+                        className="w-7 h-7 rounded-full bg-white/90 hover:bg-white border border-[#E8E2D5] hover:border-[#D4AF37] text-[#0F2C59] flex items-center justify-center transition-all cursor-pointer"
+                      >
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => navigate(`/comemorativas/${slug}`)}
+                    className="group inline-flex items-center gap-2 text-[#0F2C59] hover:text-[#D4AF37] py-1 transition-colors cursor-pointer"
+                  >
+                    <Gift size={14} strokeWidth={1.6} className="text-[#D4AF37] group-hover:scale-105 transition-transform" />
+                    <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase underline underline-offset-4 decoration-[#D4AF37]/50 group-hover:decoration-[#D4AF37]">
+                      Garantir Encomendas com Antecedência
+                    </span>
+                    <ArrowRight size={14} strokeWidth={2} className="text-[#D4AF37] group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+
+                {/* Selo de Contagem Regressiva abaixo do botão de ação */}
+                <div className="flex items-center md:justify-end">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 text-[#0F2C59] text-[10px] font-bold tracking-widest uppercase border border-[#D4AF37]/45">
                     <Clock size={10} className="text-[#D4AF37]" />
                     <span>
@@ -135,43 +173,6 @@ export const HomeCommemorativeBanner: React.FC<HomeCommemorativeBannerProps> = (
                     </span>
                   </div>
                 </div>
-
-                <h2 className="font-mea-culpa text-3xl sm:text-4xl md:text-5xl font-normal text-[#D4AF37] leading-tight select-none tracking-normal whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
-                  {activeDate.name}
-                </h2>
-              </div>
-
-              {/* Direita: Controles de Navegação + CTA Discreto */}
-              <div className="flex items-center justify-between md:justify-end gap-4 shrink-0">
-                {processedDates.length > 1 && (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={handlePrev}
-                      aria-label="Data anterior"
-                      className="w-7 h-7 rounded-full bg-white/90 hover:bg-white border border-[#E8E2D5] hover:border-[#D4AF37] text-[#0F2C59] flex items-center justify-center transition-all cursor-pointer"
-                    >
-                      <ChevronLeft size={14} />
-                    </button>
-                    <button
-                      onClick={handleNext}
-                      aria-label="Próxima data"
-                      className="w-7 h-7 rounded-full bg-white/90 hover:bg-white border border-[#E8E2D5] hover:border-[#D4AF37] text-[#0F2C59] flex items-center justify-center transition-all cursor-pointer"
-                    >
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => navigate(`/comemorativas/${slug}`)}
-                  className="group inline-flex items-center gap-2 text-[#0F2C59] hover:text-[#D4AF37] py-1 transition-colors cursor-pointer"
-                >
-                  <Gift size={14} strokeWidth={1.6} className="text-[#D4AF37] group-hover:scale-105 transition-transform" />
-                  <span className="text-[11px] sm:text-xs font-semibold tracking-wider uppercase underline underline-offset-4 decoration-[#D4AF37]/50 group-hover:decoration-[#D4AF37]">
-                    Garantir Encomendas com Antecedência
-                  </span>
-                  <ArrowRight size={14} strokeWidth={2} className="text-[#D4AF37] group-hover:translate-x-1 transition-transform" />
-                </button>
               </div>
 
             </motion.div>

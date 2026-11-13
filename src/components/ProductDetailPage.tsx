@@ -67,10 +67,17 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     fetchAddons();
   }, [companyId]);
 
+  const variationImages = (product.variations || [])
+    .flatMap(v => v.options || [])
+    .map(opt => opt.image)
+    .filter(Boolean) as string[];
+
   const productImages = [
-    product.image || product.main_image,
+    product.image,
+    product.main_image,
     product.image_hover,
-    ...(product.images || [])
+    ...(product.images || []),
+    ...variationImages
   ].filter(Boolean) as string[];
 
   const images = productImages.filter((img, index, self) => self.indexOf(img) === index);
@@ -155,11 +162,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   return (
     <div className="w-full bg-[#FAF8F5] min-h-screen text-[#1B2537] pb-20 font-sans pt-5 sm:pt-6">
-      <div className="max-w-[1850px] mx-auto px-3 sm:px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      <div className="w-full px-2 sm:px-3 flex flex-col lg:flex-row gap-6 lg:gap-10 items-start">
         
-        {/* BLOCO 01 - LADO ESQUERDO: Carrossel (Tamanho Médio) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="aspect-[4/4] max-w-[480px] mx-auto lg:max-w-none bg-white rounded-3xl overflow-hidden relative shadow-sm border border-neutral-100 group">
+        {/* BLOCO 01 - LADO ESQUERDO: Imagem 15x15 + Miniaturas */}
+        <div className="w-full lg:w-auto shrink-0 flex flex-col items-center space-y-3">
+          <div className="w-[15rem] h-[15rem] bg-white rounded-2xl overflow-hidden relative shadow-sm border border-[#E8E2D5] group shrink-0">
             <AnimatePresence mode="wait">
               <motion.div
                 key={imageIndex}
@@ -182,41 +189,45 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {images.length > 1 && (
               <>
                 <button 
+                  type="button"
                   onClick={prevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-neutral-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-white shadow-md cursor-pointer"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-[#0F2C59] opacity-0 group-hover:opacity-100 transition-all hover:bg-white shadow-md cursor-pointer"
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={16} />
                 </button>
                 <button 
+                  type="button"
                   onClick={nextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-neutral-900 opacity-0 group-hover:opacity-100 transition-all hover:bg-white shadow-md cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-[#0F2C59] opacity-0 group-hover:opacity-100 transition-all hover:bg-white shadow-md cursor-pointer"
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight size={16} />
                 </button>
               </>
             )}
           </div>
 
-          {/* Thumbnails */}
+          {/* Miniaturas das outras fotos cadastradas do mesmo produto */}
           {images.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none justify-center lg:justify-start">
+            <div className="flex flex-wrap gap-2 justify-center max-w-[16rem]">
               {images.map((img, i) => (
                 <button
                   key={i}
+                  type="button"
                   onClick={() => setImageIndex(i)}
-                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
-                    i === imageIndex ? 'border-neutral-900 scale-105 shadow-sm' : 'border-transparent opacity-60 hover:opacity-100'
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer bg-white ${
+                    i === imageIndex ? 'border-[#0F2C59] scale-105 shadow-sm' : 'border-[#E8E2D5] opacity-60 hover:opacity-100'
                   }`}
+                  aria-label={`Ver foto ${i + 1}`}
                 >
-                  <ImageWithFallback src={img} alt={`${product.product_name} ${i}`} className="w-full h-full object-cover" />
+                  <ImageWithFallback src={img} alt={`${product.product_name} ${i + 1}`} className="w-full h-full object-cover" isThumbnail={true} />
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* BLOCO 01 - LADO DIREITO: Detalhes, Ações e Especificações reposicionadas */}
-        <div className="lg:col-span-7 flex flex-col py-1">
+        {/* BLOCO 01 - LADO DIREITO: Detalhes, Ações e Especificações */}
+        <div className="w-full flex-1 min-w-0 flex flex-col py-1">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[10px] font-sans font-bold uppercase tracking-[0.3em] text-neutral-400">
@@ -290,7 +301,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     {v.options.map((opt, oIdx) => (
                       <button
                         key={`var-${vIdx}-${oIdx}`}
-                        onClick={() => setSelectedVariations({ ...selectedVariations, [v.name]: opt.name })}
+                        onClick={() => {
+                          setSelectedVariations({ ...selectedVariations, [v.name]: opt.name });
+                          if (opt.image) {
+                            const idx = images.indexOf(opt.image);
+                            if (idx > -1) setImageIndex(idx);
+                          }
+                        }}
                         className={`px-5 py-3 text-xs font-bold rounded-2xl border-2 transition-all duration-150 uppercase tracking-widest ${
                           selectedVariations[v.name] === opt.name 
                             ? `scale-[1.03] shadow-md ${theme.btnPrimary} border-transparent` 

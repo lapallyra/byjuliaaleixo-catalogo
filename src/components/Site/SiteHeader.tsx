@@ -49,8 +49,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ cartCount = 0, onCartCli
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_50%_0%,rgba(212,175,55,0.10)_0%,rgba(250,248,245,0)_75%)] pointer-events-none" />
 
       {/* HEADER SUPERIOR NOBRE EM TONS PRÓXIMOS AO CORPO */}
-      <div className="w-full py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 relative">
-        <div className="w-full max-w-[1850px] mx-auto flex items-center justify-between gap-3 relative z-10">
+      <div className="w-full py-2.5 sm:py-3.5 px-2 sm:px-3 relative">
+        <div className="w-full flex items-center justify-between gap-3 relative z-10">
           {/* Busca Rápida no Topo (Esquerda) */}
           <div className="flex items-center sm:w-72 shrink-0">
             <form 
@@ -135,8 +135,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ cartCount = 0, onCartCli
       </div>
 
       {/* BARRA DE NAVEGAÇÃO INTEGRADA AO CORPO DO SITE */}
-      <nav className={`w-full ${currentPath === '/' ? 'border-b-0' : 'border-b border-[#E8E2D5]/70'} px-2 sm:px-3 md:px-4 pt-0.5 pb-2.5 overflow-x-auto scrollbar-none relative z-10`}>
-        <div className="w-full max-w-[1850px] mx-auto flex items-center justify-center gap-1 sm:gap-3 md:gap-5 whitespace-nowrap min-w-max">
+      <nav className={`w-full ${currentPath === '/' ? 'border-b-0' : 'border-b border-[#E8E2D5]/70'} px-2 sm:px-3 pt-0.5 pb-2.5 overflow-x-auto scrollbar-none relative z-10`}>
+        <div className="w-full flex items-center justify-center gap-1 sm:gap-3 md:gap-5 whitespace-nowrap min-w-max">
           {navLinks.map((link) => {
             const active = isLinkActive(link);
             return (

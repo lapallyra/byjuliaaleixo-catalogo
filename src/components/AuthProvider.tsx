@@ -9,14 +9,21 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
+  isPinVerified: boolean;
+  verifyAdminPin: (pin: string) => boolean;
   role: UserRole | null;
   logout: () => void;
 }
+
+const ADMIN_PIN_STORAGE_KEY = 'byjuliaaleixo_admin_pin_ok';
+const ADMIN_SECRET_PIN = '2810';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   isAdmin: false,
+  isPinVerified: false,
+  verifyAdminPin: () => false,
   role: null,
   logout: () => {}
 });
@@ -45,6 +52,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [masterActive, setMasterActive] = useState<boolean>(() => {
     return localStorage.getItem('byjuliaaleixo_master_logged') === 'true';
+  });
+  const [isPinVerified, setIsPinVerified] = useState<boolean>(() => {
+    return sessionStorage.getItem(ADMIN_PIN_STORAGE_KEY) === 'true';
   });
   const [loading, setLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
@@ -141,10 +151,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return activeRole === 'ADMINISTRADOR';
   }, [activeRole]);
 
+  const verifyAdminPin = (pin: string): boolean => {
+    const cleanPin = pin.replace(/\s+/g, '');
+    if (cleanPin === ADMIN_SECRET_PIN) {
+      sessionStorage.setItem(ADMIN_PIN_STORAGE_KEY, 'true');
+      setIsPinVerified(true);
+      return true;
+    }
+    return false;
+  };
+
   const logout = async () => {
     console.log('[Auth] Initiating logout');
     localStorage.removeItem('byjuliaaleixo_master_logged');
+    sessionStorage.removeItem(ADMIN_PIN_STORAGE_KEY);
     setMasterActive(false);
+    setIsPinVerified(false);
     try {
       await auth.signOut();
     } catch (error) {
@@ -158,9 +180,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user: activeUser,
     loading: masterActive ? false : (!authInitialized || loading),
     isAdmin,
+    isPinVerified,
+    verifyAdminPin,
     role: activeRole,
     logout
-  }), [activeUser, loading, isAdmin, activeRole, authInitialized, masterActive]);
+  }), [activeUser, loading, isAdmin, isPinVerified, activeRole, authInitialized, masterActive]);
 
   return (
     <AuthContext.Provider value={contextValue}>

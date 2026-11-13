@@ -103,9 +103,9 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#1B2537] pb-32">
       {/* Header Info */}
-      <div className="max-w-[1850px] mx-auto px-3 sm:px-4 pt-6 sm:pt-8 pb-4 text-center">
+      <div className="w-full px-2 sm:px-3 pt-6 sm:pt-8 pb-4 text-center">
         <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">Personalização Total</span>
-        <h2 className="whitespace-nowrap text-[clamp(2rem,4.5vw,3.5rem)] font-mea-culpa text-[#0F2C59] mt-1.5 mb-2.5 leading-[1.15]">Monte seu Kit</h2>
+        <h2 className="whitespace-nowrap overflow-visible text-[clamp(2rem,4.5vw,3.5rem)] font-mea-culpa text-[#0F2C59] mt-1.5 mb-2.5 leading-[1.42] py-1.5 px-1.5">Monte seu Kit</h2>
         <p className="text-[#1B2537]/75 text-xs sm:text-sm font-light leading-relaxed max-w-lg mx-auto">
           Selecione os itens abaixo para criar uma composição exclusiva e cheia de afeto.
         </p>
@@ -113,7 +113,7 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
       </div>
 
       {/* CATEGORIAS COMO ABAS / FILTROS HORIZONTAIS */}
-      <div className="max-w-[1850px] mx-auto px-3 sm:px-4 mb-6">
+      <div className="w-full px-2 sm:px-3 mb-6">
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 py-1">
           <button
             onClick={() => setSelectedCategory('all')}
@@ -142,7 +142,7 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
       </div>
 
       {/* GRADE FLUIDA DE PRODUTOS */}
-      <div className="max-w-[1850px] mx-auto px-3 sm:px-4">
+      <div className="w-full px-2 sm:px-3">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 sm:gap-4 md:gap-5">
           {filteredProducts.map(product => {
             const selectedQty = selectedProducts[product.id]?.quantity || 0;
@@ -232,7 +232,7 @@ export const KitConstructor: React.FC<KitConstructorProps> = ({ allProducts, set
             transition={{ type: "tween", duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="fixed bottom-0 left-0 right-0 bg-[#FAF8F5]/95 backdrop-blur-md border-t border-[#D4AF37]/40 shadow-[0_-10px_30px_rgba(15,44,89,0.08)] z-30 pb-safe"
           >
-            <div className="max-w-[1850px] mx-auto px-3 sm:px-4 py-3.5 flex items-center justify-between gap-4">
+            <div className="w-full px-2 sm:px-3 py-3.5 flex items-center justify-between gap-4">
               
               {/* LADO ESQUERDO: LISTA DE MINI IMAGENS (IMG + IMG + IMG) */}
               <div className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">

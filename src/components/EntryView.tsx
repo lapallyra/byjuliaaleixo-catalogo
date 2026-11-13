@@ -37,7 +37,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ allProducts = [] }) => {
         }
         return (b.salesCount || 0) - (a.salesCount || 0);
       })
-      .slice(0, 4);
+      .slice(0, 5);
   }, [allProducts]);
 
   return (
@@ -52,22 +52,22 @@ export const EntryView: React.FC<EntryViewProps> = ({ allProducts = [] }) => {
       />
 
       {/* 2. Hero Editorial de Luxo — Corpo Contínuo com o Header */}
-      <section className="w-full bg-[#FAF8F5] relative overflow-hidden pt-4 pb-12 sm:pt-6 sm:pb-16 md:pt-8 md:pb-18 px-3 sm:px-4">
+      <section className="w-full bg-[#FAF8F5] relative overflow-visible pt-4 pb-12 sm:pt-6 sm:pb-16 md:pt-8 md:pb-18 px-2 sm:px-3">
         {/* Aura champanhe extremamente sutil ao fundo */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_45%,rgba(212,175,55,0.06)_0%,rgba(250,248,245,0)_75%)]"
         />
 
-        <div className="relative z-10 max-w-[1850px] mx-auto">
-          <div className="max-w-6xl mx-auto flex flex-col items-center text-center">
+        <div className="relative z-10 w-full">
+          <div className="w-full flex flex-col items-center text-center">
             <div className="inline-flex items-center gap-3 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.32em] text-[#0F2C59]/75 mb-5 sm:mb-7">
               <span className="w-6 h-px bg-[#D4AF37]/80" />
               <span>Ateliê Exclusivo · Desde 2025</span>
               <span className="w-6 h-px bg-[#D4AF37]/80" />
             </div>
 
-            <h1 className="whitespace-nowrap text-[clamp(1.65rem,4.5vw,4.15rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.12] mb-5 sm:mb-6">
+            <h1 className="whitespace-nowrap overflow-visible text-[clamp(1.6rem,4.3vw,4rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1.5 px-1.5 mb-4 sm:mb-5">
               Lembranças Afetivas &amp; Papelaria Nobre
             </h1>
 
@@ -113,15 +113,15 @@ export const EntryView: React.FC<EntryViewProps> = ({ allProducts = [] }) => {
 
       {/* 3. Vitrine Curada de Alta Conversão — Peças Mais Desejadas */}
       {featuredLuxuryProducts.length > 0 && (
-        <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(243,236,223,0.55)_50%,#FAF8F5_100%)] py-14 sm:py-18 px-3 sm:px-4">
-          <div className="max-w-[1850px] mx-auto">
-            <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
+        <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(243,236,223,0.55)_50%,#FAF8F5_100%)] py-12 sm:py-14 px-2 sm:px-3">
+          <div className="w-full">
+            <div className="text-center max-w-3xl mx-auto mb-9 sm:mb-10">
               <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75 mb-3">
                 <span className="w-5 h-px bg-[#D4AF37]/70" />
                 <span>Seleção do Ateliê</span>
                 <span className="w-5 h-px bg-[#D4AF37]/70" />
               </div>
-              <h2 className="whitespace-nowrap text-[clamp(1.9rem,4vw,3rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+              <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.9rem,4vw,3rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5">
                 Peças Mais Desejadas
               </h2>
               <p className="text-xs sm:text-sm text-[#1B2537]/70 mt-2 font-light">
@@ -129,7 +129,7 @@ export const EntryView: React.FC<EntryViewProps> = ({ allProducts = [] }) => {
               </p>
             </div>
 
-            <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5 lg:gap-4">
               {featuredLuxuryProducts.map((prod) => (
                 <ProductCard
                   key={prod.id}

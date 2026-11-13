@@ -68,9 +68,9 @@ export const GiftListInfoView: React.FC = () => {
       {/* BACKGROUND GRAPHICS */}
       <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#F3ECDF]/60 via-[#FAF8F5] to-transparent pointer-events-none -z-10" />
       
-      <div className="max-w-[1850px] mx-auto px-3 sm:px-4 py-8 sm:py-12">
+      <div className="w-full px-2 sm:px-3 py-8 sm:py-12">
         {/* HERO SECTION */}
-        <div className="text-center max-w-5xl mx-auto mb-20">
+        <div className="text-center w-full mb-20">
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -84,7 +84,7 @@ export const GiftListInfoView: React.FC = () => {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.5 }}
-            className="whitespace-nowrap font-mea-culpa text-[clamp(1.6rem,4.1vw,3.85rem)] text-[#0F2C59] tracking-tight leading-[1.15] mb-6"
+            className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(1.55rem,4vw,3.75rem)] text-[#0F2C59] tracking-tight leading-[1.42] py-1.5 px-1.5 mb-6"
           >
             Sua Lista de Presentes com Afeto &amp; Sofisticação
           </motion.h1>
@@ -188,7 +188,7 @@ export const GiftListInfoView: React.FC = () => {
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F2C59] bg-[#F3ECDF] px-3.5 py-1.5 rounded-full border border-[#D4AF37]/40 inline-block mb-4">
             Simplicidade
           </span>
-          <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.75rem,3.8vw,2.75rem)] text-[#0F2C59] mb-16 leading-[1.15]">
+          <h2 className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(1.75rem,3.8vw,2.75rem)] text-[#0F2C59] mb-16 leading-[1.42] py-1 px-1.5">
             Como funciona passo a passo
           </h2>
 
@@ -328,7 +328,7 @@ export const GiftListInfoView: React.FC = () => {
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F2C59] bg-[#F3ECDF] px-3.5 py-1.5 rounded-full border border-[#D4AF37]/40 inline-block mb-4">
             Inspiração
           </span>
-          <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.7rem,3.8vw,2.75rem)] text-[#0F2C59] mb-14 leading-[1.15]">
+          <h2 className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(1.65rem,3.7vw,2.75rem)] text-[#0F2C59] mb-14 leading-[1.42] py-1 px-1.5">
             Perfeito para todos os seus momentos
           </h2>
 
@@ -368,12 +368,12 @@ export const GiftListInfoView: React.FC = () => {
         </section>
 
         {/* FAQ SECTION */}
-        <section className="mb-28 max-w-4xl mx-auto">
+        <section className="mb-28 w-full">
           <div className="text-center mb-12">
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#0F2C59] bg-[#F3ECDF] px-3.5 py-1.5 rounded-full border border-[#D4AF37]/40 inline-block mb-4">
               Dúvidas
             </span>
-            <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.75rem,3.8vw,2.75rem)] text-[#0F2C59] leading-[1.15]">
+            <h2 className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(1.75rem,3.8vw,2.75rem)] text-[#0F2C59] leading-[1.42] py-1 px-1.5">
               Perguntas Frequentes
             </h2>
           </div>

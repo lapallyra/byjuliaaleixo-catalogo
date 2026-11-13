@@ -56,12 +56,12 @@ export const KitsView: React.FC<KitsViewProps> = ({ allProducts, setCarts }) => 
       {/* Subtle Top Gradient matching Home */}
       <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#F3ECDF]/60 to-transparent pointer-events-none -z-10" />
 
-      <main className="max-w-[1850px] mx-auto px-3 sm:px-4 py-6 sm:py-8 relative z-10">
+      <main className="w-full px-2 sm:px-3 py-6 sm:py-8 relative z-10">
         {/* Header Section */}
         <div className="mb-8 sm:mb-10 text-center relative">
           <div className="flex flex-col items-center gap-2 mb-3">
              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#0F2C59]/75">Combinações Exclusivas</span>
-             <h2 className="whitespace-nowrap text-[clamp(2rem,4.5vw,3.5rem)] font-mea-culpa text-[#0F2C59] leading-[1.15]">Kits Prontos</h2>
+             <h2 className="whitespace-nowrap overflow-visible text-[clamp(2rem,4.5vw,3.5rem)] font-mea-culpa text-[#0F2C59] leading-[1.42] py-1.5 px-1.5">Kits Prontos</h2>
              <div className="h-[1px] w-12 bg-[#D4AF37]/60 mt-2" />
           </div>
           <p className="text-[#1B2537]/75 max-w-2xl mx-auto text-xs sm:text-sm font-light leading-relaxed">
@@ -75,7 +75,7 @@ export const KitsView: React.FC<KitsViewProps> = ({ allProducts, setCarts }) => 
             <p className="text-[#0F2C59] font-medium text-sm">Nenhum kit pronto disponível no momento.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-7">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5 lg:gap-4">
             {kits.map((kit) => (
               <ProductCard
                 key={kit.id}

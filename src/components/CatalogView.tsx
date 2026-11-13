@@ -627,11 +627,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               
               {!selectedCategory && !searchQuery && highlights.length > 0 && (
                 <div ref={highlightsScrollRef} className="border-b border-[#D4AF37]/15 pb-4">
-                  <div className="max-w-[1850px] mx-auto px-3 pt-6 pb-2 text-left">
+                  <div className="w-full px-2 sm:px-3 pt-6 pb-2 text-left">
                     <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#D4AF37]">
                       Lançamentos
                     </span>
-                    <h2 className="whitespace-nowrap text-[clamp(1.65rem,2.8vw,2.25rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-tight mt-1">
+                    <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.65rem,2.8vw,2.25rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5 mt-1">
                       Novidades
                     </h2>
                   </div>
@@ -654,11 +654,11 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   if (campaignProducts.length === 0) return null;
                   return (
                     <div key={camp.id} className="border-b border-[#D4AF37]/15 pb-4 mt-4">
-                      <div className="max-w-[1850px] mx-auto px-3 pt-6 pb-2 text-left">
+                      <div className="w-full px-2 sm:px-3 pt-6 pb-2 text-left">
                         <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#D4AF37]">
                           {camp.subtitle || "Seleção Exclusiva"}
                         </span>
-                        <h2 className="whitespace-nowrap overflow-hidden text-ellipsis text-[clamp(1.5rem,2.6vw,2.25rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-tight mt-1">
+                        <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.45rem,2.6vw,2.2rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5 mt-1">
                           {camp.title}
                         </h2>
                         {camp.description && (
@@ -684,8 +684,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                   const highlightProd = companyProducts.find(p => p.id === camp.highlightProductId);
                   if (!highlightProd) return null;
                   return (
-                    <div key={camp.id} className="max-w-[1850px] mx-auto px-3 py-8 border-b border-[#D4AF37]/15">
-                      <div className="bg-white rounded-3xl p-6 md:p-12 border border-[#D4AF37]/30 shadow-xs flex flex-col md:flex-row items-center gap-8 md:gap-16">
+                    <div key={camp.id} className="w-full px-2 sm:px-3 py-8 border-b border-[#D4AF37]/15">
+                      <div className="bg-white rounded-3xl p-5 sm:p-8 border border-[#D4AF37]/30 shadow-xs flex flex-col md:flex-row items-center gap-6 md:gap-10">
                         <div className="w-full md:w-1/2 aspect-square rounded-2xl overflow-hidden bg-[#FAF8F5] border border-[#E8E2D5]">
                           <img src={highlightProd.image} className="w-full h-full object-cover hover:scale-103 transition-transform duration-500" referrerPolicy="no-referrer" />
                         </div>
@@ -693,7 +693,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           <span className="text-[9px] font-sans font-black tracking-[0.3em] uppercase text-[#D4AF37]">
                             {camp.subtitle || "Destaque do Ateliê"}
                           </span>
-                          <h2 className="whitespace-nowrap overflow-hidden text-ellipsis text-[clamp(1.6rem,2.8vw,2.4rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-tight">
+                          <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.55rem,2.7vw,2.35rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5">
                             {highlightProd.product_name}
                           </h2>
                           {highlightProd.description && (
@@ -742,9 +742,9 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               })}
               
               {/* Main Scroll Content */}
-              <main className="p-1 md:p-2 relative">
+              <main className="px-2 sm:px-3 py-2 relative">
 
-                <div className="max-w-[1850px] mx-auto h-full flex flex-col pt-1">
+                <div className="w-full h-full flex flex-col pt-1">
                   
                   <CatalogInfoBar 
                     selectedCategory={selectedCategory}
@@ -787,7 +787,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                     {/* Grid - Premium Vertical Cards Showcase */}
                     {filteredProducts.length > 0 ? (
                       <>
-                      <div id="catalog-grid" className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 md:gap-6 pb-20 px-2 sm:px-0">
+                      <div id="catalog-grid" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5 lg:gap-4 pb-20 px-0">
                         {paginatedProducts.map((product, idx) => (
                             <ProductCard 
                               key={`prod-${product.id}-${idx}`}
@@ -896,8 +896,8 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
     </div>
 
     {/* Footer Legal & Copyright - Slim & Compact */}
-    <footer className={`flex-shrink-0 w-full py-4 sm:py-5 border-t ${theme.borderLine} text-center px-3 sm:px-3 bg-white/70 backdrop-blur-md relative z-10`}>
-        <div className="max-w-[1850px] mx-auto">
+    <footer className={`flex-shrink-0 w-full py-4 sm:py-5 border-t ${theme.borderLine} text-center px-2 sm:px-3 bg-white/70 backdrop-blur-md relative z-10`}>
+        <div className="w-full">
           <p className="text-[8px] font-sans font-black tracking-[0.25em] mb-1.5 uppercase text-neutral-600 opacity-70 text-center">
             Avisos Legais, Direitos e Produção
           </p>

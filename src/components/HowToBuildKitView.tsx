@@ -49,27 +49,27 @@ export const HowToBuildKitView: React.FC = () => {
   ];
 
   return (
-    <div className="bg-[#FDFCFA] min-h-screen font-sans selection:bg-[#E8DCC8] selection:text-[#3A312D] overflow-x-hidden relative">
+    <div className="bg-[#FAF8F5] min-h-screen font-sans selection:bg-[#FAF0DC] selection:text-[#0F2C59] overflow-x-hidden relative">
       
       {/* 1. HERO SECTION */}
-      <section className="relative py-12 sm:py-16 md:py-20 bg-[#F8F5F0] border-b border-[#E8DCC8]/40 flex items-center justify-center">
-        <div className="relative z-10 text-center px-4 max-w-3xl">
+      <section className="relative py-12 sm:py-16 md:py-20 bg-[#F3ECDF]/60 border-b border-[#D4AF37]/25 flex items-center justify-center">
+        <div className="relative z-10 text-center px-2 sm:px-3 w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <h1 className="text-[#3D2E24] font-mea-culpa text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-4 tracking-tight py-1">
+            <h1 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(2rem,4.5vw,3.75rem)] mb-4 tracking-tight leading-[1.42] py-1.5 px-1.5">
               Monte seu Kit
             </h1>
-            <p className="text-[#6D5443] text-sm sm:text-base md:text-lg font-light tracking-wide max-w-xl mx-auto leading-relaxed mb-8">
+            <p className="text-[#1B2537]/75 text-sm sm:text-base md:text-lg font-light tracking-wide max-w-xl mx-auto leading-relaxed mb-8">
               Transforme um presente em uma experiência inesquecível. Crie composições personalizadas escolhendo cada produto e detalhe com sua essência.
             </p>
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => navigate('/kit-meukit')}
-              className="bg-[#6D5443] hover:bg-[#5B4535] text-white px-8 sm:px-10 py-3 sm:py-3.5 rounded-full text-xs uppercase tracking-[0.2em] font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+              className="bg-[#0F2C59] hover:bg-[#1B3F7A] text-white px-8 sm:px-10 py-3 sm:py-3.5 rounded-full text-xs uppercase tracking-[0.2em] font-bold shadow-md hover:shadow-lg border border-[#D4AF37]/40 transition-all cursor-pointer"
             >
               Começar agora
             </motion.button>
@@ -78,16 +78,16 @@ export const HowToBuildKitView: React.FC = () => {
       </section>
 
       {/* 2. COMO FUNCIONA - JORNADA VISUAL */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 max-w-[1850px] mx-auto">
+      <section className="py-12 sm:py-16 md:py-20 px-2 sm:px-3 w-full">
         <div className="text-center mb-12 sm:mb-16">
-          <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#CCA062] mb-2 block">Passo a Passo</span>
-          <h2 className="text-[#3D2E24] font-mea-culpa text-3xl sm:text-4xl md:text-5xl mb-4">
+          <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#D4AF37] mb-2 block">Passo a Passo</span>
+          <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.75rem,4vw,3rem)] mb-4 leading-[1.42] py-1 px-1.5">
             Uma jornada de criação
           </h2>
-          <div className="w-12 h-[1px] bg-[#CCA062] mx-auto" />
+          <div className="w-12 h-[1px] bg-[#D4AF37] mx-auto" />
         </div>
 
-        <div className="relative max-w-5xl mx-auto">
+        <div className="relative w-full">
           {/* Vertical line connector for desktop */}
           <div className="hidden md:block absolute left-1/2 top-8 bottom-8 w-[1px] bg-gradient-to-b from-[#E8DCC8] via-[#CCA062]/30 to-transparent -translate-x-1/2" />
 
@@ -143,19 +143,19 @@ export const HowToBuildKitView: React.FC = () => {
       </section>
 
       {/* 3. EXPERIÊNCIA DE PERSONALIZAÇÃO */}
-      <section className="bg-white py-14 sm:py-18 md:py-24 px-4 sm:px-6 md:px-8 border-y border-[#E8DCC8]/30">
-        <div className="max-w-[1850px] mx-auto">
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center max-w-6xl mx-auto">
+      <section className="bg-white py-14 sm:py-18 md:py-24 px-2 sm:px-3 border-y border-[#D4AF37]/25">
+        <div className="w-full">
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full">
             <motion.div 
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="lg:col-span-7 space-y-8"
+              className="lg:col-span-7 space-y-8 min-w-0"
             >
               <div className="space-y-3">
-                <span className="text-[#CCA062] text-[10px] font-bold uppercase tracking-[0.3em]">Artesanato com Propósito</span>
-                <h2 className="text-[#3D2E24] font-mea-culpa text-3xl sm:text-4xl md:text-5xl font-normal">Cada kit é uma história única</h2>
+                <span className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-[0.3em]">Artesanato com Propósito</span>
+                <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.6rem,3.3vw,2.9rem)] font-normal leading-[1.42] py-1 px-1.5">Cada kit é uma história única</h2>
                 <p className="text-[#735A4A] text-sm sm:text-base font-light leading-relaxed">
                   Não apenas montamos caixas; criamos conexões. Nosso processo artesanal garante que cada elemento escolhido converse entre si, resultando em uma apresentação que transborda carinho e atenção.
                 </p>
@@ -203,28 +203,28 @@ export const HowToBuildKitView: React.FC = () => {
       <ContinueExploring currentPath="/comomontar" />
 
       {/* 4. CTA FINAL */}
-      <section className="py-16 sm:py-20 md:py-24 px-6 bg-[#FCFAF7] text-center relative overflow-hidden">
+      <section className="py-16 sm:py-20 md:py-24 px-2 sm:px-3 bg-[#FAF8F5] text-center relative overflow-hidden">
         {/* Abstract background elements */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#E8DCC8]/20 rounded-full blur-[100px] -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#F3ECDF]/50 rounded-full blur-[100px] -z-10" />
         
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-xl mx-auto"
+          className="w-full"
         >
-          <Heart className="w-6 h-6 text-[#CCA062] mx-auto mb-4" />
-          <h2 className="text-[#3D2E24] font-mea-culpa text-3xl sm:text-4xl md:text-5xl mb-4 font-normal">
+          <Heart className="w-6 h-6 text-[#D4AF37] mx-auto mb-4" />
+          <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.45rem,3.4vw,2.9rem)] mb-4 font-normal leading-[1.42] py-1 px-1.5">
             Crie algo especial para alguém especial
           </h2>
-          <p className="text-[#735A4A] text-xs sm:text-sm font-light tracking-wider mb-8 uppercase leading-relaxed max-w-md mx-auto">
+          <p className="text-[#1B2537]/75 text-xs sm:text-sm font-light tracking-wider mb-8 uppercase leading-relaxed max-w-md mx-auto">
             Comece agora a jornada de criar um kit que será lembrado para sempre.
           </p>
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/kit-meukit')}
-            className="bg-[#2C1810] hover:bg-[#3D261C] text-white px-10 py-3.5 rounded-full text-xs uppercase tracking-[0.25em] font-bold shadow-lg hover:shadow-xl transition-all cursor-pointer"
+            className="bg-[#0F2C59] hover:bg-[#1B3F7A] text-white px-10 py-3.5 rounded-full text-xs uppercase tracking-[0.25em] font-bold shadow-lg hover:shadow-xl border border-[#D4AF37]/40 transition-all cursor-pointer"
           >
             Montar meu kit
           </motion.button>
@@ -232,7 +232,7 @@ export const HowToBuildKitView: React.FC = () => {
       </section>
 
       {/* Decorative Footer */}
-      <div className="pb-16 bg-[#FCFAF7] flex flex-col items-center gap-8">
+      <div className="pb-16 bg-[#FAF8F5] flex flex-col items-center gap-8">
         <div className="w-[1px] h-16 bg-gradient-to-b from-[#CCA062]/40 to-transparent" />
         <span className="text-[10px] uppercase tracking-[0.3em] text-[#CCA062]/60 font-bold italic">
           Feito com mãos e coração

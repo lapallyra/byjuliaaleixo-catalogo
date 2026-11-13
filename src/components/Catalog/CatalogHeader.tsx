@@ -33,7 +33,7 @@ export const CatalogHeader: React.FC<{
     <div className="relative bg-[#FAF8F5] z-20">
       {/* Sub-barra de navegação do Ateliê */}
       <nav className="w-full border-b border-[#E8E2D5]/55 bg-[#FAF8F5]">
-        <div className="max-w-[1850px] mx-auto px-2 sm:px-3 md:px-4 py-2.5 flex items-center justify-between gap-4">
+        <div className="w-full px-2 sm:px-3 py-2.5 flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={onGoBack}

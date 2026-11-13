@@ -47,7 +47,7 @@ export const HomeFAQSection: React.FC = () => {
   };
 
   return (
-    <section className="w-full max-w-[1850px] mx-auto px-3 sm:px-4 py-14 sm:py-16">
+    <section className="w-full px-2 sm:px-3 py-12 sm:py-14">
       {/* Section Title */}
       <div className="text-center max-w-2xl mx-auto mb-10">
         <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75 mb-3">
@@ -55,13 +55,13 @@ export const HomeFAQSection: React.FC = () => {
           <span>Dúvidas Frequentes</span>
           <span className="w-5 h-px bg-[#D4AF37]" />
         </div>
-        <h2 className="whitespace-nowrap text-[clamp(1.85rem,4vw,3rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+        <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.85rem,4vw,3rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5">
           Perguntas &amp; Respostas
         </h2>
       </div>
 
       {/* Accordion List */}
-      <div className="max-w-3xl mx-auto space-y-3">
+      <div className="w-full space-y-3">
         {faqs.map((faq, idx) => {
           const isOpen = openIndex === idx;
 

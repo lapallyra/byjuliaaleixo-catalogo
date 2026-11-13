@@ -46,15 +46,15 @@ export const HomeCompanyLanding: React.FC<HomeCompanyLandingProps> = () => {
     <div className="w-full text-[#1B2537] select-none overflow-x-hidden">
       
       {/* 4A. SEÇÃO EDITORIAL 1 (TEXTO + IMAGEM): MONTE SEU KIT */}
-      <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(244,237,225,0.48)_50%,#FAF8F5_100%)] px-3 sm:px-4 py-12 sm:py-16">
-        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-7 lg:gap-10">
-          <div className="w-full lg:flex-1 max-w-xl space-y-5 text-left">
+      <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(244,237,225,0.48)_50%,#FAF8F5_100%)] px-4 sm:px-8 md:px-[2.5cm] py-12 sm:py-16">
+        <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
+          <div className="w-full lg:flex-1 space-y-5 text-left">
             <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75">
               <span className="w-5 h-px bg-[#D4AF37]" />
               <span>Curadoria Sob Medida</span>
             </div>
 
-            <h2 className="whitespace-nowrap text-[clamp(1.7rem,3.1vw,2.85rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+            <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.65rem,3vw,2.8rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5">
               Monte Seu Kit Exclusivo
             </h2>
 
@@ -98,8 +98,8 @@ export const HomeCompanyLanding: React.FC<HomeCompanyLandingProps> = () => {
       </section>
 
       {/* 4B. SEÇÃO EDITORIAL 2 (IMAGEM + TEXTO): PERSONALIZAÇÃO DE ALTO PADRÃO */}
-      <section className="w-full bg-[#FAF8F5] px-3 sm:px-4 py-12 sm:py-16">
-        <div className="max-w-5xl mx-auto flex flex-col-reverse lg:flex-row items-center justify-center gap-7 lg:gap-10">
+      <section className="w-full bg-[#FAF8F5] px-4 sm:px-8 md:px-[2.5cm] py-12 sm:py-16">
+        <div className="w-full flex flex-col-reverse lg:flex-row items-center justify-between gap-6 lg:gap-8">
           <div className="shrink-0 flex justify-center">
             <div className="w-[245px] sm:w-[265px] p-[1.5px] rounded-3xl bg-[linear-gradient(145deg,rgba(212,175,55,0.42)_0%,rgba(250,248,245,0.65)_50%,rgba(212,175,55,0.30)_100%)] shadow-[0_6px_22px_rgba(15,44,89,0.03)] group">
               <div className="aspect-[4/5] w-full rounded-[22px] overflow-hidden bg-[#FAF8F5] relative">
@@ -116,13 +116,13 @@ export const HomeCompanyLanding: React.FC<HomeCompanyLandingProps> = () => {
             </div>
           </div>
 
-          <div className="w-full lg:flex-1 max-w-xl space-y-5 text-left">
+          <div className="w-full lg:flex-1 space-y-5 text-left">
             <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75">
               <span className="w-5 h-px bg-[#D4AF37]" />
               <span>Garantia de Perfeição</span>
             </div>
 
-            <h2 className="whitespace-nowrap text-[clamp(1.55rem,2.75vw,2.6rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+            <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.5rem,2.7vw,2.55rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5">
               Personalização de Alto Padrão
             </h2>
 
@@ -159,15 +159,15 @@ export const HomeCompanyLanding: React.FC<HomeCompanyLandingProps> = () => {
       </section>
 
       {/* 4C. SEÇÃO EDITORIAL 3 (TEXTO + IMAGEM): POR TRÁS DA MADRINHA */}
-      <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(244,237,225,0.48)_50%,#FAF8F5_100%)] px-3 sm:px-4 py-12 sm:py-16">
-        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-7 lg:gap-10">
-          <div className="w-full lg:flex-1 max-w-xl space-y-5 text-center lg:text-left">
+      <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(244,237,225,0.48)_50%,#FAF8F5_100%)] px-4 sm:px-8 md:px-[2.5cm] py-12 sm:py-16">
+        <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
+          <div className="w-full lg:flex-1 space-y-5 text-center lg:text-left">
             <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75">
               <span className="w-5 h-px bg-[#D4AF37]" />
               <span>Nossa Essência</span>
             </div>
 
-            <h2 className="whitespace-nowrap text-[clamp(1.75rem,3.1vw,2.85rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+            <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.7rem,3vw,2.8rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5">
               Por Trás da Madrinha
             </h2>
 
@@ -175,8 +175,8 @@ export const HomeCompanyLanding: React.FC<HomeCompanyLandingProps> = () => {
               "A Madrinha nasceu do desejo de desacelerar o mundo através de peças feitas à mão, com calma, intenção e perfeição estética. Cada laço, cada fragrância e cada costura têm um único propósito: fazer quem recebe se sentir profundamente amado."
             </p>
 
-            <div className="pt-1 flex flex-col items-center lg:items-start space-y-0.5">
-              <span className="font-meaculpa text-4xl text-[#D4AF37]" style={{ fontFamily: "'Mea Culpa', cursive" }}>
+            <div className="pt-1 flex flex-col items-center lg:items-start space-y-0.5 overflow-visible">
+              <span className="font-meaculpa text-4xl text-[#D4AF37] leading-[1.42] py-1 px-1.5 overflow-visible" style={{ fontFamily: "'Mea Culpa', cursive" }}>
                 Júlia Aleixo
               </span>
               <span className="text-[10px] uppercase tracking-[0.22em] text-[#1B2537]/65 font-semibold">
@@ -214,19 +214,19 @@ export const HomeCompanyLanding: React.FC<HomeCompanyLandingProps> = () => {
       </section>
 
       {/* 4D. PROVA SOCIAL EDITORIAL: DEPOIMENTOS */}
-      <section className="w-full bg-[#FAF8F5] px-3 sm:px-4 py-14 sm:py-18">
+      <section className="w-full bg-[#FAF8F5] px-2 sm:px-3 py-12 sm:py-16">
         <div className="text-center max-w-2xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75 mb-3">
             <span className="w-5 h-px bg-[#D4AF37]" />
             <span>Experiências Reais</span>
             <span className="w-5 h-px bg-[#D4AF37]" />
           </div>
-          <h2 className="whitespace-nowrap text-[clamp(1.65rem,3.8vw,3rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+          <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.6rem,3.6vw,2.95rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5">
             Amor em Forma de Depoimentos
           </h2>
         </div>
 
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
           {feedbackTestimonials.map((fb, idx) => (
             <div
               key={idx}
@@ -263,8 +263,8 @@ export const HomeCompanyLanding: React.FC<HomeCompanyLandingProps> = () => {
       </section>
 
       {/* 4E. SEÇÃO EDITORIAL 4 (IMAGEM + TEXTO): LISTA DE PRESENTES AFETIVA */}
-      <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(244,237,225,0.48)_50%,#FAF8F5_100%)] px-3 sm:px-4 py-12 sm:py-16">
-        <div className="max-w-5xl mx-auto flex flex-col-reverse lg:flex-row items-center justify-center gap-7 lg:gap-10">
+      <section className="w-full bg-[linear-gradient(180deg,#FAF8F5_0%,rgba(244,237,225,0.48)_50%,#FAF8F5_100%)] px-4 sm:px-8 md:px-[2.5cm] py-12 sm:py-16">
+        <div className="w-full flex flex-col-reverse lg:flex-row items-center justify-between gap-6 lg:gap-8">
           <div className="shrink-0 flex justify-center">
             <div className="w-[245px] sm:w-[265px] p-[1.5px] rounded-3xl bg-[linear-gradient(145deg,rgba(212,175,55,0.42)_0%,rgba(250,248,245,0.65)_50%,rgba(212,175,55,0.30)_100%)] shadow-[0_6px_22px_rgba(15,44,89,0.03)] group">
               <div className="aspect-square w-full rounded-[22px] overflow-hidden bg-[#FAF8F5] relative">
@@ -281,13 +281,13 @@ export const HomeCompanyLanding: React.FC<HomeCompanyLandingProps> = () => {
             </div>
           </div>
 
-          <div className="w-full lg:flex-1 max-w-xl space-y-5 text-left">
+          <div className="w-full lg:flex-1 space-y-5 text-left">
             <div className="inline-flex items-center gap-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0F2C59]/75">
               <span className="w-5 h-px bg-[#D4AF37]" />
               <span>Eventos &amp; Celebrações</span>
             </div>
 
-            <h2 className="whitespace-nowrap text-[clamp(1.65rem,2.95vw,2.7rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.15]">
+            <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.6rem,2.9vw,2.65rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5">
               Lista de Presentes Afetiva
             </h2>
 

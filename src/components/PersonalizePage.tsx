@@ -99,8 +99,8 @@ export const PersonalizePage: React.FC = () => {
     <div className="min-h-screen bg-[#FAF8F5] text-[#1B2537] font-sans pb-20">
       
       {/* HERO BANNER */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#F3ECDF]/60 via-[#FAF8F5] to-[#FAF8F5] pt-10 pb-12 px-3 sm:px-4 border-b border-[#D4AF37]/25">
-        <div className="max-w-5xl mx-auto text-center">
+      <section className="relative overflow-visible bg-gradient-to-b from-[#F3ECDF]/60 via-[#FAF8F5] to-[#FAF8F5] pt-10 pb-12 px-2 sm:px-3 border-b border-[#D4AF37]/25">
+        <div className="w-full text-center">
           
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
@@ -115,7 +115,7 @@ export const PersonalizePage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="whitespace-nowrap font-mea-culpa text-[clamp(1.85rem,4.5vw,3.8rem)] text-[#0F2C59] leading-[1.15] mb-4"
+            className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(1.85rem,4.4vw,3.75rem)] text-[#0F2C59] leading-[1.42] py-1.5 px-1.5 mb-4"
           >
             A Magia da Personalização
           </motion.h1>
@@ -155,7 +155,7 @@ export const PersonalizePage: React.FC = () => {
       </section>
 
       {/* DEMONSTRATION SECTION: BEFORE & AFTER SLIDER ONLY */}
-      <section className="max-w-5xl mx-auto px-3 sm:px-4 py-10">
+      <section className="w-full px-2 sm:px-3 py-10">
         
         {/* Section Title */}
         <div className="text-center mb-8">
@@ -163,7 +163,7 @@ export const PersonalizePage: React.FC = () => {
             <Wand2 size={14} />
             <span>Barra Interativa Antes &amp; Depois</span>
           </div>
-          <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.65rem,4vw,3rem)] text-[#0F2C59] leading-[1.15]">
+          <h2 className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(1.6rem,3.9vw,2.95rem)] text-[#0F2C59] leading-[1.42] py-1 px-1.5">
             Arraste para Ver a Transformação
           </h2>
           <p className="text-xs sm:text-sm text-[#1B2537]/75 font-light max-w-md mx-auto mt-1">
@@ -196,7 +196,7 @@ export const PersonalizePage: React.FC = () => {
         </div>
 
         {/* Item Info Header */}
-        <div className="flex items-center justify-between mb-3 bg-white px-4 py-2.5 rounded-xl border border-[#D4AF37]/30 max-w-2xl mx-auto">
+        <div className="flex items-center justify-between mb-3 bg-white px-4 py-2.5 rounded-xl border border-[#D4AF37]/30 max-w-4xl mx-auto">
           <div className="flex items-center gap-2 text-xs font-bold text-[#0F2C59]">
             <span className="px-2 py-0.5 rounded-md bg-[#FAF8F5] border border-[#D4AF37]/30 text-[#0F2C59] text-[11px]">
               Ateliê {currentItem.atelier}
@@ -207,7 +207,7 @@ export const PersonalizePage: React.FC = () => {
         </div>
 
         {/* COMPACT INTERACTIVE COMPARISON CONTAINER */}
-        <div className="relative max-w-2xl mx-auto w-full h-[280px] sm:h-[340px] md:h-[370px] rounded-2xl overflow-hidden shadow-xl border border-[#E8DFC8] bg-black select-none">
+        <div className="relative max-w-4xl mx-auto w-full h-[280px] sm:h-[360px] md:h-[400px] rounded-2xl overflow-hidden shadow-xl border border-[#E8DFC8] bg-black select-none">
           
           {/* AFTER Image (Background Base - Personalized Mug) */}
           <img
@@ -266,7 +266,7 @@ export const PersonalizePage: React.FC = () => {
         </div>
 
         {/* DETAILS OF PERSONALIZATION FOR THIS ITEM */}
-        <div className="mt-6 max-w-2xl mx-auto bg-white rounded-2xl p-5 sm:p-6 border border-[#D4AF37]/30 shadow-xs">
+        <div className="mt-6 w-full bg-white rounded-2xl p-5 sm:p-6 border border-[#D4AF37]/30 shadow-xs">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-[#D4AF37]/20">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-widest text-[#D4AF37]">
@@ -311,13 +311,13 @@ export const PersonalizePage: React.FC = () => {
 
       {/* WHY PERSONALIZE SECTION (INCENTIVES) */}
       <section className="bg-[#F3ECDF]/55 py-12 border-y border-[#D4AF37]/20 mt-6">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4">
+        <div className="w-full px-2 sm:px-3">
           
           <div className="text-center mb-10">
             <span className="text-[#D4AF37] text-xs font-bold uppercase tracking-[0.2em]">
               Por Que Escolher a Personalização?
             </span>
-            <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.65rem,4vw,3rem)] text-[#0F2C59] mt-1 leading-[1.15]">
+            <h2 className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(1.6rem,3.9vw,2.95rem)] text-[#0F2C59] mt-1 leading-[1.42] py-1 px-1.5">
               Motivos para Adoçar &amp; Surpreender
             </h2>
             <p className="text-xs sm:text-sm text-[#1B2537]/75 font-light max-w-xl mx-auto mt-1">
@@ -372,12 +372,12 @@ export const PersonalizePage: React.FC = () => {
       </section>
 
       {/* HOW IT WORKS: STEP BY STEP */}
-      <section className="max-w-5xl mx-auto px-3 sm:px-4 py-12">
+      <section className="w-full px-2 sm:px-3 py-12">
         <div className="text-center mb-8">
           <span className="text-[#D4AF37] text-xs font-bold uppercase tracking-[0.2em]">
             Passo a Passo Simples
           </span>
-          <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.65rem,4vw,3rem)] text-[#0F2C59] mt-1 leading-[1.15]">
+          <h2 className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(1.6rem,3.9vw,2.95rem)] text-[#0F2C59] mt-1 leading-[1.42] py-1 px-1.5">
             Como Encomendar Seu Mimo Único
           </h2>
         </div>
@@ -426,14 +426,14 @@ export const PersonalizePage: React.FC = () => {
       </section>
 
       {/* CTA BANNER */}
-      <section className="max-w-5xl mx-auto px-3 sm:px-4 mt-4">
-        <div className="bg-gradient-to-r from-[#0F2C59] via-[#16396E] to-[#0F2C59] rounded-2xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden border border-[#D4AF37]/40 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
+      <section className="w-full px-2 sm:px-3 mt-4">
+        <div className="bg-gradient-to-r from-[#0F2C59] via-[#16396E] to-[#0F2C59] rounded-2xl p-6 sm:p-10 text-white shadow-xl relative overflow-visible border border-[#D4AF37]/40 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-6">
           
-          <div className="max-w-lg z-10 min-w-0">
+          <div className="max-w-lg z-10 min-w-0 overflow-visible">
             <span className="text-[#D4AF37] font-bold text-xs uppercase tracking-[0.2em] block mb-1">
               Pronto para encantar?
             </span>
-            <h2 className="whitespace-nowrap font-mea-culpa text-[clamp(1.6rem,3.4vw,2.75rem)] text-white leading-tight mb-2">
+            <h2 className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(1.55rem,3.3vw,2.7rem)] text-white leading-[1.42] py-1 px-1.5 mb-2">
               Crie Sua Caneca Personalizada
             </h2>
             <p className="text-xs text-[#FAF8F5]/85 font-light leading-relaxed">

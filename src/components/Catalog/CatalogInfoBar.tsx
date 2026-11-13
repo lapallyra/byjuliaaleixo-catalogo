@@ -25,9 +25,9 @@ export const CatalogInfoBar: React.FC<CatalogInfoBarProps> = ({
   return (
     <div className="catalog-info-bar mb-2 py-1.5 border-b border-[#D4AF37]/20 flex flex-col md:flex-row md:items-center justify-between gap-3">
       {/* Left side: Category Title & Search badge */}
-      <div className="flex flex-col gap-1.5 min-w-0">
+      <div className="flex flex-col gap-1.5 min-w-0 overflow-visible">
         {selectedCategory && (
-          <h2 className="whitespace-nowrap text-[clamp(1.65rem,3vw,2.35rem)] font-mea-culpa text-[#0F2C59] tracking-tight overflow-hidden text-ellipsis">
+          <h2 className="whitespace-nowrap overflow-visible text-[clamp(1.6rem,3vw,2.3rem)] font-mea-culpa text-[#0F2C59] tracking-tight leading-[1.42] py-1 px-1.5">
             {selectedCategory}
           </h2>
         )}

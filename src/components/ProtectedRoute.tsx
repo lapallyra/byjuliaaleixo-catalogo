@@ -5,7 +5,7 @@ import { checkIsAdminDomain } from '../lib/utils';
 import { LoadingScreen } from './LoadingScreen';
 
 export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, isPinVerified, loading } = useAuth();
   const location = useLocation();
 
   React.useEffect(() => {
@@ -14,15 +14,16 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
       loading, 
       authenticated: !!user, 
       isAdmin,
+      isPinVerified,
       userEmail: user?.email 
     });
-  }, [location.pathname, loading, user, isAdmin]);
+  }, [location.pathname, loading, user, isAdmin, isPinVerified]);
 
   if (loading) {
     return <LoadingScreen />;
   }
 
-  if (!user || !isAdmin) {
+  if (!user || !isAdmin || !isPinVerified) {
     const isAdminDomain = checkIsAdminDomain();
     return <Navigate to={isAdminDomain ? "/login" : "/admin/login"} replace />;
   }

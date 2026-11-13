@@ -1,100 +1,166 @@
-import React, { useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { useAuth } from './AuthProvider';
-import { LogIn, ArrowLeft, X, Loader2, KeyRound, Mail, ShieldCheck } from 'lucide-react';
-import { auth, login, loginWithRedirect } from '../lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { LogIn, ArrowLeft, X, Loader2, ShieldCheck, KeyRound, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { login } from '../lib/firebase';
 import { checkIsAdminDomain } from '../lib/utils';
 
+const BOX_COUNT = 6;
+
 export function AdminLoginView() {
-  const { user, isAdmin, loading, logout } = useAuth();
-  const location = useLocation();
+  const { user, isAdmin, isPinVerified, verifyAdminPin, loading, logout } = useAuth();
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pinDigits, setPinDigits] = useState<string[]>(Array(BOX_COUNT).fill(''));
+  const [showPin, setShowPin] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Email / Password Form State
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showEmailForm, setShowEmailForm] = useState(false);
+  useEffect(() => {
+    if (!loading && !isPinVerified) {
+      const timer = setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isPinVerified]);
 
-  const handleMasterLogin = () => {
-    setIsLoggingIn(true);
-    localStorage.setItem('byjuliaaleixo_master_logged', 'true');
-    window.dispatchEvent(new Event('auth-state-change'));
-    setTimeout(() => {
-      setIsLoggingIn(false);
-      navigate(checkIsAdminDomain() ? '/' : '/admin');
-    }, 300);
-  };
+  const enteredCode = pinDigits.join('');
 
-  const handleEmailPasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isLoggingIn) return;
-    setIsLoggingIn(true);
+  const handleDigitChange = (index: number, rawValue: string) => {
     setError(null);
-
-    const cleanEmail = email.trim().toLowerCase();
-
-    // Direct check for special master credentials or default passwords
-    const isSpecialEmail = cleanEmail === 'byjuliaaleixo' || 
-                           cleanEmail === 'byjuliaaleixo@gmail.com' || 
-                           cleanEmail === 'juualleixo@gmail.com' ||
-                           cleanEmail === 'lapallyra@gmail.com' ||
-                           cleanEmail === 'admin';
-
-    if (isSpecialEmail || password === 'admin' || password === 'admin123') {
-      localStorage.setItem('byjuliaaleixo_master_logged', 'true');
-      window.dispatchEvent(new Event('auth-state-change'));
-      setIsLoggingIn(false);
-      navigate(checkIsAdminDomain() ? '/' : '/admin');
+    const sanitized = rawValue.replace(/\D/g, '');
+    if (!sanitized) {
+      const next = [...pinDigits];
+      next[index] = '';
+      setPinDigits(next);
       return;
     }
 
-    try {
-      await signInWithEmailAndPassword(auth, cleanEmail, password);
-      // Navigation handled by auth state change
-    } catch (err: any) {
-      console.error('[AdminLogin] Email login error:', err);
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
-        setError('Credenciais incorretas. Verifique seu e-mail e senha.');
-      } else {
-        setError('Não foi possível entrar com esse e-mail. Utilize o Acesso Direto Master.');
+    // Handle multi-character paste/autofill
+    if (sanitized.length > 1) {
+      const next = [...pinDigits];
+      const chars = sanitized.slice(0, BOX_COUNT - index).split('');
+      chars.forEach((ch, offset) => {
+        next[index + offset] = ch;
+      });
+      setPinDigits(next);
+      const nextFocus = Math.min(BOX_COUNT - 1, index + chars.length);
+      inputRefs.current[nextFocus]?.focus();
+
+      const combined = next.join('');
+      if (verifyAdminPin(combined)) {
+        if (user && isAdmin) {
+          navigate(checkIsAdminDomain() ? '/' : '/admin', { replace: true });
+        }
       }
-    } finally {
-      setIsLoggingIn(false);
+      return;
+    }
+
+    const next = [...pinDigits];
+    next[index] = sanitized;
+    setPinDigits(next);
+
+    if (index < BOX_COUNT - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+
+    const combined = next.join('');
+    if (verifyAdminPin(combined)) {
+      if (user && isAdmin) {
+        navigate(checkIsAdminDomain() ? '/' : '/admin', { replace: true });
+      }
     }
   };
 
-  // If user is logged in but NOT admin, show access denied with quick master option
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      if (pinDigits[index]) {
+        const next = [...pinDigits];
+        next[index] = '';
+        setPinDigits(next);
+      } else if (index > 0) {
+        const next = [...pinDigits];
+        next[index - 1] = '';
+        setPinDigits(next);
+        inputRefs.current[index - 1]?.focus();
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < BOX_COUNT - 1) {
+      inputRefs.current[index + 1]?.focus();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (user && isAdmin) {
+        handleVerifyOnly();
+      } else {
+        handleGoogleLogin();
+      }
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, BOX_COUNT);
+    if (!pasted) return;
+    setError(null);
+    const next = Array(BOX_COUNT).fill('');
+    pasted.split('').forEach((ch, idx) => {
+      next[idx] = ch;
+    });
+    setPinDigits(next);
+    const focusIdx = Math.min(BOX_COUNT - 1, pasted.length);
+    inputRefs.current[focusIdx]?.focus();
+
+    if (verifyAdminPin(next.join('')) && user && isAdmin) {
+      navigate(checkIsAdminDomain() ? '/' : '/admin', { replace: true });
+    }
+  };
+
+  const ensurePinValid = (): boolean => {
+    if (isPinVerified) return true;
+    const isValid = verifyAdminPin(enteredCode);
+    if (!isValid) {
+      setError('Código único inválido. Preencha os dígitos do código secreto de liberação.');
+      setPinDigits(Array(BOX_COUNT).fill(''));
+      setTimeout(() => inputRefs.current[0]?.focus(), 50);
+      return false;
+    }
+    return true;
+  };
+
+  const handleVerifyOnly = () => {
+    setError(null);
+    if (ensurePinValid() && user && isAdmin) {
+      navigate(checkIsAdminDomain() ? '/' : '/admin', { replace: true });
+    }
+  };
+
+  // If user is logged in but NOT admin, show access denied
   if (user && !isAdmin && !loading) {
     return (
-      <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center p-6 text-center font-sans">
-        <div className="max-w-md w-full bg-white/80 backdrop-blur-xl border border-white p-8 md:p-10 rounded-[28px] shadow-lg flex flex-col items-center">
+      <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center p-4 sm:p-6 text-center font-sans">
+        <div className="max-w-md w-full bg-white border border-[#D4AF37]/30 p-8 md:p-10 rounded-[28px] shadow-lg flex flex-col items-center">
           <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mb-6 border border-rose-100">
             <X className="text-rose-500" size={32} />
           </div>
-          <h1 className="text-2xl font-black text-gray-800 mb-2 uppercase tracking-tight">Acesso Negado</h1>
-          <p className="text-gray-500 mb-6 font-sans text-xs tracking-wider leading-relaxed">
-            O e-mail <span className="text-gray-800 font-bold">{user.email}</span> não possui permissão de administrador.
+          <h1 className="whitespace-nowrap text-[clamp(1.35rem,3vw,1.65rem)] font-bold text-[#0F2C59] mb-2 uppercase tracking-tight">
+            Acesso Negado
+          </h1>
+          <p className="text-[#1B2537]/70 mb-6 font-sans text-xs tracking-wider leading-relaxed">
+            O e-mail <span className="text-[#0F2C59] font-bold">{user.email}</span> não possui permissão de administrador.
           </p>
           <div className="flex flex-col gap-3 w-full">
-            <button 
-              onClick={handleMasterLogin}
-              className="bg-[#B38F4D] hover:bg-[#96763D] text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-sm text-xs uppercase tracking-widest flex items-center justify-center gap-2"
-            >
-              <ShieldCheck size={16} /> Entrar com Acesso Master Ateliê
-            </button>
-            <button 
+            <button
               onClick={logout}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all text-xs uppercase tracking-widest"
+              className="bg-[#0F2C59] hover:bg-[#1B3F7A] text-white font-bold py-3 px-6 rounded-xl transition-all text-xs uppercase tracking-widest cursor-pointer"
             >
               Sair e tentar com outra conta
             </button>
-            <button 
+            <button
               onClick={() => navigate('/')}
-              className="text-gray-400 hover:text-gray-600 font-bold py-2 text-[10px] uppercase tracking-wider"
+              className="text-[#1B2537]/60 hover:text-[#0F2C59] font-bold py-2 text-[10px] uppercase tracking-wider cursor-pointer"
             >
               Voltar para a Loja
             </button>
@@ -106,7 +172,7 @@ export function AdminLoginView() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#FCFAF7] font-sans">
+      <div className="flex flex-col items-center justify-center h-screen bg-[#FAF8F5] font-sans">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -114,15 +180,15 @@ export function AdminLoginView() {
           className="flex flex-col items-center"
         >
           <div className="relative mb-6">
-            <motion.div 
+            <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="text-[#3D2E24]/20"
+              className="text-[#D4AF37]/60"
             >
               <Loader2 size={40} strokeWidth={1.5} />
             </motion.div>
           </div>
-          <span className="text-[#3D2E24]/50 font-sans text-[10px] uppercase tracking-[0.3em] font-medium">
+          <span className="text-[#0F2C59]/70 font-sans text-[10px] uppercase tracking-[0.3em] font-medium">
             Verificando Credenciais...
           </span>
         </motion.div>
@@ -130,28 +196,30 @@ export function AdminLoginView() {
     );
   }
 
-  // If user is logged in and is admin, redirect to admin dashboard
-  if (user && isAdmin) {
+  // If user is logged in, is admin AND PIN is verified, redirect to admin dashboard
+  if (user && isAdmin && isPinVerified) {
     const isAdminDomain = checkIsAdminDomain();
     return <Navigate to={isAdminDomain ? "/" : "/admin"} replace />;
   }
 
   const handleGoogleLogin = async () => {
     if (isLoggingIn) return;
+    if (!ensurePinValid()) return;
+
     setIsLoggingIn(true);
     setError(null);
-    
+
     const timeout = setTimeout(() => {
       setIsLoggingIn(false);
-      setError('O login do Google não concluiu. Utilize o formulário abaixo ou o Acesso Direto Master.');
+      setError('O login do Google não concluiu. Tente novamente.');
     }, 20000);
 
     try {
       await login();
     } catch (err: any) {
       console.error('[AdminLogin] Error during handleGoogleLogin:', err);
-      let msg = 'Falha ao realizar login com Google. Tente com E-mail e Senha ou Acesso Master.';
-      
+      let msg = 'Falha ao realizar login com Google. Tente novamente.';
+
       if (err.code === 'auth/unauthorized-domain') {
         msg = 'O domínio atual não está autorizado no Firebase Authentication. Verifique as configurações externas do projeto no console do Firebase.';
       } else if (err.code === 'auth/popup-blocked') {
@@ -161,7 +229,7 @@ export function AdminLoginView() {
       } else if (err.code === 'auth/network-request-failed') {
         msg = 'Erro de conexão ou rede falhou. Verifique sua internet.';
       }
-      
+
       setError(msg);
     } finally {
       clearTimeout(timeout);
@@ -169,25 +237,86 @@ export function AdminLoginView() {
     }
   };
 
+  const renderCodeBoxes = () => (
+    <div className="w-full mb-5">
+      <div className="flex items-center justify-between mb-2.5">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#0F2C59]">
+          <KeyRound size={12} className="text-[#D4AF37]" />
+          Código Único de Acesso
+        </span>
+        <button
+          type="button"
+          onClick={() => setShowPin((prev) => !prev)}
+          className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[#1B2537]/60 hover:text-[#0F2C59] transition-colors cursor-pointer"
+        >
+          {showPin ? <EyeOff size={12} /> : <Eye size={12} />}
+          <span>{showPin ? 'Ocultar' : 'Mostrar'}</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-6 gap-2 sm:gap-2.5">
+        {pinDigits.map((digit, index) => (
+          <input
+            key={index}
+            ref={(el) => {
+              inputRefs.current[index] = el;
+            }}
+            type={showPin ? 'text' : 'password'}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={1}
+            value={digit}
+            onChange={(e) => handleDigitChange(index, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(index, e)}
+            onPaste={handlePaste}
+            aria-label={`Dígito ${index + 1} do código de acesso`}
+            className={`w-full h-12 sm:h-13 text-center text-lg font-bold rounded-xl border transition-all outline-none bg-[#FAF8F5] text-[#0F2C59] ${
+              isPinVerified
+                ? 'border-[#D4AF37] bg-[#F3ECDF]/60'
+                : digit
+                ? 'border-[#0F2C59] bg-white shadow-xs'
+                : 'border-[#D4AF37]/40 focus:border-[#0F2C59] focus:bg-white focus:ring-2 focus:ring-[#D4AF37]/25'
+            }`}
+          />
+        ))}
+      </div>
+
+      {isPinVerified ? (
+        <div className="mt-2.5 inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#0F2C59]">
+          <CheckCircle2 size={13} className="text-[#D4AF37]" />
+          <span>Código secreto validado</span>
+        </div>
+      ) : (
+        <p className="mt-2 text-[10px] text-[#1B2537]/55 font-medium tracking-wide">
+          Digite o código secreto de liberação nos campos acima
+        </p>
+      )}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center p-6 text-center relative font-sans">
+    <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center p-4 sm:p-6 text-center relative font-sans">
       <div className="absolute top-6 left-6">
-        <button 
+        <button
           onClick={() => navigate('/')}
-          className="w-10 h-10 bg-white/80 text-gray-600 rounded-full flex items-center justify-center hover:bg-white hover:text-[#B38F4D] transition-all border border-white/80 shadow-md"
+          className="w-10 h-10 bg-white text-[#0F2C59] rounded-full flex items-center justify-center hover:border-[#D4AF37] hover:text-[#D4AF37] transition-all border border-[#D4AF37]/30 shadow-md cursor-pointer"
           title="Voltar para a Loja"
         >
           <ArrowLeft size={16} />
         </button>
       </div>
 
-      <div className="max-w-md w-full bg-white/80 backdrop-blur-xl border border-white p-8 md:p-10 rounded-[28px] shadow-xl flex flex-col items-center">
-        <div className="w-16 h-16 bg-[#F5EFE6] rounded-2xl flex items-center justify-center mb-5 border border-[#E8DFC8]/60 text-[#B38F4D]">
+      <div className="max-w-md w-full bg-white border border-[#D4AF37]/30 p-7 sm:p-9 rounded-[28px] shadow-xl flex flex-col items-center">
+        <div className="w-16 h-16 bg-[#F3ECDF] rounded-2xl flex items-center justify-center mb-5 border border-[#D4AF37]/40 text-[#D4AF37]">
           <ShieldCheck size={32} strokeWidth={1.5} />
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-1 uppercase tracking-tight">Painel Administrativo</h2>
-        <p className="text-gray-500 mb-6 font-sans text-xs uppercase tracking-widest leading-relaxed">
-          Ateliê VIP • Identifique-se para Acessar
+        <h2 className="whitespace-nowrap text-[clamp(1.25rem,3vw,1.5rem)] font-bold text-[#0F2C59] mb-1 uppercase tracking-tight">
+          Painel Administrativo
+        </h2>
+        <p className="text-[#1B2537]/65 mb-6 font-sans text-xs uppercase tracking-widest leading-relaxed">
+          {user && isAdmin
+            ? `Conta autenticada: ${user.email}`
+            : 'Ateliê VIP • Identifique-se para Acessar'}
         </p>
 
         {error && (
@@ -196,93 +325,44 @@ export function AdminLoginView() {
           </p>
         )}
 
-        {/* Master Quick Access Button */}
-        <button 
-          onClick={handleMasterLogin}
-          disabled={isLoggingIn}
-          className="w-full mb-4 bg-gradient-to-r from-[#B38F4D] to-[#96763D] hover:from-[#96763D] hover:to-[#80622F] text-white font-bold py-4 px-6 rounded-xl transition-all shadow-md uppercase tracking-widest text-[11px] flex items-center justify-center gap-2"
-        >
-          {isLoggingIn ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={18} />}
-          Acesso Direto (Ateliê Master)
-        </button>
+        {renderCodeBoxes()}
 
-        <div className="relative w-full my-3 flex items-center justify-center">
-          <div className="border-t border-gray-200 w-full" />
-          <span className="bg-white px-3 text-[10px] text-gray-400 uppercase tracking-widest absolute">ou</span>
-        </div>
-
-        {/* Form or Options */}
-        {showEmailForm ? (
-          <form onSubmit={handleEmailPasswordSubmit} className="w-full flex flex-col gap-3 mt-2">
-            <div className="relative text-left">
-              <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1 block">E-mail ou Usuário</label>
-              <div className="relative">
-                <input 
-                  type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="byjuliaaleixo@gmail.com"
-                  required
-                  className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-3.5 py-3 text-xs text-gray-800 focus:outline-none focus:border-[#B38F4D] focus:bg-white transition-all pl-9"
-                />
-                <Mail size={15} className="absolute left-3 top-3.5 text-gray-400" />
-              </div>
-            </div>
-
-            <div className="relative text-left">
-              <label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1 block">Senha</label>
-              <div className="relative">
-                <input 
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-3.5 py-3 text-xs text-gray-800 focus:outline-none focus:border-[#B38F4D] focus:bg-white transition-all pl-9"
-                />
-                <KeyRound size={15} className="absolute left-3 top-3.5 text-gray-400" />
-              </div>
-            </div>
-
-            <button 
-              type="submit"
-              disabled={isLoggingIn}
-              className="mt-2 bg-gray-900 hover:bg-black text-white font-bold py-3.5 px-6 rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+        {user && isAdmin ? (
+          <div className="w-full flex flex-col gap-2.5 mt-1">
+            <button
+              onClick={handleVerifyOnly}
+              className="w-full bg-[#0F2C59] hover:bg-[#1B3F7A] text-white font-bold py-3.5 px-6 rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm cursor-pointer border border-[#D4AF37]/40"
             >
-              {isLoggingIn && <Loader2 size={14} className="animate-spin" />}
-              Entrar no Painel
+              <ShieldCheck size={16} className="text-[#D4AF37]" />
+              <span>Liberar Painel</span>
             </button>
-
-            <button 
-              type="button"
-              onClick={() => setShowEmailForm(false)}
-              className="text-gray-500 hover:text-gray-700 text-[10px] font-bold uppercase tracking-wider mt-1"
+            <button
+              onClick={logout}
+              className="text-[#1B2537]/60 hover:text-[#0F2C59] transition-all text-[10px] uppercase font-bold tracking-wider mt-1 cursor-pointer"
             >
-              Voltar para Opções de Login
+              Sair e trocar conta Google
             </button>
-          </form>
+          </div>
         ) : (
-          <div className="w-full flex flex-col gap-2.5 mt-2">
-            <button 
-              onClick={() => setShowEmailForm(true)}
-              className="w-full bg-white border border-gray-300 hover:border-gray-400 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm"
-            >
-              <Mail size={16} className="text-gray-500" /> Entrar com E-mail / Senha
-            </button>
-
-            <button 
+          <div className="w-full flex flex-col gap-3 mt-1">
+            <button
               onClick={handleGoogleLogin}
               disabled={isLoggingIn}
-              className="w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 font-bold py-3 px-6 rounded-xl transition-all text-[11px] uppercase tracking-widest flex items-center justify-center gap-2"
+              className="w-full bg-white border border-[#D4AF37]/45 hover:border-[#0F2C59] hover:bg-[#FAF8F5] text-[#0F2C59] font-bold py-3.5 px-6 rounded-xl transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-sm cursor-pointer disabled:opacity-60"
             >
-              <LogIn size={15} className="text-pink-500" /> Entrar com Google
+              {isLoggingIn ? (
+                <Loader2 size={16} className="animate-spin text-[#D4AF37]" />
+              ) : (
+                <LogIn size={16} className="text-[#D4AF37]" />
+              )}
+              <span>Entrar com Google</span>
             </button>
           </div>
         )}
 
-        <button 
-          onClick={() => navigate('/')} 
-          className="text-gray-400 hover:text-gray-600 transition-all text-[10px] uppercase font-bold tracking-wider mt-6 flex items-center justify-center gap-1.5"
+        <button
+          onClick={() => navigate('/')}
+          className="text-[#1B2537]/60 hover:text-[#0F2C59] transition-all text-[10px] uppercase font-bold tracking-wider mt-6 flex items-center justify-center gap-1.5 cursor-pointer"
         >
           <ArrowLeft size={13} /> Ir para a Loja
         </button>
@@ -290,4 +370,3 @@ export function AdminLoginView() {
     </div>
   );
 }
-

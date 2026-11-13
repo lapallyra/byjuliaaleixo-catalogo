@@ -68,7 +68,7 @@ export const CustomerFeedbackView: React.FC = () => {
             <span className="inline-block mb-6 text-white/80 uppercase tracking-[0.4em] text-[10px] font-medium bg-black/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
               Confiança & Experiência
             </span>
-            <h1 className="text-white font-mea-culpa text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-6 tracking-tight drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-full">
+            <h1 className="text-white font-mea-culpa text-[clamp(2.25rem,5.5vw,5rem)] mb-6 tracking-tight drop-shadow-sm whitespace-nowrap overflow-visible leading-[1.42] py-1.5 px-2">
               Feedback que Amamos
             </h1>
             <p className="text-white/90 text-lg md:text-xl font-light tracking-wide max-w-2xl mx-auto leading-relaxed mb-12">
@@ -100,7 +100,7 @@ export const CustomerFeedbackView: React.FC = () => {
       </section>
 
       {/* Feedback Feed */}
-      <section id="feedback-feed" className="py-24 md:py-40 px-3 sm:px-4 max-w-4xl mx-auto space-y-32">
+      <section id="feedback-feed" className="py-20 md:py-28 px-2 sm:px-3 w-full space-y-24">
         {displayFeedbacks.map((item, index) => (
           <motion.div
             key={index}
@@ -129,10 +129,10 @@ export const CustomerFeedbackView: React.FC = () => {
       </section>
 
       {/* Middle Section: Visual Narrative */}
-      <section className="bg-white py-32 px-3 sm:px-4">
-        <div className="max-w-5xl mx-auto text-center">
+      <section className="bg-white py-24 px-2 sm:px-3">
+        <div className="w-full text-center">
           <Sparkles className="w-8 h-8 text-[#D4AF37]/40 mx-auto mb-8" />
-          <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.85rem,4vw,3.5rem)] mb-6 leading-[1.15]">O afeto está nos detalhes</h2>
+          <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.85rem,4vw,3.5rem)] mb-6 leading-[1.42] py-1 px-1.5">O afeto está nos detalhes</h2>
           <p className="text-[#1B2537]/70 text-sm md:text-base font-light tracking-wide max-w-xl mx-auto leading-relaxed uppercase">
             Cada depoimento é uma confirmação de que o trabalho manual carrega uma energia única, capaz de emocionar e criar memórias eternas.
           </p>
@@ -143,15 +143,15 @@ export const CustomerFeedbackView: React.FC = () => {
       <ContinueExploring currentPath="/feedclientes" />
 
       {/* Final CTA */}
-      <section className="py-32 md:py-48 px-3 sm:px-4 bg-[#FAF8F5] text-center">
+      <section className="py-24 md:py-32 px-2 sm:px-3 bg-[#FAF8F5] text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-2xl mx-auto"
+          className="w-full"
         >
           <Heart className="w-8 h-8 text-[#D4AF37]/40 mx-auto mb-8" />
-          <h2 className="whitespace-nowrap text-[#0F2C59] font-mea-culpa text-[clamp(1.75rem,4vw,3.5rem)] mb-6 leading-[1.15]">
+          <h2 className="whitespace-nowrap overflow-visible text-[#0F2C59] font-mea-culpa text-[clamp(1.75rem,4vw,3.5rem)] mb-6 leading-[1.42] py-1 px-1.5">
             Queremos ouvir sua história
           </h2>
           <p className="text-[#1B2537]/70 text-sm md:text-base font-light tracking-wide mb-12 uppercase leading-relaxed">

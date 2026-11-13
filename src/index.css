@@ -65,8 +65,16 @@ body {
 }
 
 @layer utilities {
-  .font-meaculpa {
+  .font-meaculpa,
+  .font-mea-culpa,
+  .font-cursive {
     font-family: "Mea Culpa", cursive !important;
+    line-height: 1.45;
+    padding-top: 0.12em;
+    padding-bottom: 0.16em;
+    padding-inline: 0.12em;
+    overflow: visible;
+    text-overflow: clip;
   }
   .font-poppins {
     font-family: "Poppins", sans-serif !important;

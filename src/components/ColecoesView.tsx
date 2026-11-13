@@ -142,14 +142,14 @@ const AtelierCarousel = ({
         <div 
           ref={scrollRef}
           onScroll={checkScroll}
-          className="flex gap-5 overflow-x-auto pb-4 scrollbar-hidden scroll-smooth px-2 select-none"
+          className="flex gap-2.5 sm:gap-3.5 lg:gap-4 overflow-x-auto pb-4 scrollbar-hidden scroll-smooth px-0 select-none"
         >
           {products.length === 0 ? (
-            [1, 2, 3, 4].map((_, i) => (
+            [1, 2, 3, 4, 5].map((_, i) => (
               <div 
                 key={i} 
                 onClick={onNavigate}
-                className="min-w-[200px] sm:min-w-[240px] flex flex-col border border-[#e8dcc8]/60 bg-white rounded-2xl p-4 gap-3 cursor-pointer hover:border-transparent hover:shadow-md transition-all shrink-0"
+                className="w-[calc((100%-10px)/2)] md:w-[calc((100%-28px)/3)] lg:w-[calc((100%-64px)/5)] flex flex-col border border-[#e8dcc8]/60 bg-white rounded-2xl p-4 gap-3 cursor-pointer hover:border-transparent hover:shadow-md transition-all shrink-0"
               >
                 <div className="w-full aspect-square bg-[#faf8f5] rounded-xl flex items-center justify-center">
                   <Sparkles size={20} className="text-[#cca062]/30" />
@@ -159,7 +159,7 @@ const AtelierCarousel = ({
             ))
           ) : (
             products.map((prod) => (
-              <div key={prod.id} className="min-w-[345px] sm:min-w-[440px] shrink-0">
+              <div key={prod.id} className="w-[calc((100%-10px)/2)] md:w-[calc((100%-28px)/3)] lg:w-[calc((100%-64px)/5)] shrink-0">
                 <ProductCard 
                   product={prod}
                   theme={getTheme(prod.company)}
@@ -205,11 +205,11 @@ export const ColecoesView: React.FC<ColecoesViewProps> = ({ allProducts = [] }) 
       {/* BACKGROUND GRAPHICS */}
       <div className="absolute top-0 left-0 w-full h-[400px] bg-gradient-to-b from-[#F3ECDF]/60 to-transparent pointer-events-none -z-10" />
       
-      <div className="max-w-[1850px] mx-auto px-3 sm:px-4">
+      <div className="w-full px-2 sm:px-3">
         
         {/* HEADER */}
         <div className="text-center mb-12 sm:mb-16">
-          <h1 className="whitespace-nowrap font-mea-culpa text-[clamp(2rem,4.5vw,3.75rem)] text-[#0F2C59] mb-3 leading-[1.15]">
+          <h1 className="whitespace-nowrap overflow-visible font-mea-culpa text-[clamp(2rem,4.5vw,3.75rem)] text-[#0F2C59] mb-3 leading-[1.42] py-1.5 px-1.5">
             Coleções por Ateliê
           </h1>
           <p className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-[#D4AF37]">
@@ -250,7 +250,7 @@ export const ColecoesView: React.FC<ColecoesViewProps> = ({ allProducts = [] }) 
         {/* CUTE SEPARATOR */}
         <div className="text-center mt-12">
           <HeartDivider />
-          <p className="font-cursive text-3xl text-[#6d5443] mt-4 mb-2">
+          <p className="font-cursive text-3xl text-[#6d5443] mt-4 mb-2 leading-[1.42] py-1 px-2 overflow-visible">
             Cada coleção é um pedaço de sentimento costurado e criado à mão.
           </p>
           <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">

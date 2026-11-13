@@ -82,6 +82,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     } else {
       setSelectedVariations({});
     }
+    setImageIndex(0);
   }, [product]);
 
   const handleShare = () => {
@@ -92,13 +93,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     });
   };
 
+  const variationImages = (product.variations || [])
+    .flatMap(v => v.options || [])
+    .map(opt => opt.image)
+    .filter(Boolean) as string[];
+
   const productImages = [
-    product.image || product.main_image,
+    product.image,
+    product.main_image,
     product.image_hover,
-    ...(product.images || [])
+    ...(product.images || []),
+    ...variationImages
   ].filter(Boolean) as string[];
   
-  const images = productImages.filter((img, index, self) => self.indexOf(img) === index).slice(0, 5); 
+  const images = productImages.filter((img, index, self) => self.indexOf(img) === index); 
   
   const wholesaleMinQty = product.wholesale_min_qty || 5;
   const isWholesaleActive = product.isWholesaleEnabled && quantity >= wholesaleMinQty && product.wholesale_price > 0;
@@ -170,9 +178,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 no-scrollbar pb-36">
-          {/* Main image carousel */}
-          <div className="space-y-4">
-            <div className="aspect-square bg-white rounded-[2rem] overflow-hidden relative border border-[#E8E2D5] shadow-xs flex items-center justify-center p-4">
+          {/* Main image carousel (15x15) */}
+          <div className="space-y-3 flex flex-col items-center">
+            <div className="w-[15rem] h-[15rem] bg-white rounded-2xl overflow-hidden relative border border-[#E8E2D5] shadow-xs flex items-center justify-center">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={imageIndex}
@@ -185,7 +193,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <ImageWithFallback 
                     src={images[imageIndex] || ''} 
                     alt={product.product_name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                     isCritical={true}
                     fetchPriority="high"
                   />
@@ -193,18 +201,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </AnimatePresence>
             </div>
 
-            {/* Thumbnails */}
+            {/* Miniaturas das outras fotos cadastradas do mesmo produto */}
             {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none justify-center">
+              <div className="flex flex-wrap gap-2 justify-center max-w-full">
                 {images.map((img, i) => (
                   <button 
                     key={`thumb-${i}`}
+                    type="button"
                     onClick={() => setImageIndex(i)}
-                    className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
-                      i === imageIndex ? 'scale-105 shadow-md border-[#0F2C59]' : 'opacity-40 hover:opacity-100 border-transparent'
+                    className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden border-2 transition-all shrink-0 cursor-pointer bg-white ${
+                      i === imageIndex ? 'scale-105 shadow-md border-[#0F2C59]' : 'opacity-55 hover:opacity-100 border-[#E8E2D5]'
                     }`}
+                    aria-label={`Ver foto ${i + 1}`}
                   >
-                    <ImageWithFallback src={img || ''} alt="Thumbnail" className="w-full h-full object-cover" isThumbnail={true} />
+                    <ImageWithFallback src={img || ''} alt={`${product.product_name} ${i + 1}`} className="w-full h-full object-cover" isThumbnail={true} />
                   </button>
                 ))}
               </div>
@@ -290,7 +300,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     {v.options.map((opt, oIdx) => (
                       <button
                         key={`var-${vIdx}-${oIdx}`}
-                        onClick={() => setSelectedVariations({ ...selectedVariations, [v.name]: opt.name })}
+                        onClick={() => {
+                          setSelectedVariations({ ...selectedVariations, [v.name]: opt.name });
+                          if (opt.image) {
+                            const idx = images.indexOf(opt.image);
+                            if (idx > -1) setImageIndex(idx);
+                          }
+                        }}
                         className={`px-4 py-2.5 text-[11px] font-bold rounded-xl border-2 transition-all duration-150 uppercase tracking-widest cursor-pointer ${
                           selectedVariations[v.name] === opt.name 
                             ? 'scale-[1.03] shadow-md bg-[#0F2C59] text-white border-transparent' 
